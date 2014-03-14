@@ -1,11 +1,11 @@
 package hci.biominer.model.genome;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Gene {
 	
 	//fields
-	private int geneNameID;
 	private String name;
 	private Transcript[] transcripts;
 	private Transcript mergedTranscript;
@@ -34,16 +34,16 @@ public class Gene {
 		
 	}
 	
-	public static Gene makeGene(ArrayList<String[]> lines) throws Exception{
+	public static Gene makeGene(ArrayList<String[]> lines, HashMap<String, Integer> chrNameLength) throws Exception{
 		int num = lines.size();
 		Gene gene = new Gene();
 		
 		//make transcripts
 		Transcript[] transcripts = new Transcript[num];
-		transcripts[0] = new Transcript(lines.get(0), gene);
+		transcripts[0] = new Transcript(lines.get(0), chrNameLength);
 		boolean plusStrand = transcripts[0].isPlusStand();
 		for (int i=1; i< num; i++){
-			transcripts[i] = new Transcript(lines.get(i), gene);
+			transcripts[i] = new Transcript(lines.get(i), chrNameLength);
 			if (plusStrand != transcripts[i].isPlusStand()) throw new Exception ("\nError: strand differs between transcripts for " +transcripts[0].getGeneName());
 		}
 		
@@ -60,7 +60,6 @@ public class Gene {
 	
 	public String toString(){
 		StringBuilder sb = new StringBuilder();
-		sb.append(geneNameID); sb.append("\n");
 		sb.append(name); sb.append("\n");
 		sb.append(plusStrand); sb.append("\n");
 		sb.append(mergedTranscript.toString()); sb.append("\n");
@@ -72,12 +71,6 @@ public class Gene {
 	}
 	
 	//getters and setters
-	public int getGeneNameID() {
-		return geneNameID;
-	}
-	public void setGeneNameID(int geneNameID) {
-		this.geneNameID = geneNameID;
-	}
 	public String getName() {
 		return name;
 	}

@@ -3,12 +3,11 @@ package hci.biominer.model.genome;
 import hci.biominer.util.ModelUtil;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Transcript {
 
 	//fields
-	private int transcriptNameID;
-	private Gene parent;
 	private String geneName;
 	private String transcriptName;
 	private String chrom;
@@ -26,8 +25,7 @@ public class Transcript {
 	
 	/** Parses a UCSC refflat formated gene line with geneName and transcriptName in first two columns: 
 	 * ENSG00000230759	ENSTENSG00000220751	chr1	+	103957500	103968087	103968087	103968087	2	103957500,103967726	103957557,103968087 */
-	public Transcript (String[] tokens, Gene parent) throws Exception{
-		this.parent = parent;
+	public Transcript (String[] tokens, HashMap<String, Integer> chrNameLength) throws Exception{
 		geneName = tokens[0];
 		transcriptName = tokens[1];
 		chrom = tokens[2];
@@ -51,7 +49,7 @@ public class Transcript {
 		//make introns
 		makeIntrons();
 		
-		checkFields();
+		checkFields(chrNameLength);
 	}
 	
 	public void setTss() {
@@ -86,30 +84,35 @@ public class Transcript {
 		}
 	}
 
-	public void checkFields() throws Exception{
+	public void checkFields(HashMap<String, Integer> chrNameLength) throws Exception{
 		//check strand
-		if (strand != '+' && strand != '-' && strand != '.') throw new Exception ("\nError: the strand isn't +, -, or .  ?");
+		if (strand != '+' && strand != '-' && strand != '.') throw new Exception ("\nError: the strand isn't +, -, or .  ?\n"+this.toString());
 
 		//check exons
-		if (Region.isOK(exons) == false) throw new Exception ("\nError: one of the exon starts is >= a stop.");
+		if (Region.isOK(exons) == false) throw new Exception ("\nError: one of the exon starts is >= a stop.\n"+this.toString());
 
 		//check introns
-		if (introns != null && Region.isOK(introns) == false) throw new Exception ("\nError: one of the intron starts is >= a stop.");
+		if (introns != null && Region.isOK(introns) == false) throw new Exception ("\nError: one of the intron starts is >= a stop.\n"+this.toString());
 
 		//check that last exon stop is == txEnd
 		int lastExonEnd = exons[exons.length-1].getStop();
-		if (lastExonEnd != txEnd) throw new Exception ("\nError: the txEnd is not = the last exon stop.");
+		if (lastExonEnd != txEnd) throw new Exception ("\nError: the txEnd is not = the last exon stop.\n"+this.toString());
 
 		//check first exon start
-		if (exons[0].getStart() !=txStart) throw new Exception ("\nError: the txStart is not = the first exon start.");
+		if (exons[0].getStart() !=txStart) throw new Exception ("\nError: the txStart is not = the first exon start.\n"+this.toString());
 
 		//check that cdsStart and cdsEnd are internal or equal to
-		if (cdsStart < txStart || cdsEnd > txEnd) throw new Exception ("\nError: the cdsStart or End aren't = or < the txStart, txEnd.");
+		if (cdsStart < txStart || cdsEnd > txEnd) throw new Exception ("\nError: the cdsStart or End aren't = or < the txStart, txEnd.\n"+this.toString());
+		
+		//check chrom and lengths
+		Integer maxLen = chrNameLength.get(chrom);
+		if (maxLen == null) throw new Exception ("\nError: the chromosome name for this transcript wasn't found in the genome.\n"+this.toString());
+		int maxLength = maxLen.intValue();
+		if (txEnd >= maxLength || exons[exons.length-1].getStop() >= maxLength) throw new Exception ("\nError: the txStop or last exon position exeed the length of the chromosome.\n"+this.toString());
 	}
 
 	public Transcript getPartialClone(){
 		Transcript t = new Transcript();
-		t.setParent(parent);
 		t.setGeneName(geneName);
 		t.setTranscriptName(transcriptName);
 		t.setChrom(chrom);
@@ -204,7 +207,6 @@ public class Transcript {
 
 	public String toString(){
 		StringBuffer sb = new StringBuffer();
-		sb.append(parent.getName()); sb.append("\t");
 		sb.append(transcriptName); sb.append("\t");
 		sb.append(chrom); sb.append("\t");
 		sb.append(strand); sb.append("\t");
@@ -231,22 +233,6 @@ public class Transcript {
 	
 	public boolean isPlusStand(){
 		return strand == '+';
-	}
-
-	public int getTranscriptNameID() {
-		return transcriptNameID;
-	}
-
-	public void setTranscriptNameID(int transcriptNameID) {
-		this.transcriptNameID = transcriptNameID;
-	}
-
-	public Gene getParent() {
-		return parent;
-	}
-
-	public void setParent(Gene parent) {
-		this.parent = parent;
 	}
 
 	public String getTranscriptName() {

@@ -6,11 +6,14 @@ import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public class ModelUtil {
+	
+	public static final Pattern TAB = Pattern.compile("\\t");
 
 	/**Given a String of ints delimited by something, will parse or return null.*/
 	public static int[] stringArrayToInts(String s, String delimiter){
