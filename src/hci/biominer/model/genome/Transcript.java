@@ -108,7 +108,7 @@ public class Transcript {
 		Integer maxLen = chrNameLength.get(chrom);
 		if (maxLen == null) throw new Exception ("\nError: the chromosome name for this transcript wasn't found in the genome.\n"+this.toString());
 		int maxLength = maxLen.intValue();
-		if (txEnd >= maxLength || exons[exons.length-1].getStop() >= maxLength) throw new Exception ("\nError: the txStop or last exon position exeed the length of the chromosome.\n"+this.toString());
+		if (txEnd >= maxLength || exons[exons.length-1].getStop() >= maxLength) throw new Exception ("\nError: the txStop or last exon position exeed the length of the chromosome ("+maxLength+").\n"+this.toString());
 	}
 
 	public Transcript getPartialClone(){

@@ -61,7 +61,8 @@ public class GenomeParser {
 		if (line.startsWith("ChromosomeLengths") == false) throw new Exception("Error: could not find the ChromosomeLengths line in "+line+", aborting.\n");
 		while ((line = in.readLine()) != null){
 			tokens = ModelUtil.TAB.split(line);
-			Integer length = Integer.parseInt(tokens[0]);
+			//add 1 to bring to interbase coordiantes
+			Integer length = Integer.parseInt(tokens[0]) +1;
 			for (int i=1; i< tokens.length; i++){
 				//look to see if it is already present
 				Integer old = chrNameLength.get(tokens[i]);

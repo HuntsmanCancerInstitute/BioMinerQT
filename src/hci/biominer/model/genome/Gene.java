@@ -60,9 +60,9 @@ public class Gene {
 	
 	public String toString(){
 		StringBuilder sb = new StringBuilder();
-		sb.append(name); sb.append("\n");
-		sb.append(plusStrand); sb.append("\n");
-		sb.append(mergedTranscript.toString()); sb.append("\n");
+		sb.append("GeneName:\t" +name); sb.append("\n");
+		sb.append("IsPlusStrand:\t" +plusStrand); sb.append("\n");
+		sb.append("MergedTranscript:\t" +mergedTranscript.toString()); sb.append("\n");
 		for (Transcript t: transcripts){
 			sb.append(t.toString());
 			sb.append("\n");
