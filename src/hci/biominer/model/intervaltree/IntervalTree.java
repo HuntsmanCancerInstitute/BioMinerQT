@@ -95,7 +95,7 @@ public class IntervalTree<T> implements java.io.Serializable {
 	private Interval<T> rightNeighbor = null;
 	
 	/**Will search and set params for retrieving neighbors when a search fails.*/
-	private boolean searchNeighbors = false;
+	private boolean searchForNeighbors = false;
 
 	/**
 	 * Tree constructor.
@@ -132,7 +132,7 @@ public class IntervalTree<T> implements java.io.Serializable {
 	 * As a side-effect of the search, the variables {@link #rightNeighbor} and
 	 * {@link #leftNeighbor} are set. If this method returns an empty list, then
 	 * these variables contain the intervals that are the closest neighbors to
-	 * the left and the right to the query position if {@link #searchNeighbors}
+	 * the left and the right to the query position if {@link #searchForNeighbors}
 	 * 
 	 * Modified by Nix to assume interbase coordinates
 	 * 
@@ -156,7 +156,7 @@ public class IntervalTree<T> implements java.io.Serializable {
 			obtlst.add(it.getValue());
 		}
 		/* Search for neighbors if there are no hits?*/
-		if (searchNeighbors && obtlst.isEmpty())
+		if (searchForNeighbors && obtlst.isEmpty())
 			searchInbetween(low);
 		return obtlst;
 	}
@@ -414,6 +414,10 @@ public class IntervalTree<T> implements java.io.Serializable {
 
 	public void debugPrint() {
 		debugPrint(this.root);
+	}
+
+	public void setSearchForNeighbors(boolean searchForNeighbors) {
+		this.searchForNeighbors = searchForNeighbors;
 	}
 
 }
