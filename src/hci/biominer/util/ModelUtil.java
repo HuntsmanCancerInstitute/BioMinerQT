@@ -14,6 +14,16 @@ import java.util.zip.ZipFile;
 public class ModelUtil {
 	
 	public static final Pattern TAB = Pattern.compile("\\t");
+	
+	/**Calls garbage collection then returns memory used by app.*/
+	public static long fetchUsedMemory(){
+	    System.gc(); System.gc(); System.gc(); System.gc();
+	    System.gc(); System.gc(); System.gc(); System.gc();
+	    System.gc(); System.gc(); System.gc(); System.gc();
+	    System.gc(); System.gc(); System.gc(); System.gc();
+	    return Runtime.getRuntime().totalMemory() -
+	      Runtime.getRuntime().freeMemory();
+	}
 
 	/**Given a String of ints delimited by something, will parse or return null.*/
 	public static int[] stringArrayToInts(String s, String delimiter){

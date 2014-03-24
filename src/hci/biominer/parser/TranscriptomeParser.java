@@ -1,5 +1,6 @@
 package hci.biominer.parser;
 
+import hci.biominer.model.genome.Chromosome;
 import hci.biominer.model.genome.Gene;
 import hci.biominer.model.genome.Genome;
 import hci.biominer.model.genome.Transcriptome;
@@ -10,35 +11,28 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 
 public class TranscriptomeParser {
 
 	//fields
-	private File refflatSource;
-	private Gene[] genes;
-	private HashMap<String, Integer> chrNameLength;
+	Transcriptome transcriptome;
 
 	//constructors
-	public TranscriptomeParser(File refflatSource, Genome genome) throws Exception{
-		this.refflatSource = refflatSource;
-		this.chrNameLength = genome.getChrNameLength();
-		parseRefFlat();
-	}
-	
-	/**Populates a Transcriptome container, name and description can be null.*/
-	public Transcriptome makeTranscriptome(String name, String description){
-		Transcriptome t = new Transcriptome();
-		t.setRefflatSource(refflatSource);
-		t.setGenes(genes);
-		t.setName(name);
-		t.setDescription(description);
-		return t;
+	public TranscriptomeParser(String name, File refflatSource, Genome genome) throws Exception{
+		parseRefFlat(name, refflatSource, genome);
 	}
 
 	/** Parses a UCSC refflat formated gene line with geneName and transcriptName in first two columns: 
 	 * ENSG00000230759	ENSTENSG00000220751	chr1	+	103957500	103968087	103968087	103968087	2	103957500,103967726	103957557,103968087 
-	 * Assumes file is sorted by geneName.*/
-	public void parseRefFlat() throws Exception{
+	 * Assumes file is sorted by geneName.
+	 * Adds the transcriptome to the Genome.*/
+	public void parseRefFlat(String name, File refflatSource, Genome genome) throws Exception{
+		transcriptome = new Transcriptome();
+		transcriptome.setSourceFile(refflatSource);
+		transcriptome.setName(name);
+		LinkedHashMap<String, Chromosome> nameChromosome = genome.getNameChromosome();
+		
 		BufferedReader in;
 		String line = null;
 		ArrayList<String[]> transcriptsAL = new ArrayList<String[]>();
@@ -58,7 +52,7 @@ public class TranscriptomeParser {
 					//has it been seen before?
 					if (parsedGeneNames.contains(oldGeneName)) throw new Exception ("\nError: file does not appear to be sorted by geneName see "+ oldGeneName);
 					parsedGeneNames.add(oldGeneName);
-					genesAL.add(Gene.makeGene(transcriptsAL, chrNameLength));
+					genesAL.add(Gene.makeGene(transcriptsAL, nameChromosome));
 					oldGeneName = tokens[0];
 					transcriptsAL.clear();
 				}
@@ -69,12 +63,16 @@ public class TranscriptomeParser {
 		}
 		in.close();
 		//add last and make array
-		genesAL.add(Gene.makeGene(transcriptsAL, chrNameLength));
-		genes = new Gene[genesAL.size()];
+		genesAL.add(Gene.makeGene(transcriptsAL, nameChromosome));
+		Gene[] genes = new Gene[genesAL.size()];
 		genesAL.toArray(genes);
+		transcriptome.setGenes(genes);
+		
+		//add to genome
+		genome.addTranscriptome(transcriptome);
 	}
-	
-	public Gene[] getGenes() {
-		return genes;
+
+	public Transcriptome getTranscriptome() {
+		return transcriptome;
 	}
 }

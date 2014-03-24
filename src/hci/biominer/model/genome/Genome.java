@@ -1,34 +1,32 @@
 package hci.biominer.model.genome;
 
-import hci.biominer.parser.GenomeParser;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 public class Genome {
 	//fields
 	private String name;
 	private String speciesName;
 	private Transcriptome[] transcriptomes;
-	private HashMap<String, Integer> chrNameLength = new HashMap<String, Integer>();
+	private LinkedHashMap<String, Chromosome> nameChromosome;
 	
 	//constructors
-	public Genome (GenomeParser gp){
-		this.name = gp.getGenomeBuildName();
-		this.speciesName = gp.getSpecies();
-		this.chrNameLength = gp.getChrNameLength();
-	}
+	public Genome (){}
 
 	//methods
 	public String toString(){
 		StringBuilder sb = new StringBuilder();
 		sb.append("SpeciesName:\t"+ speciesName); sb.append("\n");
 		sb.append("GenomeName:\t"+ name); sb.append("\n");
-		sb.append("ChromosomeName Length Hash:\t"+chrNameLength); sb.append("\n");
+		sb.append("Chromosome Hash:\n");
+		for (Chromosome c: nameChromosome.values()){
+			sb.append(c.toString()); 
+		}
 		for (Transcriptome t: transcriptomes){
-			sb.append("\nTranscriptome:\n");
 			sb.append(t);  sb.append("\n");
 		}
 		return sb.toString();
 	}
+	
 	public void addTranscriptome(Transcriptome transcriptome) {
 		if (transcriptomes == null){
 			transcriptomes = new Transcriptome[1];
@@ -52,11 +50,22 @@ public class Genome {
 	public Transcriptome[] getTranscriptomes() {
 		return transcriptomes;
 	}
-	public HashMap<String, Integer> getChrNameLength() {
-		return chrNameLength;
+	public LinkedHashMap<String, Chromosome> getNameChromosome() {
+		return nameChromosome;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+	public void setSpeciesName(String speciesName) {
+		this.speciesName = speciesName;
+	}
+	public void setNameChromosome(LinkedHashMap<String, Chromosome> nameChromosome) {
+		this.nameChromosome = nameChromosome;
 	}
 
-
+	public void setTranscriptomes(Transcriptome[] transcriptomes) {
+		this.transcriptomes = transcriptomes;
+	}
 
 	
 }

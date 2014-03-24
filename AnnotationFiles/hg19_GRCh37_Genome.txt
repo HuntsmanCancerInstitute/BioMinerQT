@@ -1,7 +1,17 @@
-Species	Homo sapiens						
-BuildName	Hg19/GRCh37						
-TranscriptomeFile	/Users/u0028003/Code/BioMiner/AnnotationFiles/hg19Ens_Transcripts.ucsc.zip						
-ChromosomeLengths			
+#Tab delimited descriptor file for loading a genome and transcriptome(s)
+
+#Binomial naming of the associated species
+Species	Homo sapiens	
+
+#Genome build name, should include all standard names, no tabs					
+BuildName	Hg19 GRCh37 H_sapiens_Feb_2009	
+
+#One or more refflat formatted transcript file(s), not merged genes.  The first column is the gene name, the second the transcript name.					
+TranscriptomeName	File
+EnsembleXXXXX	/Users/u0028003/Code/BioMiner/AnnotationFiles/hg19Ens_Transcripts.ucsc.zip	
+
+#Chromosome lengths and their associated aliases.  The first is assumed to be "the" name for the chromosome.					
+ChromosomeLength	Name	Aliases			
 249250621	chr1	1					
 243199373	chr2	2					
 198022430	chr3	3					
@@ -21,9 +31,9 @@ ChromosomeLengths
 81195210	chr17	17					
 78077248	chr18	18					
 59128983	chr19	19					
-63025520	chr20	20					
-51304566	chr22	21					
-48129895	chr21	22					
+63025520	chr20	20
+48129895	chr21	21						
+51304566	chr22	22									
 155270560	chrX	X					
 59373566	chrY	Y					
 16571	chrM	MT	M	chrMT					

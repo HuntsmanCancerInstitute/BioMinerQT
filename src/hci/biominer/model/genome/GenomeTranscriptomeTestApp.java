@@ -3,7 +3,7 @@ package hci.biominer.model.genome;
 import java.io.File;
 
 import hci.biominer.parser.GenomeParser;
-import hci.biominer.parser.TranscriptomeParser;
+import hci.biominer.parser.VCFIntervalTreeParser;
 
 public class GenomeTranscriptomeTestApp {
 
@@ -13,17 +13,16 @@ public class GenomeTranscriptomeTestApp {
 			System.out.println("Loading genome...");
 			File descriptorFile = new File ("/Users/u0028003/Code/BioMiner/AnnotationFiles/hg19_GRCh37_Genome.txt");
 			GenomeParser gp = new GenomeParser (descriptorFile);
-			Genome genome = new Genome (gp);
-			
-			//add a transcriptome,
-			System.out.println("Loading transcriptomes...\n");
-			String name = "EnsemblReleaseXXX";
-			String description = "Refflat file downloaded from UCSC and reprocessed with XXX.";
-			TranscriptomeParser tp = new TranscriptomeParser (gp.getTranscriptomeFiles()[0], genome);
-			Transcriptome transcriptome = tp.makeTranscriptome(name, description);
-			genome.addTranscriptome(transcriptome);
-			
+			Genome genome = gp.getGenome();
 			System.out.println(genome);
+			
+			//load a vcf file
+			File vcfFile = new File("/Users/u0028003/Code/BioMiner/TestDataSets/clinvar_00-latest.vcf.gz");
+			VCFIntervalTreeParser vcfITP = new VCFIntervalTreeParser(vcfFile, genome);
+			vcfITP.getChromNameIntervalTree(); //triggers parsing
+			System.out.println(vcfITP);
+			
+			
 			
 		} catch (Exception e){
 			e.printStackTrace();

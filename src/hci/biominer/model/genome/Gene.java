@@ -1,7 +1,7 @@
 package hci.biominer.model.genome;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 public class Gene {
 	
@@ -34,16 +34,16 @@ public class Gene {
 		
 	}
 	
-	public static Gene makeGene(ArrayList<String[]> lines, HashMap<String, Integer> chrNameLength) throws Exception{
+	public static Gene makeGene(ArrayList<String[]> lines, LinkedHashMap<String, Chromosome> nameChromosome) throws Exception{
 		int num = lines.size();
 		Gene gene = new Gene();
 		
 		//make transcripts
 		Transcript[] transcripts = new Transcript[num];
-		transcripts[0] = new Transcript(lines.get(0), chrNameLength);
+		transcripts[0] = new Transcript(lines.get(0), nameChromosome);
 		boolean plusStrand = transcripts[0].isPlusStand();
 		for (int i=1; i< num; i++){
-			transcripts[i] = new Transcript(lines.get(i), chrNameLength);
+			transcripts[i] = new Transcript(lines.get(i), nameChromosome);
 			if (plusStrand != transcripts[i].isPlusStand()) throw new Exception ("\nError: strand differs between transcripts for " +transcripts[0].getGeneName());
 		}
 		

@@ -1,6 +1,7 @@
 package hci.biominer.model.intervaltree;
 
 import hci.biominer.model.genome.Region;
+import hci.biominer.util.ModelUtil;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,11 +39,14 @@ public class TestIntervalTree {
 	}
 	
 	public TestIntervalTree (){
+		long startMemory = ModelUtil.fetchUsedMemory();
+		
 		//fetch simulated datasets in IntervalTrees
 		HashMap<Integer, IntervalTree<Peak>>[] chIPData = getChIPPeaks();
 		
 		//fetch a simulated test dataset
 		HashMap<Integer, Peak[]> testPeaks = getPeaks();
+		System.out.println("\nMemory used after generating 101 datasets\t"+(ModelUtil.fetchUsedMemory()- startMemory));
 		
 		//intersect
 		intersectPeaks (testPeaks, chIPData);
@@ -152,8 +156,13 @@ public class TestIntervalTree {
 			if (tree == null) continue;
 			//for each queryRegion
 			Peak[] queryRegions = chromIdQuery.get(chrId);
+			//System.out.println("Num p in chrom "+queryRegions.length);
+			//int counter = 0;
 			for (Peak r: queryRegions){
-				dataSetIds.addAll(tree.search(r.getStart(), r.getStop()));
+				ArrayList<Peak> intersectingPeaks = tree.search(r.getStart(), r.getStop());
+				//System.out.println("\tInts "+intersectingPeaks.size());
+				dataSetIds.addAll(intersectingPeaks);
+				//if (counter++ == 10) System.exit(0);
 			}
 		}
 		return dataSetIds;
