@@ -1,14 +1,17 @@
 package hci.biominer.model.genome;
 
+import java.io.Serializable;
+
 import hci.biominer.util.ModelUtil;
 
 /**Representation of a chromosome*/
-public class Chromosome {
+public class Chromosome implements Serializable {
 	
 	//fields
 	private String name;
 	private String[] aliases;
 	private int length;
+	private static final long serialVersionUID = 1L;
 	
 	//constructors
 	public Chromosome (int length, String name, String[] aliases){

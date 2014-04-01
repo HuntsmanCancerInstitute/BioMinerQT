@@ -1,13 +1,15 @@
 package hci.biominer.model.genome;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 /**Interbase coordinates describing a region on a chromosome.*/
-public class Region {
+public class Region implements Serializable {
 	
 	//fields
 	private int start;
 	private int stop;
+	private static final long serialVersionUID = 1L;
 	
 	//constructors
 	public Region(int start, int stop) {
@@ -21,6 +23,18 @@ public class Region {
 		for (Region r: regions){
 			if (r.getStart()>= r.getStop()) return false;
 		}
+		return true;
+	}
+	
+	/**Assumes interbase coordinates*/
+	public boolean intersects(int start, int stop){
+		if (stop < this.start || start >= this.stop) return false;
+		return true;
+	}
+	
+	/**Assumes interbase coordinates.*/
+	public boolean intersects(Region coding) {
+		if (coding.stop < this.start || coding.start >= this.stop) return false;
 		return true;
 	}
 	
@@ -66,6 +80,10 @@ public class Region {
 			if (ei[i].stop > max) max = ei[i].stop;
 		}
 		return new int[]{min,max};
+	}
+	
+	public String toString(){
+		return start +"\t" + stop;
 	}
 	
 	//getters setters

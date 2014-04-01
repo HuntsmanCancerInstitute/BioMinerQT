@@ -1,13 +1,15 @@
 package hci.biominer.model.genome;
 
+import java.io.Serializable;
 import java.util.LinkedHashMap;
 
-public class Genome {
+public class Genome implements Serializable{
 	//fields
 	private String name;
 	private String speciesName;
 	private Transcriptome[] transcriptomes;
 	private LinkedHashMap<String, Chromosome> nameChromosome;
+	private static final long serialVersionUID = 1L;
 	
 	//constructors
 	public Genome (){}

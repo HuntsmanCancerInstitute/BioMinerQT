@@ -32,9 +32,10 @@ public class VCFIntervalTreeParser {
 	private static final int alternateIndex = 4;
 
 	//Constructors
-	public VCFIntervalTreeParser(File vcfFile, Genome genome) {
+	public VCFIntervalTreeParser(File vcfFile, Genome genome) throws Exception{
 		this.vcfFile = vcfFile;
 		this.genome = genome;
+		if (vcfFile.canRead() == false) throw new Exception ("\nCould not read/ find this vcf file -> "+vcfFile);
 	}
 
 	//Methods

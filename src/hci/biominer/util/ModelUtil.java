@@ -3,9 +3,13 @@ package hci.biominer.util;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.ArrayList;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
@@ -23,6 +27,12 @@ public class ModelUtil {
 	    System.gc(); System.gc(); System.gc(); System.gc();
 	    return Runtime.getRuntime().totalMemory() -
 	      Runtime.getRuntime().freeMemory();
+	}
+	
+	/**Prints the string to System.err and exits with 1.*/
+	public static void errorExit(String s){
+		System.err.println(s);
+		System.exit(1);
 	}
 
 	/**Given a String of ints delimited by something, will parse or return null.*/
@@ -67,6 +77,56 @@ public class ModelUtil {
 		}
 		else in = new BufferedReader (new FileReader (txtFile));
 		return in;
+	}
+
+	public static String arrayListToString(@SuppressWarnings("rawtypes") ArrayList al, String seporator) {
+		StringBuilder sb = new StringBuilder();
+		sb.append(al.get(0).toString());
+		int num = al.size();
+		for (int i=1; i< num; i++){
+			sb.append(seporator);
+			sb.append(al.get(i).toString());
+		}
+		return sb.toString();
+	}
+	
+	/**Saves an object to disk.*/
+	public static boolean saveObject(File file, Object ob) {
+		try {
+			ObjectOutputStream out =
+				new ObjectOutputStream(new FileOutputStream(file));
+			out.writeObject(ob);
+			out.close();
+			return true;
+		} catch (Exception e) {
+			System.out.println("There appears to be a problem with saving this file: "+ file);
+			e.printStackTrace();
+		}
+		return false;
+	}
+	
+	/**Loads a serialized Object saved to disk.
+	 * Can be zip/gz compressed too.*/
+	public static Object loadObject(File file) {
+		Object a = null;
+		try {
+			ObjectInputStream in;
+			if (file.getName().endsWith(".zip")){
+				ZipFile zf = new ZipFile(file);
+				ZipEntry ze = (ZipEntry) zf.entries().nextElement();
+				in = new ObjectInputStream( zf.getInputStream(ze));
+			}
+			else if (file.getName().endsWith(".gz")) {
+				in = new ObjectInputStream(new GZIPInputStream(new FileInputStream(file)));
+			}
+			else in = new ObjectInputStream(new FileInputStream(file));
+			a = in.readObject();
+			in.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("Problem fetchObject() "+file);
+		}
+		return a;
 	}
 
 }

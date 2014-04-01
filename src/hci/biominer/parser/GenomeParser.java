@@ -7,15 +7,17 @@ import hci.biominer.util.ModelUtil;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 
-public class GenomeParser {
+public class GenomeParser implements Serializable{
 	
 	//fields
 	private Genome genome;
+	private static final long serialVersionUID = 1L;
 	
 	public GenomeParser(File desc) throws Exception {
 		parseDescriptorFile(desc);
@@ -34,6 +36,7 @@ public class GenomeParser {
 	
 
 	private void parseDescriptorFile(File desc) throws Exception{
+		if (desc.canRead() == false) throw new Exception ("\nCould not read/ find this descriptor file -> "+desc);
 		genome = new Genome();
 		BufferedReader in = ModelUtil.fetchBufferedReader(desc);
 		String line;

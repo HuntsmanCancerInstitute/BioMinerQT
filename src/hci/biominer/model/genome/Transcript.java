@@ -2,10 +2,11 @@ package hci.biominer.model.genome;
 
 import hci.biominer.util.ModelUtil;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class Transcript {
+public class Transcript implements Serializable {
 
 	//fields
 	private String geneName;
@@ -19,6 +20,7 @@ public class Transcript {
 	private Region[] exons = null;
 	private Region[] introns = null;
 	private int tss;
+	private static final long serialVersionUID = 1L;
 
 	//constructors
 	public Transcript (){}
@@ -190,6 +192,26 @@ public class Transcript {
 		return true;
 	}
 	
+	public static Transcript mergeTranscripts(Transcript first, Transcript second){
+		Transcript mergedTranscript = first.getPartialClone();
+
+		Region[] merged = Region.merge(mergedTranscript.getExons(), second.getExons());
+		mergedTranscript.setExons(merged);
+		//reset tx start and stop
+		if (mergedTranscript.getTxStart() > second.getTxStart()) mergedTranscript.setTxStart(second.getTxStart());
+		if (mergedTranscript.getTxEnd() < second.getTxEnd()) mergedTranscript.setTxEnd(second.getTxEnd());
+		//reset cds start stop
+		if (mergedTranscript.getCdsStart() > second.getCdsStart()) mergedTranscript.setCdsStart(second.getCdsStart());
+		if (mergedTranscript.getCdsEnd() < second.getCdsEnd()) mergedTranscript.setCdsEnd(second.getCdsEnd());
+
+
+		mergedTranscript.makeIntrons();
+		mergedTranscript.setTss();
+		mergedTranscript.setTranscriptName(first.getTranscriptName() + "+" + second.getTranscriptName());
+
+		return mergedTranscript;
+	}
+	
 	/**Returns null if no overlap, otherwise the start and stop coordinates of the overlap.
 	 * Assumes interbase coordinates*/
 	public int[] fetchOverlap (int start, int stop) {
@@ -321,6 +343,10 @@ public class Transcript {
 
 	public void setGeneName(String geneName) {
 		this.geneName = geneName;
+	}
+
+	public Region getCodingRegion() {
+		return new Region (cdsStart, cdsEnd);
 	}
 
 	//getters setters
