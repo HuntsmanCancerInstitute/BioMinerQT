@@ -90,7 +90,6 @@ public class TestIntervalTree {
 		public float getLog2Rto() {
 			return log2Rto;
 		}
-		
 	}
 	
 	public HashMap<Integer, IntervalTree<Peak>>[] getChIPPeaks(){

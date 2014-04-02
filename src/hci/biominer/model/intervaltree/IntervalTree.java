@@ -160,6 +160,28 @@ public class IntervalTree<T> implements java.io.Serializable {
 			searchInbetween(low);
 		return obtlst;
 	}
+	
+	/* This method is almost identical to standard serach.  The interval must be completely contained
+	 * within in the mode.
+	 */
+	public ArrayList<T> searchContains(int low, int high) {
+		low++;
+		ArrayList<Interval<T>> result = new ArrayList<Interval<T>>();
+		/* reset */
+		this.leftNeighbor = null;
+		this.rightNeighbor = null;
+		// System.out.println("Search for (" + low + "," + high + ")");
+		// debugPrint(this.root);
+		searchIntervalContains(root, result, low, high);
+		ArrayList<T> obtlst = new ArrayList<T>();
+		for (Interval<T> it : result) {
+			obtlst.add(it.getValue());
+		}
+		/* Search for neighbors if there are no hits?*/
+		if (searchForNeighbors && obtlst.isEmpty())
+			searchInbetween(low);
+		return obtlst;
+	}
 
 	/**
 	 * In cases where we do not find an intersection, i.e., when a call to
@@ -397,6 +419,50 @@ public class IntervalTree<T> implements java.io.Serializable {
 			searchInterval(n.getRight(), result, ilow, ihigh);
 		}
 	}
+	
+	/*This method is almost idential to searchIntervalContains, but the interval must be completely contained
+	 * by the node.
+	 * 
+	 */
+	private void searchIntervalContains(Node<T> n, ArrayList<Interval<T>> result, int ilow, int ihigh) {
+		if (n == null) {
+			return;
+		}
+	
+		if (ilow < n.getMedian()) {
+			
+			int size = n.leftorder.size();
+			for (int i = 0; i < size; i++) {
+				
+				if (n.leftorder.get(i).getLow() > ilow) {
+					break;
+				}
+				
+				result.add(n.leftorder.get(i));
+			}
+		}
+		else if (ihigh > n.getMedian()) {
+			
+			int size = n.rightorder.size();
+			for (int i = 0; i < size; i++) {
+				if (n.rightorder.get(i).getHigh() < ihigh) {
+					break;
+				}
+				
+				result.add(n.rightorder.get(i));
+			}
+		}
+
+		if (ilow < n.getMedian() && n.getLeft() != null) {
+			searchIntervalContains(n.getLeft(), result, ilow, ihigh);
+
+		}
+
+		if (ihigh > n.getMedian() && n.getRight() != null) {
+			searchIntervalContains(n.getRight(), result, ilow, ihigh);
+		}
+	}
+	
 
 	/**
 	 * This is intended to be used to print out the interval tree for debugging

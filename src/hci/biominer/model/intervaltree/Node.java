@@ -22,7 +22,7 @@ import java.util.List;
  *         Top, Peter Robinson
  * @version 0.08 (9 January, 2014)
  */
-public class Node<T> {
+public class Node<T> implements java.io.Serializable {
 	/** Median of all intervals in this node */
 	private int median;
 	/** node containing the intervals completely to the left of the median. */

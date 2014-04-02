@@ -11,7 +11,7 @@ import java.util.Comparator;
  * @version 0.02 (15 May, 2013)
  * @param <T>
  */
-public class RightComparator implements Comparator<Interval<?>> {
+public class RightComparator implements Comparator<Interval<?>>, java.io.Serializable {
 
 	@Override
 	public int compare(Interval<?> interval_1, Interval<?> interval_2) {
