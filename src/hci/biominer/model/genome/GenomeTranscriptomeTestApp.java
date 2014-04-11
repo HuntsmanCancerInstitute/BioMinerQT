@@ -18,15 +18,15 @@ public class GenomeTranscriptomeTestApp {
 	public static void main(String[] args) {
 		try {
 			//create a genome from a descriptor file
-			File localDir = new File("/Users/timmosbruger/Documents/Projects/AE/ChIP/");
-			//File localDir = new File("/Users/u0028003/Code/BioMiner")
+			//File localDir = new File("/Users/timmosbruger/Documents/Projects/AE/ChIP/");
+			File localDir = new File("/Users/u0028003/Code/BioMiner");
 			
 			System.out.println("Loading genome...");
 			File descriptorFile = new File (localDir,"/AnnotationFiles/hg19_GRCh37_Genome.txt");
 			GenomeParser gp = new GenomeParser (descriptorFile);
 			Genome genome = gp.getGenome();
 			System.out.println(genome);
-			
+
 			//load a vcf file
 			System.out.println("Loading vcf file...");
 			File vcfFile = new File(localDir,"TestDataSets/clinvar_00-latest.vcf.gz");

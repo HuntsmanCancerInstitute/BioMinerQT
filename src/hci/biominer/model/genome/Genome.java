@@ -5,7 +5,8 @@ import java.util.LinkedHashMap;
 
 public class Genome implements Serializable{
 	//fields
-	private String name;
+	private String buildName;
+	private String buildNamesAliases;
 	private String speciesName;
 	private Transcriptome[] transcriptomes;
 	private LinkedHashMap<String, Chromosome> nameChromosome;
@@ -18,7 +19,8 @@ public class Genome implements Serializable{
 	public String toString(){
 		StringBuilder sb = new StringBuilder();
 		sb.append("SpeciesName:\t"+ speciesName); sb.append("\n");
-		sb.append("GenomeName:\t"+ name); sb.append("\n");
+		sb.append("GenomeBuildName:\t"+ buildName); sb.append("\n");
+		sb.append("GenomeBuildNameAliases:\t"+ buildNamesAliases); sb.append("\n");
 		sb.append("Chromosome Hash:\n");
 		for (Chromosome c: nameChromosome.values()){
 			sb.append(c.toString()); 
@@ -43,8 +45,8 @@ public class Genome implements Serializable{
 	}
 
 	//getters and setters
-	public String getName() {
-		return name;
+	public String getBuildName() {
+		return buildName;
 	}
 	public String getSpeciesName() {
 		return speciesName;
@@ -55,8 +57,8 @@ public class Genome implements Serializable{
 	public LinkedHashMap<String, Chromosome> getNameChromosome() {
 		return nameChromosome;
 	}
-	public void setName(String name) {
-		this.name = name;
+	public void setBuildName(String name) {
+		this.buildName = name;
 	}
 	public void setSpeciesName(String speciesName) {
 		this.speciesName = speciesName;
@@ -67,6 +69,12 @@ public class Genome implements Serializable{
 
 	public void setTranscriptomes(Transcriptome[] transcriptomes) {
 		this.transcriptomes = transcriptomes;
+	}
+	public String getBuildNamesAliases() {
+		return buildNamesAliases;
+	}
+	public void setBuildNamesAliases(String buildNamesAliases) {
+		this.buildNamesAliases = buildNamesAliases;
 	}
 
 	

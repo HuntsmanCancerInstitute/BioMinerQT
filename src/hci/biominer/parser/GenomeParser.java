@@ -47,11 +47,14 @@ public class GenomeParser implements Serializable{
 		if (tokens.length !=2 || tokens[0].equals("Species") == false) throw new Exception("Error: could not parse species name from "+line+", aborting.\n");
 		genome.setSpeciesName(tokens[1]);
 		
-		//name
+		//build names
 		while ((line = in.readLine()) != null) if (line.length() !=0 && line.startsWith("#") == false) break;
 		tokens = ModelUtil.TAB.split(line);
-		if (tokens.length !=2 || tokens[0].equals("BuildName") == false) throw new Exception("Error: could not parse build name from "+line+", aborting.\n");
-		genome.setName(tokens[1]);
+		if (tokens.length < 2 || tokens[0].equals("BuildName") == false) throw new Exception("Error: could not parse build name from "+line+", aborting.\n");
+		genome.setBuildName(tokens[1]);
+		String buildNames = ModelUtil.stringArrayToString(tokens, ", ");
+		buildNames = buildNames.substring("BuildName, ".length());
+		genome.setBuildNamesAliases(buildNames);
 		
 		//transcripts, just create empty containers with the name and file
 		boolean foundTranscriptomeName = false;
