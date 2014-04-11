@@ -3,14 +3,14 @@
 #Binomial naming of the associated species
 Species	Homo sapiens	
 
-#Genome build name, should include all standard names, no tabs					
-BuildName	Hg19 GRCh37 H_sapiens_Feb_2009	
+#Genome build names, should include all standard names, tab delimited, the first should be what is used by IGV, see http://www.broadinstitute.org/software/igv/genome_ids				
+BuildName	hg19	GRCh37	H_sapiens_Feb_2009	Hg19
 
 #One or more refflat formatted transcript file(s), not merged genes.  The first column is the gene name, the second the transcript name.					
 TranscriptomeName	File
 EnsembleXXXXX	/Users/u0028003/Code/BioMiner/AnnotationFiles/hg19Ens_Transcripts.ucsc.zip	
 
-#Chromosome lengths and their associated aliases.  The first is assumed to be "the" name for the chromosome.					
+#Chromosome lengths and their associated aliases.  The first should be what is used by IGV.					
 ChromosomeLength	Name	Aliases			
 249250621	chr1	1					
 243199373	chr2	2					
