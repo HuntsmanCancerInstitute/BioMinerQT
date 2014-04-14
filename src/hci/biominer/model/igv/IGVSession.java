@@ -8,7 +8,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 
-/**Container and methods to build a text xml doc for driving IGV.*/
+/**Container and methods to build a text xml doc for driving IGV.
+ * Note, chromosome and genome version must be recognized by IGV.*/
 public class IGVSession {
 
 	//fields
@@ -16,9 +17,12 @@ public class IGVSession {
 	private String chromosome;
 	private int start;
 	private int stop;
-	private String sessionVersion = "3";
 	private IGVResource[] igvResources;
-	public static final String igvLaunch = "http://www.broadinstitute.org/igv/projects/current/igv.php?sessionURL=";
+	
+	//constants
+	private static final String sessionVersion = "3";
+	public static final String igvLaunchURL = "http://www.broadinstitute.org/igv/projects/current/igv.php?sessionURL=";
+	public static final String igvGoToURL = "http://localhost:60151/goto?locus=";
 
 	//constructors
 	/**Be sure the genomeVersion and chromosome names follow IGV conventions.  Don't forget to add some IGVResources too!*/
@@ -69,6 +73,10 @@ public class IGVSession {
 		return sb.toString();
 	}
 
+	/**Returns url to move a running instance of igv to a given chrom and position.*/
+	public static String fetchGoToURL(String igvChrom, int start, int stop){
+		return igvGoToURL+":"+start+"-"+stop;
+	}
 
 	/**Writes the session xml doc to file.*/
 	public void writeXMLSession(File xml) throws IOException{
@@ -79,7 +87,7 @@ public class IGVSession {
 	
 	
 	public URL fetchIGVLaunchURL(URL sessionXMLFile) throws MalformedURLException{
-		return new URL(igvLaunch + sessionXMLFile.toString());
+		return new URL(igvLaunchURL + sessionXMLFile.toString());
 	}
 
 	//getters and setters
@@ -141,7 +149,10 @@ public class IGVSession {
 			
 			//fetch launch igv URL
 			URL sessionFile = new URL("http://bioserver.hci.utah.edu/IGVSessionsTestData/testIGVSession.xml");
-			System.out.println(is.fetchIGVLaunchURL(sessionFile));
+			System.out.println(  is.fetchIGVLaunchURL(sessionFile)  );
+			
+			//go to BRCA2 local host link
+			System.out.println(  IGVSession.fetchGoToURL("chr13",32854430,33008995)  );
 			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
