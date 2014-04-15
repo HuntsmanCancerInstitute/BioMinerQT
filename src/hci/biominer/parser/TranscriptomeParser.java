@@ -31,6 +31,7 @@ public class TranscriptomeParser {
 		transcriptome = new Transcriptome();
 		transcriptome.setSourceFile(refflatSource);
 		transcriptome.setName(name);
+		transcriptome.setGenome(genome);
 		LinkedHashMap<String, Chromosome> nameChromosome = genome.getNameChromosome();
 		
 		BufferedReader in;

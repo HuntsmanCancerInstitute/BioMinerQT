@@ -7,7 +7,7 @@ import java.util.LinkedHashMap;
 public class Gene implements Serializable {
 	
 	//fields
-	private String name;
+	private String name = null;
 	private Chromosome chromosome;
 	private Transcript[] transcripts;
 	private Transcript mergedTranscript;
@@ -82,16 +82,15 @@ public class Gene implements Serializable {
 		
 		//make transcripts
 		Transcript[] transcripts = new Transcript[num];
-		transcripts[0] = new Transcript(lines.get(0), nameChromosome);
+		transcripts[0] = new Transcript(lines.get(0), nameChromosome, gene);
 		boolean plusStrand = transcripts[0].isPlusStand();
 		for (int i=1; i< num; i++){
-			transcripts[i] = new Transcript(lines.get(i), nameChromosome);
-			if (plusStrand != transcripts[i].isPlusStand()) throw new Exception ("\nError: strand differs between transcripts for " +transcripts[0].getGeneName());
+			transcripts[i] = new Transcript(lines.get(i), nameChromosome, gene);
+			if (plusStrand != transcripts[i].isPlusStand()) throw new Exception ("\nError: strand differs between transcripts for " +transcripts[0].getGene().getName());
 		}
 		
 		//populate gene fields
 		gene.setTranscripts(transcripts);
-		gene.setName(transcripts[0].getGeneName());
 		gene.setPlusStrand(plusStrand);
 		gene.setChromsome(nameChromosome.get(transcripts[0].getChrom()));
 		

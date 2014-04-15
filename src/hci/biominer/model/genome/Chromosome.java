@@ -9,6 +9,7 @@ public class Chromosome implements Serializable {
 	
 	//fields
 	private String name;
+	/**Includes the name*/
 	private String[] aliases;
 	private int length;
 	private static final long serialVersionUID = 1L;

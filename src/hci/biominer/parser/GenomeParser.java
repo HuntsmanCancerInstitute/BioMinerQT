@@ -100,12 +100,10 @@ public class GenomeParser implements Serializable{
 			if (nameChromosome.containsKey(name)) throw new Exception("Error: duplicate chromosome name encountered in "+line+",aborting.\n");
 			//create Chromosome
 			Chromosome chromosome = new Chromosome(length, name, null);
-			//add it
-			nameChromosome.put(name, chromosome);
 			//fetch aliases
-			String[] aliases = new String[tokens.length - 2];
+			String[] aliases = new String[tokens.length - 1];
 			int j = 0;
-			for (int i=2; i< tokens.length; i++){
+			for (int i=1; i< tokens.length; i++){
 				//look to see if it is already present
 				if (nameChromosome.containsKey(tokens[i])) throw new Exception("Error: duplicate chromosome name encountered in "+line+",aborting.\n");
 				nameChromosome.put(tokens[i], chromosome);

@@ -9,7 +9,7 @@ import java.util.HashMap;
 public class Transcript implements Serializable {
 
 	//fields
-	private String geneName;
+	private Gene gene;
 	private String transcriptName;
 	private String chrom;
 	private char strand;
@@ -27,8 +27,9 @@ public class Transcript implements Serializable {
 	
 	/** Parses a UCSC refflat formated gene line with geneName and transcriptName in first two columns: 
 	 * ENSG00000230759	ENSTENSG00000220751	chr1	+	103957500	103968087	103968087	103968087	2	103957500,103967726	103957557,103968087 */
-	public Transcript (String[] tokens, HashMap<String, Chromosome> nameChromosome) throws Exception{
-		geneName = tokens[0];
+	public Transcript (String[] tokens, HashMap<String, Chromosome> nameChromosome, Gene gene) throws Exception{
+		this.gene = gene;
+		if (gene.getName() == null) gene.setName(tokens[0]);
 		transcriptName = tokens[1];
 		chrom = tokens[2];
 		strand = tokens[3].charAt(0);
@@ -85,6 +86,26 @@ public class Transcript implements Serializable {
 			}
 		}
 	}
+	
+	/**Returns the minimum distance separating these.*/
+	public int distance(Region region){
+		if (intersects(region.getStart(), region.getStop())) return 0;
+		int right = txStart - region.getStop();
+		int left = region.getStart() - txEnd;
+		if (right < 0) return left;
+		if (left < 0) return right;
+		return 0;
+	}
+	
+	/**Returns the distance to the transcription start site.*/
+	public int distanceToTSS(Region region){
+		if (region.intersects(tss, tss+1)) return 0;
+		int right = tss - region.getStop();
+		int left = region.getStart() - tss;
+		if (right < 0) return left;
+		if (left < 0) return right;
+		return 0;
+	}
 
 	public void checkFields(HashMap<String, Chromosome> nameChromosome) throws Exception{
 		//check strand
@@ -115,7 +136,7 @@ public class Transcript implements Serializable {
 
 	public Transcript getPartialClone(){
 		Transcript t = new Transcript();
-		t.setGeneName(geneName);
+		t.setGene(gene);
 		t.setTranscriptName(transcriptName);
 		t.setChrom(chrom);
 		t.setStrand(strand);
@@ -337,12 +358,12 @@ public class Transcript implements Serializable {
 		this.tss = tss;
 	}
 
-	public String getGeneName() {
-		return geneName;
+	public Gene getGene() {
+		return gene;
 	}
 
-	public void setGeneName(String geneName) {
-		this.geneName = geneName;
+	public void setGene(Gene gene) {
+		this.gene = gene;
 	}
 
 	public Region getCodingRegion() {

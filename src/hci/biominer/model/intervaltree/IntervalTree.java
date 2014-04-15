@@ -103,7 +103,8 @@ public class IntervalTree<T> implements java.io.Serializable {
 	 * @param intervals
 	 *            A list that contains the intervals
 	 */
-	public IntervalTree(List<Interval<T>> intervals, boolean searchNeighbors) {
+	public IntervalTree(List<Interval<T>> intervals, boolean searchForNeighbors) {
+		this.searchForNeighbors = searchForNeighbors;
 		/* sets the root and calls the node constructor with list */
 		initializeComparators();
 		this.root = new Node<T>(intervals, this.leftcomp, this.rightcomp);

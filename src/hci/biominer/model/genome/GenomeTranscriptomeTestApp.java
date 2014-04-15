@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+
 import hci.biominer.model.intervaltree.IntervalTree;
 import hci.biominer.parser.GenomeParser;
 import hci.biominer.parser.VCFIntervalTreeParser;
@@ -25,7 +26,12 @@ public class GenomeTranscriptomeTestApp {
 			File descriptorFile = new File (localDir,"/AnnotationFiles/hg19_GRCh37_Genome.txt");
 			GenomeParser gp = new GenomeParser (descriptorFile);
 			Genome genome = gp.getGenome();
-			System.out.println(genome);
+			//System.out.println(genome);
+			
+			//fetch genes intersecting several regions near ENSG00000164197
+			testGeneSearchIntervalTree(genome);
+			
+			System.exit(0);
 
 			//load a vcf file
 			System.out.println("Loading vcf file...");
@@ -104,6 +110,63 @@ public class GenomeTranscriptomeTestApp {
 			System.out.println(e.getMessage());
 			e.printStackTrace();
 		}
+	}
+
+	/**Does lookup for genes that intersect several regions on chr5.*/
+	private static void testGeneSearchIntervalTree(Genome genome) {
+		String[] type = {"internal", "overlapping", "5\'", "3\'"};
+		Region[] regions = new Region[4];
+		regions[0] = new Region(63653148, 63653215);
+		regions[1] = new Region(63461635, 63461703);
+		regions[2] = new Region(63461561, 63461629);
+		regions[3] = new Region(63668763, 63668830);
+		
+		//direct overlap
+		System.out.println("\nSearching for overlaping Genes");
+		HashMap<String, IntervalTree<Gene>> geneITs = genome.getTranscriptomes()[0].getChromGeneIntervalTrees();
+		IntervalTree<Gene> chr5IT = geneITs.get("chr5");
+		//enable searching for neighbors if no intersection found
+		chr5IT.setSearchForNeighbors(true);
+		for (int i=0; i< type.length; i++){
+			System.out.println(type[i]);
+			ArrayList<Gene> genes = chr5IT.search(regions[i].getStart(), regions[i].getStop());
+			for (Gene g : genes) System.out.println("\t"+g.getName()+"\t"+g.getMergedTranscript().distance(regions[i]));
+			Gene left = chr5IT.getLeftNeighbor();
+			if (left != null) System.out.println("\t5' of Region "+left.getName()+"\t"+left.getMergedTranscript().distance(regions[i]));
+			Gene right = chr5IT.getRightNeighbor();
+			if (right != null) System.out.println("\t3' of Region "+right.getName()+"\t"+right.getMergedTranscript().distance(regions[i]));
+		}
+		
+		//now search using IT with 100KB +/- each gene
+		System.out.println("\nSearching Genes +/- 100KB");
+		chr5IT = genome.getTranscriptomes()[0].getChromGene100KIntervalTrees().get("chr5");
+		//enable searching for neighbors if no intersection found
+		chr5IT.setSearchForNeighbors(true);
+		for (int i=0; i< type.length; i++){
+			System.out.println(type[i]);
+			ArrayList<Gene> genes = chr5IT.search(regions[i].getStart(), regions[i].getStop());
+			for (Gene g : genes) System.out.println("\t"+g.getName()+"\t"+g.getMergedTranscript().distance(regions[i]));
+			Gene left = chr5IT.getLeftNeighbor();
+			if (left != null) System.out.println("\t5' of Region "+left.getName()+"\t"+left.getMergedTranscript().distance(regions[i]));
+			Gene right = chr5IT.getRightNeighbor();
+			if (right != null) System.out.println("\t3' of Region "+right.getName()+"\t"+right.getMergedTranscript().distance(regions[i]));
+		}
+		
+		//search for genes with a TSS within 100kb of each region
+		System.out.println("\nSearching Genes with TSS +/- 100KB");
+		IntervalTree<Transcript> chr5ITTrans = genome.getTranscriptomes()[0].getChromTSS100KIntervalTrees().get("chr5");
+		//enable searching for neighbors if no intersection found
+		chr5ITTrans.setSearchForNeighbors(true);
+		for (int i=0; i< type.length; i++){
+			System.out.println(type[i]);
+			ArrayList<Transcript> genes = chr5ITTrans.search(regions[i].getStart(), regions[i].getStop());
+			for (Transcript g : genes) System.out.println("\t"+g.getTranscriptName()+"\t"+g.distanceToTSS(regions[i]));
+			Transcript left = chr5ITTrans.getLeftNeighbor();
+			if (left != null) System.out.println("\t5' of Region "+left.getTranscriptName()+"\t"+left.distanceToTSS(regions[i]));
+			Transcript right = chr5ITTrans.getRightNeighbor();
+			if (right != null) System.out.println("\t3' of Region "+right.getTranscriptName()+"\t"+right.distanceToTSS(regions[i]));
+		}
+		
 	}
 	
 }
