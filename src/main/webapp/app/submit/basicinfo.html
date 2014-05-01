@@ -1,0 +1,62 @@
+ <form class="form-horizontal">
+	<fieldset>
+		<!-- Text input-->
+		<div class="form-group">
+		  <label class="col-md-4 control-label" for="project_name">Name</label>  
+		  <div class="col-md-6">
+		  <input id="project_name" ng-model="project.name" name="project_name" placeholder="name" class="form-control input-md" required="" type="text">
+		    
+		  </div>
+		</div>
+		
+		<!-- Textarea -->
+		<div class="form-group">
+		  <label class="col-md-4 control-label" for="project_description">Description</label>
+		  <div class="col-md-4">                     
+		    <textarea class="form-control" id="project_description" ng-model="project.description" name="project_description"></textarea>
+		  </div>
+		</div>
+		
+		<!-- Select Basic -->
+		<div class="form-group">
+		  <label class="col-md-4 control-label" for="species_build">Species and Genome Build</label>
+		  <div class="col-md-6">
+		    <select id="species_build" ng-model="project.idGenomeBuild" ng-options="gb.idGenomeBuild as gb.name  group by gb.species for gb in genomeBuildList" class="form-control">
+		    </select>
+		  </div>
+		</div>
+		
+		<!-- Select Basic -->
+		<div class="form-group">
+		  <label class="col-md-4 control-label" for="lab">Lab</label>
+		  <div class="col-md-4">
+		    <select ng-model="project.idLab" ng-options="lab.idLab as lab.name for lab in labList" class="form-control">
+		      <option value=""></option>
+		    </select>
+		  </div>
+		</div>
+		
+		<!-- Multiple Radios (inline) -->
+		<div class="form-group">
+		  <label class="col-md-4 control-label" for="visibility">Visibility</label>
+		  <div class="col-md-4"> 
+		    <label class="radio-inline" ng-repeat="visibility in visibilityList">
+		      <input name="visibility"  ng-value="visibility.codeVisibility" ng-model="project.codeVisibility"  type="radio">
+		         {{ visibility.name }}
+		      </input>
+		    </label> 
+		  </div>
+		</div>
+		
+			
+		<!-- Button -->
+		<div class="form-group">
+		  <label class="col-md-4 control-label" for="save_analysis_project_button"></label>
+		  <div class="col-md-4">
+		    <button id="save_analysis_project_button" name="save_analysis_project_button" class="btn btn-primary">Save</button>
+		  </div>
+		</div>
+		
+		
+	</fieldset>
+</form>

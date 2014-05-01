@@ -1,0 +1,31 @@
+	
+	 
+            <div class="modal-header">
+				<h4>Add Analysis Project</h4>
+			</div>
+			<div class="modal-body">
+				<form class="form-horizontal">
+					<fieldset>
+						
+						<div class="form-group">
+  							<label class="col-md-2 control-label" for="">Name</label>  
+  							<div class="col-md-6">
+  								<input id=""  ng-model="project.name" placeholder="name" class="form-control input-md" required="" type="text">
+  							</div>
+						</div>
+
+						<div class="form-group">
+  							<label class="col-md-2 control-label" for="">Description</label>  
+  							<div class="col-md-10">                     
+    							<textarea ng-model="project.description" placeholder="description" class="form-control"></textarea>
+  							</div>
+						</div>
+
+					</fieldset>
+				</form>
+			</div>
+			<div class="modal-footer">
+			            <button class="btn btn-primary" ng-click="ok()">Add</button>
+			            <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+			</div>
+  	  

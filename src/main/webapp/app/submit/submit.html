@@ -1,0 +1,63 @@
+   	<div class="row" style="margin-top: 20px; margin-bottom: 20px; padding: 0px; margin-right: 0px; margin-left: 0px">
+	     <div class="col-lg-3" style="padding-left: 0px">
+		       <h3 style="margin: 0px">Submit Your Data</h3>
+	     </div>
+	     <div class="col-lg-9">
+	  	   <button id="new_analysis_project_button" ng-click="openNewProjectWindow()" name="new_analysis_project_button" class="btn btn-primary btn-sm">New</button>
+	  	   <button class="btn btn-primary btn-sm">Refresh</button>
+	     </div>
+ 	</div>
+	 			
+	<div class="row">
+
+  
+	     <!-- Sidebar -->
+     	<div class="col-lg-2">  
+     	
+            <div class=" panel panel-default">
+				<div class="panel-heading">My Projects</div>
+	            <div class="panel-body">
+					<ul>
+					 <li ng-repeat="project in projects">
+					 	<a ng-class="project.cssClass" href="#/submit" ng-click="edit(project.id)">{{project.name}}</a>
+					 </li>
+					
+					</ul>
+				</div>
+			</div>
+     
+     	</div>
+     
+		<div class="col-lg-10" ng-show="project.name">
+			
+			<div class=" panel panel-default">
+			
+				<div class="panel-heading">Analysis Project: {{project.name}}</div>
+				
+				<div class="panel-body" style="padding-top: 10px;">
+				
+					<tabset>
+					   <tab heading="Analysis Project">
+							<ng:include src="'app/submit/basicinfo.html'"></ng:include>				
+					   </tab>
+
+					   <tab heading="Upload Files">
+							<ng:include src="'app/common/upload.html'"></ng:include>				
+					   </tab>
+
+					   <tab heading="Samples">
+							<ng:include src="'app/submit/samples.html'"></ng:include>				
+					   </tab>
+					   <tab heading="Data Tracks">
+							<ng:include src="'app/submit/datatracks.html'"></ng:include>				
+					   </tab>
+					   <tab heading="Analysis Results">
+							<ng:include src="'app/submit/results.html'"></ng:include>				
+					   </tab>
+					</tabset>
+				</div>
+			</div>
+		
+		</div> 
+		
+	</div> 

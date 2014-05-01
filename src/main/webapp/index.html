@@ -1,0 +1,146 @@
+<!DOCTYPE HTML>
+<!--
+/*
+ * BioMiner - This is the main html.  Note that this is an AngularJS application.
+ *            reside in app directory. The app directory is organized by
+ *            modules.  Each subdirectory under app represents a module.  Within each
+ *            module subdirectory you will find the javascript files for Controllers,
+ *            directives, filters, services, etc. along with the html files.
+ *
+ * Copyright 2014
+ *
+ */
+-->
+<html lang="en">
+
+<head>
+<!-- Force latest IE rendering engine or ChromeFrame if installed -->
+<!--[if IE]>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<![endif]-->
+<meta charset="utf-8">
+
+<title>jQuery File Upload Demo - AngularJS version</title>
+
+<meta name="description" content="File Upload widget with multiple file selection, drag&amp;drop support, progress bars, validation and preview images, audio and video for AngularJS. Supports cross-domain, chunked and resumable file uploads and client-side image resizing. Works with any server-side platform (PHP, Python, Ruby on Rails, Java, Node.js, Go etc.) that supports standard HTML form file uploads.">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+
+
+<link rel="stylesheet" href="http://blueimp.github.io/Gallery/css/blueimp-gallery.min.css">
+<link rel="stylesheet" href="resources/css/jquery.fileupload.css">
+<link rel="stylesheet" href="resources/css/jquery.fileupload-ui.css">
+
+<link rel="stylesheet" href="resources/css/biominer.css">
+
+<noscript><link rel="stylesheet" href="resources/css/jquery.fileupload-noscript.css"></noscript>
+<noscript><link rel="stylesheet" href="resources/css/jquery.fileupload-ui-noscript.css"></noscript>
+
+</head>
+
+<body>
+
+<div class="container" data-ng-app="app">
+	<nav  class="navbar navbar-default navbar-fixed-top" role="navigation">
+	   <div class="container-fluid">
+	      <!-- Brand and toggle get grouped for better mobile display -->
+	      <div class="navbar-header">
+	        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+	          <span class="sr-only">Toggle navigation</span>
+	          <span class="icon-bar"></span>
+	          <span class="icon-bar"></span>
+	          <span class="icon-bar"></span>
+	        </button>
+	        <a class="navbar-brand" href="index.html"><img src="resources/images/biominer_logo.png" style="max-width:100px; margin-top: -5px;"/>BioMiner</a>
+	      </div>
+	
+	      <!-- Collect the nav links, forms, and other content for toggling -->
+	      <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+	          <ul class="nav navbar-nav">
+	          
+		        <li><a href="#/dashboard">Dashboard</a></li>
+	    	    <li><a href="#/query">Query</a></li>
+	    	    <li><a href="#/submit">Submit Your Data</a></li>
+	        	<li><a href="#/upload">Upload</a></li>
+	        	
+	        	
+	        	<li><a href="#/useradmin">Users</a></li>
+	            
+	          </ul>
+	          <div class="nav navbar-nav navbar-right">
+		        <form class="navbar-form navbar-left" role="search">
+		          <div class="form-group">
+		            <input type="text" class="form-control" placeholder="Search">
+		          </div>
+		        </form>
+		     
+		        
+		        <ul class="nav navbar-nav">
+		          <li><a href="#">Help</a></li>
+		          <li><a href="#">About</a></li>
+		        </ul>
+	          </div>
+	       </div> <!-- /.navbar-collapse -->
+	    </div> <!-- /.container-fluid -->
+	</nav>
+	
+	<!-- This is filled in with the appropriate html view based on the AngularJS routing in app.js -->
+  	<div class="main" data-ng-view></div>
+
+</div>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.12/angular.min.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.12/angular-route.min.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.12/angular-resource.min.js"></script>
+
+
+
+<script src="http://cdnjs.cloudflare.com/ajax/libs/flot/0.8.2/jquery.flot.min.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/flot/0.8.2/jquery.flot.pie.min.js"></script>
+
+<!-- Bootstrap JS is not required, but included for the responsive demo navigation -->
+<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+<script src="resources/js/ui-bootstrap-tpls-0.10.0.min.js"></script>
+
+
+<!-- The jQuery UI widget factory, can be omitted if jQuery UI is already included -->
+<script src="resources/js/jquery.ui.widget.js"></script>
+<!-- The Load Image plugin is included for the preview images and image resizing functionality -->
+<script src="http://blueimp.github.io/JavaScript-Load-Image/js/load-image.min.js"></script>
+<!-- The Canvas to Blob plugin is included for image resizing functionality -->
+<script src="http://blueimp.github.io/JavaScript-Canvas-to-Blob/js/canvas-to-blob.min.js"></script>
+<!-- blueimp Gallery script -->
+<script src="http://blueimp.github.io/Gallery/js/jquery.blueimp-gallery.min.js"></script>
+<!-- The Iframe Transport is required for browsers without support for XHR file uploads -->
+<script src="resources/js/jquery.iframe-transport.js"></script>
+<!-- The basic File Upload plugin -->
+<script src="resources/js/jquery.fileupload.js"></script>
+<!-- The File Upload processing plugin -->
+<script src="resources/js/jquery.fileupload-process.js"></script>
+<!-- The File Upload image preview & resize plugin -->
+<script src="resources/js/jquery.fileupload-image.js"></script>
+<!-- The File Upload audio preview plugin -->
+<script src="resources/js/jquery.fileupload-audio.js"></script>
+<!-- The File Upload video preview plugin -->
+<script src="resources/js/jquery.fileupload-video.js"></script>
+<!-- The File Upload validation plugin -->
+<script src="resources/js/jquery.fileupload-validate.js"></script>
+<!-- The File Upload Angular JS module -->
+<script src="resources/js/jquery.fileupload-angular.js"></script>
+
+
+<script src="app/app.js"></script>
+<script src="app/common/filters.js"></script>
+<script src="app/common/directives.js"></script>
+<script src="app/common/services.js"></script>
+<script src="app/submit/SubmitController.js"></script>
+<script src="app/submit/ProjectWindowController.js"></script>
+<script src="app/query/QueryController.js"></script>
+<script src="app/dashboard/DashboardController.js"></script>
+<script src="app/useradmin/UserAdminController.js"></script>
+
+</body> 
+</html>
