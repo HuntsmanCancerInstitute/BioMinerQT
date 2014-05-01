@@ -1,4 +1,4 @@
-package hci.biominer.model.nix;
+package hci.biominer.util;
 
 import hci.biominer.model.genome.Gene;
 import hci.biominer.model.genome.Genome;

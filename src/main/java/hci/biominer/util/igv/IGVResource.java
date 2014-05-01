@@ -1,4 +1,4 @@
-package hci.biominer.model.igv;
+package hci.biominer.util.igv;
 
 import java.net.URL;
 
