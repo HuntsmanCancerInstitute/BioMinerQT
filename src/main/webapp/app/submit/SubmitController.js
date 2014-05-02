@@ -157,7 +157,7 @@ function($scope, $http, $modal) {
 
 		    var modalInstance = $modal.open({
 		      templateUrl: 'app/submit/newProjectWindow.html',
-		      controller: ProjectWindowController,
+		      controller: 'ProjectWindowController',
 		      resolve: {
 		        projectName: function () {
 		          return $scope.projectName;
@@ -411,6 +411,8 @@ function($scope, $http, $modal) {
 
 
 }]);
+
+
 
 
 
