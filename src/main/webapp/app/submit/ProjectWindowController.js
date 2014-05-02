@@ -1,6 +1,6 @@
 'use strict';
 
-var ProjectWindowController = angular.module("submit").controller("ProjectWindowController", [
+angular.module("submit").controller("ProjectWindowController", [
  '$scope', '$modalInstance', 'projectName', 'projectDescription',                                                     
 function ($scope, $modalInstance, projectName, projectDescription) {
 
