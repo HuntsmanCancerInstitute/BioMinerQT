@@ -4,7 +4,7 @@
  * SubmitController
  * @constructor
  */
-var submit    = angular.module('submit',    ['filters', 'services', 'directives', 'ui.bootstrap']);
+var submit    = angular.module('submit',    ['ui.bootstrap', 'blueimp.fileupload','filters', 'services', 'directives']);
 
 angular.module("submit").controller("SubmitController", [
 '$scope', '$http', '$modal',
@@ -14,7 +14,10 @@ function($scope, $http, $modal) {
     $scope.nextIdProject = 100;
     $scope.projectName = "";
     $scope.projectDescription = "";
+    
 
+	
+    $scope.uploadedFiles = [];
 
     $scope.sample = {};
     $scope.nextIdSample = 100;
@@ -408,6 +411,9 @@ function($scope, $http, $modal) {
 		
 		$scope.results.push(newResult);
 	};
+	
+	
+	
 
 
 }]);

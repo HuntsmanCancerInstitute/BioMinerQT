@@ -27,6 +27,9 @@ public class FileController {
 	
 	FileMap fileMap = new FileMap();
 	LinkedList<FileMeta> files = new LinkedList<FileMeta>();
+	
+	private final static String FILES_PATH = "/temp/";
+	
 	FileMeta fileMeta = null;
 	/***************************************************
 	 * URL: /rest/controller/upload  
@@ -45,6 +48,7 @@ public class FileController {
 		 Iterator<String> itr =  request.getFileNames();
 		 MultipartFile mpf = null;
 		 int index = 0;
+		 String idAnalysisProject = request.getParameter("idAnalysisProject");
 
 		 //2. get each file
 		 while(itr.hasNext()){
@@ -53,28 +57,26 @@ public class FileController {
 			 mpf = request.getFile(itr.next()); 
 			 System.out.println(mpf.getOriginalFilename() +" uploaded! "+files.size());
 
-			 //2.2 if files > 10 remove the first from the list
-			 if(files.size() >= 10)
-				 files.pop();
 			 
 			 //2.3 create new fileMeta
 			 fileMeta = new FileMeta();
 			 fileMeta.setName(mpf.getOriginalFilename());
-			 fileMeta.setSize(mpf.getSize()/1024+" Kb");
-			 fileMeta.setUrl(      "http://localhost:8080/biominer/submit/upload/get/" + index);
-			 fileMeta.setDeleteUrl("http://localhost:8080/biominer/submit/upload/delete/" + index);
+			 fileMeta.setSize(new Long(mpf.getSize()).toString());
+			 fileMeta.setUrl(      "submit/upload/get/" + index);
+			 fileMeta.setDeleteUrl("submit/upload/delete/" + index);
 			
 			 
 			 try {
 				fileMeta.setBytes(mpf.getBytes());
 				
 				// copy file to local disk (make sure the path "e.g. D:/temp/files" exists)
-				FileCopyUtils.copy(mpf.getBytes(), new FileOutputStream("/temp/"+mpf.getOriginalFilename()));
+				FileCopyUtils.copy(mpf.getBytes(), new FileOutputStream(FILES_PATH+mpf.getOriginalFilename()));
 				
-			} catch (IOException e) {
+			 } catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			}
+			 }
+			 
 			 //2.4 add to files
 			 files.add(fileMeta);
 			 index++;
@@ -111,7 +113,7 @@ public class FileController {
 	 public void deleteFile(HttpServletResponse response,@PathVariable String value){
 		 FileMeta file = files.get(Integer.parseInt(value));
 		 try {		
-			 	File f = new File(file.getName());
+			 	File f = new File(FILES_PATH+file.getName());
 			 	boolean success = f.delete();
 			 	if (!success) {
 			 		System.out.println("File " + file.getName() + " not deleted");
@@ -137,9 +139,9 @@ public class FileController {
 		        
 				 fileMeta = new FileMeta();
 				 fileMeta.setName(file.getName());
-				 fileMeta.setSize(file.length()/1024+" Kb");
-				 fileMeta.setUrl(      "http://localhost:8080/biominer/submit/upload/get/" + index);
-				 fileMeta.setDeleteUrl("http://localhost:8080/biominer/submit/upload/delete/" + index);
+				 fileMeta.setSize(new Long(file.length()).toString());
+				 fileMeta.setUrl(      "submit/upload/get/" + index);
+				 fileMeta.setDeleteUrl("submit/upload/delete/" + index);
 
 				 files.add(fileMeta);
 				 index++;

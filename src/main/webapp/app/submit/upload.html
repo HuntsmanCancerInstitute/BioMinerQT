@@ -1,17 +1,19 @@
-<div class="container">
-    <br>
-    <blockquote>Upload your analysis files and data tracks.</blockquote>
-    <form id="fileupload" action="//jquery-file-upload.appspot.com/" method="POST" enctype="multipart/form-data" data-ng-controller="DemoFileUploadController"  data-file-upload="options" data-ng-class="{'fileupload-processing': processing() || loadingFiles}">
-        <!-- Redirect browsers with JavaScript disabled to the origin page -->
-        <noscript><input type="hidden" name="redirect" value="http://blueimp.github.io/jQuery-File-Upload/"></noscript>
+<div class="container-fluid" style="padding-top: 10px;">
+    <form id="fileupload" action="submit/upload" 
+          method="POST" 
+          enctype="multipart/form-data" 
+          data-ng-controller="DemoFileUploadController"  
+          data-file-upload="options" 
+          data-ng-class="{'fileupload-processing': processing() || loadingFiles}">
+          <input type="hidden" name="idAnalysisProject" value="{{idAnalysisProject}}">
         <!-- The fileupload-buttonbar contains buttons to add/delete files and start/cancel the upload -->
         <div class="row fileupload-buttonbar">
             <div class="col-lg-7">
                 <!-- The fileinput-button span is used to style the file input field as button -->
-                <span class="btn btn-success fileinput-button" >
+                <span class="btn btn-success fileinput-button"  ng-class="{disabled: disabled}">
                     <i class="glyphicon glyphicon-plus"></i>
                     <span>Add files...</span>
-                    <input type="file" name="files[]" multiple >
+                    <input type="file" name="files[]" multiple  ng-disabled="disabled">
                 </span>
                 <button type="button" class="btn btn-primary start" data-ng-click="submit()">
                     <i class="glyphicon glyphicon-upload"></i>
@@ -64,7 +66,7 @@
                         <i class="glyphicon glyphicon-ban-circle"></i>
                         <span>Cancel</span>
                     </button>
-                    <button data-ng-controller="FileDestroyController" type="button" class="btn btn-danger destroy" data-ng-click="file.$destroy()" data-ng-hide="!file.$destroy">
+                    <button data-ng-controller="FileDestroyController" type="button" class="btn btn-sm btn-danger destroy" data-ng-click="file.$destroy()" data-ng-hide="!file.$destroy">
                         <i class="glyphicon glyphicon-trash"></i>
                         <span>Delete</span>
                     </button>

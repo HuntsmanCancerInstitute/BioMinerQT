@@ -13,7 +13,7 @@
 		</div> 
 		
 		<!-- Description -->
-		<div class="col-lg-2">
+		<div class="col-lg-3">
 			<div class="form-group">
 				<label class="control-label" for="analysis_description">Description</label>
 		  		<textarea class="form-control" placeholder="method / description" ng-model="result.description" id="analysis_description"></textarea>
@@ -22,7 +22,7 @@
 		
 	
 		<!-- Date -->
-		<div class="col-lg-2">
+		<div class="col-lg-3">
 			<div class="form-group">
 				<label class="control-label" for="">Date</label>
 				<p class="input-group">
@@ -36,7 +36,7 @@
 		
 
 		<!-- Analysis Type -->
-		<div class="col-lg-2">
+		<div class="col-lg-3">
 			<div class="form-group">
 				<label class="control-label" for="analysis_type">Analysis type</label>  
 				<select id="analysis_type" ng-model="result.idAnalysisType" ng-options="at.idAnalysisType as at.name for at in analysisTypeList" placeholder="Analysis type" class="form-control">
@@ -45,8 +45,27 @@
 			</div>
 		</div> 
 
+
+		
+	</div> <!--  end row -->
+	
+	
+	<div class="row">
+		<!--Files -->
+		<div class="col-lg-5">
+			<div class="form-group">
+			  <label class="control-label" for="applicable_files">Files</label>
+			  <div class="radio" ng-repeat="file in uploadedFiles">
+			    <label>
+			      <input ng-model="file.isChecked" value="{{file.idDataTrack}}" type="radio">
+			      {{file.name}}
+			    </label>
+			  </div>
+			</div>	
+		</div> 
+
 		<!-- Samples -->
-		<div class="col-lg-1">
+		<div class="col-lg-3">
 			<div class="form-group">
 			  <label class="control-label" for="applicable_samples">Samples</label>
 			  <div class="checkbox" ng-repeat="sample in samples">
@@ -59,7 +78,7 @@
 		</div> 
 
 		<!-- Data Tracks -->
-		<div class="col-lg-2">
+		<div class="col-lg-3">
 			<div class="form-group">
 			  <label class="control-label" for="applicable_datatracks">Data tracks</label>
 			  <div class="checkbox" ng-repeat="datatrack in datatracks">
@@ -70,20 +89,22 @@
 			  </div>
 			</div>	
 		</div> 
-
+		
 
 		<!-- Add/Save buttons  -->
 		<div class="col-lg-1">
 			<div class="form-group">
-			  	<label class="control-label" for=""></label>  
+			  	<label class="control-label" for="">Buttons</label>  
 				<div class="animate-switch-container" ng-switch on="resultEditMode">
-				<button id="add_result_button"  class="animate-switch btn btn-primary" ng-switch-when="false" ng-click="addResult(result)">Add</button>
-				<button id="save_result_button" class="animate-switch btn btn-primary" ng-switch-when="true" ng-click="saveResult(result)">Save</button>
+					<button id="add_result_button"  class="animate-switch btn btn-primary" ng-switch-when="false" ng-click="addResult(result)">Add</button>
+					<button id="save_result_button" class="animate-switch btn btn-primary" ng-switch-when="true" ng-click="saveResult(result)">Save</button>
+				</div>
 			</div>
 		</div> <!-- end col -->
 		
 
-		
+
+
 		</fieldset>
 		</form>
 	</div> <!--  end row -->
@@ -99,25 +120,25 @@
 			            <th >Description</th>
 			            <th >Date</th>
 			            <th >Analysis Type</th>
+			            <th >Files</th>
 			            <th >Samples</th>
 			            <th >Data Tracks</th>
 			            <th ></th>
 			        </tr>
 			    </thead>
 			    <tbody>
-			        <tr ng-repeat="result in results">
+			        <tr ng-repeat="result in results" ng-click="editResult(result)">
 			            <td style="width: 10%;">{{result.name}}</td>
 			            <td style="width: 15%;">{{result.description}}</td>
 			            <td style="width: 10%;">{{result.date | date:'MM/dd/yyyy'}}</td>
 			            <td style="width: 10%;">{{result.idAnalysisType | lookupAnalysisType:analysisTypeList}}</td>
-			            <td style="width: 20%;"><div ng-repeat="sample in result.samples">{{sample.name}}<br></div></td>
-			            <td style="width: 20%;"><div ng-repeat="dt in result.datatracks">{{dt.name}}<br></div></td>
+			            <td style="width: 20%;"><div ng-repeat="file in result.files"{{file.name}}<br></div></td>
+			            <td style="width: 10%;"><div ng-repeat="sample in result.samples">{{sample.name}}<br></div></td>
+			            <td style="width: 10%;"><div ng-repeat="dt in result.datatracks">{{dt.name}}<br></div></td>
 			            <td style="width: 15%;">
-			                <button class="btn btn-sm btn-primary" ng-click="editResult(result)" data-toggle="tooltip" data-placement="top" title="edit">
-								<span class="glyphicon glyphicon-pencil"></span>
 							</button>
 			                <button class="btn btn-sm btn-success" ng-click="duplicateResult(result)" data-toggle="tooltip" data-placement="top" title="duplicate">
-				                <span class="glyphicon glyphicon-tags"></span>
+				                Copy
 			                </button>
 			                <button class="btn btn-sm btn-danger" ng-click="removeResult(result.idResult)" data-toggle="tooltip" data-placement="top" title="remove">
 			                 	<span class="glyphicon glyphicon-trash"></span>

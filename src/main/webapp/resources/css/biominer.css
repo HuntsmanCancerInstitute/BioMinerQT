@@ -1,6 +1,11 @@
 body { padding-top: 30px; }
 
 
+.left {
+	float :left;
+}
+
+
 .form-horizontal {
 	padding: 20px;
 }
