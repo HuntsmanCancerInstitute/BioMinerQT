@@ -94,4 +94,35 @@ var filters = angular.module('filters', [])
 			return display;
 		};
 	}
+])
+
+.filter('startFrom', [
+   function() {
+	   return function(input, start) {
+		   start = +start; //parse to int
+		   return input.slice(start);
+	   };
+   }
+])
+
+.filter('ceil', [
+  function() {
+	  return function(number) {
+		  return Math.ceil(number);
+	  };
+  }                           
+])
+
+.filter('displayPhone', [
+    function() {
+    	return function(number) {
+    		var numberString = number.toString();
+    		var section1 = numberString.slice(0,3);
+    		var section2 = numberString.slice(3,6);
+    		var section3 = numberString.slice(6);
+    		
+    		return "( " + section1 + " ) " + section2 + "-" + section3;
+    	};
+    }
 ]);
+

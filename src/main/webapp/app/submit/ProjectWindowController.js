@@ -9,6 +9,7 @@ function ($scope, $modalInstance, projectName, projectDescription) {
 	$scope.project.description = projectDescription;
 	
 	
+	
 	$scope.ok = function () {
 	 $modalInstance.close($scope.project);
 	};

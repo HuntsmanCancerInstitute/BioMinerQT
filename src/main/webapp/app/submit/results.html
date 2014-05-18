@@ -132,7 +132,7 @@
 			            <td style="width: 15%;">{{result.description}}</td>
 			            <td style="width: 10%;">{{result.date | date:'MM/dd/yyyy'}}</td>
 			            <td style="width: 10%;">{{result.idAnalysisType | lookupAnalysisType:analysisTypeList}}</td>
-			            <td style="width: 20%;"><div ng-repeat="file in result.files"{{file.name}}<br></div></td>
+			            <td style="width: 20%;"><div ng-repeat="file in result.files">{{file.name}}<br></div></td>
 			            <td style="width: 10%;"><div ng-repeat="sample in result.samples">{{sample.name}}<br></div></td>
 			            <td style="width: 10%;"><div ng-repeat="dt in result.datatracks">{{dt.name}}<br></div></td>
 			            <td style="width: 15%;">

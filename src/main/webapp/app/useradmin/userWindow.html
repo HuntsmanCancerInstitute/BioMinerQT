@@ -1,0 +1,56 @@
+<div class="modal-header">
+	<h4>{{title}} User</h4>
+</div>
+<div class="modal-body">
+	<form class="form-horizontal" name="newUserForm">
+		<fieldset>
+			
+			<div class="form-group">
+				<label class="col-md-4 control-label" for="firstEntry">First Name</label>  
+				<input class="col-md-6" id="firstEntry" ng-model="user.first"  class="form-control input-md" required type="text">
+			</div>
+
+			<div class="form-group">
+				<label class="col-md-4 control-label" for="lastEntry">Last Name</label>                   
+				<input class="col-md-6" id="lastEntry" ng-model="user.last" class="form-control input-md" required type="text">
+			</div>
+			
+			<div class="form-group">
+					<label class="col-md-4 control-label" for=""labEntry">Lab Name</label>  
+				    <select class="col-md-6" ng-model="user.lab"  ng-options="lab.last for lab in availLabs" required ></select>
+			</div>
+			
+			<div class="form-group">
+				<label class="col-md-4 control-label" for="userEntry">Username</label>                   
+				<input class="col-md-6" id="userEntry" name="userInput" ng-model="user.username"  class="form-control input-md" required type="text"  ui-validate="{used: 'checkUsername($value)'}">
+				<span ng-show="newUserForm.userInput.$error.used" class="label label-danger">username already in use</span>
+			</div>
+			
+			<div class="form-group">
+				<label class="col-md-4 control-label" for="passEntry">Password</label>                   
+				<input class="col-md-6" type="password" id="passEntry" ng-model="user.password" class="form-control input-md" required>
+			</div>
+			
+			<div class = "form-group">
+				<label class="col-md-4 control-label" for="phoneEntry">Phone</label>                  
+				<input class="col-md-6" id="phoneEntry" ng-model="user.phone" ui-mask="(999)999-9999" class="form-control input-md" required>
+			</div>
+			
+			<div class = "form-group">
+				<label class="col-md-4 control-label" for="emailEntry">Email</label>                  
+				<input class="col-md-6" id="emailEntry" ng-model="user.email" type="email" class="form-control input-md" required>
+			</div>
+			
+			<div class = "form-group">
+				<label class="col-md-4 control-label" for="adminEntry">Admin</label>                  
+				<input class="col-md-1" id="adminEntry" ng-model="user.admin" type="checkbox" class="form-control input-md" ng-click="report()">
+			</div>
+			
+			
+		</fieldset>
+	</form>
+</div>
+<div class="modal-footer">
+            <button class="btn btn-primary" ng-click="ok()" ng-disabled="newUserForm.$invalid">{{bFace}}</button>
+            <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+</div>
