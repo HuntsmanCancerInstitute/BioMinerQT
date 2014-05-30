@@ -4,7 +4,7 @@
  * UserAdminController
  * @constructor
  */
-var useradmin = angular.module('useradmin', ['ui.mask','ui.validate','confirmation','filters']);
+var useradmin = angular.module('useradmin', ['ui.mask','ui.validate','confirmation','filters','directives']);
 
 angular.module("useradmin").controller("UserAdminController", ['$scope','$http','$modal',
                                                       
@@ -57,12 +57,14 @@ function($scope, $http, $modal) {
 	//tabset variables
 	$scope.userTabOpen = true;
 	$scope.labTabOpen = false;
-	
-	
+
 	//Model data
 	$scope.labs = [];
 	$scope.selectedUsers = [];
 	$scope.selectedLab;
+	
+	//Select all users
+	$scope.selectAllUsers = false;
 	
 	
 	/**
@@ -161,11 +163,17 @@ function($scope, $http, $modal) {
     	});
     	
     	modalInstance.result.then(function (user) {
+    		//Create a list of lab ids
+	    	var ids = [];
+	    	for (var i=0; i<user.lab.length;i++) {
+	    		ids.push(user.lab[i].id);
+	    	}
+	    	
 	    	$http({
     	    	method: 'POST',
     	    	url: 'user/modifyuser',
     	    	params: {first:user.first,last:user.last,username:user.username,password:user.password,email:user.email,
-    	    		phone:user.phone,admin:user.admin,lab:user.lab.id,userid:user.idx}
+    	    		phone:user.phone,admin:user.admin,lab:ids,userid:user.idx}
     	    }).success(function(data,status) {
     	    	$scope.loadSelected();
     	    	$scope.loadUsers();
@@ -218,7 +226,7 @@ function($scope, $http, $modal) {
 		        },
 		        userData: function () {
 		        	var emptyUser = {first: '', last: '', username: '', password: '',
-			    			phone: '', email: '', admin: false, lab: ''};
+			    			phone: '', email: '', admin: false, lab: []};
     				return emptyUser;
     			},
     			title: function() {
@@ -231,11 +239,17 @@ function($scope, $http, $modal) {
 	    });
 
 	    modalInstance.result.then(function (user) {
+	    	//Create a list of lab ids
+	    	var ids = [];
+	    	for (var i=0; i<user.lab.length;i++) {
+	    		ids.push(user.lab[i].id);
+	    	}
+	    	
 	    	$http({
     	    	method: 'POST',
     	    	url: 'user/adduser',
     	    	params: {first:user.first,last:user.last,username:user.username,password:user.password,email:user.email,
-    	    		phone:user.phone,admin:user.admin,lab:user.lab.id}
+    	    		phone:user.phone,admin:user.admin,lab:ids}
     	    }).success(function(data,status) {
     	    	$scope.loadSelected();
     	    	$scope.loadLabs();
@@ -281,12 +295,14 @@ function($scope, $http, $modal) {
     /***
      * Select or deselect all users
      */
-    $scope.selectAllUsers = function() {
+    $scope.selectAllUsersChanged = function() {
+    	$scope.selectAllUsers = !$scope.selectAllUsers;
+
     	var $checked = false;
-    	if ($scope.selectAllUsersCheckbox) {
-    		$checked = false;
-    	} else {
+    	if ($scope.selectAllUsers) {
     		$checked = true;
+    	} else {
+    		$checked = false;
     	}
     	
     	for (var i = 0; i < $scope.selectedUsers.length; i++) {
@@ -346,44 +362,66 @@ function($scope, $http, $modal) {
      * This method launches a confirmation window.  If a result is returned, the delete user method is selected.
      */
     $scope.confirmUserDelete = function() {
-    	var modalInstance = $modal.open({
-    		templateUrl: 'app/common/confirmation.html',
-    		controller: 'ConfirmationController',
-    		resolve: {
-    			data: function() {
-    				return {
-    					title: 'Delete Users',
-    					message: "Click OK to delete selected users, otherwise click cancel."
-    				};
-    			},	
+    	//load lab ids
+    	var selectedIds = [];
+    	for (var i=0; $scope.selectedUsers.length;i++) {
+    		if ($scope.selectedUsers[i].selected) {
+    			selectedIds.push(i);
     		}
-    	});
+    	}
     	
-    	modalInstance.result.then(function(result) {
-    		$scope.deleteSelectedUsers();
-    	});
+    	if (selectedIds.length > 0) {
+    		var modalInstance = $modal.open({
+        		templateUrl: 'app/common/confirmation.html',
+        		controller: 'ConfirmationController',
+        		resolve: {
+        			data: function() {
+        				return {
+        					title: 'Delete Users',
+        					message: "Click OK to delete selected users, otherwise click cancel."
+        				};
+        			},	
+        		}
+        	});
+        	
+        	modalInstance.result.then(function(result) {
+        		$scope.deleteSelectedUsers();
+        	});
+    	}
+    	
     };
     
     /***
      * This method launches a confirmation window.  If a result is returned, the delete lab method is selected.
      */
     $scope.confirmLabDelete = function() {
-    	var modalInstance = $modal.open({
-    		templateUrl: 'app/common/confirmation.html',
-    		controller: 'ConfirmationController',
-    		resolve: {
-    			data: function() {
-    				return {
-    					title: 'Delete Labs',
-    					message: "Click OK to delete selected labs, otherwise click cancel."
-    				};
-    			},	
+    	//load lab ids
+    	var selectedIds = [];
+    	for (var i=0; $scope.labs.length;i++) {
+    		if ($scope.labs[i].selected) {
+    			selectedIds.push(i);
     		}
-    	});
+    	}
     	
-    	modalInstance.result.then(function(result) {
-    		$scope.deleteSelectedLabs();
-    	});
+    	if (selectedIds > 0) {
+    		var modalInstance = $modal.open({
+        		templateUrl: 'app/common/confirmation.html',
+        		controller: 'ConfirmationController',
+        		resolve: {
+        			data: function() {
+        				return {
+        					title: 'Delete Labs',
+        					message: "Click OK to delete selected labs, otherwise click cancel."
+        				};
+        			},	
+        		}
+        	});
+        	
+        	modalInstance.result.then(function(result) {
+        		$scope.deleteSelectedLabs();
+        	});
+    	}
+    	
     };
     
     //Load labs and users.

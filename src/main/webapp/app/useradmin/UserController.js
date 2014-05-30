@@ -9,7 +9,7 @@ function ($scope, $http, $modalInstance, labList, userData, title,bFace) {
 	$scope.availLabs = labList;
 	$scope.user = angular.copy(userData);
 	$scope.usedNames = [];
-
+	
 	$http({
 		method: 'POST',
 		url: 'user/usernames'
@@ -17,31 +17,35 @@ function ($scope, $http, $modalInstance, labList, userData, title,bFace) {
 		$scope.usedNames = data;
 	});
 	
-	
 	$scope.ok = function () {
-	 $modalInstance.close($scope.user);
+	  $modalInstance.close($scope.user);
 	};
 	
 	$scope.cancel = function () {
-	 $modalInstance.dismiss('cancel');
+	  $modalInstance.dismiss('cancel');
 	};
 	
 	
 	$scope.checkUsername = function(value) {
-		console.log("start");
-		console.log(value);
-		console.log($scope.usedNames.indexOf(value));
-		console.log($scope.usedNames.indexOf($scope.user.username) === -1);
 		return $scope.usedNames.indexOf(value) === -1;
 	};
 	
 	$scope.setLab = function() {
-		if (!angular.isUndefined($scope.user.lab.id) || $scope.user.lab.id != null) {
+		if (!angular.isUndefined($scope.user.lab) || $scope.user.lab != null) {
+			//Create an array of ids.
+			var ids = [];
+			for (var i = 0; i < $scope.user.lab.length; i++) {
+				ids.push($scope.user.lab[i].id);
+			}
+			
+			var labList = [];
 			for (var i = 0; i < $scope.availLabs.length; i++) {
-				if ($scope.user.lab.id == $scope.availLabs[i].id) {
-					$scope.user.lab = $scope.availLabs[i];
+				if (ids.indexOf($scope.availLabs[i].id) != -1) {
+					labList.push($scope.availLabs[i]);
 				}
 			}
+			
+			$scope.user.lab = labList;
 		}
 	};
 	
@@ -50,8 +54,5 @@ function ($scope, $http, $modalInstance, labList, userData, title,bFace) {
 	};
 	
 	$scope.setLab();
-	
-	
-	
 	
 }]);

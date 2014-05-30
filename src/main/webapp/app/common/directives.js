@@ -25,4 +25,22 @@ var directives = angular.module('directives', [])
 	        }
 	    };
 	}
+])
+.directive('chosen',[ 
+    function() {
+		var linker = function(scope,element,attrs) {
+			scope.$watch(attrs.chosen,function(){
+				element.chosen();
+				element.trigger('chosen:updated');
+			});
+			
+			
+		};
+		
+		return {
+			restrict: 'A',
+			link: linker
+		};
+    }
+	
 ]);

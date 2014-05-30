@@ -19,6 +19,7 @@ public class UserDAO {
 	private SessionFactory sessionFactory;
 	
 	private Session getCurrentSession() {
+		
 		return sessionFactory.openSession();
 	}
 	
@@ -78,7 +79,7 @@ public class UserDAO {
 	@SuppressWarnings("unchecked")
 	public List<User> getUserByLab(Long id) {
 		Session session =  this.getCurrentSession();
-		Query query = session.createQuery("from User where labIdx = :labIdx");
+		Query query = session.createQuery("from User u where :labIdx in (select l.idx from u.labs l)");
 		query.setParameter("labIdx", id);
 		List<User> users = query.list();
 		session.close();

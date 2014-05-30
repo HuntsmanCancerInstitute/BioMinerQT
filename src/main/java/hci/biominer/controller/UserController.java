@@ -10,9 +10,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.ArrayList;
 
 import java.security.SecureRandom;
-import java.security.spec.InvalidKeySpecException;
 
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
@@ -26,7 +26,6 @@ public class UserController {
 	private static final int KEY_LENGTH = 192;
 	
 	
-
 	@Autowired
     private UserService userService;
 	
@@ -49,12 +48,16 @@ public class UserController {
     @ResponseBody
     public void addUser(@RequestParam(value="first") String firstName, @RequestParam(value="last") String lastName, @RequestParam(value="username") String username,
     		@RequestParam(value="password") String password, @RequestParam(value="email") String email, @RequestParam(value="phone") Long phone, 
-    		@RequestParam(value="admin") boolean admin, @RequestParam(value="lab") Long labId) {
+    		@RequestParam(value="admin") boolean admin, @RequestParam(value="lab") List<Long> labIds) {
  
-    	Lab userLab = labService.getLab(labId);
+    	List<Lab> labList = new ArrayList<Lab>();
+    	for (Long lidx: labIds) {
+    		labList.add(labService.getLab(lidx));
+    	}
+    	
     	String salt = this.createSalt();
     	String npass = this.createPassword(password, salt);
-    	User newUser = new User(firstName,lastName,username,npass,salt,email,phone,admin,userLab);
+    	User newUser = new User(firstName,lastName,username,npass,salt,email,phone,admin,labList);
     	userService.addUser(newUser);
     }
     
@@ -74,10 +77,13 @@ public class UserController {
     @ResponseBody
     public void modifyUser(@RequestParam(value="first") String firstName, @RequestParam(value="last") String lastName, @RequestParam(value="username") String username,
     		@RequestParam(value="password") String password, @RequestParam(value="email") String email, @RequestParam(value="phone") Long phone, 
-    		@RequestParam(value="admin") boolean admin, @RequestParam(value="lab") Long labId, @RequestParam(value="userid") Long userId) {
+    		@RequestParam(value="admin") boolean admin, @RequestParam(value="lab") List<Long> labIds, @RequestParam(value="userid") Long userId) {
  
     	//Get lab
-    	Lab userLab = labService.getLab(labId);
+    	List<Lab> labList = new ArrayList<Lab>();
+    	for (Long lidx: labIds) {
+    		labList.add(labService.getLab(lidx));
+    	}
     	
     	//Create new password if updated
     	String salt = null;
@@ -88,7 +94,7 @@ public class UserController {
     	}
     	
     	//Create a new user
-    	User user = new User(firstName,lastName,username,npass,salt,email,phone,admin,userLab);
+    	User user = new User(firstName,lastName,username,npass,salt,email,phone,admin,labList);
     	
     	//Update user
     	userService.updateUser(userId,user);

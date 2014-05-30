@@ -6,8 +6,14 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Column;
-import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.ManyToMany;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.CascadeType;
+import javax.persistence.FetchType;
+
+import java.util.List;
 
 import org.codehaus.jackson.annotate.JsonIgnore;
 
@@ -20,9 +26,11 @@ public class User {
 	@Column(name="idx")
 	private Long idx;
 	
-	@ManyToOne
-	@JoinColumn(name="labIdx")
-	private Lab lab = null;
+	@ManyToMany(fetch=FetchType.EAGER)
+	@JoinTable(name="user_lab",
+	joinColumns={@JoinColumn(name="uidx",referencedColumnName="idx")},
+	inverseJoinColumns={@JoinColumn(name="lidx",referencedColumnName="idx")})
+	private List<Lab> labs = null;
 	
 	@Column(name = "first")
 	private String first;
@@ -52,7 +60,7 @@ public class User {
 		
 	}
 	
-	public User(String firstName, String lastName, String userName, String password, String salt, String email, Long phone, boolean admin, Lab lab) {
+	public User(String firstName, String lastName, String userName, String password, String salt, String email, Long phone, boolean admin, List<Lab> labs) {
 		this.first = firstName;
 		this.last = lastName;
 		this.username = userName;
@@ -60,7 +68,7 @@ public class User {
 		this.email = email;
 		this.phone = phone;
 		this.admin = admin;
-		this.lab = lab;
+		this.labs = labs;
 		this.salt = salt;
 	}
 
@@ -72,12 +80,12 @@ public class User {
 		this.idx = idx;
 	}
 
-	public Lab getLab() {
-		return lab;
+	public List<Lab> getLab() {
+		return labs;
 	}
 
-	public void setLab(Lab lab) {
-		this.lab = lab;
+	public void setLab(List<Lab> lab) {
+		this.labs = lab;
 	}
 
 	public String getFirst() {
