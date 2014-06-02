@@ -1,55 +1,55 @@
-   	<div class="row" style="margin-top: 20px; margin-bottom: 20px; padding: 0px; margin-right: 0px; margin-left: 0px">
-	     <div class="col-lg-3" style="padding-left: 0px">
-		       <h3 style="margin: 0px">Submit Your Data</h3>
-	     </div>
-	     <div class="col-lg-9">
-	  	   <button id="new_analysis_project_button" ng-click="openNewProjectWindow()" name="new_analysis_project_button" class="btn btn-primary btn-sm">New</button>
-	  	   <button class="btn btn-primary btn-sm">Refresh</button>
-	     </div>
+
+   	<div class="row toolbar" >
+  	       <h3>Submit Your Data</h3>
+	       <a ng-click="openNewProjectWindow()"><span class="glyphicon glyphicon-plus"></span> New Submission</a>
+		   <a><span class="glyphicon glyphicon-refresh"></span> Refresh</a>
+		   <input type="text"/>
+		   <div class="form-group right">
+		    	<select id="species_build" ng-model="project.idGenomeBuild" ng-options="gb.idGenomeBuild as gb.name  group by gb.species for gb in genomeBuildList" class="form-control">
+		     	</select>
+		   </div>
+	</div>
+		
  	</div>
 	 			
 	<div class="row">
 	     <!-- Sidebar -->
      	<div class="col-lg-2">  
      	
-            <div class=" panel panel-default">
-				<div class="panel-heading">My Projects</div>
-	            <div class="panel-body">
+            <div class="panel panel-default">
+				<div class="panel-heading">Submissions</div>
+	  	   
+				
+           	 	<div class="panel-body">
 					<ul>
-					 <li ng-repeat="project in projects">
-					 	<a ng-class="project.cssClass" href="#/submit" ng-click="edit(project.id)">{{project.name}}</a>
-					 </li>
-					
+				 		<li ng-repeat="project in projects">
+				 			<a ng-class="project.cssClass" href="#/submit" ng-click="edit(project.id)">{{project.name}}</a>
+						 </li>
+				
 					</ul>
 				</div>
 			</div>
-     
+ 
      	</div>
      
 		<div class="col-lg-10" ng-show="project.name">
 			
 			<div class=" panel panel-default">
 			
-				<div class="panel-heading">Analysis Project: {{project.name}}</div>
+				<div class="panel-heading">{{project.name}}</div>
 				
 				<div class="panel-body" style="padding-top: 10px;">
 				
 					<tabset>
-					   <tab heading="Analysis Project">
+					   <tab heading="1. Describe Project">
 							<ng:include src="'app/submit/basicinfo.html'"></ng:include>				
 					   </tab>
 
-					   <tab heading="Upload Files">
-							<ng:include src="'app/submit/upload.html'"></ng:include>				
+					   <tab heading="2. Import Data">
+							<ng:include src="'app/submit/import.html'"></ng:include>				
 					   </tab>
-
-					   <tab heading="Samples">
-							<ng:include src="'app/submit/samples.html'"></ng:include>				
-					   </tab>
-					   <tab heading="Data Tracks">
-							<ng:include src="'app/submit/datatracks.html'"></ng:include>				
-					   </tab>
-					   <tab heading="Analysis Results" >
+					   
+					   <tab heading="3. Describe Each Analysis" >
 							<ng:include src="'app/submit/results.html'"></ng:include>				
 					   </tab>
 					</tabset>
