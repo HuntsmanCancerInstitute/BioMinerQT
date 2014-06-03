@@ -5,10 +5,19 @@
 .navbar-nav > li > a {
     padding-top: 0px;
     padding-bottom: 0px;
-    line-height: 70px;
-    font-size: 14pt;
+    line-height: 65px;
+    font-size: 16pt;
     font-family: "Raleway", sans-serif;
     font-weight: 300;
+}
+.navbar-minor > li > a {
+	font-size: 12pt;
+}
+
+@media (min-width: 768px) {
+  .navbar-form {
+    line-height: 50px;
+  }
 }
 
 @media (max-width: 767px) {
@@ -17,10 +26,17 @@
     padding-top: 10px;
     padding-bottom: 10px;}
 }
+@media (min-width: 768px) {
+   .navbar-nav {
+      float: left;
+	  margin: 0;
+    }
+}
+
 .navbar-brand {
 /* margin-left: -15px; */
-padding-top: 8px;
-font-size: 18pt;
+padding-top: 7px;
+font-size: 22pt;
 font-family: "Raleway", sans-serif;
 font-weight: 400;
 }
