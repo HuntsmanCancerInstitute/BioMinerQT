@@ -10,9 +10,7 @@
     font-family: "Raleway", sans-serif;
     font-weight: 300;
 }
-.navbar-minor > li > a {
-	font-size: 12pt;
-}
+
 
 @media (min-width: 768px) {
   .navbar-form {
@@ -34,8 +32,7 @@
 }
 
 .navbar-brand {
-/* margin-left: -15px; */
-padding-top: 7px;
+padding-top: 13px;
 font-size: 22pt;
 font-family: "Raleway", sans-serif;
 font-weight: 400;
