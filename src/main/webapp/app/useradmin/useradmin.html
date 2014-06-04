@@ -22,6 +22,9 @@
 					<label for="search">Filter Users </label>	
 					<input id="search" ng-model="userQuery">
 				</span>
+				<span style="padding-right: 10px; padding-left: 10px">
+					<label class="label label-warning">{{message}}</label>
+				</span>
 			</span>
 			
 			<span ng-show="labTabOpen">
@@ -38,6 +41,9 @@
 					<a ng-click="confirmLabDelete()" href="#/useradmin">
 			 		 <span class="glyphicon glyphicon-minus"></span>Delete lab
 					</a>
+				</span>
+				<span style="padding-right: 10px; padding-left: 10px">
+					<label class="label label-warning">{{message}}</label>
 				</span>
 			
 			</span>
@@ -105,6 +111,7 @@
 						        <th ng-click="labOrderByField='first'; labReverseSort=!labReverseSort">First Name</th>
 						        <th ng-click="labOrderByField='last'; labReverseSort=!labReverseSort">Last Name</th>
 						        <th ng-click="labOrderByField='count'; labReverseSort=!labReverseSort">Member Count</th>
+						        <th>Institutions</th>
 						      </tr>
 					    </thead>
 					    <tbody>				         	
@@ -113,6 +120,7 @@
 				             	<td>{{lab.first}}</td>
 				             	<td>{{lab.last}}</td>
 				             	<td>{{lab.count}}</td>
+				             	<td><span ng-repeat="i in lab.institutes">{{i.name}}{{$last ? '' : ', '}}</span></td>
 			         		</tr>
 					    </tbody>
 			    	</table>

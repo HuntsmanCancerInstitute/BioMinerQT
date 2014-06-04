@@ -8,5 +8,6 @@
         <mapping class="hci.biominer.model.Species" />
         <mapping class="hci.biominer.model.access.Lab"/>
         <mapping class="hci.biominer.model.access.User"/>
+        <mapping class="hci.biominer.model.access.Institute"/>
     </session-factory>
 </hibernate-configuration>

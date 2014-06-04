@@ -6,9 +6,9 @@
  */
 var useradmin = angular.module('useradmin', ['ui.mask','ui.validate','confirmation','filters','directives']);
 
-angular.module("useradmin").controller("UserAdminController", ['$scope','$http','$modal',
+angular.module("useradmin").controller("UserAdminController", ['$scope','$http','$modal','$timeout',
                                                       
-function($scope, $http, $modal) {
+function($scope, $http, $modal, $timeout) {
 	
 	/**********************
 	 * Temporary password validation fun!
@@ -62,9 +62,18 @@ function($scope, $http, $modal) {
 	$scope.labs = [];
 	$scope.selectedUsers = [];
 	$scope.selectedLab;
+	$scope.institutes = [];
 	
 	//Select all users
 	$scope.selectAllUsers = false;
+	
+	/**
+	 * Message
+	 */
+	$scope.setMessage = function(message) {
+		$scope.message = message;
+		$timeout(function(){$scope.message = "";},3000); 
+	};
 	
 	
 	/**
@@ -103,6 +112,19 @@ function($scope, $http, $modal) {
 	    	$scope.loadCounts();
 	    	
 	    });
+	};
+	
+	/**
+	 * Load all available institutes.
+	 */
+	
+	$scope.loadInstitutes = function() {
+		$http({
+			method: 'POST',
+			url: 'institute/all'
+		}).success(function(data,status) {
+			$scope.institutes = data;
+		});
 	};
 
     
@@ -190,6 +212,9 @@ function($scope, $http, $modal) {
     		templateUrl: 'app/useradmin/labWindow.html',
     		controller: 'LabController',
     		resolve: {
+    			instituteList: function() {
+    				return $scope.institutes;
+    			},
     			labData: function () {
     				return e;
     			},
@@ -203,10 +228,15 @@ function($scope, $http, $modal) {
     	});
     	
     	modalInstance.result.then(function (lab) {
+    		var ids = [];
+	    	for (var i=0; i<lab.institutes.length;i++) {
+	    		ids.push(lab.institutes[i].idx);
+	    	}
+    		
 	    	$http({
     	    	method: 'POST',
     	    	url: 'lab/modifylab',
-    	    	params: {first:lab.first,last:lab.last,id:lab.id}
+    	    	params: {first:lab.first, last:lab.last, id:lab.id, institutes:ids}
     	    }).success(function(data,status) {
     	    	$scope.loadLabs();
     	    });
@@ -265,8 +295,11 @@ function($scope, $http, $modal) {
 	      templateUrl: 'app/useradmin/labWindow.html',
 	      controller: 'LabController',
     	  resolve: {
+    		  	instituteList: function() {
+    		  		return $scope.institutes;
+  				},
 		        labData: function () {
-		        	var emptyLab = {first: '', last: ''};
+		        	var emptyLab = {first: '', last: '', institutes: []};
     				return emptyLab;
     			},
     			title: function() {
@@ -279,10 +312,15 @@ function($scope, $http, $modal) {
 	    });
 
 	    modalInstance.result.then(function (lab) {
+	    	var ids = [];
+	    	for (var i=0; i<lab.institutes.length;i++) {
+	    		ids.push(lab.institutes[i].idx);
+	    	}
+	    	
 	    	$http({
     	    	method: 'POST',
     	    	url: 'lab/addlab',
-    	    	params: {first:lab.first,last:lab.last}
+    	    	params: {first:lab.first,last:lab.last, institutes: ids}
     	    }).success(function(data,status) {
     	    	$scope.loadLabs();
     	    });
@@ -364,7 +402,7 @@ function($scope, $http, $modal) {
     $scope.confirmUserDelete = function() {
     	//load lab ids
     	var selectedIds = [];
-    	for (var i=0; $scope.selectedUsers.length;i++) {
+    	for (var i=0; i<$scope.selectedUsers.length;i++) {
     		if ($scope.selectedUsers[i].selected) {
     			selectedIds.push(i);
     		}
@@ -387,6 +425,8 @@ function($scope, $http, $modal) {
         	modalInstance.result.then(function(result) {
         		$scope.deleteSelectedUsers();
         	});
+    	} else {
+    		$scope.setMessage("No users selected");
     	}
     	
     };
@@ -397,7 +437,7 @@ function($scope, $http, $modal) {
     $scope.confirmLabDelete = function() {
     	//load lab ids
     	var selectedIds = [];
-    	for (var i=0; $scope.labs.length;i++) {
+    	for (var i=0; i<$scope.labs.length;i++) {
     		if ($scope.labs[i].selected) {
     			selectedIds.push(i);
     		}
@@ -420,12 +460,17 @@ function($scope, $http, $modal) {
         	modalInstance.result.then(function(result) {
         		$scope.deleteSelectedLabs();
         	});
+    	} else {
+    		$scope.setMessage("No labs selected");
     	}
     	
     };
     
     //Load labs and users.
 	$scope.loadLabs();
+	$scope.loadInstitutes();
 	$scope.loadSelected();
-    
+	
+	
+	
 }]);

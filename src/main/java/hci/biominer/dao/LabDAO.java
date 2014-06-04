@@ -5,6 +5,7 @@ import java.util.List;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -12,7 +13,7 @@ import hci.biominer.model.access.Lab;
 import hci.biominer.model.access.User;
 
 @Repository
-public class LabDAO {
+public class LabDAO  {
 
 	@Autowired
 	private SessionFactory sessionFactory;
@@ -35,6 +36,7 @@ public class LabDAO {
 		Lab labToUpdate = (Lab) session.get(Lab.class, id);
 		labToUpdate.setFirst(lab.getFirst());
 		labToUpdate.setLast(lab.getLast());
+		labToUpdate.setInstitutes(lab.getInstitutes());
 		session.update(labToUpdate);
 		session.getTransaction().commit();
 		session.close();
@@ -43,6 +45,8 @@ public class LabDAO {
 	public Lab getLab(Long id) {
 		Session session = this.getCurrentSession();
 		Lab lab  = (Lab)session.get(Lab.class, id);
+		
+		Hibernate.initialize(lab.getInstitutes());
 		session.close();
 		return lab;
 	}
@@ -62,6 +66,9 @@ public class LabDAO {
 	public List<Lab> getAllLabs() {
 		Session session  = this.getCurrentSession();
 		List<Lab> lab = session.createQuery("from Lab").list();
+		for (Lab l: lab) {
+			Hibernate.initialize(l.getInstitutes());
+		}
 		session.close();
 		return lab;
 	}

@@ -26,7 +26,7 @@ public class User {
 	@Column(name="idx")
 	private Long idx;
 	
-	@ManyToMany(fetch=FetchType.EAGER)
+	@ManyToMany()
 	@JoinTable(name="user_lab",
 	joinColumns={@JoinColumn(name="uidx",referencedColumnName="idx")},
 	inverseJoinColumns={@JoinColumn(name="lidx",referencedColumnName="idx")})

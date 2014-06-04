@@ -14,6 +14,11 @@
 				<label class="col-md-4 control-label" for="lastEntry">Last Name</label>                   
 				<input class="col-md-6" id="lastEntry" ng-model="lab.last" class="form-control input-md" required type="text">
 			</div>
+			
+			<div class="form-group">
+				<label class="col-md-4 control-label" for=""labEntry">Institutes</label>  
+			    <select data-placeholder="Choose Institutes ..." multiple class="col-md-6 chosen-select" ng-model="lab.institutes" chosen="availInst" ng-options="inst.name for inst in availInst" required ></select>
+			</div>
 					
 		</fieldset>
 	</form>

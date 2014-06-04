@@ -10,6 +10,8 @@ import hci.biominer.dao.LabDAO;
 import hci.biominer.model.access.Lab;
 import hci.biominer.model.access.User;
 
+
+
 @Service("LabService")
 @Transactional
 public class LabService {
