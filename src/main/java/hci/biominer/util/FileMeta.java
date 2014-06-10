@@ -11,6 +11,7 @@ public class FileMeta {
 	private String url;
 	private String deleteUrl;
 	private String deleteType = "DELETE";
+	private String message;
 	
 	private byte[] bytes;
 	
@@ -50,5 +51,13 @@ public class FileMeta {
 	}
 	public void setDeleteType(String deleteType) {
 		this.deleteType = deleteType;
+	}
+	
+	public void setMessage(String message) {
+		this.message = message;
+	}
+	
+	public String getMessage() {
+		return this.message;
 	}
 }

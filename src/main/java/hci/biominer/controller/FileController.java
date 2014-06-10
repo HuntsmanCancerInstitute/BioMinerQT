@@ -1,10 +1,14 @@
 package hci.biominer.controller;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
-import java.util.Iterator;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -14,8 +18,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import hci.biominer.util.FileMap;
 import hci.biominer.util.FileMeta;
@@ -25,8 +29,10 @@ import hci.biominer.util.FileMeta;
 public class FileController {
 
 	
+	//FileMap fileMap = new FileMap();
+	HashMap<String,FileMeta> files = new HashMap<String,FileMeta>();
+	LinkedList<FileMeta> fileList = new LinkedList<FileMeta>();
 	FileMap fileMap = new FileMap();
-	LinkedList<FileMeta> files = new LinkedList<FileMeta>();
 	
 	private final static String FILES_PATH = "/temp/";
 	
@@ -39,56 +45,41 @@ public class FileController {
 	 * @return LinkedList<FileMeta> as json format
 	 ****************************************************/
 	@RequestMapping(value="/upload", method = RequestMethod.POST)
-	public @ResponseBody FileMap upload(MultipartHttpServletRequest request, HttpServletResponse response) {
+	public @ResponseBody 
+	FileMeta upload(@RequestParam("file") MultipartFile file) {
  
-		fileMap = new FileMap();
-		files = new LinkedList<FileMeta>();
+		FileMeta fileMeta = new FileMeta();
+		String name = file.getOriginalFilename();
 		
-		 //1. build an iterator
-		 Iterator<String> itr =  request.getFileNames();
-		 MultipartFile mpf = null;
-		 int index = 0;
-		 String idAnalysisProject = request.getParameter("idAnalysisProject");
-
-		 //2. get each file
-		 while(itr.hasNext()){
-			 
-			 //2.1 get next MultipartFile
-			 mpf = request.getFile(itr.next()); 
-			 System.out.println(mpf.getOriginalFilename() +" uploaded! "+files.size());
-
-			 
-			 //2.3 create new fileMeta
-			 fileMeta = new FileMeta();
-			 fileMeta.setName(mpf.getOriginalFilename());
-			 fileMeta.setSize(new Long(mpf.getSize()).toString());
-			 fileMeta.setUrl(      "submit/upload/get/" + index);
-			 fileMeta.setDeleteUrl("submit/upload/delete/" + index);
-			
-			 
-			 try {
-				fileMeta.setBytes(mpf.getBytes());
+		if (!file.isEmpty()) {
+			try {
 				
-				// copy file to local disk (make sure the path "e.g. D:/temp/files" exists)
-				FileCopyUtils.copy(mpf.getBytes(), new FileOutputStream(FILES_PATH+mpf.getOriginalFilename()));
+				fileMeta.setName(name);
+				fileMeta.setSize(new Long(file.getSize()).toString());
+				fileMeta.setUrl("submit/upload/get/" + name);
+				fileMeta.setDeleteUrl("submit/upload/delete/" + name);
 				
-			 } catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			 }
-			 
-			 //2.4 add to files
-			 files.add(fileMeta);
-			 index++;
-			 
-		 }
-		 
-		// result will be like this
-		// [{"fileName":"app_engine-85x77.png","fileSize":"8 Kb","fileType":"image/png"},...]
-		fileMap.setFiles( files);
-		return fileMap;
- 
+				fileMeta.setBytes(file.getBytes());
+				
+				File localFile = new File(FILES_PATH,name);
+				FileCopyUtils.copy(file.getBytes(), new FileOutputStream(localFile));
+				
+				System.out.println("File upload successful! " + name);
+				fileMeta.setMessage("success");
+				files.put(name, fileMeta);
+				
+			} catch (Exception ex) {
+				System.out.println("File upload failed: " + name + " " + ex.getMessage());
+				fileMeta.setMessage(ex.getMessage());
+			}
+		} else {
+			fileMeta.setMessage("File is empty");
+		}
+		
+		return fileMeta;
 	}
+	
+	
 	/***************************************************
 	 * URL: /submit/upload/get/{value}
 	 * get(): get file as an attachment
@@ -96,9 +87,10 @@ public class FileController {
 	 * @param value : value from the URL
 	 * @return void
 	 ****************************************************/
-	 @RequestMapping(value = "/upload/get/{value}", method = RequestMethod.GET)
+	 @RequestMapping(value = "/upload/get/{value:.+}", method = RequestMethod.GET)
 	 public void getFile(HttpServletResponse response,@PathVariable String value){
-		 FileMeta getFile = files.get(Integer.parseInt(value));
+		 FileMeta getFile = files.get(value);
+		 
 		 try {		
 			 	//response.setContentType(getFile.getFileType());
 			 	response.setHeader("Content-disposition", "attachment; filename=\""+getFile.getName()+"\"");
@@ -109,14 +101,16 @@ public class FileController {
 		 }
 	 }
 	
-	 @RequestMapping(value = "/upload/delete/{value}", method = RequestMethod.DELETE)
+	 @RequestMapping(value = "/upload/delete/{value:.+}", method = RequestMethod.DELETE)
 	 public void deleteFile(HttpServletResponse response,@PathVariable String value){
-		 FileMeta file = files.get(Integer.parseInt(value));
+		 FileMeta file = files.get(value);
 		 try {		
 			 	File f = new File(FILES_PATH+file.getName());
 			 	boolean success = f.delete();
+			 	
 			 	if (!success) {
 			 		System.out.println("File " + file.getName() + " not deleted");
+			 		files.remove(value);
 			 	}
 			 	
 		 }catch (Exception e) {
@@ -124,32 +118,68 @@ public class FileController {
 				e.printStackTrace();
 		 }
 	 }
+	 
+	 
 
 	
 	@RequestMapping(value = "/upload", method = RequestMethod.GET)
 	 public @ResponseBody FileMap  get(HttpServletResponse response){
-		File folder = new File("/temp");
+		File folder = new File(FILES_PATH);
 		File[] listOfFiles = folder.listFiles();
-		fileMap = new FileMap();
-		files = new LinkedList<FileMeta>();
-		int index = 0;
+		FileMap fileMap = new FileMap();
 
 		for (File file : listOfFiles) {
 		    if (file.isFile() && !file.getName().startsWith(".")) {
-		        
-				 fileMeta = new FileMeta();
-				 fileMeta.setName(file.getName());
-				 fileMeta.setSize(new Long(file.length()).toString());
-				 fileMeta.setUrl(      "submit/upload/get/" + index);
-				 fileMeta.setDeleteUrl("submit/upload/delete/" + index);
+		         String name = file.getName();
+		         
+	        	 FileInputStream fileInputStream=null;
+	       
+	             byte[] bFile = new byte[(int) file.length()];
+	      
+	             try {
+	                 //convert file into array of bytes
+		     	    fileInputStream = new FileInputStream(file);
+		     	    fileInputStream.read(bFile);
+		     	    fileInputStream.close();
+	    
+	             }catch(Exception e){
+	             	e.printStackTrace();
+	             }
 
-				 files.add(fileMeta);
-				 index++;
+	        	 fileMeta = new FileMeta();
+				 fileMeta.setName(name);
+				 fileMeta.setSize(new Long(file.length()).toString());
+				 fileMeta.setUrl(      "submit/upload/get/" + name);
+				 fileMeta.setDeleteUrl("submit/upload/delete/" + name);
+				 fileMeta.setMessage("success");
+				 fileMeta.setBytes(bFile);
+				 files.put(name,fileMeta);
+				 fileList.add(fileMeta);
+		         
 		    }
 		}
-		fileMap.setFiles(files);
+		fileMap.setFiles(fileList);
 		return fileMap;
-		
 	}
+	
+//	@RequestMapping(value = "/header/get/{value:.+}", method = RequestMethod.GET)
+//	public List<List<String>> getHeader(@PathVariable String value) {
+//		 FileMeta fm = files.get(value);
+//		 
+//		 try {		
+//			 	BufferedReader br = new BufferedReader(new FileReader(new File(FILES_PATH,fm.getName())));
+//			 
+//			 	String temp = null;
+//			 	
+//			 	while((temp = br.readLine()) != null) {
+//			 		
+//			 		
+//			 	}
+//			 	
+//			 	
+//		 }catch (IOException e) {
+//				e.printStackTrace();
+//		 }
+//	 }
  
 }

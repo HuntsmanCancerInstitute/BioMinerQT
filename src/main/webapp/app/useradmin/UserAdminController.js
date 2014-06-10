@@ -336,15 +336,8 @@ function($scope, $http, $modal, $timeout) {
     $scope.selectAllUsersChanged = function() {
     	$scope.selectAllUsers = !$scope.selectAllUsers;
 
-    	var $checked = false;
-    	if ($scope.selectAllUsers) {
-    		$checked = true;
-    	} else {
-    		$checked = false;
-    	}
-    	
     	for (var i = 0; i < $scope.selectedUsers.length; i++) {
-    		$scope.selectedUsers[i].selected = $checked;
+    		$scope.selectedUsers[i].selected = $scope.selectAllUsers;
     	}
     };
     
