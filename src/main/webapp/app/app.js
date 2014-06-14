@@ -5,7 +5,7 @@
 
 	var url = 'submit/upload';
 
-	angular.module('app', ['ngRoute', 'ui.bootstrap', 'blueimp.fileupload', 'dashboard', 'submit', 'query', 'useradmin', 'upload']);
+	angular.module('app', ['ngRoute', 'ui.bootstrap', 'dashboard', 'submit', 'query', 'useradmin', 'upload']);
 
 
 	angular.module('app').config(['$routeProvider', 
