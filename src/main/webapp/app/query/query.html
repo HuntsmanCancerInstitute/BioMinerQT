@@ -1,189 +1,134 @@
-<div id="wrapper">
+<form class="form-horizontal">
+<fieldset>
 
-  <!-- Page content -->
-  <div id="page-content-wrapper">
-     <!-- Sidebar -->
-     <div id="sidebar-wrapper">  
-
-			<div class="bs-example">
-				 <div class="row" >
-				     <div class="col-md-7" >
-					 	<h3 style="margin: 0">Query</h3>
-					 </div>
-				     <div class="col-md-2 v-center">
-						 <button type="button" class="btn btn-primary btn-sm">Run</button>
-				     </div>
-		 		 </div>
-		 		 
-			     <accordion close-others="false">
-					  <accordion-group heading="Experiment" is-open="true">
-							    <div class="form-group">
-							      <label for="checkbox" class="control-label">Experiment Type</label>
-				                  <div class="checkbox">
-				                    <label><input type="checkbox"> RNA Seq</label>
-				                  </div>
-				                  <div class="checkbox">
-				                    <label><input type="checkbox"> ChIP Seq</label>
-				                  </div>
-				                  <div class="checkbox">
-				                    <label><input type="checkbox"> Bisulfite Seq</label>
-				                  </div>
-							    </div>
-					  </accordion-group>
-					  
-					  <accordion-group heading="Genome and Region">
-							    <div class="form-group">
-							      <label for="select" class="control-label">Species</label>
-							      <select class="form-control" multiple=""  id="select">
-							          <optgroup label="Chicken">
-							             <option value="any1">Any build</option>
-							             <option value="cmay2013">May 2013</option>
-							             <option value="cjan2009">Jan 2009</option>
-							          </optgroup>
-							          <optgroup label="Human">
-							             <option value="any2">Any build</option>
-							             <option value="h57">H57 - Feb 2012</option>
-							             <option value="hmay2009">May 2009</option>
-							          </optgroup>
-							          <optgroup label="Mouse">
-							             <option value="any3">Any build</option>
-							             <option value="10">May 2013</option>
-							             <option value="11">Jan 2009</option>
-							          </optgroup>
-							          <optgroup label="Zebrafish">
-							             <option value="any4">Any build</option>			          
-							             <option value="20">May 2013</option>
-							             <option value="21">Jan 2009</option>
-							          </optgroup>
-							        </select>
-							    </div>
-							    <div class="form-group">
-							      <label for="input" class="control-label">Region (eg. chr12:43566-3457633)</label>
-							      <input class="form-control"/>
-							    </div>
-					  </accordion-group>
-					  
-					  <accordion-group heading="Proximity">
-							    <div class="form-group">
-							      <label for="input" class="control-label">Within</label>
-							      <input placeholder="100 kb"/>
-				                  <div class="checkbox">
-				                    <label><input type="checkbox"> Gene</label>
-				                  </div>
-				                  <div class="checkbox">
-				                    <label><input type="checkbox"> Transcription Start Site</label>
-				                  </div>
-							    </div>
-					  </accordion-group>
-					  
-					  <accordion-group heading="Threshold">
-						  <div>
-					         <div class="form-group">
-					           <label for="input" class="control-label">Significance (False Discover Rate)</label>
-					           <input  class="form-control" placeholder=".5">
-					         </div>
-					         <div class="form-group">
-					           <label for="select" class="control-label">Magnitude</label>
-					             <select class="form-control"  id="select">
-						             <option value="1">at least 2-fold</option>
-						             <option value="2">at least 3-fold</option>
-						             <option value="2">at least 4-fold</option>
-						             <option value="2">at least 5-fold</option>
-							     </select>
-					         </div>
-					      </div>
-					           
-					    </accordion-group>
-					
-					  
-					  <accordion-group heading="Sample Characteristics">
-					         <div class="form-group">
-					           <label for="select" class="control-label">Site</label>
-					             <select class="form-control" multiple="" id="select">
-					               <optgroup label="Heart">
-						             <option value="0">All</option>
-						             <option value="1">Left ventricle</option>
-						             <option value="2">Right ventricle</option>
-						             <option value="2">Chamber</option>
-						             <option value="2">Blah blah</option>
-						           </optgroup>
-					               <optgroup label="Lung">
-						             <option value="10">All</option>
-						             <option value="11">alsja</option>
-						             <option value="12">Another site</option>
-						           </optgroup>
-							     </select>
-					         </div> <!-- end form-group -->
-					  </accordion-group> 
-					  
-				</accordion> <!-- end panel-group -->
-			
-		  </div> <!-- end  -->
-  
-  
-
-     </div>  <!-- end sidebar -->
-     
-     <div class="container">
-        <h3 style="margin-top: 15px">Results</h3>
-        
-			<table class="table table-striped table-hover ">
-			  <thead>
-			    <tr>
-			      <th>#</th>
-			      <th>Column heading</th>
-			      <th>Column heading</th>
-			      <th>Column heading</th>
-			    </tr>
-			  </thead>
-			  <tbody>
-			    <tr>
-			      <td>1</td>
-			      <td>Column content</td>
-			      <td>Column content</td>
-			      <td>Column content</td>
-			    </tr>
-			    <tr>
-			      <td>2</td>
-			      <td>Column content</td>
-			      <td>Column content</td>
-			      <td>Column content</td>
-			    </tr>
-			    <tr class="info">
-			      <td>3</td>
-			      <td>Column content</td>
-			      <td>Column content</td>
-			      <td>Column content</td>
-			    </tr>
-			    <tr class="success">
-			      <td>4</td>
-			      <td>Column content</td>
-			      <td>Column content</td>
-			      <td>Column content</td>
-			    </tr>
-			    <tr class="danger">
-			      <td>5</td>
-			      <td>Column content</td>
-			      <td>Column content</td>
-			      <td>Column content</td>
-			    </tr>
-			    <tr class="warning">
-			      <td>6</td>
-			      <td>Column content</td>
-			      <td>Column content</td>
-			      <td>Column content</td>
-			    </tr>
-			    <tr class="active">
-			      <td>7</td>
-			      <td>Column content</td>
-			      <td>Column content</td>
-			      <td>Column content</td>
-			    </tr>
-			  </tbody>
-			</table> 
-     </div>
-
-  </div> <!-- end page-content -->
-</div> <!-- end wrapper -->
-
+   	<div class="row toolbar" >
+  	       <h3>
+   	       <span class="glyphicon glyphicon-zoom-in"></span> Query
+		   </h3>
+		   <a><span class="glyphicon glyphicon-play"></span >Run</a>
+		   <a><span class="glyphicon glyphicon-remove"> Clear</a>
+	</div>
+		
+ 	</div>
+	 			
+	<div class="row">
+	
+	
+	     <!-- Sidebar -->
+     	<div class="col-lg-4">  
  
+
+     	
+            <div class="panel panel-default">
+				<div class="panel-heading">Compose Query</div>
+	  	   
+				
+           	 	<div class="panel-body">
+            	 	
+           	 		<h4>What would you like to find?</h4>
+           	 			
+           	 		<!-- What type of data? -->
+           	 		<div class="form-group">
+					  <div class="col-md-12"> 
+					    <label class="radio-inline" for="radios-0">
+					      <input name="radios" id="radios-0" value="1" checked="checked" type="radio">Genes
+					    </label> 
+					    <label class="radio-inline" for="radios-1">
+					      <input name="radios" id="radios-1" value="2" type="radio">Genomic Regions
+					    </label> 
+					    <label class="radio-inline" for="radios-2">
+					      <input name="radios" id="radios-2" value="3" type="radio">Variants
+					    </label>
+					  </div>
+					</div>
+
+  
+           	 		<h4 style="padding-top: 10px">What Genome?</h4>
+					<div class="form-group">
+		  				<div class="col-md-12">
+		    				<select id="species_build" ng-model="genomeBuild" ng-options="gb.idGenomeBuild as gb.name  group by gb.species for gb in genomeBuildList" class="form-control">
+		    				</select>
+		  				</div>
+					</div>
+
+           	 		
+  
+           	 		<h4 style="padding-top: 10px">What Datasets?</h4>
+           	 		
+           	 		<!-- What data sets? -->
+					<div class="form-group">
+					  <div class="col-md-12">
+					    <label class="checkbox-inline" for="checkboxes-0">
+					      <input name="checkboxes" id="checkboxes-0" value="1" type="checkbox">
+					      RNA Seq
+					    </label>
+					    <label class="checkbox-inline" for="checkboxes-1">
+					      <input name="checkboxes" id="checkboxes-1" value="2" type="checkbox">
+					      ChIP Seq
+					    </label>
+					    <label class="checkbox-inline" for="checkboxes-2">
+					      <input name="checkboxes" id="checkboxes-2" value="3" type="checkbox">
+					      Variant
+					    </label>
+					    <label class="checkbox-inline" for="checkboxes-3">
+					      <input name="checkboxes" id="checkboxes-3" value="4" type="checkbox">
+					      Methylation
+					    </label>
+					  </div>
+					</div>
+					
+					
+					<!--  Lab -->
+					<div class="form-group">
+						<label class="col-md-4 control-label" for=""labEntry">Labs</label>  
+					    <select data-placeholder="Choose labs..." multiple class="col-md-7 chosen-select" ng-model="selectedLabs" chosen="labList" ng-options="lab.name for lab in labList"  ></select>
+					</div>
+					
+					<!--  Analysis Project -->
+					<div class="form-group">
+						<label class="col-md-4 control-label" for=""labEntry">Analysis Projects</label>  
+					    <select data-placeholder="Choose analysis projects..." multiple class="col-md-7 chosen-select" ng-model="selectedLabs" chosen="labList" ng-options="lab.name for lab in labList"  ></select>
+					</div>
+					
+					<!--  Analysis  -->
+					<div class="form-group">
+						<label class="col-md-4 control-label" for=""labEntry">Individual Analysis</label>  
+					    <select data-placeholder="Choose individual analysis..." multiple class="col-md-7 chosen-select" ng-model="selectedLabs" chosen="labList" ng-options="lab.name for lab in labList"  ></select>
+					</div>
+					
+					<!--  Sample Source  -->
+					<div class="form-group">
+						<label class="col-md-4 control-label" for=""labEntry">Sample Source</label>  
+					    <select data-placeholder="Choose sample source..." multiple class="col-md-7 chosen-select" ng-model="selectedLabs" chosen="labList" ng-options="lab.name for lab in labList"  ></select>
+					</div>
+
+
+
+          	 		<h4s tyle="padding-top: 10px">What Regions / Genes?</h4>
+          	 		
+          	 		
+          	 		
+ 				</div>
+			</div>
+        
+        
+     	</div>
+     
+		<div class="col-lg-8" >
+			
+			<div class=" panel panel-default">
+			
+				<div class="panel-heading">Results</div>
+				
+				<div class="panel-body">
+				
+				
+				</div>
+			</div>
+		
+		</div> 
+		
+	</div> 
+	
+</fieldset>
+</form>

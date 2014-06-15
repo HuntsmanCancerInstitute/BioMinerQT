@@ -1,53 +1,58 @@
-<div class="container-fluid" >
-	<div class="row">
-			<h3 style="display:inline; padding-right: 10px">Users and Labs</h3>
-			<span ng-show="userTabOpen">
-				<span style="padding-right: 10px; padding-left: 10px">
-				<a ng-click="openNewUserWindow()"  href="#/useradmin">
-		 		 <span class="glyphicon glyphicon-plus"></span>Add User
-				</a>
-				</span>
-				<span style="padding-right: 10px; padding-left: 10px">
-					<a ng-click="confirmUserDelete()"  href="#/useradmin">
-			 		 <span class="glyphicon glyphicon-minus"></span>Delete User
-					</a>
-				</span>
-				<span style="padding-right: 10px; padding-left: 10px">
-					<label for="labSelect">Lab </label>
-					<select id="labSelect" ng-model="selectedLab"  ng-options="lab.last for lab in labs" >
-					<option value=""></option>
-					</select>
-				</span>
-				<span style="padding-right: 10px; padding-left: 10px; float: right">
-					<label for="search">Filter Users </label>	
-					<input id="search" ng-model="userQuery">
-				</span>
-				<span style="padding-right: 10px; padding-left: 10px">
-					<label class="label label-warning">{{message}}</label>
-				</span>
-			</span>
+
+	
+	<!-- Users tool bar -->
+   	<div class="row toolbar" ng-show="userTabOpen" >
+      		<h3>
+   	        <span class="glyphicon glyphicon-cog"></span>
+			  Users and Labs
+		   </h3>
+
+  
+    		<a ng-click="openNewUserWindow()"  href="#/useradmin">
+   				<span class="glyphicon glyphicon-plus"></span>Add User
+			</a>
+	      
+	
+			<a ng-click="confirmUserDelete()"  href="#/useradmin">
+	 		 	<span class="glyphicon glyphicon-minus"></span>Delete User
+			</a>
 			
-			<span ng-show="labTabOpen">
-				<span style="padding-right: 10px; padding-left: 10px; float: right" >
+			<label for="labSelect">Lab </label>
+			<select id="labSelect" ng-model="selectedLab"  ng-options="lab.last for lab in labs" >
+				<option value=""></option>
+			</select>
+				
+			<label class="label label-warning">{{message}}</label>
+				
+		    <div class="form-group right">
+		  		 <label for="search">Filter Users </label>	
+				 <input id="search" ng-model="userQuery">
+		    </div>
+	</div>
+	
+	
+	<!-- Lab tool bar -->
+   	<div class="row toolbar" ng-show="labTabOpen" >
+      		<h3>Users and Labs</h3>
+      		
+			<a ng-click="openNewLabWindow()" href="#/useradmin">
+	 		 	<span class="glyphicon glyphicon-plus"></span>Add Lab
+			</a>
+			
+			<a ng-click="confirmLabDelete()" href="#/useradmin">
+	 		 	<span class="glyphicon glyphicon-minus"></span>Delete lab
+			</a>
+			
+			<label class="label label-warning">{{message}}</label>
+				
+			<div class="form-group right">
 				<label for="search">Filter Labs </label>	
 				<input id="search" ng-model="labQuery">
-				</span>
-				<span style="padding-right: 10px; padding-left: 10px">
-					<a ng-click="openNewLabWindow()" href="#/useradmin">
-			 		 <span class="glyphicon glyphicon-plus"></span>Add Lab
-					</a>
-				</span>
-				<span style="padding-right: 10px; padding-left: 10px">
-					<a ng-click="confirmLabDelete()" href="#/useradmin">
-			 		 <span class="glyphicon glyphicon-minus"></span>Delete lab
-					</a>
-				</span>
-				<span style="padding-right: 10px; padding-left: 10px">
-					<label class="label label-warning">{{message}}</label>
-				</span>
-			
-			</span>
+		    </div>
 	</div>
+	
+	
+	
 	<div class="row">	
 		<div class="panel panel-default col-lg-12">
 		  <div class="panel-body" style="padding-top: 10px;">	
@@ -172,5 +177,4 @@
 		</form>
 	</div>
 	
-</div>
 

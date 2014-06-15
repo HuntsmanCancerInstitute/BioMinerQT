@@ -74,6 +74,7 @@ function($scope, $http, $modal) {
 	                  
 	];
 	$scope.siteList = [
+	   	                  {idSite: 1, name: "Cell Line", organ: "Cell Line"},
 	   	                  {idSite: 1, name: "Left ventricle", organ: "Heart"},
 	   	                  {idSite: 2, name: "Right ventricle", organ: "Heart"},
 	   	                  {idSite: 3, name: "Aortic valve", organ: "Heart"},
