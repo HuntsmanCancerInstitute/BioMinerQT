@@ -43,4 +43,26 @@ var directives = angular.module('directives', [])
 		};
     }
 	
-]);
+]).directive('resize', function ($window) {
+    return function (scope, element, attrs) {
+        var w = angular.element($window);
+        scope.getWindowDimensions = function () {
+            return {
+                'h': w.height(),
+                'w': w.width()
+            };
+        };
+        scope.$watch(scope.getWindowDimensions, function (newValue, oldValue) {
+            scope.style = function () {
+                return {
+                    'height': (newValue.h * attrs.per / 100) + 'px',
+                };
+            };
+
+        }, true);
+
+        w.bind('resize', function () {
+            scope.$apply();
+        });
+    };
+});

@@ -78,6 +78,7 @@ public class GenomeParser implements Serializable{
 			if (tokens.length != 2) throw new Exception("Error: could not transcriptome name and file from "+line+", aborting.\n");
 			String transName = tokens[0];
 			File transFile = new File(tokens[1]);
+			if (transFile.exists() == false) throw new Exception("Error: could not find the transcriptome file in "+line+", aborting.\n");
 			if (transFile.canRead() == false) throw new Exception("Error: could not read the transcriptome file in "+line+", aborting.\n");
 			transAL.add(new Transcriptome(transName, transFile));
 		}

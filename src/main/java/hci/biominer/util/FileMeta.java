@@ -12,22 +12,23 @@ public class FileMeta {
 	private String deleteUrl;
 	private String deleteType = "DELETE";
 	private String message;
+	private String directory;
 	
-	private byte[] bytes;
-	
-	
-	public byte[] getBytes() {
-		return bytes;
-	}
-	public void setBytes(byte[] bytes) {
-		this.bytes = bytes;
-	}
 	public String getName() {
 		return name;
 	}
 	public void setName(String name) {
 		this.name = name;
 	}
+	
+	public void setDirectory(String directory) {
+		this.directory = directory;
+	}
+	
+	public String getDirectory() {
+		return this.directory;
+	}
+	
 	public String getSize() {
 		return size;
 	}
@@ -40,12 +41,7 @@ public class FileMeta {
 	public void setUrl(String url) {
 		this.url = url;
 	}
-	public String getDeleteUrl() {
-		return deleteUrl;
-	}
-	public void setDeleteUrl(String deleteUrl) {
-		this.deleteUrl = deleteUrl;
-	}
+	
 	public String getDeleteType() {
 		return deleteType;
 	}

@@ -1,6 +1,40 @@
-body { 
-	 padding-top: 65px;   
+.table-container
+{
+	width: 100%;
+    overflow: auto;
+	margin: 0 0 1em;
+	height: 100%;
+	font-size: 1em;
+    font-family: "Arial";
+    
+    
+}
 
+.td-container-unselected {
+	overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100px;
+    min-width: 100px;
+    color: #D1D0CE;
+}
+
+.td-container-selected {
+	overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100px;
+    min-width: 100px;
+    color: #333;
+}
+
+
+
+.preview-dialog .modal-dialog {
+   width: 80%;
+}
+.preview-dialog .modal-body {
+	overflow-y: auto;
 }
 
 .navbar-fixed-top {

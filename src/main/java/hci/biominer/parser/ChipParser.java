@@ -34,8 +34,8 @@ public class ChipParser {
 	/* 
 	 * Constructor for internal call. Assumes 0-based indexes.
 	 */
-	public ChipParser(File inputFile, File outputFile, int chromColumn, int startColumn, int endColumn,
-			int fdrColumn, int logColumn, boolean isConverted, Genome build) throws Exception {
+	public ChipParser(File inputFile, File outputFile, Integer chromColumn, Integer startColumn, Integer endColumn,
+			Integer fdrColumn, Integer logColumn, boolean isConverted, Genome build) throws Exception {
 		
 		this.genomeBuild = build;
 		
@@ -94,8 +94,8 @@ public class ChipParser {
 		
 		
 		//Create intervalTrees
-		System.out.println("[ChipParser] Creating interval tree...");
-		createIntervalTree();
+//		System.out.println("[ChipParser] Creating interval tree...");
+//		createIntervalTree();
 	}
 	
 	/*

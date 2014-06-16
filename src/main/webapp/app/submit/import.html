@@ -1,23 +1,23 @@
 <div class="container-fluid" style="padding-top: 20px" data-ng-controller="UploadController">
 	<div class="row">
-	    <h4>Load Files</h4>
+	    <h4>Import Files</h4>
 		<div class="col-lg-5">
 			<span class="btn btn-success fileinput-button"  ng-class="{disabled: disabled}">
-		        <i class="glyphicon glyphicon-plus"></i>
+		        <i class="glyphicon glyphicon-upload"></i>
 		        <span>Upload</span>
 		        <input type="file" ng-file-select="onFileSelect($files)" multiple>            
 		    </span>
-		    <button class="btn btn-primary">
-	           <span class="glyphicon glyphicon-plane"></span> Parse
+		    <button class="btn btn-primary" data-ng-click="parse()">
+	           <span class="glyphicon glyphicon-cutlery"></span> Parse
          	</button>
-         	<button class="btn btn-danger" data-ng-click="deleteSelected()">
+         	<button class="btn btn-danger" data-ng-click="deleteSelected($parent.uploadedFiles)">
          		<span class="glyphicon glyphicon-fire"></span> Delete
          	</button>
 		</div>
 		
 		<div class="col-lg-5" ng-show="complete > 0 && complete < 100">
 <!-- 		<div class="col-lg-5"> -->
-              <span>Uploading files....{{complete}}%</span>
+              <span>Uploading files....{{complete | number }}%</span>
               <div class="progress progress-striped active"><div class="progress-bar progress-bar-info" data-ng-style="{width: complete + '%'}"></div></div>
         </div>
 	</div>
@@ -26,7 +26,7 @@
 			<table class="table table-striped table-hover" ng-show="uploadedFiles.length > 0">
 			    <thead>
 			        <tr>
-			            <th data-ng-click="clickSelected()">Selected</th>
+			            <th data-ng-click="clickSelected($parent.uploadedFiles)">Selected</th>
 			            <th>Name</th>
 			            <th>Size</th>
 			            <th>Imported</th>
@@ -35,7 +35,7 @@
 			    <tbody>
 			        <tr ng-repeat="file in uploadedFiles">
 			            <td> <input type="checkbox" ng-model="file.selected"/></td>
-			            <td><a target="_self" ng-href="{{file.url}}">{{file.name}}</a></td>
+			            <td><a target="_self" ng-href="submit/upload/get?file={{file.name}}&type={{$parent.uploadedFiles.type}}">{{file.name}}</a></td>
 			            <td>{{file.size | bytes}}</td>
 			            
 			          	<td ng-switch on="file.message">
@@ -64,6 +64,51 @@
 	<hr>
 	<div class="row">
 		<h4>Parsed Files</h4>
+		<div class="col-lg-5">
+         	<button class="btn btn-danger" data-ng-click="deleteSelected(parsedFiles)">
+         		<span class="glyphicon glyphicon-fire"></span> Delete
+         	</button>
+		</div>
 	</div>
+	
+	<div class="row">
+			<table class="table table-striped table-hover" ng-show="parsedFiles.length > 0">
+			    <thead>
+			        <tr>
+			            <th data-ng-click="clickSelected(parsedFiles)">Selected</th>
+			            <th>Name</th>
+			            <th>Size</th>
+			            <th>Imported</th>
+			        </tr>
+			    </thead>
+			    <tbody>
+			        <tr ng-repeat="file in parsedFiles">
+			            <td> <input type="checkbox" ng-model="file.selected"/></td>
+			            <td><a target="_self" ng-href="submit/upload/get?file={{file.name}}&type={{parsedFiles.type}}">{{file.name}}</a></td>
+			            <td>{{file.size | bytes}}</td>
+			            
+			          	<td ng-switch on="file.message">
+			          		
+		          			<div class="loader" ng-switch-when="started"">
+			          			
+			          		</div>
+			          		
+			          		<span class="label-success label" ng-switch-when="success" tooltip="{{file.message}}">
+			          			<span class="glyphicon glyphicon-thumbs-up"></span>
+			          		</span>
+			          		
+			          		<span class="label-danger label" ng-switch-default tooltip="{{file.message}}">
+			          			<span class="glyphicon glyphicon-thumbs-down"></span>
+			          		</span>
+			          		
+			          		<span class="label-info label" ng-switch-when="started">
+			          			<span class="glyphicon glyphicon-time"></span>
+			          		</span>
+			          		
+			          	</td>
+			        </tr>
+			    </tbody>
+			</table>
+	</div> <!-- end row -->	
 </div> <!--  end container -->
 
