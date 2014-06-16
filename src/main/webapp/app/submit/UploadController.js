@@ -1,13 +1,14 @@
 'use strict';
 
 
-var upload  = angular.module('upload',  ['ui.bootstrap', 'angularFileUpload','filters', 'services', 'directives']);
+var upload  = angular.module('upload',  ['ui.bootstrap', 'angularFileUpload','filters', 'services', 'directives','error']);
 
 angular.module("upload").controller("UploadController", ['$scope','$upload','$http','$modal','$q',
                                                       
 	function($scope, $upload, $http, $modal, $q) {
-	
-		$scope.selectAllFiles = false;
+
+		$scope.selectAllParse = false;
+		$scope.selectAllImport = false;
 		$scope.columnDefs = null;
 		
 		$scope.parsedFiles = [];
@@ -19,6 +20,7 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 		 * Upload files!
 		 ********************/
 		$scope.onFileSelect = function($files) {
+			
 			//Initialize upload status variables.
 			$scope.complete = 0;
 			$scope.totalGlobalSize = 0;
@@ -58,7 +60,7 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 				(function (i,index,file) {
 						return $scope.upload = $upload.upload({
 							url: "submit/upload",
-							file: file,
+							file: file, 
 							progress: function(evt) {
 								$scope.$parent.uploadedFiles[index].complete = 100.0 * evt.loaded / evt.total;
 								
@@ -92,10 +94,10 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 		/********************
 		 * Select/Deselect all
 		 ********************/
-		$scope.clickSelected = function(collection) {
-			$scope.selectAllFiles = !$scope.selectAllFiles;
+		$scope.clickSelected = function(collection,status) {
+			status = !status;
 			for (var i=0; i < collection.length;i++) {
-				collection[i].selected = $scope.selectAllFiles;
+				collection[i].selected = status;
 			}
 		};
 		
@@ -212,7 +214,7 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 							params[$scope.columnDefs[k].name] = $scope.columnDefs[k].index;
 						}
 						
-						(function(i,params) {
+						(function(params,index) {
 							promise = promise.then(function() {
 								return $http({
 									url: "submit/parse/chip",
@@ -223,7 +225,7 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 									$scope.parsedFiles[index] = data;
 								});
 							});
-						}(i,params));
+						}(params,index));
 						
 
 					}
@@ -263,6 +265,22 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
             	}
         	});
 		};
+		
+		/********************
+		 * Display error message in modal
+		 ********************/
+		$scope.showError = function(file) {
+			$modal.open({
+	    		templateUrl: 'app/common/error.html',
+	    		controller: 'ErrorController',
+	    		resolve: {
+	    			file: function() {
+	    				return file;
+	    			}
+	    		}
+	    	});
+		};
+		
 		
 		
 		/********************

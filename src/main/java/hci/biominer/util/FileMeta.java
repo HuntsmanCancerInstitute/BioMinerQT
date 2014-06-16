@@ -8,9 +8,6 @@ public class FileMeta {
 
 	private String name;
 	private String size;
-	private String url;
-	private String deleteUrl;
-	private String deleteType = "DELETE";
 	private String message;
 	private String directory;
 	
@@ -35,19 +32,7 @@ public class FileMeta {
 	public void setSize(String size) {
 		this.size = size;
 	}
-	public String getUrl() {
-		return url;
-	}
-	public void setUrl(String url) {
-		this.url = url;
-	}
 	
-	public String getDeleteType() {
-		return deleteType;
-	}
-	public void setDeleteType(String deleteType) {
-		this.deleteType = deleteType;
-	}
 	
 	public void setMessage(String message) {
 		this.message = message;

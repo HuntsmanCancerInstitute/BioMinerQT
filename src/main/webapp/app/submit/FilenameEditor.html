@@ -1,0 +1,18 @@
+<div class="modal-header">
+	<h4>Change Filenames</h4>
+	<div>
+		<span class="label label-default" ng-click="alertHover=!alertHover">Click for instructions..</span>
+	</div>
+	<div class="alert alert-info" ng-show="alertHover==true">
+		<p><b>Instructions!</b> If you are not happy with the default parsed file names, please change them</p>
+	</div>
+</div>
+<div class="modal-body" resize per="{{alertHover == true ? 60 : 70}}" ng-style="style()">
+   <ul ng-repeat="file in selectedFiles">
+   		<li>
+   </ul>
+</div>
+<div class="modal-footer">
+            <button class="btn btn-primary" ng-click="ok()">Parse</button>
+            <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+</div>

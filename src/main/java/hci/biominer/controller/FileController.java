@@ -197,21 +197,7 @@ public class FileController {
 		for (File file : listOfFiles) {
 		    if (file.isFile() && !file.getName().startsWith(".")) {
 		         String name = file.getName();
-		         
-	        	 FileInputStream fileInputStream=null;
-	       
-	             byte[] bFile = new byte[(int) file.length()];
-	      
-	             try {
-	                 //convert file into array of bytes
-		     	    fileInputStream = new FileInputStream(file);
-		     	    fileInputStream.read(bFile);
-		     	    fileInputStream.close();
-	    
-	             }catch(Exception e){
-	             	e.printStackTrace();
-	             }
-
+		        
 	        	 fileMeta = new FileMeta();
 				 fileMeta.setName(name);
 				 fileMeta.setDirectory(folder.getPath());
