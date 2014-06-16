@@ -14,6 +14,7 @@ function($scope, $http) {
 	$scope.selectedLabs = [];
 	$scope.selectedSpecies = [];
 	$scope.genomeBuild = "";
+	$scope.sampleSource = "";
 	
 	// Temporary mockup code... these should be in a parent model
 	$scope.labList = [
@@ -59,12 +60,13 @@ function($scope, $http) {
 	                  {idSampleType: 4, name: "DNA"}
 	                  
 	];
-	$scope.siteList = [
-	   	                  {idSite: 1, name: "Left ventricle", organ: "Heart"},
-	   	                  {idSite: 2, name: "Right ventricle", organ: "Heart"},
-	   	                  {idSite: 3, name: "Aortic valve", organ: "Heart"},
-	   	                  {idSite: 4, name: "Left interior lobe", organ: "Lung"},
-	   	                  {idSite: 5, name: "Right interior lobe", organ: "Lung"}
+	$scope.sampleSourceList = [
+	 	   	              {idSampleSource: 0, name: "Cell Line", organ: "Cell Line"},
+	   	                  {idSampleSource: 1, name: "Heart, Left ventricle", organ: "Heart"},
+	   	                  {idSampleSource: 2, name: "Heart, Right ventricle", organ: "Heart"},
+	   	                  {idSampleSource: 3, name: "Heart, Aortic valve", organ: "Heart"},
+	   	                  {idSampleSource: 4, name: "Lung, Left interior lobe", organ: "Lung"},
+	   	                  {idSampleSource: 5, name: "Lung, Right interior lobe", organ: "Lung"}
 	   	                  
 	];
 	$scope.sampleGroupList = [

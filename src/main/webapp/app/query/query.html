@@ -1,6 +1,9 @@
 <form class="form-horizontal">
 <fieldset>
 
+	<!--                 -->
+    <!--  Toolbar        -->
+ 	<!--                 -->
    	<div class="row toolbar" >
   	       <h3>
    	       <span class="glyphicon glyphicon-zoom-in"></span> Query
@@ -9,13 +12,18 @@
 		   <a><span class="glyphicon glyphicon-remove"> Clear</a>
 	</div>
 		
- 	</div>
+
 	 			
+	<!--                 -->
+    <!--  Main panel     -->
+ 	<!--                 -->
 	<div class="row">
 	
 	
-	     <!-- Sidebar -->
-     	<div class="col-lg-4">  
+     	<!--                         -->
+        <!--  Query (sidebar) Panel  -->
+     	<!--                         -->
+     	<div class="col-lg-5">  
  
 
      	
@@ -28,7 +36,7 @@
            	 		<h4>What would you like to find?</h4>
            	 			
            	 		<!-- What type of data? -->
-           	 		<div class="form-group">
+           	 		<div class="form-group" style="padding-top: 0px">
 					  <div class="col-md-12"> 
 					    <label class="radio-inline" for="radios-0">
 					      <input name="radios" id="radios-0" value="1" checked="checked" type="radio">Genes
@@ -43,7 +51,7 @@
 					</div>
 
   
-           	 		<h4 style="padding-top: 10px">What Genome?</h4>
+           	 		<h4 style="padding-top: 20px">What Genome?</h4>
 					<div class="form-group">
 		  				<div class="col-md-12">
 		    				<select id="species_build" ng-model="genomeBuild" ng-options="gb.idGenomeBuild as gb.name  group by gb.species for gb in genomeBuildList" class="form-control">
@@ -53,7 +61,7 @@
 
            	 		
   
-           	 		<h4 style="padding-top: 10px">What Datasets?</h4>
+           	 		<h4 style="padding-top: 20px">What Datasets?</h4>
            	 		
            	 		<!-- What data sets? -->
 					<div class="form-group">
@@ -99,22 +107,73 @@
 					<!--  Sample Source  -->
 					<div class="form-group">
 						<label class="col-md-4 control-label" for=""labEntry">Sample Source</label>  
-					    <select data-placeholder="Choose sample source..." multiple class="col-md-7 chosen-select" ng-model="selectedLabs" chosen="labList" ng-options="lab.name for lab in labList"  ></select>
+					    <select data-placeholder="Choose sample source..." multiple class="col-md-7 chosen-select" ng-model="sampleSource" chosen="sampleSourceList" ng-options="sampleSource.name for sampleSource in sampleSourceList"  ></select>
 					</div>
 
 
 
-          	 		<h4s tyle="padding-top: 10px">What Regions / Genes?</h4>
           	 		
           	 		
+          	 		<!-- Interest or Don't Intersect -->
+           	 		<div class="form-group" style="padding-top: 20px;">
+					  <div class="col-md-12"> 
+						<h4 style="display: inline;margin-right: 10px">That</h4>
+					    <label style="padding-top:0px;" class="radio-inline" for="intersect-radios">
+					      <input name="radios" id="intersect" value="1" checked="checked" type="radio">Intersect
+					    </label> 
+					    <label style="padding-top:0px;" class="radio-inline" for="intersect-radios">
+					      <input name="radios" id="dont_intersect" value="2" type="radio">Don't Intersect
+					    </label> 
+					  </div>
+					</div>
+					
+					
+          	 		<!-- Regions-->
+					<div class="form-group">
+					    <div class="col-md-2">
+					    	<div class="checkbox" style="display: inline; padding-left: 0px;">
+						   		<label for="radios-region">
+							    	<input name="radio-region" value="1" type="radio"> Regions
+						   		</label>
+							</div>
+					    </div>
+					 	<div class="col-md-10">
+				    		<input type="text" style="display: inline; max-width: 60%;" class="form-control" placeholder="chr1:4500-8900">
+					    	&nbsp;&nbsp;+/-
+					    	<input type="text" style="display: inline; max-width: 60px;" class="form-control" placeholder="1000"/> 
+					    	bp
+						</div>
+					</div>
+							 
+          	 		<!-- Genes-->
+					<div class="form-group">
+						<div class="col-md-2">
+							<div class="checkbox" style="display: inline; padding-left: 0px;">
+						   		<label for="radios-region">
+							    	<input name="radio-region" value="2" type="radio"> Genes
+						   		</label>
+							</div>
+						</div>
+					 	<div class="col-md-10">
+				    		<input type="text" style="display: inline; max-width: 60%;" class="form-control" placeholder="gene, gene, ...">
+					    	&nbsp;&nbsp;+/-
+					    	<input type="text" style="display: inline; max-width: 60px;"class="form-control" placeholder="1000"/> 
+					    	bp
+					    </div>
+					</div>
+
+					
+					
           	 		
- 				</div>
-			</div>
-        
-        
-     	</div>
-     
-		<div class="col-lg-8" >
+ 				</div> <!-- end of panel body -->
+			</div> <!--  end of panel -->
+     	</div> <!--  end of sidebar  -->
+     	
+     	
+     	<!--                 -->
+        <!--  Results Panel  -->
+     	<!--                 -->
+		<div class="col-lg-7" >
 			
 			<div class=" panel panel-default">
 			
@@ -128,7 +187,7 @@
 		
 		</div> 
 		
-	</div> 
+	</div>  <!-- end of row (main panel) -->
 	
 </fieldset>
 </form>
