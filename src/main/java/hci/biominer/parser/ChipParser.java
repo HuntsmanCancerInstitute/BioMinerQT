@@ -3,13 +3,16 @@ package hci.biominer.parser;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.GZIPOutputStream;
 
 import hci.biominer.model.chip.Chip;
 import hci.biominer.model.chip.ChipIntervalTreeSerialized;
@@ -30,6 +33,7 @@ public class ChipParser {
 	private Genome genomeBuild = null;
 	private boolean isConverted = false;
 	private ArrayList<String> parsedData = null;
+	private String warningMessage = "";
 	
 	/* 
 	 * Constructor for internal call. Assumes 0-based indexes.
@@ -42,6 +46,7 @@ public class ChipParser {
 		if (!inputFile.exists()) {
 			throw new Exception("[ChipParser] Specified input file does not exist");
 		}
+		
 		this.inputFile = inputFile;
 		this.outputFile = outputFile;
 		this.chromColumn = chromColumn;
@@ -56,8 +61,12 @@ public class ChipParser {
 		String[] colNames = new String[] {"Chromsome Column","Start Column","End Column","FDR Column","Log Column"};
 		colMax = ColumnValidators.validateColumns(colsToCheck, colNames, this.inputFile);
 		
-		this.run();
-	
+		try {
+			this.run();
+		} catch(Exception ex) {
+			//System.out.println(ex);
+			throw ex;
+		}
 	}
 	
 	/*
@@ -67,15 +76,6 @@ public class ChipParser {
 		//Validate command line arguments
 		System.out.println("[ChipParser] Processing command line arguments:");
 		this.processArgs(args);
-		
-		try {
-			this.run();
-		} catch (Exception ioex) {
-			System.out.println("[ChipParser] Error processing file: " + ioex.getMessage());
-			System.exit(1);
-		}
-		
-		System.out.println("[ChipParser] All done!\n");
 	
 	}
 	
@@ -83,19 +83,18 @@ public class ChipParser {
 	/*
 	 * Main workflow
 	 */
-	private void run() throws Exception {
+	public String run() throws Exception {
 		System.out.println("[ChipParser] Processing input file...");
 		this.processData();
-		
 		
 		//Write output
 		System.out.println("[ChipParser] Writing output file...");
 		this.writeData();
 		
+		System.out.println("[ChipParser] All done!\n");
 		
-		//Create intervalTrees
-//		System.out.println("[ChipParser] Creating interval tree...");
-//		createIntervalTree();
+		return this.warningMessage;
+
 	}
 	
 	/*
@@ -115,9 +114,12 @@ public class ChipParser {
 	 */
 	private void writeData() throws Exception{
 		BufferedWriter bw = null;
+		
+		
 		try {
 			//Open file handle
-			bw = new BufferedWriter(new FileWriter(this.outputFile));
+			GZIPOutputStream zip = new GZIPOutputStream(new FileOutputStream(this.outputFile));
+			bw = new BufferedWriter(new OutputStreamWriter(zip));
 			
 			//Write data
 			for (String line: this.parsedData) {
@@ -127,7 +129,7 @@ public class ChipParser {
 			//Close handle
 			bw.close();
 		} catch (IOException ioex) {
-			throw new IOException(String.format("[ChipParser] Error writing to output file file: %s.  Exiting\n",ioex.getMessage()));
+			throw new IOException(String.format("[ChipParser] Error writing to output file file: %s.",ioex.getMessage()));
 		} finally {
 			try {
 				bw.close();
@@ -174,58 +176,39 @@ public class ChipParser {
 				//Make sure the line length matches header. Parsing might go OK if this fails, but I 
 				//think it's best to error out when the file is at all malformed.
 				if (parts.length != this.colMax) {
-					System.out.println(String.format("[ChipParser] The number of columns in row %d ( %d ) doesn't match the header ( %d )\n",
+					throw new Exception(String.format("[ChipParser] The number of columns in row %d ( %d ) doesn't match the header ( %d )\n",
 							lineCount,parts.length,this.colMax));
-					failed = true;
-					break;
 				}
 				
 
 				//Parse chromsome, check to make sure it's recognizable
-				if ((tempChrom = ColumnValidators.validateChromosome(this.genomeBuild, parts[this.chromColumn])) == null) {
-					failed = true;
-					break;
-				}
-				
+				tempChrom = ColumnValidators.validateChromosome(this.genomeBuild, parts[this.chromColumn]);
 				
 				//Parse start position, make sure it's an integer and within boundaries
-				if ((tempStart = ColumnValidators.validateCoordiate(this.genomeBuild, tempChrom, parts[this.startColumn])) == -1) {
-					failed = true;
-					break;
-				}
+				tempStart = ColumnValidators.validateCoordiate(this.genomeBuild, tempChrom, parts[this.startColumn]);
 				
 				//Parse end position, make sure it's an integer and within boundaries
-				if ((tempEnd = ColumnValidators.validateCoordiate(this.genomeBuild, tempChrom, parts[this.endColumn])) == -1) {
-					failed = true;
-					break;
-				}
-				
+				tempEnd = ColumnValidators.validateCoordiate(this.genomeBuild, tempChrom, parts[this.endColumn]);
+			
 				//Check to sure end is greater than start
 				if (tempEnd <= tempStart) {
-					System.out.println(String.format("[ChipParser] Region end %d is less than or equal to region start %d, exiting.",tempEnd,tempStart));
-					failed = true;
+					throw new Exception(String.format("[ChipParser] Region end %d is less than or equal to region start %d, exiting.",tempEnd,tempStart));
 				}
 				
 				//Parse FDR
-				if ((tempFdr = ColumnValidators.validateFdr(parts[this.fdrColumn], this.isConverted)) == -1) {
-					failed = true;
-					break;
-				} else {
-					if (this.isConverted && tempFdr > 1) {
-						allTransformedFdrLessThanOne = false;
-					}
+				tempFdr = ColumnValidators.validateFdr(parts[this.fdrColumn], this.isConverted);
+					
+				if (this.isConverted && tempFdr > 1) {
+					allTransformedFdrLessThanOne = false;
 				}
 				
 				//Parse LogRatio
-				if ((tempLog = ColumnValidators.validateLog2Ratio(parts[this.logColumn])) == Float.MAX_VALUE) {
-					failed =  true;
-					break;
-				} else {
-					if (tempLog > 0) {
-						allLog2RatioNeg = false;
-					} else if (tempLog < 0) {
-						allLog2RatioPos = false;
-					}
+				tempLog = ColumnValidators.validateLog2Ratio(parts[this.logColumn]);
+				
+				if (tempLog > 0) {
+					allLog2RatioNeg = false;
+				} else if (tempLog < 0) {
+					allLog2RatioPos = false;
 				}
 				
 				
@@ -237,21 +220,17 @@ public class ChipParser {
 			}
 			
 			//Throw failure message or warning messages
-			if (failed) {
-				throw new Exception("[ChipParser] This application identified malformed lines, please fix errors and re-run the application.\n");
-				
-			} else if (allTransformedFdrLessThanOne) {
-				System.out.println("[ChipParser] WARNING: FDR formatting style was set as transformed, but all values were between 0 and 1.  Are you sure the FDR values were transformed? "
-						+ "FDR values are transformed using the formula -10 * log10(FDR)");				
+		    if (allTransformedFdrLessThanOne) {
+		    	this.warningMessage = "[ChipParser] WARNING: FDR formatting style was set as transformed, but all values were between 0 and 1.  Are you sure the FDR values were transformed? "
+						+ "FDR values are transformed using the formula -10 * log10(FDR)";		
 			} else if (allLog2RatioNeg) {
-				System.out.println("[ChipParser] WARNING: All log2ratios were less than or equal to zero.  Are you sure the log2Ratios are formatted correctly?");
+				this.warningMessage = "[ChipParser] WARNING: All log2ratios were less than or equal to zero.  Are you sure the log2Ratios are formatted correctly?";
 			} else if (allLog2RatioPos) {
-				System.out.println("[ChipParser] WARNING: All log2ratios were greater than or equal to zero.  Are you sure the log2Ratios are formatted correctly?");
+				this.warningMessage = "[ChipParser] WARNING: All log2ratios were greater than or equal to zero.  Are you sure the log2Ratios are formatted correctly?";
 			}
 			
-			
 		} catch (IOException ioex) {
-			throw new IOException(String.format("[ChipParser] Error processing data file: %s.  Exiting\n",ioex.getMessage()));
+			throw new IOException(String.format("[ChipParser] Error processing data file: %s.",ioex.getMessage()));
 		} finally {
 			try {
 				br.close();
@@ -392,7 +371,13 @@ public class ChipParser {
 		//Slurp header for number of columns:
 		Integer[] colsToCheck = new Integer[]{this.chromColumn,this.startColumn,this.endColumn,this.fdrColumn,this.logColumn};
 		String[] colNames = new String[] {"Chromsome Column","Start Column","End Column","FDR Column","Log Column"};
-		colMax = ColumnValidators.validateColumns(colsToCheck, colNames, this.inputFile);
+		try {
+			colMax = ColumnValidators.validateColumns(colsToCheck, colNames, this.inputFile);
+		} catch (Exception ex) {
+			System.out.println(ex.getMessage());
+			ex.printStackTrace();
+		}
+		
 	}
 	
 

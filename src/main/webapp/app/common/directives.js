@@ -55,7 +55,7 @@ var directives = angular.module('directives', [])
         scope.$watch(scope.getWindowDimensions, function (newValue, oldValue) {
             scope.style = function () {
                 return {
-                    'height': (newValue.h * attrs.per / 100) + 'px',
+                    'max-height': (newValue.h * attrs.per / 100) + 'px',
                 };
             };
 
