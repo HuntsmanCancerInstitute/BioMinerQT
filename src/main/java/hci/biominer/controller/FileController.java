@@ -8,6 +8,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.zip.GZIPOutputStream;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -25,18 +26,47 @@ import hci.biominer.parser.GenomeParser;
 import hci.biominer.util.FileMap;
 import hci.biominer.util.FileMeta;
 import hci.biominer.util.PreviewMap;
+import hci.biominer.util.ModelUtil;
 
 @Controller
 @RequestMapping("/submit")
 public class FileController {
 
 	//Persistence containers.
-	HashMap<String,FileMeta> importedFileHash = new HashMap<String,FileMeta>();
-	HashMap<String,FileMeta> parsedFileHash = new HashMap<String,FileMeta>();
+	private HashMap<String,FileMeta> importedFileHash = new HashMap<String,FileMeta>();
+	private HashMap<String,FileMeta> parsedFileHash = new HashMap<String,FileMeta>();
 	
 	//Hard-coded file locations
 	private final static String FILES_PATH = "/temp/";
 	private final static String PARSED_PATH = "/parsed/";
+	
+	private final static String SUCCESS = "success";
+	private final static String FAILURE = "failure";
+	private final static String WARNING = "warning";
+	
+	//Load genome descriptons
+	private HashMap<String,File> genomePaths; 
+    private HashMap<String,Genome> loadedGenomes;
+	
+	public FileController() {
+		loadedGenomes = new HashMap<String,Genome>();
+		
+		genomePaths = new HashMap<String,File>();
+		genomePaths.put("hg19",new File("/Users/timmosbruger/Documents/eclipse4.3/BiominerQT/AnnotationFiles/hg19_GRCh37_Genome.txt"));
+		
+		
+		for (String key: genomePaths.keySet()) {
+			GenomeParser gp;
+			try {
+				gp = new GenomeParser(genomePaths.get(key));
+				Genome genome = gp.getGenome();
+				loadedGenomes.put(key,genome);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
 	
 	
 	/***************************************************
@@ -48,7 +78,7 @@ public class FileController {
 	 ****************************************************/
 	@RequestMapping(value="/upload", method = RequestMethod.POST)
 	public @ResponseBody 
-	FileMeta upload(@RequestParam("file") MultipartFile file) {
+	FileMeta upload(@RequestParam("file") MultipartFile file, @RequestParam("analysisID") String id) {
  
 		FileMeta fileMeta = new FileMeta();
 		String name = file.getOriginalFilename();
@@ -56,22 +86,36 @@ public class FileController {
 		if (!file.isEmpty()) {
 			try {
 				
-				fileMeta.setName(name);
-				fileMeta.setSize(new Long(file.getSize()).toString());
-				fileMeta.setDirectory(FILES_PATH);
+				File directory = new File(FILES_PATH,id);
+				if (!directory.exists()) {
+					directory.mkdir();
+				}
+				fileMeta.setDirectory(directory.getAbsolutePath());
 				
-				File localFile = new File(FILES_PATH,name);
-				FileCopyUtils.copy(file.getInputStream(), new FileOutputStream(localFile));
+				if (name.endsWith(".bam") || name.endsWith(".bai") || name.endsWith(".useq") || name.endsWith(".bw") || name.endsWith(".gz") || name.endsWith(".zip")) {
+					File localFile = new File(directory,name);
+					FileCopyUtils.copy(file.getInputStream(), new FileOutputStream(localFile));
+					fileMeta.setSize(String.valueOf(localFile.length()));
+					fileMeta.setName(name);
+				} else {
+					File localFile = new File(directory,name + ".gz");
+					FileCopyUtils.copy(file.getInputStream(), new GZIPOutputStream(new FileOutputStream(localFile)));
+					fileMeta.setSize(String.valueOf(localFile.length()));
+					fileMeta.setName(name + ".gz");
+				}
 				
 				System.out.println("File upload successful! " + name);
-				fileMeta.setMessage("success");
+				fileMeta.setState(SUCCESS);
+				fileMeta.setMessage("");
 				importedFileHash.put(name, fileMeta);
 				
 			} catch (Exception ex) {
 				System.out.println("File upload failed: " + name + " " + ex.getMessage());
+				fileMeta.setState(FAILURE);
 				fileMeta.setMessage(ex.getMessage());
 			}
 		} else {
+			fileMeta.setState(FAILURE);
 			fileMeta.setMessage("File is empty");
 		}
 		
@@ -146,6 +190,9 @@ public class FileController {
 		 
 		 FileMeta deleteFile = fileHash.get(file);
 		 try {		
+			 
+			    System.out.println(deleteFile.getDirectory());
+			    System.out.println(deleteFile.getName());
 			 	File f = new File(deleteFile.getDirectory(),deleteFile.getName());
 			 	boolean success = f.delete();
 			 	
@@ -169,16 +216,16 @@ public class FileController {
 	 * @return void
 	 ****************************************************/
 	@RequestMapping(value = "upload/load", method = RequestMethod.GET)
-	 public @ResponseBody FileMap  get(HttpServletResponse response, @RequestParam("type") String type){
+	 public @ResponseBody FileMap  get(HttpServletResponse response, @RequestParam("type") String type, @RequestParam("analysisID") String id){
 		HashMap<String,FileMeta> fileHash; //HashMap container, might get replaced with db
 		FileMap fileMap = new FileMap();
 		File folder;
 		
 		if (type.equals("imported")) {
-			 folder = new File(FILES_PATH);
+			 folder = new File(FILES_PATH,id);
 			 fileHash = this.importedFileHash;
 		 } else if (type.equals("parsed")) {
-			 folder = new File(PARSED_PATH);
+			 folder = new File(PARSED_PATH,id);
 			 fileHash = this.parsedFileHash;
 		 } else {
 				 try {
@@ -188,6 +235,10 @@ public class FileController {
 				}
 			 return fileMap;
 		 }
+		
+		if (!folder.exists()) {
+			folder.mkdir();
+		}
 		
 		
 		File[] listOfFiles = folder.listFiles();
@@ -202,10 +253,10 @@ public class FileController {
 				 fileMeta.setName(name);
 				 fileMeta.setDirectory(folder.getPath());
 				 fileMeta.setSize(new Long(file.length()).toString());
-				 fileMeta.setMessage("success");
+				 fileMeta.setMessage("");
+				 fileMeta.setState(SUCCESS);
 				 fileHash.put(name,fileMeta);
 				 fileMap.addFile(fileMeta);
-		         
 		    }
 		}
 		return fileMap;
@@ -230,7 +281,7 @@ public class FileController {
 			 	int counter = 0;
 			 	
 			 	//Open a buffered reader
-			 	BufferedReader br = new BufferedReader(new FileReader(new File(fm.getDirectory(),fm.getName())));
+			 	BufferedReader br = ModelUtil.fetchBufferedReader(new File(fm.getDirectory(),fm.getName()));
 			 
 			 	//Grab the first 20 lines of the file
 			 	while((temp = br.readLine()) != null) {
@@ -273,31 +324,67 @@ public class FileController {
 	public @ResponseBody 
 	FileMeta upload(@RequestParam("inputFile") String input, @RequestParam("outputFile") String output,
 			@RequestParam("Chromosome") Integer chrom, @RequestParam("Start") Integer start, @RequestParam("End") Integer end,
-			@RequestParam("Log2Ratio") Integer log, @RequestParam("FDR") Integer fdr) {
+			@RequestParam("Log2Ratio") Integer log, @RequestParam("FDR") Integer fdr, @RequestParam("genome") String genomeName, 
+			@RequestParam("analysisID") String id, @RequestParam("10*log10(FDR)") Integer logFDR) {
  
-		
 		FileMeta outputMeta = new FileMeta();
 		
 		try {
-			//Grab genome.. temporarily hard-coded
-			File descriptorFile = new File ("/Users/timmosbruger/Documents/eclipse4.3/BiominerQT/AnnotationFiles/hg19_GRCh37_Genome.txt");
-			GenomeParser gp = new GenomeParser (descriptorFile);
-			Genome genome = gp.getGenome();
 			
-			File inputFile = new File(FILES_PATH, input);
-			File outputFile = new File(PARSED_PATH, output);
-			new ChipParser(inputFile, outputFile, chrom, start, end, fdr, log, true, genome);
+			if (!this.loadedGenomes.containsKey(genomeName)) {
+				outputMeta.setName(output);
+				outputMeta.setSize(null);
+				outputMeta.setMessage(String.format("The selected genome %s does not have a transcriptome object.",genomeName));
+				return outputMeta;
+			}
+			
+			Genome genome = this.loadedGenomes.get(genomeName);
+			
+			File importDir = new File(FILES_PATH,id);
+			File parseDir = new File(PARSED_PATH,id);
+			File inputFile = new File(importDir, input);
+			File outputFile = new File(parseDir, output);
+			
+			//Add gz extension if it doesn't exisst
+			if (!outputFile.getName().endsWith(".gz")) {
+				outputFile = new File(outputFile.getParent(),outputFile.getName() + ".gz");
+			}
+			
+			String warningMessage = "";
+			if (fdr != -1) {
+				ChipParser cp = new ChipParser(inputFile, outputFile, chrom, start, end, fdr, log, false, genome);
+				warningMessage = cp.run();
+			} else if (logFDR != 1) {
+				ChipParser cp = new ChipParser(inputFile, outputFile, chrom, start, end, logFDR, log, true, genome);
+				warningMessage = cp.run();
+			} else {
+				outputMeta.setName(output);
+				outputMeta.setSize(null);
+				outputMeta.setMessage("Neither FDR or 10*log10(FDR) were set.");
+				return outputMeta;
+			}
+			
+			if (warningMessage.equals("")) {
+				outputMeta.setState(SUCCESS);
+				outputMeta.setMessage("");
+			} else {
+				outputMeta.setState(WARNING);
+				outputMeta.setMessage(warningMessage);
+			}
 			
 			outputMeta.setName(output);
-			outputMeta.setDirectory(PARSED_PATH);
+			outputMeta.setDirectory(parseDir.getAbsolutePath());
 			outputMeta.setSize(new Long(outputFile.length()).toString());
-			outputMeta.setMessage("success");
+			
+			this.parsedFileHash.put(output, outputMeta);
 		} catch (Exception ioex) {
 			outputMeta.setName(output);
 			outputMeta.setSize(null);
+			outputMeta.setState(FAILURE);
 			outputMeta.setMessage(ioex.getMessage());
 		}
 		
+	
 		return outputMeta;
 	}
 	

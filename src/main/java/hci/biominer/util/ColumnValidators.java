@@ -33,7 +33,7 @@ public class ColumnValidators {
 //		return genomeBuild;
 //	}
 	
-	public static int validateColumns(Integer[] colsToCheck, String[] colNames, File inputFile) {
+	public static int validateColumns(Integer[] colsToCheck, String[] colNames, File inputFile) throws Exception {
 		System.out.print("[ColumnValidator] Reading input file header to determine number of columns..");
 		
 		int colMax = -1;
@@ -48,69 +48,52 @@ public class ColumnValidators {
 			br.close();
 			System.out.println("OK");
 		} catch (IOException ioex) {
-			System.out.println(String.format("\n[ColumnValidator] Error reading input file: %s. Message: %s",inputFile.getAbsolutePath(),ioex.getMessage()));
-			System.exit(1);
+			throw new IOException(String.format("[ColumnValidator] Error reading input file: %s. Message: %s.",inputFile.getAbsolutePath(),ioex.getMessage()));
 		}
 		
 		//Check to make sure column designations are within range
 		System.out.print("[ColumnValidator] Making sure column indexes are set and within range..");
 				
 		int idx = 0;
-		boolean failed = false;
+
 		for (Integer col: colsToCheck) {
 			if (col == -1) {
-				System.out.println(String.format("[ColumnValidator] %s was not set",colNames[idx]));
-				failed = true;
+				throw new IOException(String.format("[ColumnValidator] %s was not set.", colNames[idx]));
 			} if (col < 0 || col > colMax ) {
-				System.out.println(String.format("[ColumnValidator] %s index was not valid: %d, must be between %d and %d.  If the number of columns seems"
-						+ " low, check to make sure your file is tab-delimited",colNames[idx],col,0,colMax));
-				failed = true;
+				throw new IOException(String.format("[ColumnValidator] %s index was not valid: %d, must be between %d and %d.  If the number of columns seems"
+						+ " low, check to make sure your file is tab-delimited.",colNames[idx],col,0,colMax));
 			}
-			
 			idx++;
 		}
 		
-		if (failed) {
-			System.out.println("Errors while checking column designations, please fix errors and try again\n");
-			System.exit(1);
-		} else {
-			System.out.println("OK");
-		}
-		
+		System.out.println("OK");
 		return colMax;
 	}
 	
-	public static int validateCoordiate(Genome build, String chromosome, String coordinate) {
+	public static int validateCoordiate(Genome build, String chromosome, String coordinate) throws Exception{
 		int tempStart = -1;
-		boolean failed = false;
 		
 		//Make sure value is an integer
 		try {
 			tempStart = Integer.parseInt(coordinate);
 		} catch (NumberFormatException nfe) {
-			System.out.println(String.format("[ColumnValidator] Can't parse coordinate, not an integer: %s",coordinate));
-			failed = true;
+			throw new NumberFormatException(String.format("[ColumnValidator] Can't parse coordinate, not an integer: %s. Please make sure you selected the proper columns.",coordinate));	
 		}
 		
 		//Make sure it falls within boundaries
 		int maxPos = build.getNameChromosome().get(chromosome).getLength();
 		//int maxPos = GenomeBuilds.BUILD_INFO.get(build).get(chromosome);
 		if (tempStart < 0 || tempStart >= maxPos) {
-			System.out.println(String.format("[ColumnValidator] Parsed start position ( %d ) does not fall with %s boundaries: %d - %d",
-					tempStart,chromosome,0,maxPos));
-			failed = true;
+			throw new NumberFormatException(String.format("[ColumnValidator] Parsed start position ( %d ) does not fall with %s boundaries: %d - %d. Please make"
+					+ " sure you selected the proper genome build.",
+					tempStart,chromosome,0,maxPos));	
 		}
 		
-		if (failed) {
-			return -1;
-		} else {
-			return tempStart;
-		}
-		
+		return tempStart;
 	}
 	
-	public static String validateChromosome(Genome build, String chromosome) {
-		boolean failed = false;
+	public static String validateChromosome(Genome build, String chromosome) throws Exception {
+
 		
 		if (chromosome.startsWith("chr")) {
 			chromosome = chromosome.substring(3);
@@ -120,69 +103,51 @@ public class ColumnValidators {
 		
 		
 		if (!nameChromosome.containsKey(chromosome)) {
-			System.out.println(String.format("[ColumnValidator] Can't find chromsome %s in genome build.",chromosome));
-			failed = true;
+			throw new Exception(String.format("[ColumnValidator] Can't find chromosome '%s' in genome build '%s'. Please make sure your genome build is correct and that "
+					+ "you selected the proper columns.",chromosome,build.getBuildName()));
 		} 
 		
-		if (failed) {
-			return null;
-		} else {
-			return chromosome;
-		}
+		return chromosome;
 	}
 	
-	public static float validateFdr(String fdr, boolean transformed) {
+	public static float validateFdr(String fdr, boolean transformed) throws Exception{
 		float tempFdr = -1;
-		boolean failed = false;
+
 		
 		//Parse FDR value
 	    try {
 	    	tempFdr = Float.parseFloat(fdr);
 	    } catch (NumberFormatException nfe) {
-	    	System.out.println(String.format("[ColumnValidator] Can't parse FDR, not a floating point value: %s",fdr));
-	    	failed = true;
+	    	throw new NumberFormatException(String.format("[ColumnValidator] Can't parse FDR, not a floating point value: %s.",fdr));
 	    }
 	    
 	    //Make sure value is greater than 0
-	    if (!failed && tempFdr < 0) {
-	    	System.out.println(String.format("[ColumnValidator] The FDR value is less than zero: %f, please make sure you selected the correct column",tempFdr));
-	    	failed = true;
+	    if (tempFdr < 0) {
+	    	throw new Exception(String.format("[ColumnValidator] The FDR value is less than zero: %f, please make sure you selected the correct column.",tempFdr));
 	    }
 	    
 	    //If the score isn't transformed, make sure it's less than one
 	    if (!transformed) {
 	    	if (tempFdr > 1) {
-		    	System.out.println(String.format("[ColumnValidator] The FDR formatting style was set as 'untransformed', but the value is greater than 1: %f",tempFdr));
-		    	failed = true;
+	    		throw new Exception(String.format("[ColumnValidator] The FDR formatting style was set as 'untransformed', but the value is greater than 1: %f.",tempFdr));
 	    	}
 	    	tempFdr = (float)(-10 * Math.log(tempFdr));
 	    }
 	    
-	    if (failed) {
-	    	return -1;
-	    } else {
-	    	return tempFdr;
-	    }
+	
+	    return tempFdr;
 	}
 	
-	public static float validateLog2Ratio(String log2ratio) {
+	public static float validateLog2Ratio(String log2ratio) throws Exception{
 		float tempLog = Float.MAX_VALUE;
-		boolean failed = false;
 		
 		//Parser log2ratio value
 		try {
 			tempLog = Float.parseFloat(log2ratio);
 		} catch (NumberFormatException nfe) {
-			System.out.println(String.format("[ColumnValidator] Can't parse log2ratio, not a floating point value: %s",log2ratio));
-			failed = true;
+			throw new NumberFormatException(String.format("[ColumnValidator] Can't parse log2ratio, not a floating point value: %s.",log2ratio));
 		}
 		
-		if (failed) {
-			return Float.MAX_VALUE;
-		} else {
-			return tempLog;
-		}
+		return tempLog;
 	}
-	
-
 }

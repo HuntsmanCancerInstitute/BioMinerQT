@@ -28,7 +28,13 @@
     color: #333;
 }
 
+.filename-dialog .modal-body {
+	overflow-y: auto;
+}
 
+.filename-dialog .modal-dialog {
+	width: 50%;
+}
 
 .preview-dialog .modal-dialog {
    width: 80%;

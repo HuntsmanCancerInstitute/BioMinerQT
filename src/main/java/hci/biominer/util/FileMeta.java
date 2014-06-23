@@ -9,6 +9,7 @@ public class FileMeta {
 	private String name;
 	private String size;
 	private String message;
+	private String state;
 	private String directory;
 	
 	public String getName() {
@@ -33,7 +34,6 @@ public class FileMeta {
 		this.size = size;
 	}
 	
-	
 	public void setMessage(String message) {
 		this.message = message;
 	}
@@ -41,4 +41,14 @@ public class FileMeta {
 	public String getMessage() {
 		return this.message;
 	}
+	
+	public String getState() {
+		return this.state;
+	}
+	
+	public void setState(String state) {
+		this.state = state;
+	}
+	
+	
 }
