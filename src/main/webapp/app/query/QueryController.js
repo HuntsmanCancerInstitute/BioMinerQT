@@ -15,6 +15,8 @@ function($scope, $http) {
 	$scope.selectedSpecies = [];
 	$scope.genomeBuild = "";
 	$scope.sampleSource = "";
+	$scope.geneAnnotations = [];
+	$scope.gentypes = [];
 	
 	// Temporary mockup code... these should be in a parent model
 	$scope.labList = [
@@ -29,6 +31,24 @@ function($scope, $http) {
 	                      }
 	                        
     ];
+    
+    $scope.geneAnnotationList = [
+                   {"idGeneAnnotation": 1, "name": "TSS"},
+                   {"idGeneAnnotation": 2, "name": "Genic"},
+                   {"idGeneAnnotation": 3, "name": "Intronic"},
+                   {"idGeneAnnotation": 4, "name": "Exonic"},
+                   {"idGeneAnnotation": 5, "name": "Intergenic"}
+                     		
+    ];
+    
+    
+    $scope.genotypeList = [
+                   {"idGenotype": 1, "name": "Homozygous Mutant"},
+                   {"idGenotype": 2, "name": "Heterozygous Mutant"},
+                   {"idGenotype": 3, "name": "Compound Heterozygous "},
+                   {"idGenotype": 4, "name": "Wildtype"}
+    ];
+       
        
    $scope.visibilityList = [
                    {"codeVisibility": "MEM", "name": "Lab members"},

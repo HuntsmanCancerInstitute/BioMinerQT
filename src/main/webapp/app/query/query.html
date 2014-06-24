@@ -9,7 +9,7 @@
    	       <span class="glyphicon glyphicon-zoom-in"></span> Query
 		   </h3>
 		   <a><span class="glyphicon glyphicon-play"></span >Run</a>
-		   <a><span class="glyphicon glyphicon-remove"> Clear</a>
+		   <a><span class="glyphicon glyphicon-remove"></span>Clear</a>
 	</div>
 		
 
@@ -137,12 +137,15 @@
 						   		</label>
 							</div>
 					    </div>
-					 	<div class="col-md-10">
-				    		<input type="text" style="display: inline; max-width: 60%;" class="form-control" placeholder="chr1:4500-8900">
+					    <div class="col-md-7">
+				    		<input type="text" style="display: inline;" class="form-control" placeholder="chr1:4500-8900">
+					    </div>
+				    	<div class="col-md-3">
 					    	&nbsp;&nbsp;+/-
 					    	<input type="text" style="display: inline; max-width: 60px;" class="form-control" placeholder="1000"/> 
 					    	bp
-						</div>
+				    	</div>
+					    
 					</div>
 							 
           	 		<!-- Genes-->
@@ -154,11 +157,112 @@
 						   		</label>
 							</div>
 						</div>
-					 	<div class="col-md-10">
-				    		<input type="text" style="display: inline; max-width: 60%;" class="form-control" placeholder="gene, gene, ...">
+					 	<div class="col-md-7">
+				    		<input type="text" style="display: inline;" class="form-control" placeholder="gene, gene, ...">
+					    </div>
+				    	<div class="col-md-3">
 					    	&nbsp;&nbsp;+/-
 					    	<input type="text" style="display: inline; max-width: 60px;"class="form-control" placeholder="1000"/> 
 					    	bp
+				    	</div>
+					</div>
+
+         	 		<!-- Genes annotations-->
+					<div class="form-group">
+					 	<div class="col-md-2">
+					    </div>
+					    <div class="col-md-7">
+						    <select data-placeholder="Choose gene annotations..."   multiple class="col-md-12 chosen-select" ng-model="geneAnnotations" chosen="geneAnnotationList" ng-options="geneAnnotation.name for geneAnnotation in geneAnnotationList"  ></select>
+					    </div>
+				    	<div class="col-md-3">
+							&nbsp;&nbsp;+/-
+					    	<input type="text" style="display: inline; max-width: 60px;"class="form-control" placeholder="1000"/> 
+					    	bp
+				    	</div>
+					</div>
+					
+					
+					<!--  Thresholds -->
+           	 		<h4 style="padding-top: 20px">That Exceed these Thresholds</h4>
+           	 		 
+           	 		 <!-- FDR-->
+					<div class="form-group">
+					  <label class="col-md-3 control-label" >FDR</label>  
+					  <div class="col-md-6">
+						<label class="radio-inline" for="radios-0">
+					    <input name="fdt_radios" id="fdr_radio_1" value="1" checked="checked" type="radio">
+					      > abs
+					    </label> 
+					    <label class="radio-inline" for="radios-1">
+					      <input name="fdr_radios" id="fdr_radio_2" value="2" type="radio">
+					      >
+					    </label> 
+					    <label class="radio-inline" for="radios-2">
+					      <input name="fdr_radios" id="fdt_radio_3" value="3" type="radio">
+					      <
+					    </label> 
+						<input id="textinput" style="display: inline; max-width: 60px; margin-left: 10px;" name="textinput" placeholder="" class="form-control input-md" type="text">
+					  </div>
+					</div>        
+					
+           	 		
+           	 		 <!-- Log2 Ratio-->
+					<div class="form-group">
+					  <label class="col-md-3 control-label">Log2Ratio</label>  
+					  <div class="col-md-6">
+						<label class="radio-inline" for="radios-0">
+					    <input name="log2_radios" id="radios-0" value="1" checked="checked" type="radio">
+					      > abs
+					    </label> 
+					    <label class="radio-inline" for="radios-1">
+					      <input name="log2_radios" id="radios-1" value="2" type="radio">
+					      >
+					    </label> 
+					    <label class="radio-inline" for="radios-2">
+					      <input name="log2_radios" id="radios-2" value="3" type="radio">
+					      <
+					    </label> 
+					    
+						<input id="textinput" style="display: inline; max-width: 60px; margin-left:10px;" name="textinput" placeholder="" class="form-control input-md" type="text">
+					  </div>
+					</div>        
+
+					
+					<!-- Variant filter -->
+					<div class="form-group">
+					  <label class="col-md-3 control-label" for="variant-filter-radios">Variant Filter</label>
+					  <div class="col-md-6"> 
+					    <label class="radio-inline" for="variant-filter-radios-0">
+					      <input name="variant-filter-radios" id="variant-filter-radios-0" value="pass" checked="checked" type="radio">
+					      Pass
+					    </label> 
+					    <label class="radio-inline" for="variant-filter-radios-1">
+					      <input name="variant-filter-radios" id="variant-filter-radios-1" value="nopass" type="radio">
+					      No- Pass
+					    </label>
+					  </div>
+					</div>
+					
+					<!-- Variant type -->
+					<div class="form-group">
+					  <label class="col-md-3 control-label" for="variant-type-radios">Variant Type</label>
+					  <div class="col-md-6"> 
+					    <label class="radio-inline" for="variant-type-radios-0">
+					      <input name="variant-type-radios" id="variant-type-radios-0" value="1" checked="checked" type="radio">
+					      SNV
+					    </label> 
+					    <label class="radio-inline" for="variant-type-radios-1">
+					      <input name="variant-type-radios" id="variant-type-radios-1" value="2" type="radio">
+					      INDEL
+					    </label>
+					  </div>
+					</div>
+					
+        	 		<!-- Variant Genotype-->
+					<div class="form-group">
+					 	<label class="col-md-3 control-label" for="genotypes">Genotype</label>
+					    <div class="col-md-9">
+						    <select name="genotypes" data-placeholder="Choose genotypes..."   multiple class="col-md-12 chosen-select" ng-model="genotypes" chosen="genotypeList" ng-options="genotype.name for genotype in genotypeList"  ></select>
 					    </div>
 					</div>
 
