@@ -8,7 +8,7 @@
   	       <h3>
    	       <span class="glyphicon glyphicon-zoom-in"></span> Query
 		   </h3>
-		   <a><span class="glyphicon glyphicon-play"></span >Run</a>
+		   <a ng-click="runQuery()"><span class="glyphicon glyphicon-play"></span >Run</a>
 		   <a><span class="glyphicon glyphicon-remove"></span>Clear</a>
 	</div>
 		
@@ -35,18 +35,16 @@
             	 	
            	 		<h4>What would you like to find?</h4>
            	 			
-           	 		<!-- What type of data? -->
+           	 		<!-- What type of result do you want back? -->
            	 		<div class="form-group" style="padding-top: 0px">
 					  <div class="col-md-12"> 
-					    <label class="radio-inline" for="radios-0">
-					      <input name="radios" id="radios-0" value="1" checked="checked" type="radio">Genes
+					    <label ng-repeat="(key,name) in mapResultType" class="radio-inline" for="radio-rt-{{ key }}">
+					      <input 
+					      		 id="radio-rt-{{ key }}"
+					      	     ng-model="$parent.codeResultType" 
+					      	     ng-value="key" 
+					      	     type="radio">{{ name }}
 					    </label> 
-					    <label class="radio-inline" for="radios-1">
-					      <input name="radios" id="radios-1" value="2" type="radio">Genomic Regions
-					    </label> 
-					    <label class="radio-inline" for="radios-2">
-					      <input name="radios" id="radios-2" value="3" type="radio">Variants
-					    </label>
 					  </div>
 					</div>
 
@@ -54,7 +52,10 @@
            	 		<h4 style="padding-top: 20px">What Genome?</h4>
 					<div class="form-group">
 		  				<div class="col-md-12">
-		    				<select id="species_build" ng-model="genomeBuild" ng-options="gb.idGenomeBuild as gb.name  group by gb.species for gb in genomeBuildList" class="form-control">
+		    				<select id="select_build" 
+		    				        ng-model="genomeBuild" 
+		    				        ng-options="gb.name  group by gb.species for gb in genomeBuildList" 
+		    				        class="form-control">
 		    				</select>
 		  				</div>
 					</div>
@@ -66,21 +67,9 @@
            	 		<!-- What data sets? -->
 					<div class="form-group">
 					  <div class="col-md-12">
-					    <label class="checkbox-inline" for="checkboxes-0">
-					      <input name="checkboxes" id="checkboxes-0" value="1" type="checkbox">
-					      RNA Seq
-					    </label>
-					    <label class="checkbox-inline" for="checkboxes-1">
-					      <input name="checkboxes" id="checkboxes-1" value="2" type="checkbox">
-					      ChIP Seq
-					    </label>
-					    <label class="checkbox-inline" for="checkboxes-2">
-					      <input name="checkboxes" id="checkboxes-2" value="3" type="checkbox">
-					      Variant
-					    </label>
-					    <label class="checkbox-inline" for="checkboxes-3">
-					      <input name="checkboxes" id="checkboxes-3" value="4" type="checkbox">
-					      Methylation
+					    <label ng-repeat="analysisType in analysisTypeList" class="checkbox-inline" for="checkbox-at-{{ analysisType.codeAnalysisType }}">
+					      <input name="checkbox-at-{{ analysisType.codeAnalysisType }}" id="checkbox-at-{{ analysisType.codeAnalysisType }}" ng-value="analysisType.codeAnalysisType" ng-model="checkedAnalysisTypes[$index]" type="checkbox" >
+					      {{ analysisType.name }}
 					    </label>
 					  </div>
 					</div>
@@ -284,6 +273,11 @@
 				<div class="panel-heading">Results</div>
 				
 				<div class="panel-body">
+				
+				<!-- The query summary -->
+				<div>
+					<span class="alert alert-success" style="padding: 4px; margin-left: 10px" ng-repeat="queryElement in querySummary">{{ queryElement }}</span>
+				</div>
 				
 				
 				</div>

@@ -10,13 +10,27 @@ var query     = angular.module('query',     ['filters', 'services', 'directives'
 angular.module("app").controller("QueryController", [
 '$scope', '$http', '$modal',                                                      
 function($scope, $http) {
-	
-	$scope.selectedLabs = [];
-	$scope.selectedSpecies = [];
+	$scope.querySummary = [];
+	$scope.codeResultType = "";
 	$scope.genomeBuild = "";
-	$scope.sampleSource = "";
+
+	$scope.checkedAnalysisTypes = [false, false, false, false];
+	$scope.selectedAnalysisTypes = [];
+	$scope.selectedLabs = [];
+	$scope.projects = [];
+	$scope.analyses = [];
+	$scope.sampleSources = [];
+	
+	$scope.codeIntersect = "";
+	$scope.thresholdFDR = "";
+	$scope.codeThresholdFDRComparison = "";
+	$scope.thresholdLog2Ratio = "";
+	$scope.codeThresholdLog2RatioComparison = "";
+	
 	$scope.geneAnnotations = [];
-	$scope.gentypes = [];
+	$scope.codeVariantPass = "";
+	$scope.codeVariantType = "";
+	$scope.genotypes = [];
 	
 	// Temporary mockup code... these should be in a parent model
 	$scope.labList = [
@@ -31,6 +45,19 @@ function($scope, $http) {
 	                      }
 	                        
     ];
+	
+	$scope.mapResultType = {
+			'GENE' :     'Genes', 
+			'REGION' :   'Genomic Regions',
+			'VARIANT' :  'Variants' };
+	
+	$scope.analysisTypeList = [
+	        {"codeAnalysisType": "RNASeq",  "name": "RNA Seq"},
+	        {"codeAnalysisType": "CHIPSEQ", "name": "ChIP Seq"},
+	        {"codeAnalysisType": "VARIANT", "name": "Variant"},
+	        {"codeAnalysisType": "METHYL",  "name": "Methylation"}
+	];
+
     
     $scope.geneAnnotationList = [
                    {"idGeneAnnotation": 1, "name": "TSS"},
@@ -43,10 +70,11 @@ function($scope, $http) {
     
     
     $scope.genotypeList = [
-                   {"idGenotype": 1, "name": "Homozygous Mutant"},
-                   {"idGenotype": 2, "name": "Heterozygous Mutant"},
-                   {"idGenotype": 3, "name": "Compound Heterozygous "},
-                   {"idGenotype": 4, "name": "Wildtype"}
+                   {"idGenotype": 1, "name": "Homozygous"},
+                   {"idGenotype": 2, "name": "Heterozygous"},
+                   {"idGenotype": 3, "name": "Carrier Mutant"},
+                   {"idGenotype": 4, "name": "Carrier Reference"},
+                   {"idGenotype": 5, "name": "Reference"}
     ];
        
        
@@ -105,5 +133,46 @@ function($scope, $http) {
 	              {idAnalysisType: 4, name: "Variant Calling"}
 	   	                  
 	];
+	
+	$scope.runQuery = function() {
+		$scope.selectedAnalysisTypes.length = 0;
+		for (var i=0; i < $scope.checkedAnalysisTypes.length; i++) {
+			if ($scope.checkedAnalysisTypes[i]) {
+				$scope.selectedAnalysisTypes.push($scope.analysisTypeList[i]);
+			}
+		}
+		
+		var theAnalysisTypes = "";
+		$scope.selectedAnalysisTypes.forEach(function(element, index, array) {
+	    	  if (theAnalysisTypes.length > 0) {
+	    		  theAnalysisTypes = theAnalysisTypes + ", ";
+	    	  }
+	    	  theAnalysisTypes = theAnalysisTypes + element.name;
+	     });
+		if (theAnalysisTypes.length > 0) {
+			theAnalysisTypes = "On" + theAnalysisTypes + " data sets";
+		}
+
+		
+		var theLabs = "";
+		$scope.selectedLabs.forEach(function(element, index, array) {
+	    	  if (theLabs.length > 0) {
+	    		  theLabs = theLabs + ", ";
+	    	  }
+	    	  theLabs = theLabs + element.name;
+	     });
+		if (theLabs.length > 0) {
+			theLabs = "Submitted by " + theLabs;
+		}
+
+		$scope.querySummary.length = 0;
+		$scope.querySummary.push("Find " + $scope.mapResultType[$scope.codeResultType]);
+		$scope.querySummary.push("For build " + $scope.genomeBuild.species + ' ' + $scope.genomeBuild.name);
+		$scope.querySummary.push(theAnalysisTypes);
+		$scope.querySummary.push(theLabs);
+	
+	};
+	
+
 
 }]);
