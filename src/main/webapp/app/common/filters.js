@@ -32,7 +32,7 @@ var filters = angular.module('filters', [])
 				}
 			}
 			return display;
-		}
+		};
 	}
 ])
 
@@ -136,5 +136,29 @@ var filters = angular.module('filters', [])
 		return (bytes / Math.pow(1024, Math.floor(number))).toFixed(precision) +  ' ' + units[number];
 	};
   }
-]);
+])
+
+// This filter is a way to partition elements into a row.  For example, it is used
+// on the query results panel to show three query filters per row.
+.filter('partition', [
+ function() 
+ {
+	  var cache = {};
+	  var filter = function(arr, size) {
+	    if (!arr) { return; }
+	    var newArr = [];
+	    for (var i=0; i<arr.length; i+=size) {
+	      newArr.push(arr.slice(i, i+size));
+	    }
+	    var arrString = JSON.stringify(arr);
+	    var fromCache = cache[arrString+size];
+	    if (JSON.stringify(fromCache) === JSON.stringify(newArr)) {
+	      return fromCache;
+	    }
+	    cache[arrString+size] = newArr;
+	    return newArr;
+	  };
+	  return filter;
+	}
+ ]);
 

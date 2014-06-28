@@ -6,10 +6,14 @@
  	<!--                 -->
    	<div class="row toolbar" >
   	       <h3>
-   	       <span class="glyphicon glyphicon-zoom-in"></span> Query
+   	       		<span class="glyphicon glyphicon-zoom-in"></span> Query
 		   </h3>
-		   <a ng-click="runQuery()"><span class="glyphicon glyphicon-play"></span >Run</a>
-		   <a><span class="glyphicon glyphicon-remove"></span>Clear</a>
+		   <button class="green-button" ng-click="runQuery()">
+		   		<span class="glyphicon glyphicon-play"></span > Run
+		   </button>
+		   <button class="normal-button" ng-click="runQuery()">
+   				<span class="glyphicon glyphicon-remove"></span> Clear
+		   </button>
 	</div>
 		
 
@@ -43,6 +47,7 @@
 					      		 id="radio-rt-{{ key }}"
 					      	     ng-model="$parent.codeResultType" 
 					      	     ng-value="key" 
+					      	     ng-change="pickResultType()"
 					      	     type="radio">{{ name }}
 					    </label> 
 					  </div>
@@ -67,8 +72,8 @@
            	 		<!-- What data sets? -->
 					<div class="form-group">
 					  <div class="col-md-12">
-					    <label ng-repeat="analysisType in analysisTypeList" class="checkbox-inline" for="checkbox-at-{{ analysisType.codeAnalysisType }}">
-					      <input name="checkbox-at-{{ analysisType.codeAnalysisType }}" id="checkbox-at-{{ analysisType.codeAnalysisType }}" ng-value="analysisType.codeAnalysisType" ng-model="checkedAnalysisTypes[$index]" type="checkbox" >
+					    <label ng-repeat="analysisType in analysisTypeCheckedList" ng-class="analysisType.class" ng-disabled="!analysisType.show" class="checkbox-inline" for="checkbox-at-{{ analysisType.codeAnalysisType }}">
+					      <input name="checkbox-at-{{ analysisType.codeAnalysisType }}"  ng-disabled="!analysisType.show"  id="checkbox-at-{{ analysisType.codeAnalysisType }}" ng-model="analysisType.selected" type="checkbox" >
 					      {{ analysisType.name }}
 					    </label>
 					  </div>
@@ -96,7 +101,7 @@
 					<!--  Sample Source  -->
 					<div class="form-group">
 						<label class="col-md-4 control-label" for=""labEntry">Sample Source</label>  
-					    <select data-placeholder="Choose sample source..." multiple class="col-md-7 chosen-select" ng-model="sampleSource" chosen="sampleSourceList" ng-options="sampleSource.name for sampleSource in sampleSourceList"  ></select>
+					    <select data-placeholder="Choose sample source..." multiple class="col-md-7 chosen-select" ng-model="selectedSampleSources" chosen="sampleSourceList" ng-options="sampleSource.name for sampleSource in sampleSourceList"  ></select>
 					</div>
 
 
@@ -107,65 +112,64 @@
            	 		<div class="form-group" style="padding-top: 20px;">
 					  <div class="col-md-12"> 
 						<h4 style="display: inline;margin-right: 10px">That</h4>
-					    <label style="padding-top:0px;" class="radio-inline" for="intersect-radios">
-					      <input name="radios" id="intersect" value="1" checked="checked" type="radio">Intersect
-					    </label> 
-					    <label style="padding-top:0px;" class="radio-inline" for="intersect-radios">
-					      <input name="radios" id="dont_intersect" value="2" type="radio">Don't Intersect
-					    </label> 
+						
+						<div class="btn-group">
+   					     	<label class="btn btn-toggle" ng-model="isIntersect" btn-radio="true" uncheckable>Intersect</label>
+        					<label class="btn btn-toggle" ng-model="isIntersect" btn-radio="false" uncheckable>Don't Intersect</label>
+    					</div>
 					  </div>
 					</div>
 					
 					
           	 		<!-- Regions-->
-					<div class="form-group">
-					    <div class="col-md-2">
+					<div class="form-group"  ng-show="isIntersect">
+					    <div class="col-md-2" style="padding-right: 0px;">
 					    	<div class="checkbox" style="display: inline; padding-left: 0px;">
 						   		<label for="radios-region">
-							    	<input name="radio-region" value="1" type="radio"> Regions
+							    	<input name="radio-region" ng-model="intersectionTarget" value="REGION" type="radio"> Regions
 						   		</label>
 							</div>
 					    </div>
-					    <div class="col-md-7">
-				    		<input type="text" style="display: inline;" class="form-control" placeholder="chr1:4500-8900">
+					    <div class="col-md-7"  ng-show="intersectionTarget == 'REGION'" style="padding-left: 1px; padding-right: 0px;">
+				    		<input type="text" ng-model="regions" style="display: inline;" class="form-control" placeholder="chr1:4500-8900">
 					    </div>
-				    	<div class="col-md-3">
+				    	<div class="col-md-3"  ng-show="intersectionTarget == 'REGION'" style="padding-left: 1px; padding-right: 0px;">
 					    	&nbsp;&nbsp;+/-
-					    	<input type="text" style="display: inline; max-width: 60px;" class="form-control" placeholder="1000"/> 
+					    	<input type="text" ng-model="regionMargins" style="display: inline; max-width: 60px;" class="form-control" placeholder="1000"/> 
 					    	bp
 				    	</div>
 					    
 					</div>
 							 
           	 		<!-- Genes-->
-					<div class="form-group">
-						<div class="col-md-2">
+					<div class="form-group" ng-show="isIntersect && isGeneBasedQuery">
+						<div class="col-md-2" style="padding-right: 0px;">
 							<div class="checkbox" style="display: inline; padding-left: 0px;">
 						   		<label for="radios-region">
-							    	<input name="radio-region" value="2" type="radio"> Genes
+							    	<input name="radio-region"  ng-model="intersectionTarget" value="GENE" type="radio"> Genes
 						   		</label>
 							</div>
 						</div>
-					 	<div class="col-md-7">
-				    		<input type="text" style="display: inline;" class="form-control" placeholder="gene, gene, ...">
+					 	<div class="col-md-7" ng-show="intersectionTarget == 'GENE'" style="padding-left: 1px; padding-right: 0px;">
+				    		<input type="text" ng-model="genes" style="display: inline;" class="form-control" placeholder="gene, gene, ...">
 					    </div>
-				    	<div class="col-md-3">
+				    	<div class="col-md-3"  ng-show="intersectionTarget == 'GENE'"  style="padding-left: 1px; padding-right: 0px;">
 					    	&nbsp;&nbsp;+/-
-					    	<input type="text" style="display: inline; max-width: 60px;"class="form-control" placeholder="1000"/> 
+					    	<input type="text" ng-model="geneMargins" style="display: inline; max-width: 60px;"class="form-control" placeholder="1000"/> 
 					    	bp
 				    	</div>
 					</div>
 
          	 		<!-- Genes annotations-->
-					<div class="form-group">
-					 	<div class="col-md-2">
+					<div class="form-group" ng-show="isIntersect && isGeneBasedQuery">
+					 	<div class="col-md-2" style="padding-right: 0px;">
 					    </div>
-					    <div class="col-md-7">
-						    <select data-placeholder="Choose gene annotations..."   multiple class="col-md-12 chosen-select" ng-model="geneAnnotations" chosen="geneAnnotationList" ng-options="geneAnnotation.name for geneAnnotation in geneAnnotationList"  ></select>
+					    <div class="col-md-7" ng-show="intersectionTarget == 'GENE'" style="padding-left: 1px; padding-right: 0px;">
+						    <select data-placeholder="Choose gene annotations..."   multiple class="col-md-12 chosen-select" ng-model="selectedGeneAnnotations" chosen="geneAnnotationList" ng-options="geneAnnotation.name for geneAnnotation in geneAnnotationList"  ></select>
 					    </div>
-				    	<div class="col-md-3">
+				    	<div class="col-md-3" ng-show="intersectionTarget == 'GENE'" style="padding-left: 1px; padding-right: 0px;">
 							&nbsp;&nbsp;+/-
-					    	<input type="text" style="display: inline; max-width: 60px;"class="form-control" placeholder="1000"/> 
+					    	<input type="text" ng-model="geneAnnotationMargins" style="display: inline; max-width: 60px;"class="form-control" placeholder="1000"/> 
 					    	bp
 				    	</div>
 					</div>
@@ -175,83 +179,68 @@
            	 		<h4 style="padding-top: 20px">That Exceed these Thresholds</h4>
            	 		 
            	 		 <!-- FDR-->
-					<div class="form-group">
+					<div class="form-group" ng-show="isThresholdBasedQuery">
 					  <label class="col-md-3 control-label" >FDR</label>  
 					  <div class="col-md-6">
-						<label class="radio-inline" for="radios-0">
-					    <input name="fdt_radios" id="fdr_radio_1" value="1" checked="checked" type="radio">
-					      > abs
-					    </label> 
-					    <label class="radio-inline" for="radios-1">
-					      <input name="fdr_radios" id="fdr_radio_2" value="2" type="radio">
-					      >
-					    </label> 
-					    <label class="radio-inline" for="radios-2">
-					      <input name="fdr_radios" id="fdt_radio_3" value="3" type="radio">
-					      <
-					    </label> 
-						<input id="textinput" style="display: inline; max-width: 60px; margin-left: 10px;" name="textinput" placeholder="" class="form-control input-md" type="text">
+					  	<div class="btn-group">
+   					     	<label class="btn btn-toggle" ng-model="codeThresholdFDRComparison" btn-radio="'<'" uncheckable>&gt;</label>
+        					<label class="btn btn-toggle" ng-model="codeThresholdFDRComparison" btn-radio="'>'" uncheckable>&lt;</label>
+    					</div>
+						<input id="textinput" ng-model="thresholdFDR" style="display: inline; max-width: 60px; margin-left: 10px;" name="textinput" placeholder=".05" class="form-control input-md" type="text">
 					  </div>
 					</div>        
 					
            	 		
            	 		 <!-- Log2 Ratio-->
-					<div class="form-group">
+					<div class="form-group" ng-show="isThresholdBasedQuery">
 					  <label class="col-md-3 control-label">Log2Ratio</label>  
 					  <div class="col-md-6">
-						<label class="radio-inline" for="radios-0">
-					    <input name="log2_radios" id="radios-0" value="1" checked="checked" type="radio">
-					      > abs
-					    </label> 
-					    <label class="radio-inline" for="radios-1">
-					      <input name="log2_radios" id="radios-1" value="2" type="radio">
-					      >
-					    </label> 
-					    <label class="radio-inline" for="radios-2">
-					      <input name="log2_radios" id="radios-2" value="3" type="radio">
-					      <
-					    </label> 
+					  	<div class="btn-group">
+   					     	<label class="btn btn-toggle" ng-model="codeThresholdLog2RatioComparison" btn-radio="'> abs '" uncheckable>&gt; abs</label>
+   					     	<label class="btn btn-toggle" ng-model="codeThresholdLog2RatioComparison" btn-radio="'>'"      uncheckable>&gt;</label>
+        					<label class="btn btn-toggle" ng-model="codeThresholdLog2RatioComparison" btn-radio="'<'"      uncheckable>&lt;</label>
+    					</div>
 					    
-						<input id="textinput" style="display: inline; max-width: 60px; margin-left:10px;" name="textinput" placeholder="" class="form-control input-md" type="text">
+						<input id="textinput" ng-model="thresholdLog2Ratio" style="display: inline; max-width: 60px; margin-left:10px;" name="textinput" placeholder="1.0" class="form-control input-md" type="text">
 					  </div>
 					</div>        
 
 					
 					<!-- Variant filter -->
-					<div class="form-group">
+					<div class="form-group" ng-hide="isThresholdBasedQuery">
 					  <label class="col-md-3 control-label" for="variant-filter-radios">Variant Filter</label>
 					  <div class="col-md-6"> 
 					    <label class="radio-inline" for="variant-filter-radios-0">
-					      <input name="variant-filter-radios" id="variant-filter-radios-0" value="pass" checked="checked" type="radio">
+					      <input name="variant-filter-radios" id="variant-filter-radios-0" ng-model="codeVariantFilterPass" value="PASS" checked="checked" type="radio">
 					      Pass
 					    </label> 
 					    <label class="radio-inline" for="variant-filter-radios-1">
-					      <input name="variant-filter-radios" id="variant-filter-radios-1" value="nopass" type="radio">
+					      <input name="variant-filter-radios" id="variant-filter-radios-1" ng-model="codeVariantFilterPass"  value="NOPASS" type="radio">
 					      No- Pass
 					    </label>
 					  </div>
 					</div>
 					
 					<!-- Variant type -->
-					<div class="form-group">
+					<div class="form-group" ng-hide="isThresholdBasedQuery">
 					  <label class="col-md-3 control-label" for="variant-type-radios">Variant Type</label>
 					  <div class="col-md-6"> 
 					    <label class="radio-inline" for="variant-type-radios-0">
-					      <input name="variant-type-radios" id="variant-type-radios-0" value="1" checked="checked" type="radio">
+					      <input name="variant-type-radios" id="variant-type-radios-0" ng-model="codeVariantFilterType" value="SNV" checked="checked" type="radio">
 					      SNV
 					    </label> 
 					    <label class="radio-inline" for="variant-type-radios-1">
-					      <input name="variant-type-radios" id="variant-type-radios-1" value="2" type="radio">
+					      <input name="variant-type-radios" id="variant-type-radios-1"  ng-model="codeVariantFilterType" value="INDEL" type="radio">
 					      INDEL
 					    </label>
 					  </div>
 					</div>
 					
         	 		<!-- Variant Genotype-->
-					<div class="form-group">
+					<div class="form-group" ng-hide="isThresholdBasedQuery">
 					 	<label class="col-md-3 control-label" for="genotypes">Genotype</label>
 					    <div class="col-md-9">
-						    <select name="genotypes" data-placeholder="Choose genotypes..."   multiple class="col-md-12 chosen-select" ng-model="genotypes" chosen="genotypeList" ng-options="genotype.name for genotype in genotypeList"  ></select>
+						    <select name="genotypes" data-placeholder="Choose genotypes..."   multiple class="col-md-12 chosen-select" ng-model="selectedGenotypes" chosen="genotypeList" ng-options="genotype.name for genotype in genotypeList"  ></select>
 					    </div>
 					</div>
 
@@ -275,12 +264,8 @@
 				<div class="panel-body">
 				
 				<!-- The query summary -->
-				<div>
-					<span class="alert alert-success" style="padding: 4px; margin-left: 10px" ng-repeat="queryElement in querySummary">{{ queryElement }}</span>
-				</div>
+				<span class="well-querysum" ng-repeat="row in querySummary">{{ row }}</span>
 				
-				
-				</div>
 			</div>
 		
 		</div> 
