@@ -24,7 +24,7 @@ function($scope, $http, $filter) {
 	$scope.analyses = [];
 	$scope.selectedSampleSources = [];
 	
-	$scope.isIntersect = "";
+	$scope.isIntersect = "true";
 	$scope.intersectionTarget = "";
 	$scope.regions = "";
 	$scope.regionMargins = "";
@@ -35,11 +35,12 @@ function($scope, $http, $filter) {
 	
 	$scope.isThresholdBasedQuery = true;
 	$scope.thresholdFDR = "";
-	$scope.codeThresholdFDRComparison = "";
+	$scope.codeThresholdFDRComparison = ">";
 	$scope.thresholdLog2Ratio = "";
-	$scope.codeThresholdLog2RatioComparison = "";
+	$scope.codeThresholdLog2RatioComparison = "> abs";
 	
-	$scope.geneAnnotations = [];
+	$scope.thresholdVariantQual = "";
+	$scope.codeThresholdVariantQualComparison = ">";
 	$scope.codeVariantFilterType = "";
 	$scope.codeVariantFilterType = "";
 	$scope.selectedGenotypes = [];
@@ -264,34 +265,40 @@ function($scope, $http, $filter) {
 		if ($scope.isThresholdBasedQuery) {
 			var thresholdQuery = "";
 			if ($scope.thresholdFDR.length > 0) {
-				thresholdQuery = "THAT EXCEED THRESHOLD of  " + "FDR " + $scope.codeThresholdFDRComparison + $scope.thresholdFDR;
+				thresholdQuery = "THAT EXCEED THRESHOLD of  " + "FDR " + $scope.codeThresholdFDRComparison + ' ' + $scope.thresholdFDR;
 			}
 			if ($scope.thresholdLog2Ratio.length > 0) {
 				thresholdQuery = thresholdQuery + ($scope.thresholdFDR.length > 0 ? " AND ": "THAT EXCEED THRESHOLD   ");
-				$scope.querySummary.push(thresholdQuery + "Log2Ratio " + $scope.codeThresholdLog2RatioComparison + $scope.thresholdLog2Ratio);
+				$scope.querySummary.push(thresholdQuery + "Log2Ratio " + $scope.codeThresholdLog2RatioComparison + ' ' + $scope.thresholdLog2Ratio);
 			}
 		} else {
 			var variantQuery = "";
-			if ($scope.codeVariantFilterPass.length > 0) {
-				variantQuery = $scope.codeVariantFilterPass;
+			if ($scope.thresholdVariantQual) {
+				variantQuery = "QUAL " +  $scope.codeThresholdVariantQualComparison + ' ' + $scope.thresholdVariantQual;
 			}
-			if ($scope.codeVariantFilterType.length > 0) {
+			if ($scope.codeVariantFilterPass) {
 				if (variantQuery.length > 0) {
-					variantQuery = variantQuery + " OR ";
+					variantQuery = variantQuery + ", ";
 				}
-				variantQuery = variantQuery + $scope.codeVariantFilterType;
+				variantQuery = variantQuery + " " + $scope.codeVariantFilterPass;
+			}
+			if ($scope.codeVariantFilterType) {
+				if (variantQuery.length > 0) {
+					variantQuery = variantQuery + ", ";
+				}
+				variantQuery = variantQuery + "  " + $scope.codeVariantFilterType;
 			}
 			if ($scope.selectedGenotypes.length > 0) {
 				$scope.display = "";
 				$scope.selectedGenotypes.forEach($scope.concatDisplayName);
 				if (variantQuery.length > 0) {
-					variantQuery = variantQuery + " OR ";
+					variantQuery = variantQuery + ", ";
 				}
-				variantQuery = variantQuery + $scope.display;
+				variantQuery = variantQuery + " " + $scope.display;
 				
 			}
 			if (variantQuery.length > 0) {
-				$scope.querySummary.push("THAT EXCEED THRESHOLD of " + variantQuery);
+				$scope.querySummary.push("FOR VARIANTS MATCHING " + variantQuery);
 			}
 		}
 		

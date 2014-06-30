@@ -114,8 +114,8 @@
 						<h4 style="display: inline;margin-right: 10px">That</h4>
 						
 						<div class="btn-group">
-   					     	<label class="btn btn-toggle" ng-model="isIntersect" btn-radio="true" uncheckable>Intersect</label>
-        					<label class="btn btn-toggle" ng-model="isIntersect" btn-radio="false" uncheckable>Don't Intersect</label>
+   					     	<label class="btn btn-toggle" ng-model="isIntersect" btn-radio="'true'" >Intersect</label>
+        					<label class="btn btn-toggle" ng-model="isIntersect" btn-radio="'false'">Don't Intersect</label>
     					</div>
 					  </div>
 					</div>
@@ -142,7 +142,7 @@
 					</div>
 							 
           	 		<!-- Genes-->
-					<div class="form-group" ng-show="isIntersect && isGeneBasedQuery">
+					<div class="form-group" ng-show="isGeneBasedQuery">
 						<div class="col-md-2" style="padding-right: 0px;">
 							<div class="checkbox" style="display: inline; padding-left: 0px;">
 						   		<label for="radios-region">
@@ -161,7 +161,7 @@
 					</div>
 
          	 		<!-- Genes annotations-->
-					<div class="form-group" ng-show="isIntersect && isGeneBasedQuery">
+					<div class="form-group" ng-show="isGeneBasedQuery">
 					 	<div class="col-md-2" style="padding-right: 0px;">
 					    </div>
 					    <div class="col-md-7" ng-show="intersectionTarget == 'GENE'" style="padding-left: 1px; padding-right: 0px;">
@@ -176,15 +176,15 @@
 					
 					
 					<!--  Thresholds -->
-           	 		<h4 style="padding-top: 20px">That Exceed these Thresholds</h4>
+           	 		<h4  ng-show="isThresholdBasedQuery" style="padding-top: 20px" >That Exceed these Thresholds</h4>
            	 		 
            	 		 <!-- FDR-->
 					<div class="form-group" ng-show="isThresholdBasedQuery">
 					  <label class="col-md-3 control-label" >FDR</label>  
 					  <div class="col-md-6">
 					  	<div class="btn-group">
-   					     	<label class="btn btn-toggle" ng-model="codeThresholdFDRComparison" btn-radio="'<'" uncheckable>&gt;</label>
-        					<label class="btn btn-toggle" ng-model="codeThresholdFDRComparison" btn-radio="'>'" uncheckable>&lt;</label>
+   					     	<label class="btn btn-toggle" ng-model="codeThresholdFDRComparison" btn-radio="'<'" >&gt;</label>
+        					<label class="btn btn-toggle" ng-model="codeThresholdFDRComparison" btn-radio="'>'" >&lt;</label>
     					</div>
 						<input id="textinput" ng-model="thresholdFDR" style="display: inline; max-width: 60px; margin-left: 10px;" name="textinput" placeholder=".05" class="form-control input-md" type="text">
 					  </div>
@@ -196,9 +196,9 @@
 					  <label class="col-md-3 control-label">Log2Ratio</label>  
 					  <div class="col-md-6">
 					  	<div class="btn-group">
-   					     	<label class="btn btn-toggle" ng-model="codeThresholdLog2RatioComparison" btn-radio="'> abs '" uncheckable>&gt; abs</label>
-   					     	<label class="btn btn-toggle" ng-model="codeThresholdLog2RatioComparison" btn-radio="'>'"      uncheckable>&gt;</label>
-        					<label class="btn btn-toggle" ng-model="codeThresholdLog2RatioComparison" btn-radio="'<'"      uncheckable>&lt;</label>
+   					     	<label class="btn btn-toggle" ng-model="codeThresholdLog2RatioComparison" btn-radio="'> abs'" >&gt; abs</label>
+   					     	<label class="btn btn-toggle" ng-model="codeThresholdLog2RatioComparison" btn-radio="'>'"     >&gt;</label>
+        					<label class="btn btn-toggle" ng-model="codeThresholdLog2RatioComparison" btn-radio="'<'"     >&lt;</label>
     					</div>
 					    
 						<input id="textinput" ng-model="thresholdLog2Ratio" style="display: inline; max-width: 60px; margin-left:10px;" name="textinput" placeholder="1.0" class="form-control input-md" type="text">
@@ -206,24 +206,41 @@
 					</div>        
 
 					
-					<!-- Variant filter -->
+					
+					<!--  Variant Criteria -->
+           	 		<h4  ng-hide="isThresholdBasedQuery" style="padding-top: 20px" >That Meet Variant Criteria</h4>
+
+					<!-- Variant qual filter -->
 					<div class="form-group" ng-hide="isThresholdBasedQuery">
-					  <label class="col-md-3 control-label" for="variant-filter-radios">Variant Filter</label>
+					  <label class="col-md-3 control-label" for="variant-filter-radios">Qual</label>
+					  <div class="col-md-6">
+					  	<div class="btn-group">
+   					     	<label class="btn btn-toggle" ng-model="codeThresholdVariantQualComparison" btn-radio="'<'" >&gt;</label>
+        					<label class="btn btn-toggle" ng-model="codeThresholdVariantQualComparison" btn-radio="'>'" >&lt;</label>
+    					</div>
+						<input id="textinput" ng-model="thresholdVariantQual" style="display: inline; max-width: 60px; margin-left: 10px;" name="textinput" placeholder="90" class="form-control input-md" type="text">
+					  </div>
+					</div>
+
+					
+					<!-- Variant pass/nopass filter -->
+					<div class="form-group" ng-hide="isThresholdBasedQuery">
+					  <label class="col-md-3 control-label" for="variant-filter-radios">Filter</label>
 					  <div class="col-md-6"> 
 					    <label class="radio-inline" for="variant-filter-radios-0">
 					      <input name="variant-filter-radios" id="variant-filter-radios-0" ng-model="codeVariantFilterPass" value="PASS" checked="checked" type="radio">
-					      Pass
+					      PASS
 					    </label> 
 					    <label class="radio-inline" for="variant-filter-radios-1">
 					      <input name="variant-filter-radios" id="variant-filter-radios-1" ng-model="codeVariantFilterPass"  value="NOPASS" type="radio">
-					      No- Pass
+					      Not PASS
 					    </label>
 					  </div>
 					</div>
 					
 					<!-- Variant type -->
 					<div class="form-group" ng-hide="isThresholdBasedQuery">
-					  <label class="col-md-3 control-label" for="variant-type-radios">Variant Type</label>
+					  <label class="col-md-3 control-label" for="variant-type-radios">Type</label>
 					  <div class="col-md-6"> 
 					    <label class="radio-inline" for="variant-type-radios-0">
 					      <input name="variant-type-radios" id="variant-type-radios-0" ng-model="codeVariantFilterType" value="SNV" checked="checked" type="radio">
