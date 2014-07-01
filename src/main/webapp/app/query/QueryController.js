@@ -12,6 +12,8 @@ angular.module("query").controller("QueryController",
 [ '$scope', '$http', '$modal',
   
 function($scope, $http, $filter) {
+	
+	
 	$scope.querySummary = [];
 	$scope.codeResultType = "";
 	$scope.isGeneBasedQuery = true;
@@ -44,7 +46,7 @@ function($scope, $http, $filter) {
 	$scope.codeVariantFilterType = "";
 	$scope.codeVariantFilterType = "";
 	$scope.selectedGenotypes = [];
-	
+
 	// Temporary mockup code... these should be in a parent model
 	$scope.labList = [
 	                  {"idLab": 1,
@@ -75,7 +77,7 @@ function($scope, $http, $filter) {
 	               	        {"codeAnalysisType": "RNASeq",  "name": "RNA Seq",     "codeResultTypes" : ["GENE", "REGION"],               
 	               	        	"selected": false, "show" : true, "class": "grey-out"},
 	               	        {"codeAnalysisType": "CHIPSEQ", "name": "ChIP Seq",    "codeResultTypes" : ["REGION"],                       
-	               	        	"selected": false, "show" : false, "class": ""},
+	               	        	"selected": false, "show" : true, "class": ""},
 	               	        {"codeAnalysisType": "VARIANT", "name": "Variant",     "codeResultTypes" : ["GENE", "REGION", "VARIANT"],     
 	               	        	"selected": false, "show" : true, "class": ""},
 	               	        {"codeAnalysisType": "METHYL",  "name": "Methylation", "codeResultTypes" : ["REGION"],                        
@@ -196,6 +198,17 @@ function($scope, $http, $filter) {
 		
 	
 	};
+	
+	$scope.someAnalysisTypeChecked = function() {
+		var someSelected = false;
+		for (var i=0; i < $scope.analysisTypeCheckedList.length; i++) {
+			if ($scope.analysisTypeCheckedList[i].selected) {
+				someSelected = true;
+				break;
+			}
+		}
+		return someSelected;
+	}
 	
 	
 	$scope.buildQuerySummary = function() {

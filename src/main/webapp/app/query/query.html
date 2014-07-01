@@ -1,4 +1,4 @@
-<form class="form-horizontal">
+<form name="queryForm" class="form-horizontal" >
 <fieldset>
 
 	<!--                 -->
@@ -8,10 +8,10 @@
   	       <h3>
    	       		<span class="glyphicon glyphicon-zoom-in"></span> Query
 		   </h3>
-		   <button class="green-button" ng-click="runQuery()">
+		   <button class="btn btn-primary" ng-disabled="queryForm.$invalid" ng-click="runQuery()">
 		   		<span class="glyphicon glyphicon-play"></span > Run
 		   </button>
-		   <button class="normal-button" ng-click="runQuery()">
+		   <button class="btn" ng-click="runQuery()">
    				<span class="glyphicon glyphicon-remove"></span> Clear
 		   </button>
 	</div>
@@ -43,8 +43,9 @@
            	 		<div class="form-group" style="padding-top: 0px">
 					  <div class="col-md-12"> 
 					    <label ng-repeat="(key,name) in mapResultType" class="radio-inline" for="radio-rt-{{ key }}">
-					      <input 
+					      <input name="result-type"
 					      		 id="radio-rt-{{ key }}"
+					      		 required
 					      	     ng-model="$parent.codeResultType" 
 					      	     ng-value="key" 
 					      	     ng-change="pickResultType()"
@@ -55,17 +56,18 @@
 
   
            	 		<h4 style="padding-top: 20px">What Genome?</h4>
-					<div class="form-group">
+					<div class="form-group" >
 		  				<div class="col-md-12">
-		    				<select id="select_build" 
+		    				<select name="gb-select"
 		    				        ng-model="genomeBuild" 
-		    				        ng-options="gb.name  group by gb.species for gb in genomeBuildList" 
+		    				        required
+		    				        ng-options="gb.name group by gb.species  for gb in genomeBuildList" 
 		    				        class="form-control">
+		    				        <option value="">Select genome build</option>
 		    				</select>
 		  				</div>
 					</div>
-
-           	 		
+					
   
            	 		<h4 style="padding-top: 20px">What Datasets?</h4>
            	 		
@@ -73,7 +75,7 @@
 					<div class="form-group">
 					  <div class="col-md-12">
 					    <label ng-repeat="analysisType in analysisTypeCheckedList" ng-class="analysisType.class" ng-disabled="!analysisType.show" class="checkbox-inline" for="checkbox-at-{{ analysisType.codeAnalysisType }}">
-					      <input name="checkbox-at-{{ analysisType.codeAnalysisType }}"  ng-disabled="!analysisType.show"  id="checkbox-at-{{ analysisType.codeAnalysisType }}" ng-model="analysisType.selected" type="checkbox" >
+					      <input name="checkbox-at-{{ analysisType.codeAnalysisType }}" ng-required="!someAnalysisTypeChecked()" ng-disabled="!analysisType.show"  id="checkbox-at-{{ analysisType.codeAnalysisType }}" ng-model="analysisType.selected" type="checkbox" >
 					      {{ analysisType.name }}
 					    </label>
 					  </div>
@@ -183,8 +185,8 @@
 					  <label class="col-md-3 control-label" >FDR</label>  
 					  <div class="col-md-6">
 					  	<div class="btn-group">
-   					     	<label class="btn btn-toggle" ng-model="codeThresholdFDRComparison" btn-radio="'<'" >&gt;</label>
-        					<label class="btn btn-toggle" ng-model="codeThresholdFDRComparison" btn-radio="'>'" >&lt;</label>
+   					     	<label class="btn btn-toggle" ng-model="codeThresholdFDRComparison" btn-radio="'>'" >&gt;</label>
+        					<label class="btn btn-toggle" ng-model="codeThresholdFDRComparison" btn-radio="'<'" >&lt;</label>
     					</div>
 						<input id="textinput" ng-model="thresholdFDR" style="display: inline; max-width: 60px; margin-left: 10px;" name="textinput" placeholder=".05" class="form-control input-md" type="text">
 					  </div>
@@ -215,10 +217,10 @@
 					  <label class="col-md-3 control-label" for="variant-filter-radios">Qual</label>
 					  <div class="col-md-6">
 					  	<div class="btn-group">
-   					     	<label class="btn btn-toggle" ng-model="codeThresholdVariantQualComparison" btn-radio="'<'" >&gt;</label>
-        					<label class="btn btn-toggle" ng-model="codeThresholdVariantQualComparison" btn-radio="'>'" >&lt;</label>
+   					     	<label class="btn btn-toggle" ng-model="codeThresholdVariantQualComparison" btn-radio="'>'" >&gt;</label>
+        					<label class="btn btn-toggle" ng-model="codeThresholdVariantQualComparison" btn-radio="'<'" >&lt;</label>
     					</div>
-						<input id="textinput" ng-model="thresholdVariantQual" style="display: inline; max-width: 60px; margin-left: 10px;" name="textinput" placeholder="90" class="form-control input-md" type="text">
+						<input id="textinput" ng-model="thresholdVariantQual" style="display: inline; max-width: 60px; margin-left: 10px;" name="textinput" placeholder="20" class="form-control input-md" type="text">
 					  </div>
 					</div>
 
@@ -288,6 +290,6 @@
 		</div> 
 		
 	</div>  <!-- end of row (main panel) -->
-	
+
 </fieldset>
 </form>
