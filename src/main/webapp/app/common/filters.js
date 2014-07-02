@@ -27,7 +27,7 @@ var filters = angular.module('filters', [])
 			var display = input;
 			for (var x in sampleTypeList) {
 				if (sampleTypeList[x].idSampleType == input) {
-					display = sampleTypeList[x].name;
+					display = sampleTypeList[x].type;
 					break;
 				}
 			}
@@ -36,28 +36,13 @@ var filters = angular.module('filters', [])
 	}
 ])
 
-.filter('lookupSampleType', [
-    function() {
-		return function(input,sampleTypeList) {
-			var display = input;
-			for (var x in sampleTypeList) {
-				if (sampleTypeList[x].idSampleType == input) {
-					display = sampleTypeList[x].name;
-					break;
-				}
-			}
-			return display;
-		};
-	}
-])
-
-.filter('lookupSampleGroup', [
+.filter('lookupSampleCondition', [
 	function() {
-		return function(input,sampleGroupList) {
+		return function(input,sampleConditionList) {
 			var display = input;
-			for (var x in sampleGroupList) {
-				if (sampleGroupList[x].idSampleGroup == input) {
-					display = sampleGroupList[x].name;
+			for (var x in sampleConditionList) {
+				if (sampleConditionList[x].idSampleCondition == input) {
+					display = sampleConditionList[x].condition;
 					break;
 				}
 			}
@@ -66,19 +51,34 @@ var filters = angular.module('filters', [])
 	}
 ])
 
-.filter('lookupSite', [
+.filter('lookupSampleSource', [
     function() {
-		return function(input,SiteList) {
+		return function(input,sampleSourceList) {
 			var display = input;
-			for (var x in SiteList) {
-				if (SiteList[x].idSite == input) {
-					display = SiteList[x].organ + " - " + SiteList[x].name;
+			for (var x in sampleSourceList) {
+				if (sampleSourceList[x].idSampleSource == input) {
+					display = sampleSourceList[x].source;
 					break;
 				}
 			}
 			return display;
 		};
 	}
+])
+
+.filter('lookupSamplePrep',[
+    function() {
+    	return function(input,samplePrepList) {
+    		var display = input;
+    		for (var x in samplePrepList) {
+    			if (samplePrepList[x].idSamplePrep == input) {
+	    			display = samplePrepList[x].description;
+	    			break;
+    			}
+    		}
+    		return display;
+    	};
+    }
 ])
 
 .filter('lookupAnalysisType', [
@@ -86,8 +86,8 @@ var filters = angular.module('filters', [])
 		return function(input,analysisTypeList) {
 			var display = input;
 			for (var x in analysisTypeList) {
-				if (analysisTypeList[x].idAnalysisType == input) {
-					display = analysisTypeList[x].name;
+				if (analysisTypeList[x].idx == input) {
+					display = analysisTypeList[x].type;
 					break;
 				}
 			}
