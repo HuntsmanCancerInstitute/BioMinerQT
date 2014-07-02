@@ -156,7 +156,7 @@ public class FileController {
 	 * get(): get file as an attachment
 	 * @param response : passed by the server
 	 * @param file : filename
-	 * @param type : file type (parsed or imported)
+	 * @param type : file type (IMPORTED or UPLOADED)
 	 * @return void
 	 ****************************************************/
 	 @RequestMapping(value = "/upload/get", method = RequestMethod.GET)
@@ -192,7 +192,7 @@ public class FileController {
 	 * delete: Delete uploaded/parsed file
 	 * @param response : passed by the server
 	 * @param file : filename
-	 * @param type : file type (parsed or imported)
+	 * @param type : file type (IMPORTED or UPLOADED)
 	 * @return void
 	 ****************************************************/
 	 @RequestMapping(value = "/upload/delete", method = RequestMethod.DELETE)

@@ -55,9 +55,9 @@
 		<div class="col-lg-5">
 			<div class="form-group">
 			  <label class="control-label" for="applicable_files">Files</label>
-			  <div class="radio" ng-repeat="file in uploadedFiles">
+			  <div class="checkbox" ng-repeat="file in importedFiles">
 			    <label>
-			      <input ng-model="file.isChecked" value="{{file.idDataTrack}}" type="radio">
+			      <input ng-model="file.isChecked" value="{{file.idFileUpload}}" type="checkbox">
 			      {{file.name}}
 			    </label>
 			  </div>

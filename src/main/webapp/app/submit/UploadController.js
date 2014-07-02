@@ -11,7 +11,7 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 		$scope.selectAllImport = false;
 		$scope.columnDefs = null;
 		
-		$scope.parsedFiles = [];
+		
 		$scope.selectedFiles = [];
 		
 		
@@ -234,19 +234,19 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 						
 						//Check to see if there are any matching files in list (match on name only)
 						var index = -1;
-						for (var j=0; j<$scope.parsedFiles.length; j++) {
-							if (params.outputFile == $scope.parsedFiles[j].name) {
+						for (var j=0; j<$scope.$parent.importedFiles.length; j++) {
+							if (params.outputFile == $scope.$parent.importedFiles[j].name) {
 								index = j;
-								$scope.parsedFiles[j].state = "started";
-								$scope.parsedFiles[j].size = null;
+								$scope.$parent.importedFiles[j].state = "started";
+								$scope.$parent.importedFiles[j].size = null;
 							}
 						}
 						
 						//If no match, create new file object.
 						if (index == -1) {
 							var f = {name: params.outputFile, state: "started"};
-							index = $scope.parsedFiles.length;
-							$scope.parsedFiles.push(f);
+							index = $scope.$parent.importedFiles.length;
+							$scope.$parent.importedFiles.push(f);
 						}
 						
 						//add columndefs to parameters.
@@ -262,7 +262,7 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 									params: params
 								}).success(function(data) {
 									data.selected = false;
-									$scope.parsedFiles[index] = data;
+									$scope.$parent.importedFiles[index] = data;
 								});
 							});
 						}(params,index));
@@ -319,7 +319,7 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
         $scope.$parent.$watch('project',function() {
         	if ($scope.$parent.project.idProject > 0) {
         		$scope.$parent.uploadedFiles = $scope.loadExisting("UPLOADED");
-            	$scope.parsedFiles = $scope.loadExisting("IMPORTED");	
+            	$scope.$parent.importedFiles = $scope.loadExisting("IMPORTED");	
         	}
         	        	
         });

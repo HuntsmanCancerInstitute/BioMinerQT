@@ -4,7 +4,8 @@
  * SubmitController
  * @constructor
  */
-var submit    = angular.module('submit', ['ui.bootstrap', 'blueimp.fileupload','filters', 'services', 'chosen']);
+ 
+var submit    = angular.module('submit', ['ui.bootstrap', 'blueimp.fileupload','filters', 'services', 'directives','chosen']);
 
 angular.module("submit").controller("SubmitController", [
 '$scope', '$http', '$modal','DynamicDictionary','StaticDictionary',
@@ -21,6 +22,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary) {
 	
 	//containers
 	$scope.uploadedFiles = [];
+	$scope.importedFiles = [];
     $scope.samples = [];
     $scope.datatracks = [];
     $scope.results = [];
@@ -30,6 +32,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary) {
     $scope.sample = {sampleType: null};
     $scope.datatrack = {};
     $scope.result = {};
+    $scope.project = {};
     
     //flags
     $scope.sampleEditMode = false;
@@ -101,13 +104,39 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary) {
 		}).success(function(data, status, headers, config) {
 			$scope.projectId = config.params.projectId;
 			$scope.projects = data;
-			for (var i=0; i<$scope.projects.length; i++) {
-				if ($scope.projects[i].idProject == $scope.projectId) {
-					$scope.samples = $scope.projects[i].samples;
-					$scope.datatracks = $scope.projects[i].dataTracks;
-				}
-			}
+			
+			$scope.setActiveProject();
 		});
+    };
+    
+    $scope.setActiveProject = function() {
+    	$scope.project = {};
+    	for (var i in $scope.projects) {
+    		if($scope.projects[i].idProject == $scope.projectId) {
+            	$scope.projects[i].cssClass = "current-project";
+            	$scope.project = $scope.projects[i];
+            	$scope.samples = $scope.projects[i].samples;
+            	$scope.datatracks = $scope.projects[i].dataTracks;
+            	
+            	//Replace project labs with objects in labList.  Track-by doesn't appear to work in chosen widgets...
+            	var ids = [];
+            	for (var idx=0; idx< $scope.project.labs.length; idx++) {
+            		ids.push($scope.project.labs[idx].idLab);
+            	}
+            	
+            	var labs = [];
+            	for (var idx=0; idx< $scope.labList.length; idx++) {
+            		if (ids.indexOf($scope.labList[idx].idLab) != -1) {
+            			labs.push($scope.labList[idx]);
+            		}
+            	}
+
+            	$scope.project.labs = labs;
+            	
+            } else {
+            	$scope.projects[i].cssClass = "";
+            }
+    	}
     };
     
     $scope.loadProjects($scope.projectId);
@@ -152,39 +181,11 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary) {
     $scope.select = function(id) {
     	$scope.projectId = id;
     	$scope.sample = {sampleType: null};
+    	$scope.datatrack = {};
+    	$scope.setActiveProject();
     };
     
-    //set active project when projectId changes.
-    $scope.$watch("projectId",function() {
-    	$scope.project = {};
-    	for (var i in $scope.projects) {
-    		if($scope.projects[i].idProject == $scope.projectId) {
-            	$scope.projects[i].cssClass = "current-project";
-            	$scope.project = $scope.projects[i];
-            	$scope.samples = $scope.projects[i].samples;
-            	$scope.datatracks = $scope.projects[i].datatracks;
-            	
-            	//Replace project labs with objects in labList.  Track-by doesn't appear to work in chosen widgets...
-            	var ids = [];
-            	for (var idx=0; idx< $scope.project.labs.length; idx++) {
-            		ids.push($scope.project.labs[idx].idLab);
-            	}
-            	
-            	var labs = [];
-            	for (var idx=0; idx< $scope.labList.length; idx++) {
-            		if (ids.indexOf($scope.labList[idx].idLab) != -1) {
-            			labs.push($scope.labList[idx]);
-            		}
-            	}
-
-            	$scope.project.labs = labs;
-            	
-            } else {
-            	$scope.projects[i].cssClass = "";
-            }
-    	}
-    });
-    
+ 
     //delete project
     $scope.deleteProject = function() {
     	if ($scope.idProject != -1) {

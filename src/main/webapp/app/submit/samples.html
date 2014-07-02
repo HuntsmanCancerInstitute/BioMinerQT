@@ -42,7 +42,7 @@
 		<div class="col-lg-2">
 			<div class="form-group">
 				<label class="control-label" for="sample_group">Condition</label>  
-				<select required id="sample_group" ng-model="sample.sampleCondition" ng-options="cond as cond.condition for cond in sampleConditionList track by cond.idSampleCondition" class="form-control">
+				<select required id="sample_group" ng-model="sample.sampleCondition" ng-options="cond as cond.cond for cond in sampleConditionList track by cond.idSampleCondition" class="form-control">
 			      <option value=""></option>
 			    </select>	
 			</div>	

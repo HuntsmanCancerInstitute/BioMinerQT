@@ -42,7 +42,7 @@ var filters = angular.module('filters', [])
 			var display = input;
 			for (var x in sampleConditionList) {
 				if (sampleConditionList[x].idSampleCondition == input) {
-					display = sampleConditionList[x].condition;
+					display = sampleConditionList[x].cond;
 					break;
 				}
 			}

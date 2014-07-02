@@ -46,7 +46,7 @@ public class SampleConditionDAO {
 		Session session = getCurrentSession();
 		session.beginTransaction();
 		SampleCondition SampleConditionToUpdate = (SampleCondition) session.get(SampleCondition.class, idSampleCondition);
-		SampleConditionToUpdate.setCondition(sampleCondition.getCondition());
+		SampleConditionToUpdate.setCond(sampleCondition.getCond());
 		session.update(SampleConditionToUpdate);
 		session.flush();
 		session.getTransaction().commit();

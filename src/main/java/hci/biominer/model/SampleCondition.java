@@ -16,15 +16,15 @@ public class SampleCondition {
 	@Column(name="idSampleCondition")
 	Long idSampleCondition;
 	
-	@Column(name="condition")
-	String condition;
+	@Column(name="cond")
+	String cond;
 	
 	public SampleCondition() {
 		
 	}
 	
-	public SampleCondition(String condition) {
-		this.condition = condition;
+	public SampleCondition(String cond) {
+		this.cond = cond;
 	}
 
 	public Long getIdSampleCondition() {
@@ -35,12 +35,12 @@ public class SampleCondition {
 		this.idSampleCondition = idSampleCondition;
 	}
 
-	public String getCondition() {
-		return condition;
+	public String getCond() {
+		return cond;
 	}
 
-	public void setCondition(String condition) {
-		this.condition = condition;
+	public void setCond(String cond) {
+		this.cond = cond;
 	}
 	
 	
