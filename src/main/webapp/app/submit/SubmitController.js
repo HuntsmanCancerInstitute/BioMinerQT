@@ -33,6 +33,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary) {
     
     //flags
     $scope.sampleEditMode = false;
+    $scope.datatrackEditMode = false;
 	
 	//Static dictionaries.
 	StaticDictionary.organismBuildList(function(data) {
@@ -287,60 +288,65 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary) {
 //	};
 	
 	
-	//
-	// Data Tracks
-	//
+	/**********************
+	 * Datatrack management
+	 *********************/
+	
 	$scope.editDataTrack = function(datatrack) {
 		$scope.datatrack = datatrack;
 		$scope.datatrackEditMode = true;
     };
 	
 	$scope.saveDataTrack = function(datatrack) {
-		$scope.datatrackEditMode = false;
+		$http({
+			url : "project/updateDataTrack",
+			method: "POST",
+			params: {idProject: $scope.projectId, name: datatrack.name, url: datatrack.url, idDataTrack: datatrack.idDataTrack},
+		}).success(function(data) {
+			$scope.loadProjects($scope.projectId);
+		}).error(function(data) {
+			console.log("Could not update datatrack");
+		});
 		
-		var newDataTrack = {};
-		$scope.datatrack = newDataTrack;
-		$scope.clearDataTrack();
+		$scope.datatrackEditMode = false;
+		$scope.datatrack = {};
 	};
 	
-	$scope.removeDataTrack = function(id) {
-        for(var i in $scope.datatracks) {
-            if($scope.datatracks[i].idDataTrack == id) {
-            	$scope.datatracks.splice(i, 1);
-            	break;
-            }
-        }
-       
+	$scope.removeDataTrack = function(datatrack) {
+		$http({
+			url : "project/deleteDataTrack",
+			method: "POST",
+			params: {idDataTrack: datatrack.idDataTrack},
+		}).success(function(data) {
+			$scope.loadProjects($scope.projectId);
+		}).error(function(data) {
+			console.log("Could not delete datatrack");
+		});
     };
 	
 	$scope.addDataTrack = function(datatrack) {
-		var newDataTrack = {};
-		newDataTrack.idDataTrack = ++$scope.nextIdDataTrack;
-		newDataTrack.name = datatrack.name;
-		newDataTrack.url = datatrack.url;
+		$http({
+			url : "project/createDataTrack",
+			method: "POST",
+			params: {idProject: $scope.projectId, name: datatrack.name, url: datatrack.url},
+		}).success(function(data) {
+			$scope.loadProjects($scope.projectId);
+		}).error(function(data) {
+			console.log("Could not create datatrack");
+		});
 		
-		$scope.datatracks.push(newDataTrack);
-		
-		$scope.clearDataTrack();
+		$scope.datatrack = {};
 	}; 
 	
-	$scope.clearDataTrack = function() {
-		
-		$scope.datatrack.idDataTrack = -1;
-		$scope.datatrack.name = "";
-		$scope.datatrack.url  = "";
-		
-	};
-	
-	$scope.duplicateDataTrack = function(datatrack) {
-		var newDataTrack = {};
-		newDataTrack.idDataTrack = ++$scope.nextIdDataTrack;
-		newDataTrack.name = datatrack.name;
-		newDataTrack.url = datatrack.url;
-		
-		
-		$scope.addDataTrack(datatrack);
-	};
+//	$scope.duplicateDataTrack = function(datatrack) {
+//		var newDataTrack = {};
+//		newDataTrack.idDataTrack = ++$scope.nextIdDataTrack;
+//		newDataTrack.name = datatrack.name;
+//		newDataTrack.url = datatrack.url;
+//		
+//		
+//		$scope.addDataTrack(datatrack);
+//	};
 	
 	
 	//

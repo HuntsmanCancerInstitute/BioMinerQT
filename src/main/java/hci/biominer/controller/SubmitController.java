@@ -199,10 +199,10 @@ public class SubmitController {
     	SampleSource sampleSource = this.sampleSourceService.getSampleSourceById(idSampleSource);
     	
     	//Create sample object
-    	Sample sampleToUpdate = new Sample(name, sampleType, samplePrep, sampleSource, sampleCondition, project);
+    	Sample updatedSample = new Sample(name, sampleType, samplePrep, sampleSource, sampleCondition, project);
     	
     	//Update sample
-    	this.sampleService.updateSample(idSample, sampleToUpdate);
+    	this.sampleService.updateSample(idSample, updatedSample);
     }
     
     
@@ -239,7 +239,7 @@ public class SubmitController {
     
     /***************************************************
 	 * URL: /project/updateSampleAnalysis
-	 * createSample(): update sample with new information
+	 * updateSampleAnalysis(): update sample with new information
 	 * method: post
 	 * @param idSample
 	 * @param idAnalysis
@@ -249,6 +249,82 @@ public class SubmitController {
     public void updateSampleAnalysis(@RequestParam(value="idSample") Long idSample, @RequestParam(value="idAnalysis") Long idAnalysis) {
     	
     }
+    
+    /***************************************************
+	 * URL: /project/deleteDataTrack
+	 * deleteDataTrack(): delete dataTrack based on primary index
+	 * method: post
+	 * @param idDataTrack primary index of the sample
+	 ****************************************************/
+    @RequestMapping(value="deleteDataTrack",method=RequestMethod.POST)
+    @ResponseBody
+    public void deleteDataTrack(@RequestParam(value="idDataTrack") Long idDataTrack) {
+    	this.dataTrackService.deleteDataTrackById(idDataTrack);
+    }
+    
+    /***************************************************
+	 * URL: /project/updateDataTrack
+	 * updateDataTrack(): update dataTrack with new information
+	 * method: post
+	 * @param idDataTrack
+	 * @param idProject
+	 * @param name
+	 * @param url
+	 ****************************************************/
+    @RequestMapping(value="updateDataTrack",method=RequestMethod.POST)
+    @ResponseBody
+    public void updateDataTrack(@RequestParam(value="idProject") Long idProject, @RequestParam(value="idDataTrack") Long idDataTrack, 
+    		@RequestParam(value="name") String name, @RequestParam(value="url") String url) {
+    	
+    	//Create secondary objects
+    	Project project = this.projectService.getProjectById(idProject);
+    	
+    	//Create datatrack object
+    	DataTrack updatedDataTrack = new DataTrack(name, url, project);
+    	
+    	//Update sample
+    	this.dataTrackService.updateDataTrack(idDataTrack, updatedDataTrack);
+    }
+    
+    
+    /***************************************************
+	 * URL: /project/createDataTrack
+	 * createDataTrack(): update dataTrack with new information
+	 * method: post
+	 * @param idProject
+	 * @param name
+	 * @param url
+	 ****************************************************/
+    @RequestMapping(value="createDataTrack",method=RequestMethod.POST)
+    @ResponseBody
+    public void createDataTrack(@RequestParam(value="idProject") Long idProject, @RequestParam(value="name") String name, 
+    		@RequestParam(value="url") String url) {
+    	
+    	//Create secondary objects
+    	Project project = this.projectService.getProjectById(idProject);
+    	
+    	//Create sample object
+    	DataTrack dataTrack = new DataTrack(name, url, project);
+    	
+    	//Update sample
+    	this.dataTrackService.addDataTrack(dataTrack);
+    }
+    
+    /***************************************************
+	 * URL: /project/updateDataTrackAnalysis
+	 * createDataTrack(): update sample with new information
+	 * method: post
+	 * @param idDataTrack
+	 * @param idAnalysis
+	 ****************************************************/
+    @RequestMapping(value="updateDataTrackAnalysis",method=RequestMethod.POST)
+    @ResponseBody
+    public void updateDataTrackAnalysis(@RequestParam(value="idDataTrack") Long idDataTrack, @RequestParam(value="idAnalysis") Long idAnalysis) {
+    	
+    }
+    
+    
+    
     
    
     
