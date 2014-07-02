@@ -23,7 +23,7 @@
 		<div class="form-group">
 		  <label class="col-md-4 control-label" for="species_build">Species and Genome Build</label>
 		  <div class="col-md-6">
-		    <select id="species_build" ng-model="project.idGenomeBuild" ng-options="gb.idGenomeBuild as gb.name  group by gb.species for gb in genomeBuildList" class="form-control">
+		    <select id="species_build" ng-model="project.organismBuild.idOrganismBuild"  ng-options="gb.idOrganismBuild as gb.name group by gb.organism.common for gb in organismBuildList" class="form-control">
 		    </select>
 		  </div>
 		</div>
@@ -31,19 +31,17 @@
 		<!-- Select Basic -->
 		<div class="form-group">
 		  <label class="col-md-4 control-label" for="lab">Lab</label>
-		  <div class="col-md-4">
-		    <select ng-model="project.idLab" ng-options="lab.idLab as lab.name for lab in labList" class="form-control">
-		      <option value=""></option>
-		    </select>
-		  </div>
+		  	<div class="col-md-6">
+  		    	<select data-placeholder="Choose labs..." ng-model="project.labs" multiple lchosen class="col-md-6 chosen-select" ng-options="lab as (lab.first + ' ' + lab.last + ' lab' ) for lab in labList"></select> 
+		    </div>
 		</div>
 		
 		<!-- Multiple Radios (inline) -->
 		<div class="form-group">
 		  <label class="col-md-4 control-label" for="visibility">Visibility</label>
 		  <div class="col-md-4"> 
-		    <label class="radio-inline" ng-repeat="visibility in visibilityList">
-		      <input name="visibility"  ng-value="visibility.codeVisibility" ng-model="project.codeVisibility"  type="radio">
+		    <label class="radio-inline" ng-repeat="visibility in projectVisibilities">
+		      <input name="visibility"  ng-value="visibility.enum" ng-model="project.visibility" type="radio">
 		         {{ visibility.name }}
 		      </input>
 		    </label> 
@@ -54,7 +52,7 @@
 		<div class="form-group">
 		  <label class="col-md-11 control-label" for="save_analysis_project_button"></label>
 		  <div class="col-md-1">
-		    <button id="save_analysis_project_button" name="save_analysis_project_button" class="btn btn-primary">Save</button>
+		    <button id="save_analysis_project_button" name="save_analysis_project_button" class="btn btn-primary" ng-click="edit()">Save</button>
 		  </div>
 		</div>
 				

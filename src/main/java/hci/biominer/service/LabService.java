@@ -23,16 +23,16 @@ public class LabService {
 		this.labDAO.addLab(lab);
 	}
 	
-	public void updateLab(Lab lab, Long id) {
-		this.labDAO.updateLab(lab,id);
+	public void updateLab(Lab lab, Long idLab) {
+		this.labDAO.updateLab(lab,idLab);
 	}
 	
-	public void deleteLab(Long id) {
-		this.labDAO.deleteLab(id);
+	public void deleteLab(Long idLab) {
+		this.labDAO.deleteLab(idLab);
 	}
 	
-	public Lab getLab(Long id) {
-		return this.labDAO.getLab(id);
+	public Lab getLab(Long idLab) {
+		return this.labDAO.getLab(idLab);
 	}
 	
 	public List<Lab> getAllLabs() {

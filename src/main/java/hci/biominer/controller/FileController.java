@@ -5,13 +5,14 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,28 +22,35 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import hci.biominer.model.genome.Genome;
+import hci.biominer.model.Project;
+import hci.biominer.model.FileUpload;
+
+import hci.biominer.service.FileUploadService;
+import hci.biominer.service.ProjectService;
+
 import hci.biominer.parser.ChipParser;
 import hci.biominer.parser.GenomeParser;
-import hci.biominer.util.FileMap;
-import hci.biominer.util.FileMeta;
+
+import hci.biominer.util.Enumerated.FileTypeEnum;
 import hci.biominer.util.PreviewMap;
 import hci.biominer.util.ModelUtil;
+import hci.biominer.util.Enumerated.*;
 
 @Controller
 @RequestMapping("/submit")
 public class FileController {
-
-	//Persistence containers.
-	private HashMap<String,FileMeta> importedFileHash = new HashMap<String,FileMeta>();
-	private HashMap<String,FileMeta> parsedFileHash = new HashMap<String,FileMeta>();
 	
+	@Autowired
+	private FileUploadService fileUploadService;
+	
+	@Autowired
+	private ProjectService projectService;
+
 	//Hard-coded file locations
 	private final static String FILES_PATH = "/temp/";
 	private final static String PARSED_PATH = "/parsed/";
+
 	
-	private final static String SUCCESS = "success";
-	private final static String FAILURE = "failure";
-	private final static String WARNING = "warning";
 	
 	//Load genome descriptons
 	private HashMap<String,File> genomePaths; 
@@ -78,48 +86,68 @@ public class FileController {
 	 ****************************************************/
 	@RequestMapping(value="/upload", method = RequestMethod.POST)
 	public @ResponseBody 
-	FileMeta upload(@RequestParam("file") MultipartFile file, @RequestParam("analysisID") String id) {
+	FileUpload upload(@RequestParam("file") MultipartFile file, @RequestParam("idProject") Long idProject) {
  
-		FileMeta fileMeta = new FileMeta();
+		FileUpload fileUpload = new FileUpload();
+
 		String name = file.getOriginalFilename();
 		
 		if (!file.isEmpty()) {
 			try {
 				
-				File directory = new File(FILES_PATH,id);
+				//Create directory
+				File directory = new File(FILES_PATH,String.valueOf(idProject));
 				if (!directory.exists()) {
 					directory.mkdir();
 				}
-				fileMeta.setDirectory(directory.getAbsolutePath());
 				
+				//Upload file
 				if (name.endsWith(".bam") || name.endsWith(".bai") || name.endsWith(".useq") || name.endsWith(".bw") || name.endsWith(".gz") || name.endsWith(".zip")) {
 					File localFile = new File(directory,name);
 					FileCopyUtils.copy(file.getInputStream(), new FileOutputStream(localFile));
-					fileMeta.setSize(String.valueOf(localFile.length()));
-					fileMeta.setName(name);
+					fileUpload.setSize(localFile.length());
+					fileUpload.setName(name);
 				} else {
 					File localFile = new File(directory,name + ".gz");
 					FileCopyUtils.copy(file.getInputStream(), new GZIPOutputStream(new FileOutputStream(localFile)));
-					fileMeta.setSize(String.valueOf(localFile.length()));
-					fileMeta.setName(name + ".gz");
+					fileUpload.setSize(localFile.length());
+					fileUpload.setName(name + ".gz");
 				}
-				
 				System.out.println("File upload successful! " + name);
-				fileMeta.setState(SUCCESS);
-				fileMeta.setMessage("");
-				importedFileHash.put(name, fileMeta);
+				
+				//Grab project object
+				Project project = this.projectService.getProjectById(idProject);
+				
+				//Setup fileUpload object.
+				fileUpload.setDirectory(directory.getAbsolutePath());
+				fileUpload.setState(FileStateEnum.SUCCESS);
+				fileUpload.setMessage("");
+				fileUpload.setType(FileTypeEnum.UPLOADED);
+				fileUpload.setParent(null);
+				fileUpload.setProject(project);
+				
+				
+				
+				//Create/update fileUpload object
+				FileUpload existing = this.fileUploadService.getFileUploadByName(fileUpload.getName(), fileUpload.getType(), project);
+				if (existing == null) {
+					this.fileUploadService.addFileUpload(fileUpload);
+				} else {
+					this.fileUploadService.updateFileUpload(existing.getIdFileUpload(),fileUpload);
+				}
 				
 			} catch (Exception ex) {
 				System.out.println("File upload failed: " + name + " " + ex.getMessage());
-				fileMeta.setState(FAILURE);
-				fileMeta.setMessage(ex.getMessage());
+				fileUpload.setState(FileStateEnum.FAILURE);
+				fileUpload.setMessage(ex.getMessage());
+				ex.printStackTrace();
 			}
 		} else {
-			fileMeta.setState(FAILURE);
-			fileMeta.setMessage("File is empty");
+			fileUpload.setState(FileStateEnum.FAILURE);
+			fileUpload.setMessage("File is empty");
 		}
 		
-		return fileMeta;
+		return fileUpload;
 	}
 	
 	
@@ -132,36 +160,32 @@ public class FileController {
 	 * @return void
 	 ****************************************************/
 	 @RequestMapping(value = "/upload/get", method = RequestMethod.GET)
-	 public void getFile(HttpServletResponse response,@RequestParam("file") String file, @RequestParam("type") String type){
-		 HashMap<String,FileMeta> fileHash;
+	 public void getUpload(HttpServletResponse response,@RequestParam("file") String file, @RequestParam("type") FileTypeEnum type, @RequestParam("idProject") Long idProject){
+		 Project project = this.projectService.getProjectById(idProject);
+		 FileUpload fileUpload = this.fileUploadService.getFileUploadByName(file,type,project);
 		 
-		 if (type.equals("imported")) {
-			 fileHash = this.importedFileHash;
-		 } else if (type.equals("parsed")) {
-			 fileHash = this.parsedFileHash;
-		 } else {
-				 try {
-					response.sendError(400,"The specified file type is not recognized");
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			 return;
+		 if (fileUpload == null) {
+			try {
+				response.sendError(400,"The specified file type is not recognized");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			return;
 		 }
-		 
-		 FileMeta getFile = fileHash.get(file);
 		 
 		 try {		
-			 	//response.setContentType(getFile.getFileType());
-			 	response.setHeader("Content-disposition", "attachment; filename=\""+getFile.getName()+"\"");
-			 	
-			 	File localFile = new File(getFile.getDirectory(), getFile.getName());
-			 	BufferedInputStream bis = new BufferedInputStream(new FileInputStream(localFile));
-			 	
-		        FileCopyUtils.copy(bis, response.getOutputStream());
+		 	//response.setContentType(getFile.getFileType());
+		 	response.setHeader("Content-disposition", "attachment; filename=\""+fileUpload.getName()+"\"");
+		 	
+		 	File localFile = new File(fileUpload.getDirectory(), fileUpload.getName());
+		 	BufferedInputStream bis = new BufferedInputStream(new FileInputStream(localFile));
+		 	
+	        FileCopyUtils.copy(bis, response.getOutputStream());
 		 }catch (IOException e) {
-				e.printStackTrace();
+			e.printStackTrace();
 		 }
 	 }
+	 
 	
 	 /***************************************************
 	 * URL: /submit/upload/delete/
@@ -172,38 +196,18 @@ public class FileController {
 	 * @return void
 	 ****************************************************/
 	 @RequestMapping(value = "/upload/delete", method = RequestMethod.DELETE)
-	 public void deleteFile(HttpServletResponse response,@RequestParam("file") String file, @RequestParam("type") String type){
-		 HashMap<String,FileMeta> fileHash;
+	 public void deleteFile(HttpServletResponse response,@RequestParam("file") String file, @RequestParam("type") FileTypeEnum type, @RequestParam("idProject") Long idProject){
+		 Project project = this.projectService.getProjectById(idProject);
+		 FileUpload fileUpload = this.fileUploadService.getFileUploadByName(file, type, project);
 		 
-		 if (type.equals("imported")) {
-			 fileHash = this.importedFileHash;
-		 } else if (type.equals("parsed")) {
-			 fileHash = this.parsedFileHash;
+		 File fileToDelete = new File(fileUpload.getDirectory(),fileUpload.getName());
+		 
+		 boolean success = fileToDelete.delete();
+		 
+		 if (!success) {
+			 System.out.println("File " + fileToDelete + " not deleted");
 		 } else {
-				try {
-					response.sendError(400,"The specified file type is not recognized");
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			 return;
-		 }
-		 
-		 FileMeta deleteFile = fileHash.get(file);
-		 try {		
-			 
-			    System.out.println(deleteFile.getDirectory());
-			    System.out.println(deleteFile.getName());
-			 	File f = new File(deleteFile.getDirectory(),deleteFile.getName());
-			 	boolean success = f.delete();
-			 	
-			 	if (!success) {
-			 		System.out.println("File " + deleteFile.getName() + " not deleted");
-			 		fileHash.remove(file);
-			 	}
-			 	
-		 }catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			 this.fileUploadService.deleteFileUploadById(fileUpload.getIdFileUpload());
 		 }
 	 }
 	 
@@ -216,49 +220,9 @@ public class FileController {
 	 * @return void
 	 ****************************************************/
 	@RequestMapping(value = "upload/load", method = RequestMethod.GET)
-	 public @ResponseBody FileMap  get(HttpServletResponse response, @RequestParam("type") String type, @RequestParam("analysisID") String id){
-		HashMap<String,FileMeta> fileHash; //HashMap container, might get replaced with db
-		FileMap fileMap = new FileMap();
-		File folder;
-		
-		if (type.equals("imported")) {
-			 folder = new File(FILES_PATH,id);
-			 fileHash = this.importedFileHash;
-		 } else if (type.equals("parsed")) {
-			 folder = new File(PARSED_PATH,id);
-			 fileHash = this.parsedFileHash;
-		 } else {
-				 try {
-					response.sendError(400,"The specified file type is not recognized");
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			 return fileMap;
-		 }
-		
-		if (!folder.exists()) {
-			folder.mkdir();
-		}
-		
-		
-		File[] listOfFiles = folder.listFiles();
-		FileMeta fileMeta;
-		
-
-		for (File file : listOfFiles) {
-		    if (file.isFile() && !file.getName().startsWith(".")) {
-		         String name = file.getName();
-		        
-	        	 fileMeta = new FileMeta();
-				 fileMeta.setName(name);
-				 fileMeta.setDirectory(folder.getPath());
-				 fileMeta.setSize(new Long(file.length()).toString());
-				 fileMeta.setMessage("");
-				 fileMeta.setState(SUCCESS);
-				 fileHash.put(name,fileMeta);
-				 fileMap.addFile(fileMeta);
-		    }
-		}
+	 public @ResponseBody List<FileUpload>  get(HttpServletResponse response, @RequestParam("type") FileTypeEnum type, @RequestParam("idProject") Long idProject){
+		Project project = this.projectService.getProjectById(idProject);
+		List<FileUpload> fileMap = this.fileUploadService.getFileUploadByType(type,project);
 		return fileMap;
 	}
 	
@@ -271,8 +235,10 @@ public class FileController {
 	 ****************************************************/
 	@RequestMapping(value = "parse/preview", method = RequestMethod.POST)
     @ResponseBody
-	public PreviewMap getHeader(@RequestParam(value="filename") String file) {
-		 FileMeta fm = this.importedFileHash.get(file);
+	public PreviewMap getHeader(@RequestParam(value="name") String name, @RequestParam("idProject") Long idProject) {
+		 Project project = this.projectService.getProjectById(idProject);
+		 FileUpload fileUpload = this.fileUploadService.getFileUploadByName(name, FileTypeEnum.UPLOADED, project);
+		
 		 PreviewMap pm = new PreviewMap();
 		 
 		 try {		
@@ -281,7 +247,7 @@ public class FileController {
 			 	int counter = 0;
 			 	
 			 	//Open a buffered reader
-			 	BufferedReader br = ModelUtil.fetchBufferedReader(new File(fm.getDirectory(),fm.getName()));
+			 	BufferedReader br = ModelUtil.fetchBufferedReader(new File(fileUpload.getDirectory(),fileUpload.getName()));
 			 
 			 	//Grab the first 20 lines of the file
 			 	while((temp = br.readLine()) != null) {
@@ -322,12 +288,12 @@ public class FileController {
 	 ****************************************************/
 	@RequestMapping(value="parse/chip", method = RequestMethod.POST)
 	public @ResponseBody 
-	FileMeta upload(@RequestParam("inputFile") String input, @RequestParam("outputFile") String output,
+	FileUpload upload(@RequestParam("inputFile") String input, @RequestParam("outputFile") String output,
 			@RequestParam("Chromosome") Integer chrom, @RequestParam("Start") Integer start, @RequestParam("End") Integer end,
 			@RequestParam("Log2Ratio") Integer log, @RequestParam("FDR") Integer fdr, @RequestParam("genome") String genomeName, 
-			@RequestParam("analysisID") String id, @RequestParam("10*log10(FDR)") Integer logFDR) {
+			@RequestParam("analysisID") String id, @RequestParam("-10*log10(FDR)") Integer logFDR, @RequestParam("idFileUpload") Long idParent) {
  
-		FileMeta outputMeta = new FileMeta();
+		FileUpload outputMeta = new FileUpload();
 		
 		try {
 			
@@ -345,11 +311,12 @@ public class FileController {
 			File inputFile = new File(importDir, input);
 			File outputFile = new File(parseDir, output);
 			
-			//Add gz extension if it doesn't exisst
+			//Add gz extension if it doesn't exist
 			if (!outputFile.getName().endsWith(".gz")) {
 				outputFile = new File(outputFile.getParent(),outputFile.getName() + ".gz");
 			}
 			
+			//Run parser, throw errors if log2 or FDR are not set
 			String warningMessage = "";
 			if (fdr != -1) {
 				ChipParser cp = new ChipParser(inputFile, outputFile, chrom, start, end, fdr, log, false, genome);
@@ -364,27 +331,45 @@ public class FileController {
 				return outputMeta;
 			}
 			
+			//Set result messages
 			if (warningMessage.equals("")) {
-				outputMeta.setState(SUCCESS);
+				outputMeta.setState(FileStateEnum.SUCCESS);
 				outputMeta.setMessage("");
 			} else {
-				outputMeta.setState(WARNING);
+				outputMeta.setState(FileStateEnum.WARNING);
 				outputMeta.setMessage(warningMessage);
 			}
-			
+		
 			outputMeta.setName(output);
 			outputMeta.setDirectory(parseDir.getAbsolutePath());
-			outputMeta.setSize(new Long(outputFile.length()).toString());
+			outputMeta.setSize(new Long(outputFile.length()));
 			
-			this.parsedFileHash.put(output, outputMeta);
+			FileUpload parent = this.fileUploadService.getFileUploadById(idParent);
+			if (parent == null) {
+				System.out.println("Nope");
+			} else {
+				System.out.println(parent.getDirectory());
+			}
+			outputMeta.setParent(parent);
+			outputMeta.setType(FileTypeEnum.IMPORTED);
+			outputMeta.setProject(parent.getProject());
+			
+			FileUpload existing = this.fileUploadService.getFileUploadByName(outputMeta.getName(), outputMeta.getType(), outputMeta.getProject());
+			if (existing == null) {
+				this.fileUploadService.addFileUpload(outputMeta);
+			} else {
+				this.fileUploadService.updateFileUpload(existing.getIdFileUpload(),outputMeta);
+			}
+			
+			
+			
 		} catch (Exception ioex) {
 			outputMeta.setName(output);
 			outputMeta.setSize(null);
-			outputMeta.setState(FAILURE);
+			outputMeta.setState(FileStateEnum.FAILURE);
 			outputMeta.setMessage(ioex.getMessage());
 		}
 		
-	
 		return outputMeta;
 	}
 	

@@ -8,6 +8,7 @@ function ($scope, $http, $modalInstance, instituteList, labData, title, bFace) {
 	$scope.bFace = bFace;
 	$scope.lab = angular.copy(labData);
 	$scope.usedNames = [];
+	
 	$scope.availInst = instituteList;
 
 	
@@ -27,12 +28,12 @@ function ($scope, $http, $modalInstance, instituteList, labData, title, bFace) {
 		if(!angular.isUndefined($scope.lab.institutes) || $scope.lab.institutes != null) {
 			var idList = [];
 			for (var i = 0; i < $scope.lab.institutes.length; i++) {
-				idList.push($scope.lab.institutes[i].idx);
+				idList.push($scope.lab.institutes[i].idInstitute);
 			}
 			
 			var instList = [];
 			for (var i=0; i < $scope.availInst.length; i++) {
-				if (idList.indexOf($scope.availInst[i].idx) != -1) {
+				if (idList.indexOf($scope.availInst[i].idInstitute) != -1) {
 					instList.push($scope.availInst[i]);
 				}
 			}

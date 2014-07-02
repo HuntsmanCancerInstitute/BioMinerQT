@@ -47,20 +47,20 @@ public class UserDAO {
 		}
 		
 		userToUpdate.setPhone(user.getPhone());
-		userToUpdate.setLab(user.getLab());
+		userToUpdate.setLabs(user.getLabs());
 		userToUpdate.setUsername(user.getUsername());
 		session.update(userToUpdate);
 		session.getTransaction().commit();
 		session.close();
 	}
 	
-	public User getUser(Long id) {
+	public User getUser(Long idUser) {
 		Session session = this.getCurrentSession();
-		User user = (User)session.get(User.class, id);
+		User user = (User)session.get(User.class, idUser);
 		
 		
-		Hibernate.initialize(user.getLab());
-		for (Lab l: user.getLab()) {
+		Hibernate.initialize(user.getLabs());
+		for (Lab l: user.getLabs()) {
 			Hibernate.initialize(l.getInstitutes());
 		}
 		
@@ -68,10 +68,10 @@ public class UserDAO {
 		return user;
 	}
 	
-	public void deleteUser(Long id) {
+	public void deleteUser(Long idUser) {
 		Session session  = this.getCurrentSession();
 		session.beginTransaction();
-		User user = (User)session.get(User.class,id);
+		User user = (User)session.get(User.class,idUser);
 		session.delete(user);
 		session.getTransaction().commit();
 		session.close();
@@ -84,8 +84,8 @@ public class UserDAO {
 		List<User> users = session.createQuery("from User").list();
 		
 		for (User u: users) {
-			Hibernate.initialize(u.getLab());
-			for (Lab l: u.getLab()) {
+			Hibernate.initialize(u.getLabs());
+			for (Lab l: u.getLabs()) {
 				Hibernate.initialize(l.getInstitutes());
 			}
 		}
@@ -95,16 +95,16 @@ public class UserDAO {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public List<User> getUserByLab(Long id) {
+	public List<User> getUserByLab(Long idLab) {
 		Session session =  this.getCurrentSession();
 		
-		Query query = session.createQuery("from User u where :labIdx in (select l.idx from u.labs l)");
-		query.setParameter("labIdx", id);
+		Query query = session.createQuery("from User u where :idLab in (select l.idLab from u.labs l)");
+		query.setParameter("idLab", idLab);
 		List<User> users = query.list();
 		
 		for (User u: users) {
-			Hibernate.initialize(u.getLab());
-			for (Lab l: u.getLab()) {
+			Hibernate.initialize(u.getLabs());
+			for (Lab l: u.getLabs()) {
 				Hibernate.initialize(l.getInstitutes());
 			}
 		}
@@ -133,8 +133,8 @@ public class UserDAO {
 		List<User> users = query.list();
 		
 		for (User u: users) {
-			Hibernate.initialize(u.getLab());
-			for (Lab l: u.getLab()) {
+			Hibernate.initialize(u.getLabs());
+			for (Lab l: u.getLabs()) {
 				Hibernate.initialize(l.getInstitutes());
 			}
 		}

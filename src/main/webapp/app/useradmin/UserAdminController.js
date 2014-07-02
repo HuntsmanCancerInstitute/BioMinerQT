@@ -4,11 +4,11 @@
  * UserAdminController
  * @constructor
  */
-var useradmin = angular.module('useradmin', ['ui.mask','ui.validate','confirmation','filters','directives']);
+var useradmin = angular.module('useradmin', ['ui.mask','ui.validate','confirmation','filters','directives','services']);
 
-angular.module("useradmin").controller("UserAdminController", ['$scope','$http','$modal','$timeout',
+angular.module("useradmin").controller("UserAdminController", ['$scope','$http','$modal','$timeout','DynamicDictionary','StaticDictionary',
                                                       
-function($scope, $http, $modal, $timeout) {
+function($scope, $http, $modal, $timeout, DynamicDictionary, StaticDictionary) {
 	
 	/**********************
 	 * Temporary password validation fun!
@@ -62,7 +62,12 @@ function($scope, $http, $modal, $timeout) {
 	$scope.labs = [];
 	$scope.selectedUsers = [];
 	$scope.selectedLab;
-	$scope.institutes = [];
+	
+	//Load static dictionaries
+	StaticDictionary.instituteList(function(data) {
+		$scope.institutes = data;
+	});
+	
 	
 	//Select all users
 	$scope.selectAllUsers = false;
@@ -92,7 +97,7 @@ function($scope, $http, $modal, $timeout) {
 			$http({
     	    	method: 'POST',
     	    	url: 'user/bylab',
-    	    	params: {id:$scope.labs[i].id, localIndex: i}
+    	    	params: {idLab:$scope.labs[i].idLab, localIndex: i}
     	    }).success(function(data,status,headers,config) {
     	    	$scope.labs[config.params.localIndex]['count'] = data.length;
     	    });
@@ -104,28 +109,12 @@ function($scope, $http, $modal, $timeout) {
 	 * Load all available labs.
 	 */
 	$scope.loadLabs = function() {
-		$http({
-	    	method: 'POST',
-	    	url: 'lab/all'
-	    }).success(function(data,status) {
+		DynamicDictionary.loadLabs().success(function(data,status) {
 	    	$scope.labs = $scope.addCheckbox(data);
 	    	$scope.loadCounts();
-	    	
 	    });
 	};
 	
-	/**
-	 * Load all available institutes.
-	 */
-	
-	$scope.loadInstitutes = function() {
-		$http({
-			method: 'POST',
-			url: 'institute/all'
-		}).success(function(data,status) {
-			$scope.institutes = data;
-		});
-	};
 
     
     /**
@@ -144,7 +133,7 @@ function($scope, $http, $modal, $timeout) {
     		$http({
     	    	method: 'POST',
     	    	url: 'user/bylab',
-    	    	params: {id:$scope.selectedLab.id}
+    	    	params: {idLab:$scope.selectedLab.idLab}
     	    }).success(function(data,status) {
     	    	$scope.selectedUsers = $scope.addCheckbox(data);
     	    });
@@ -181,24 +170,22 @@ function($scope, $http, $modal, $timeout) {
     				return "Update";
     			}
     		}
-    		
     	});
     	
     	modalInstance.result.then(function (user) {
     		//Create a list of lab ids
 	    	var ids = [];
 	    	for (var i=0; i<user.lab.length;i++) {
-	    		ids.push(user.lab[i].id);
+	    		ids.push(user.lab[i].idLab);
 	    	}
 	    	
 	    	$http({
     	    	method: 'POST',
     	    	url: 'user/modifyuser',
     	    	params: {first:user.first,last:user.last,username:user.username,password:user.password,email:user.email,
-    	    		phone:user.phone,admin:user.admin,lab:ids,userid:user.idx}
+    	    		phone:user.phone,admin:user.admin,lab:ids,idUser:user.idUser}
     	    }).success(function(data,status) {
     	    	$scope.loadSelected();
-    	    	$scope.loadUsers();
     	    });
 	    	
 	    });
@@ -230,13 +217,13 @@ function($scope, $http, $modal, $timeout) {
     	modalInstance.result.then(function (lab) {
     		var ids = [];
 	    	for (var i=0; i<lab.institutes.length;i++) {
-	    		ids.push(lab.institutes[i].idx);
+	    		ids.push(lab.institutes[i].idInstitute);
 	    	}
     		
 	    	$http({
     	    	method: 'POST',
     	    	url: 'lab/modifylab',
-    	    	params: {first:lab.first, last:lab.last, id:lab.id, institutes:ids}
+    	    	params: {first:lab.first, last:lab.last, idLab:lab.idLab, institutes:ids}
     	    }).success(function(data,status) {
     	    	$scope.loadLabs();
     	    });
@@ -272,7 +259,7 @@ function($scope, $http, $modal, $timeout) {
 	    	//Create a list of lab ids
 	    	var ids = [];
 	    	for (var i=0; i<user.lab.length;i++) {
-	    		ids.push(user.lab[i].id);
+	    		ids.push(user.lab[i].idLab);
 	    	}
 	    	
 	    	$http({
@@ -314,7 +301,7 @@ function($scope, $http, $modal, $timeout) {
 	    modalInstance.result.then(function (lab) {
 	    	var ids = [];
 	    	for (var i=0; i<lab.institutes.length;i++) {
-	    		ids.push(lab.institutes[i].idx);
+	    		ids.push(lab.institutes[i].idInstitute);
 	    	}
 	    	
 	    	$http({
@@ -351,7 +338,7 @@ function($scope, $http, $modal, $timeout) {
     	var toDelete = [];
     	for (var i = 0; i < $scope.selectedUsers.length; i++) {
 		    if ($scope.selectedUsers[i]['selected'] == true) {
-		    	toDelete.push($scope.selectedUsers[i].idx);
+		    	toDelete.push($scope.selectedUsers[i].idUser);
 		    }
 		}
    
@@ -359,7 +346,7 @@ function($scope, $http, $modal, $timeout) {
     		$http({
         		method: 'POST',
         		url: 'user/deleteuser',
-        		params: {id: toDelete[i]}
+        		params: {idUser: toDelete[i]}
     		}).success(function() {
     			$scope.loadSelected();
     			$scope.loadLabs();
@@ -374,7 +361,7 @@ function($scope, $http, $modal, $timeout) {
     	var toDelete = [];
     	for (var i = 0; i < $scope.labs.length; i++) {
 		    if ($scope.labs[i]['selected'] == true) {
-		    	toDelete.push($scope.labs[i].id);
+		    	toDelete.push($scope.labs[i].idLab);
 		    }
 		}
    
@@ -382,7 +369,7 @@ function($scope, $http, $modal, $timeout) {
     		$http({
         		method: 'POST',
         		url: 'lab/deletelab',
-        		params: {id: toDelete[i]}
+        		params: {idLab: toDelete[i]}
     		}).success(function() {
     			$scope.loadLabs();
     		});
@@ -461,9 +448,7 @@ function($scope, $http, $modal, $timeout) {
     
     //Load labs and users.
 	$scope.loadLabs();
-	$scope.loadInstitutes();
 	$scope.loadSelected();
-	
 	
 	
 }]);

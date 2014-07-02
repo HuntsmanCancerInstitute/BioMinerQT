@@ -8,7 +8,7 @@
 		        <input type="file" ng-file-select="onFileSelect($files)" multiple>            
 		    </span>
 		    <button class="btn btn-primary" data-ng-click="parse()">
-	           <span class="glyphicon glyphicon-cutlery"></span> Parse
+	           <span class="glyphicon glyphicon-cutlery"></span> Import
          	</button>
          	<button class="btn btn-danger" data-ng-click="deleteSelected($parent.uploadedFiles,'imported')">
          		<span class="glyphicon glyphicon-fire"></span> Delete
@@ -35,7 +35,7 @@
 			    <tbody>
 			        <tr ng-repeat="file in uploadedFiles">
 			            <td width="10%"> <input type="checkbox" ng-model="file.selected"/></td>
-			            <td width="50%"><a target="_self" ng-href="submit/upload/get?file={{file.name}}&type=imported">{{file.name}}</a></td>
+			            <td width="50%"><a target="_self" ng-href="submit/upload/get?file={{file.name}}&type=imported&idProject={{$parent.projectId}}">{{file.name}}</a></td>
 			            <td width="15%">{{file.size | bytes}}</td>
 			            
 			          	<td width="15%"ng-switch on="file.state">
@@ -44,11 +44,11 @@
 		          				<div class="progress-bar progress-bar-info" data-ng-style="{width: file.complete + '%'}"></div>
 		          			</div>
 			          		
-			          		<span class="label-success label" ng-switch-when="success">
+			          		<span class="label-success label" ng-switch-when="SUCCESS">
 			          			<span class="glyphicon glyphicon-ok-sign"></span>
 			          		</span>
 			          		
-			          		<span class="label-warning label" ng-switch-when="warning" ng-click="showError(file)">
+			          		<span class="label-warning label" ng-switch-when="WARNING" ng-click="showError(file)">
 			          			<span class="glyphicon glyphicon-info-sign"></span>
 			          		</span>
 			          		
@@ -88,17 +88,17 @@
 			    <tbody>
 			        <tr ng-repeat="file in parsedFiles">
 			            <td> <input type="checkbox" ng-model="file.selected"/></td>
-			            <td><a target="_self" ng-href="submit/upload/get?file={{file.name}}&type=parsed">{{file.name}}</a></td>
+			            <td><a target="_self" ng-href="submit/upload/get?file={{file.name}}&type=parsed&projectId={{$parent.projectId}}">{{file.name}}</a></td>
 			            <td>{{file.size | bytes}}</td>
 			            
 			          	<td ng-switch on="file.state">
 			          		
 			          		
-			          		<span class="label-success label" ng-switch-when="success">
+			          		<span class="label-success label" ng-switch-when="SUCCESS">
 			          			<span class="glyphicon glyphicon-ok-sign"></span>
 			          		</span>
 			          		
-			          		<span class="label-warning label" ng-switch-when="warning" ng-click="showError(file)">
+			          		<span class="label-warning label" ng-switch-when="WARNING" ng-click="showError(file)">
 			          			<span class="glyphicon glyphicon-info-sign"></span>
 			          		</span>
 			          		

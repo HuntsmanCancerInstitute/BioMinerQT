@@ -5,7 +5,18 @@
  
 <hibernate-configuration>
     <session-factory>
-        <mapping class="hci.biominer.model.Species" />
+        <mapping class="hci.biominer.model.Organism"/>
+        <mapping class="hci.biominer.model.OrganismBuild"/>
+        <mapping class="hci.biominer.model.AnalysisType"/>
+        <mapping class="hci.biominer.model.SampleType"/>
+        <mapping class="hci.biominer.model.SamplePrep"/>
+        <mapping class="hci.biominer.model.SampleCondition"/>
+        <mapping class="hci.biominer.model.SampleSource"/>
+        <mapping class="hci.biominer.model.FileUpload"/>
+        <mapping class="hci.biominer.model.DataTrack"/>
+        <mapping class="hci.biominer.model.Sample"/>
+        <mapping class="hci.biominer.model.Analysis"/>
+        <mapping class="hci.biominer.model.Project"/>
         <mapping class="hci.biominer.model.access.Lab"/>
         <mapping class="hci.biominer.model.access.User"/>
         <mapping class="hci.biominer.model.access.Institute"/>

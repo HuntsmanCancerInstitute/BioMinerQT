@@ -34,7 +34,6 @@ var directives = angular.module('directives', [])
 				element.trigger('chosen:updated');
 			});
 			
-			
 		};
 		
 		return {

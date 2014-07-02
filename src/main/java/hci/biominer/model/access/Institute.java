@@ -8,13 +8,13 @@ import javax.persistence.Id;
 import javax.persistence.GeneratedValue;
 
 @Entity
-@Table (name = "institute")
+@Table (name = "Institute")
 public class Institute {
 	@Id
 	@GeneratedValue(generator="increment")
 	@GenericGenerator(name="increment",strategy="increment")
-	@Column(name="idx")
-	private Long idx;
+	@Column(name="idInstitute")
+	private Long idInstitute;
 	
 	@Column(name="name")
 	private String name;
@@ -27,14 +27,14 @@ public class Institute {
 		this.name = name;
 	}
 	
-	public Long getIdx() {
-		return this.idx;
+	public Long getIdInstitute() {
+		return idInstitute;
 	}
-	
-	public void setIdx(Long idx) {
-		this.idx = idx;
+
+	public void setIdInstitute(Long idInstitute) {
+		this.idInstitute = idInstitute;
 	}
-	
+
 	public String getName() {
 		return this.name;
 	}

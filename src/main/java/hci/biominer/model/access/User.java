@@ -23,13 +23,13 @@ public class User {
 	@Id
 	@GeneratedValue(generator="increment")
 	@GenericGenerator(name="increment",strategy="increment")
-	@Column(name="idx")
-	private Long idx;
+	@Column(name="idUser")
+	private Long idUser;
 	
 	@ManyToMany()
-	@JoinTable(name="user_lab",
-	joinColumns={@JoinColumn(name="uidx",referencedColumnName="idx")},
-	inverseJoinColumns={@JoinColumn(name="lidx",referencedColumnName="idx")})
+	@JoinTable(name="UserLab",
+	joinColumns={@JoinColumn(name="idUser",referencedColumnName="idUser")},
+	inverseJoinColumns={@JoinColumn(name="idLab",referencedColumnName="idLab")})
 	private List<Lab> labs = null;
 	
 	@Column(name = "first")
@@ -72,20 +72,22 @@ public class User {
 		this.salt = salt;
 	}
 
-	public Long getIdx() {
-		return idx;
+	
+
+	public Long getIdUser() {
+		return idUser;
 	}
 
-	public void setIdx(Long idx) {
-		this.idx = idx;
+	public void setIdUser(Long idUser) {
+		this.idUser = idUser;
 	}
 
-	public List<Lab> getLab() {
+	public List<Lab> getLabs() {
 		return labs;
 	}
 
-	public void setLab(List<Lab> lab) {
-		this.labs = lab;
+	public void setLabs(List<Lab> labs) {
+		this.labs = labs;
 	}
 
 	public String getFirst() {

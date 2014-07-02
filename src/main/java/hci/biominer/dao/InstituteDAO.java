@@ -29,9 +29,9 @@ public class InstituteDAO {
 		
 	}
 	
-	public Institute getInstitute(Long idx) {
+	public Institute getInstitute(Long idInstitute) {
 		Session session = this.getCurrentSession();
-		Institute institute = (Institute)session.get(Institute.class,idx);
+		Institute institute = (Institute)session.get(Institute.class,idInstitute);
 		session.close();
 		return institute;
 	}

@@ -17,16 +17,16 @@ public class UserService {
 	private UserDAO userDAO;
 	
 
-	public User getUser(Long id) {
-		return userDAO.getUser(id);
+	public User getUser(Long idUser) {
+		return userDAO.getUser(idUser);
 	}
 	
 	public List<User> getAllUsers() {
 		return userDAO.getAllUsers();
 	}
 	
-	public List<User> getUsersByLab(Long id) {
-		return userDAO.getUserByLab(id);
+	public List<User> getUsersByLab(Long idLab) {
+		return userDAO.getUserByLab(idLab);
 	}
 	
 	public List<String> getUsernames() {
@@ -37,12 +37,12 @@ public class UserService {
 		userDAO.addUser(user);
 	}
 	
-	public void deleteUser(Long id) {
-		userDAO.deleteUser(id);
+	public void deleteUser(Long idUser) {
+		userDAO.deleteUser(idUser);
 	}
 	
-	public void updateUser(Long userIdx, User user) {
-		userDAO.updateUser(userIdx, user);
+	public void updateUser(Long idUser, User user) {
+		userDAO.updateUser(idUser, user);
 	}
 	
 	public User getUserByUsername(String username) {

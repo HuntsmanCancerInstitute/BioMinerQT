@@ -5,10 +5,11 @@
   	         Submit Your Data
   	       </h3>
 	       <a ng-click="openNewProjectWindow()"><span class="glyphicon glyphicon-plus"></span> New Submission</a>
-		   <a><span class="glyphicon glyphicon-refresh"></span> Refresh</a>
+		   <a ng-click="refresh()"><span class="glyphicon glyphicon-refresh"></span> Refresh</a>
+		   <a ng-click="deleteProject()"><span class="glyphicon glyphicon-trash"></span>Delete</a>
 		   <input type="text"/>
 		   <div class="form-group right">
-		    	<select id="species_build" ng-model="project.idGenomeBuild" ng-options="gb.idGenomeBuild as gb.name  group by gb.species for gb in genomeBuildList" class="form-control">
+		    	<select id="species_build" ng-model="project.idGenomeBuild" ng-options="gb.idOrganismBuild as gb.name  group by gb.species for gb in organismBuildList" class="form-control">
 		     	</select>
 		   </div>
 	</div>
@@ -26,8 +27,8 @@
            	 	<div class="panel-body">
 					<ul>
 				 		<li ng-repeat="project in projects">
-				 			<a ng-class="project.cssClass" href="#/submit" ng-click="edit(project.id)">{{project.name}}</a>
-						 </li>
+				 			<a ng-class="project.cssClass" href="#/submit" ng-click="select(project.idProject)">{{project.name}}</a>
+					    </li>
 				
 					</ul>
 				</div>

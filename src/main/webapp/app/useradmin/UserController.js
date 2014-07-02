@@ -35,12 +35,12 @@ function ($scope, $http, $modalInstance, labList, userData, title,bFace) {
 			//Create an array of ids.
 			var ids = [];
 			for (var i = 0; i < $scope.user.lab.length; i++) {
-				ids.push($scope.user.lab[i].id);
+				ids.push($scope.user.lab[i].idLab);
 			}
 			
 			var labList = [];
 			for (var i = 0; i < $scope.availLabs.length; i++) {
-				if (ids.indexOf($scope.availLabs[i].id) != -1) {
+				if (ids.indexOf($scope.availLabs[i].idLab) != -1) {
 					labList.push($scope.availLabs[i]);
 				}
 			}

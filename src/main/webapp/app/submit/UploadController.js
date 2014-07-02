@@ -41,7 +41,7 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 				
 				//Check to see if there are any matching files in list (match on name only)
 				for (var j=0; j<$scope.$parent.uploadedFiles.length; j++) {
-					if (file.name == $scope.$parent.uploadedFiles[j].name) {
+					if (file.name == $scope.$parent.uploadedFiles[j].name || (file.name + ".gz") == $scope.$parent.uploadedFiles[j].name ) {
 						index = j;
 						$scope.$parent.uploadedFiles[j].state = "started";
 						$scope.$parent.uploadedFiles[j].complete = 0;
@@ -60,7 +60,7 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 						return $scope.upload = $upload.upload({
 							url: "submit/upload",
 							file: file,
-							data: {analysisID: $scope.$parent.project.id},
+							data: {idProject: $scope.$parent.projectId},
 							progress: function(evt) {
 								$scope.$parent.uploadedFiles[index].complete = 100.0 * evt.loaded / evt.total;
 								
@@ -73,9 +73,10 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 								$scope.complete = 100.0 * $scope.currGlobalSize / $scope.totalGlobalSize;
 							}
 						}).success(function(data) {
-							if (data.state != "success") {
+							if (data.state != "SUCCESS") {
 								//Only set message on failure
 								$scope.$parent.uploadedFiles[index].message = data.message;
+								$scope.$parent.uploadedFiles[index].state = "FAILURE";
 							} else {
 								//Set everything on success
 								$scope.$parent.uploadedFiles[index] = data;
@@ -83,7 +84,7 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 							$scope.$parent.uploadedFiles[index].selected = false;
 							
 						}).error(function(data) {
-							$scope.$parent.uploadedFiles[index].status = "failure";
+							$scope.$parent.uploadedFiles[index].status = "FAILURE";
 						});
 				})(i,index,file);
 				
@@ -98,13 +99,13 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 			for (var i=0; i < collection.length;i++) {
 				collection[i].selected = status;
 			}
-			console.log($scope.$parent.project.id);
+			console.log($scope.$parent.projectId);
 		};
 		
 		/********************
 		 * Delete selected files
 		 ********************/
-		$scope.deleteSelected = function(collection,type) {
+		$scope.deleteSelected = function(collection) {
 			for (var i = 0; i < collection.length; i++) {
 				var file = collection[i];
 				var name = collection[i].name;
@@ -122,7 +123,7 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 						$http({
 							url: "submit/upload/delete",
 							method: "DELETE",
-							params: {file: file.name, type: type}
+							params: {file: file.name, type: file.type, idProject: $scope.$parent.projectId}
 						}).success((function (name) {
 							return function(data) {
 								for (var j=0; j<collection.length;j++) {
@@ -161,7 +162,7 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 				$http({
 					url: "submit/parse/preview/",
 					method: "POST",
-					params: {filename: $scope.selectedFiles[0].file.name, analysisID: $scope.$parent.project.id}
+					params: {name: $scope.selectedFiles[0].file.name, idProject: $scope.$parent.projectId}
 				}).success(function(data,status,headers,config) {
 			    	var modalInstance = $modal.open({
 			    		templateUrl: 'app/submit/previewWindow.html',
@@ -225,10 +226,11 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 						var params = {};
 						params.inputFile = $scope.selectedFiles[i].file.name;
 						params.outputFile = $scope.selectedFiles[i].outname;
+						params.idFileUpload = $scope.selectedFiles[i].file.idFileUpload;
 						
 						//This will be tied to build going forward!!
 						params.genome = "hg19";
-						params.analysisID = $scope.$parent.project.id;
+						params.analysisID = $scope.$parent.projectId;
 						
 						//Check to see if there are any matching files in list (match on name only)
 						var index = -1;
@@ -283,12 +285,12 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 			$http({
 				url: "submit/upload/load",
 				method: "GET",
-				params: {type : type, analysisID: $scope.$parent.project.id}
+				params: {type : type, idProject: $scope.$parent.projectId}
 			}).success( function(data) {
-        		for (var i = 0; i < data.files.length; i++) {
+        		for (var i = 0; i < data.length; i++) {
         			//Set selected
-    				data.files[i].selected = false;
-        			collection.push(data.files[i]);
+    				data[i].selected = false;
+        			collection.push(data[i]);
             	}
         	});
 			return collection;
@@ -315,12 +317,12 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 		 * Load files once a project is selected
 		 ********************/
         $scope.$parent.$watch('project',function() {
-        	if ($scope.$parent.project.id > 0) {
-        		$scope.$parent.uploadedFiles = $scope.loadExisting("imported");
-            	$scope.parsedFiles = $scope.loadExisting("parsed");	
+        	if ($scope.$parent.project.idProject > 0) {
+        		$scope.$parent.uploadedFiles = $scope.loadExisting("UPLOADED");
+            	$scope.parsedFiles = $scope.loadExisting("IMPORTED");	
         	}
         	        	
-        },true);
+        });
         
   
 	

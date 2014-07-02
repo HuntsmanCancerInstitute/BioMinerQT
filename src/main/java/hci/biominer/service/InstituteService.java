@@ -19,8 +19,8 @@ public class InstituteService {
 		return instituteDAO.getInstitutes();
 	}
 	
-	public Institute getInstituteById(Long idx) {
-		return instituteDAO.getInstitute(idx);
+	public Institute getInstituteById(Long idInstitute) {
+		return instituteDAO.getInstitute(idInstitute);
 	}
 	
 }

@@ -36,8 +36,8 @@ public class LabController {
     		@RequestParam(value="institutes") List<Long> instituteIds) {
 		
 		List<Institute> instituteList = new ArrayList<Institute>();
-		for (Long id: instituteIds) {
-			instituteList.add(instituteService.getInstituteById(id));
+		for (Long idInstitute: instituteIds) {
+			instituteList.add(instituteService.getInstituteById(idInstitute));
 		}
 		
     	Lab newLab = new Lab(firstName,lastName, instituteList);
@@ -46,26 +46,26 @@ public class LabController {
 	
 	@RequestMapping(value="deletelab",method=RequestMethod.POST)
     @ResponseBody
-    public void deleteLab(@RequestParam(value="id") Long id) {
-    	labService.deleteLab(id);
+    public void deleteLab(@RequestParam(value="idLab") Long idLab) {
+    	labService.deleteLab(idLab);
     }
     
     @RequestMapping(value = "modifylab", method=RequestMethod.POST)
     @ResponseBody
     public void modifyLab(@RequestParam(value="first") String firstName, @RequestParam(value="last") String lastName,
-    		@RequestParam(value="id") Long id, @RequestParam(value="institutes") List<Long> instituteIds){
+    		@RequestParam(value="idLab") Long idLab, @RequestParam(value="institutes") List<Long> instituteIds){
     	
     	List<Institute> instituteList = new ArrayList<Institute>();
-		for (Long instId: instituteIds) {
+		for (Long idInstitute: instituteIds) {
 			//System.out.println("Identifier: " + instId);
-			instituteList.add(instituteService.getInstituteById(instId));
+			instituteList.add(instituteService.getInstituteById(idInstitute));
 		}
  
     	//Create a new lab
     	Lab lab = new Lab(firstName,lastName, instituteList);
     	
     	//Update user
-    	labService.updateLab(lab, id);
+    	labService.updateLab(lab, idLab);
     }
 	
 

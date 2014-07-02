@@ -4,190 +4,225 @@
  * SubmitController
  * @constructor
  */
-var submit    = angular.module('submit',    ['ui.bootstrap', 'blueimp.fileupload','filters', 'services', 'directives']);
+var submit    = angular.module('submit', ['localytics.directives','ui.bootstrap', 'blueimp.fileupload','filters', 'services', 'directives']);
 
 angular.module("submit").controller("SubmitController", [
-'$scope', '$http', '$modal',
-function($scope, $http, $modal) {
+'$scope', '$http', '$modal','DynamicDictionary','StaticDictionary',
+function($scope, $http, $modal, DynamicDictionary, StaticDictionary) {
+	/**********************
+	 * Initialization!
+	 *********************/
 	
-    $scope.project = {};
-    $scope.nextIdProject = 100;
-    $scope.projectName = "";
-    $scope.projectDescription = "";
+	//enums!
+	$scope.projectVisibilities = [{enum: "LAB",name: "Lab"},{enum: "INSTITUTE", name: "Institute"},{enum: "PUBLIC", name: "Public"}];
+	
+	//current project
+	$scope.projectId = -1;
+	
+	//containers
+	$scope.uploadedFiles = [];
+    $scope.samples = [];
+    $scope.datatracks = [];
+    $scope.results = [];
+    $scope.samplePrepList = [];
     
-
-	
-    $scope.uploadedFiles = [];
-
-    $scope.sample = {};
-    $scope.nextIdSample = 100;
-    $scope.sampleEditMode  = false;
-	$scope.samples = [];
-	
+    //active
+    $scope.sample = {sampleType: null};
     $scope.datatrack = {};
-    $scope.nextIdDataTrack = 100;
-    $scope.datatrackEditMode  = false;
-	$scope.datatracks = [];
-	
-	
     $scope.result = {};
-    $scope.nextIdResult = 100;
-    $scope.resultEditMode  = false;
-	$scope.results = [];
-
-	
-    $scope.labList = [
-                   {"idLab": 1,
-                	"name": "Yost lab"                	
-                   },
-                   {"idLab": 2,
-                   	"name": "Bruneau lab"                	
-                   },
-                   {"idLab": 3,
-                   	"name": "Pu lab"                	
-                   }
-                     
-    ];
     
-    $scope.visibilityList = [
-                    {"codeVisibility": "MEM", "name": "Lab members"},
-                    {"codeVisibility": "INST", "name": "Institution"},
-                    {"codeVisibility": "PUBLIC", "name": "Public"}
-    		
-    ];
+    //flags
+    $scope.sampleEditMode = false;
+	
+	//Static dictionaries.
+	StaticDictionary.organismBuildList(function(data) {
+		$scope.organismBuildList = data;
+	});
+	
+	StaticDictionary.analysisTypeList(function(data) {
+		$scope.analysisTypeList = data;
+	});
+	
+	StaticDictionary.sampleTypeList(function(data) {
+		$scope.sampleTypeList = data;
+	});
+	
+	StaticDictionary.samplePrepList(function(data) {
+		$scope.samplePrepListAll = data;
+	});
+	
     
-	$scope.genomeBuildList = [
-	                 {"idGenomeBuild": 1, name: "hg17", species: "Human"},
-	                 {"idGenomeBuild": 2, name: "hg18", species: "Human"},
-	                 {"idGenomeBuild": 3, name: "mm18", species: "Mouse"},
-	                 {"idGenomeBuild": 4, name: "mm19", species: "Mouse"},
-	                 {"idGenomeBuild": 5, name: "zb 1", species: "Zebrafish"},
-	                 {"idGenomeBuild": 6, name: "zb 2", species: "Zebrafish"},
-	                 {"idGenomeBuild": 7, name: "zb 3", species: "Zebrafish"}
-	];
+    //Dynamic dictionaries.  These dictionaries can be loaded on-demand.
+    $scope.loadLabs = function() {
+    	DynamicDictionary.loadLabs().success(function(data) {
+    		$scope.labList = data;
+    	});
+    };
+    
+    $scope.loadSampleSources = function() {
+    	DynamicDictionary.loadSampleSources().success(function(data) {
+    		$scope.sampleSourceList = data;
+    	});
+    };
+    
+    $scope.loadSampleConditions = function() {
+    	DynamicDictionary.loadSampleConditions().success(function(data) {
+    		$scope.sampleConditionList = data;
+    	});
+    };
+  
+    //Load up dynamic dictionaries
+	$scope.loadLabs();
+	$scope.loadSampleConditions();
+	$scope.loadSampleSources();
+    
+    //Watchers
+    $scope.$watch('sample.sampleType',function() {
+    	if ($scope.sample.sampleType == null) {
+    		$scope.samplePrepList = null;
+    	} else {
+    		DynamicDictionary.loadSamplePrepsBySampleType($scope.sample.sampleType.idSampleType).success(function(data) {
+    			$scope.samplePrepList = data;
+    		});
+    	}
+    });
+    
+    /**********************
+	 * Project management
+	 *********************/
+    
+    //load projects (currently all, will be tied to user going forward)
+    $scope.loadProjects = function(projectId) {
+    	$http({
+			url: "project/getAllProjects",
+			method: "POST",
+			params: {projectId: projectId},
+		}).success(function(data, status, headers, config) {
+			$scope.projectId = config.params.projectId;
+			$scope.projects = data;
+			for (var i=0; i<$scope.projects.length; i++) {
+				if ($scope.projects[i].idProject == $scope.projectId) {
+					$scope.samples = $scope.projects[i].samples;
+					$scope.datatracks = $scope.projects[i].dataTracks;
+				}
+			}
+		});
+    };
+    
+    $scope.loadProjects($scope.projectId);
+    
+    //Create project
+    $scope.add = function(project) {
+		$http({
+			url: "project/createProject",
+			method: "POST",
+			params: {name: project.name, description: project.description, visibility: "PUBLIC"},
+		}).success(function(data) {
+			$scope.loadProjects(data);			
+		});
+	};
 	
-	$scope.sampleTypeList = [
-	                  {idSampleType: 1, name: "RNA -> polyA"},
-	                  {idSampleType: 2, name: "RNA->RiboZero"},
-	                  {idSampleType: 3, name: "ChIP DNA"},
-	                  {idSampleType: 4, name: "DNA"}
-	                  
-	];
-	$scope.siteList = [
-	   	                  {idSite: 1, name: "Cell Line", organ: "Cell Line"},
-	   	                  {idSite: 1, name: "Left ventricle", organ: "Heart"},
-	   	                  {idSite: 2, name: "Right ventricle", organ: "Heart"},
-	   	                  {idSite: 3, name: "Aortic valve", organ: "Heart"},
-	   	                  {idSite: 4, name: "Left interior lobe", organ: "Lung"},
-	   	                  {idSite: 5, name: "Right interior lobe", organ: "Lung"}
-	   	                  
-	];
-	$scope.sampleGroupList = [
-	                      {idSampleGroup: 1, name: "Effect (wildtype)"}, 
-	                      {idSampleGroup: 2, name: "Treated"}, 
-	                      {idSampleGroup: 3, name: "Tumor"}, 
-	                      {idSampleGroup: 4, name: "Normal"}, 
-	                      {idSampleGroup: 5, name: "Control"}, 
-	                      {idSampleGroup: 6, name: "Other (specify)"} 
-	                      
-   ];
-   $scope.analysisTypeList = [
-	   	                  {idAnalysisType: 1, name: "ChIP Seq"},
-	   	                  {idAnalysisType: 2, name: "RNA Seq"},
-	   	                  {idAnalysisType: 3, name: "Methylation Analysis"},
-	   	                  {idAnalysisType: 4, name: "Variant Calling"}
-	   	                  
-   ];
-
-
-	$scope.projects = [
-	                 {"id": 1,
-	                  "name": "Project ABC",
-	                  "description": "Fast just got faster with Nexus S.",
-	                  "idLab": 1,
-	                  "idGenomeBuild": 3,
-	                  "codeVisibility": "MEM"},
-	                 {"id": 2,
-	                  "name": "My Analysis Project",
-	                  "description": "The Next, Next Generation tablet.",
-	                  "idLab": 2,
-	                  "idGenomeBuild": 4,
-	                  "codeVisibility": "PUBLIC"},
-	                 {"id": 3,
-	                  "name": "ChIP SEQ",
-	                  "description": "Here is a good description.",
-	                  "idLab": 3,
-	                  "idGenomeBuild": 7,
-	                  "codeVisibility": "INST"}
-	               ];
-	
-	
-	
-	$scope.edit = function(id) {
-		//search project with given id and update it
-        for(var i in $scope.projects) {
-            if($scope.projects[i].id == id) {
+	//Update project
+	$scope.edit = function() {
+		var ids = [];
+		
+		for (var idx=0; idx<$scope.project.labs.length;idx++) {
+			ids.push($scope.project.labs[idx].idLab);
+		}
+		
+		var buildId = -1;
+		if ($scope.project.organismBuild != null) {
+			buildId = $scope.project.organismBuild.idOrganismBuild;
+		}
+		
+		$http({
+			url: "project/updateProject",
+			method: "POST",
+			params: {name: $scope.project.name, description: $scope.project.description,
+				idLab: ids, idOrganismBuild: buildId, idProject: $scope.projectId,
+				visibility: $scope.project.visibility},
+		}).success(function(data) {
+			$scope.loadProjects($scope.projectId);
+		});
+		
+    };
+    
+    //Select project
+    $scope.select = function(id) {
+    	$scope.projectId = id;
+    	$scope.sample = {sampleType: null};
+    };
+    
+    //set active project when projectId changes.
+    $scope.$watch("projectId",function() {
+    	$scope.project = {};
+    	for (var i in $scope.projects) {
+    		if($scope.projects[i].idProject == $scope.projectId) {
             	$scope.projects[i].cssClass = "current-project";
             	$scope.project = $scope.projects[i];
+            	$scope.samples = $scope.projects[i].samples;
+            	$scope.datatracks = $scope.projects[i].datatracks;
+            	
+            	//Replace project labs with objects in labList.  Track-by doesn't appear to work in chosen widgets...
+            	var ids = [];
+            	for (var idx=0; idx< $scope.project.labs.length; idx++) {
+            		ids.push($scope.project.labs[idx].idLab);
+            	}
+            	
+            	var labs = [];
+            	for (var idx=0; idx< $scope.labList.length; idx++) {
+            		if (ids.indexOf($scope.labList[idx].idLab) != -1) {
+            			labs.push($scope.labList[idx]);
+            		}
+            	}
+
+            	$scope.project.labs = labs;
+            	
             } else {
             	$scope.projects[i].cssClass = "";
             }
-        }
+    	}
+    });
+    
+    //delete project
+    $scope.deleteProject = function() {
+    	if ($scope.idProject != -1) {
+    		$http({
+    			url: "project/deleteProject",
+    			method: "POST",
+    			params: {idProject: $scope.projectId},
+        	}).success(function(data) {
+        		$scope.loadProjects(-1);
+        	});
+    	}
+    	
     };
-	
-	$scope.add = function(project) {
-		$scope.projects.push( {"id": ++$scope.nextIdProject,
-							   "name": project.name,
-			                   "description": project.description,
-			                   "cssClass": "current-project"}
-							);
-		
-		$scope.project = $scope.projects[$scope.projects.length - 1];
-
-		for(var i in $scope.projects) {
-            if($scope.projects[i].id == $scope.project.id) {
-            	$scope.projects[i].cssClass = "current-project";
-            } else {
-            	$scope.projects[i].cssClass = "";
-            }
-        }
-		
-	};
-	
-	//
-	//  New Analysis Project Dialog
-	//
+    
+    //clear out selected project
+    $scope.refresh = function() {
+    	$scope.projectId = -1;
+    	$scope.sample = {sampleType: null};
+    };
+    
+    
+	//New Analysis Project Dialog
 	$scope.openNewProjectWindow = function () {
+	    var modalInstance = $modal.open({
+	      templateUrl: 'app/submit/newProjectWindow.html',
+	      controller: 'ProjectWindowController',
+	    });
 
-		    var modalInstance = $modal.open({
-		      templateUrl: 'app/submit/newProjectWindow.html',
-		      controller: 'ProjectWindowController',
-		      resolve: {
-		        projectName: function () {
-		          return $scope.projectName;
-		        }, 
-		        projectDescription: function() {
-		          return $scope.projectDescription;  
-		        }
-		      }
-		    });
-
-		    modalInstance.result.then(function (project) {
-		    	$scope.add(project);
-				
-				$scope.projectName = "";
-				$scope.projectDescription = "";
-		    	
-		    }, function () {
-		    	// When dialog dismissed
-		    });
+	    modalInstance.result.then(function (project) {
+	    	$scope.add(project);
+	    }, function () {
+	    	// When dialog dismissed
+	    });
 	};
-	
-	
-	
-	//
-	// Samples
-	//
+
+
+	/**********************
+	* Sample management
+	*********************/
 
 	$scope.editSample = function(sample) {
 		$scope.sample = sample;
@@ -197,54 +232,59 @@ function($scope, $http, $modal) {
 	$scope.saveSample = function(sample) {
 		$scope.sampleEditMode = false;
 		
-		var newSample = {};
-		$scope.sample = newSample;
-		$scope.clearSample();
+		$http({
+			url: "project/updateSample",
+			method: "POST",
+			params: {idProject: $scope.projectId, name: sample.name, idSampleType: sample.sampleType.idSampleType,
+				idSamplePrep: sample.samplePrep.idSamplePrep, idSampleSource: sample.sampleSource.idSampleSource, 
+				idSampleCondition: sample.sampleCondition.idSampleCondition, idSample: sample.idSample},
+		}).success(function(data) {
+			$scope.loadProjects($scope.projectId);
+			$scope.sample = {};
+		}).error(function(data, status, headers, config) {
+			console.log("Could not update sample.");
+		});
 	};
 	
-	$scope.removeSample = function(id) {
-        for(var i in $scope.samples) {
-            if($scope.samples[i].idSample == id) {
-            	$scope.samples.splice(i, 1);
-            	break;
-            }
-        }
-       
+	$scope.removeSample = function(sample) {
+		$http({
+			url: "project/deleteSample",
+			method: "POST",
+			params: {idSample: sample.idSample},
+		}).success(function(data) {
+			$scope.loadProjects($scope.projectId);
+		}).error(function(data, status, headers, config) {
+			console.log("Could not delete sample.");
+		});
     };
 	
 	$scope.addSample = function(sample) {
-		var newSample = {};
-		newSample.idSample = ++$scope.nextIdSample;
-		newSample.name = sample.name;
-		newSample.idSampleType = sample.idSampleType;
-		newSample.idSite = sample.idSite;
-		newSample.idSampleGroup = sample.idSampleGroup;
+		$http({
+			url: "project/createSample",
+			method: "POST",
+			params: {idProject: $scope.projectId, name: sample.name, idSampleType: sample.sampleType.idSampleType,
+				idSamplePrep: sample.samplePrep.idSamplePrep, idSampleSource: sample.sampleSource.idSampleSource, 
+				idSampleCondition: sample.sampleCondition.idSampleCondition},
+		}).success(function(data) {
+			$scope.loadProjects($scope.projectId);
+		}).error(function(data, status, headers, config) {
+			console.log("Could not create sample.");
+		});
 		
-		$scope.samples.push(newSample);
-		
-		$scope.clearSample();
-	};
-	
-	$scope.clearSample = function() {
-		$scope.sample.idSample = -1;
-		$scope.sample.name = "";
-		$scope.sample.idSampleType = "";
-		$scope.sample.idSite = "";
-		$scope.sample.idSampleGroup = "";
-
 		
 	};
 	
-	$scope.duplicateSample = function(sample) {
-		var newSample = {};
-		newSample.idSample = ++$scope.nextIdSample;
-		newSample.name = sample.name;
-		newSample.idSampleType = sample.idSampleType;
-		newSample.idSite = sample.idSite;
-		newSample.idSampleGroup = sample.idSampleGroup;
-		
-		$scope.samples.push(newSample);
-	};
+	
+//	$scope.duplicateSample = function(sample) {
+//		var newSample = {};
+//		newSample.idSample = ++$scope.nextIdSample;
+//		newSample.name = sample.name;
+//		newSample.idSampleType = sample.idSampleType;
+//		newSample.idSite = sample.idSite;
+//		newSample.idSampleGroup = sample.idSampleGroup;
+//
+//		$scope.samples.push(newSample);
+//	};
 	
 	
 	//
@@ -415,8 +455,9 @@ function($scope, $http, $modal) {
 	
 	
 	
-
-
+	
+	
+	
 }]);
 
 

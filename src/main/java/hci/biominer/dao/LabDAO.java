@@ -30,10 +30,10 @@ public class LabDAO  {
 		session.close();
 	}
 	
-	public void updateLab(Lab lab, Long id) {
+	public void updateLab(Lab lab, Long idLab) {
 		Session session = this.getCurrentSession();
 		session.beginTransaction();
-		Lab labToUpdate = (Lab) session.get(Lab.class, id);
+		Lab labToUpdate = (Lab) session.get(Lab.class, idLab);
 		labToUpdate.setFirst(lab.getFirst());
 		labToUpdate.setLast(lab.getLast());
 		labToUpdate.setInstitutes(lab.getInstitutes());
@@ -42,19 +42,18 @@ public class LabDAO  {
 		session.close();
 	}
 	
-	public Lab getLab(Long id) {
+	public Lab getLab(Long idLab) {
 		Session session = this.getCurrentSession();
-		Lab lab  = (Lab)session.get(Lab.class, id);
-		
+		Lab lab  = (Lab)session.get(Lab.class, idLab);
 		Hibernate.initialize(lab.getInstitutes());
 		session.close();
 		return lab;
 	}
 	
-	public void deleteLab(Long id) {
+	public void deleteLab(Long idLab) {
 		Session session = this.getCurrentSession();
 		session.beginTransaction();
-		Lab lab = (Lab)session.get(Lab.class, id);
+		Lab lab = (Lab)session.get(Lab.class, idLab);
 		if (lab != null) {
 			session.delete(lab);
 		}

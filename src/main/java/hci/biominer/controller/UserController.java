@@ -40,8 +40,8 @@ public class UserController {
     
     @RequestMapping(value = "bylab", method = RequestMethod.POST)
     @ResponseBody
-    public List<User> getUserListByLab(@RequestParam(value="id") Long id) {
-        return userService.getUsersByLab(id);
+    public List<User> getUserListByLab(@RequestParam(value="idLab") Long idLab) {
+        return userService.getUsersByLab(idLab);
     }
     
     @RequestMapping(value = "adduser", method=RequestMethod.POST)
@@ -51,8 +51,8 @@ public class UserController {
     		@RequestParam(value="admin") boolean admin, @RequestParam(value="lab") List<Long> labIds) {
  
     	List<Lab> labList = new ArrayList<Lab>();
-    	for (Long lidx: labIds) {
-    		labList.add(labService.getLab(lidx));
+    	for (Long idLab: labIds) {
+    		labList.add(labService.getLab(idLab));
     	}
     	
     	String salt = this.createSalt();
@@ -69,20 +69,20 @@ public class UserController {
     
     @RequestMapping(value="deleteuser",method=RequestMethod.POST)
     @ResponseBody
-    public void deleteUser(@RequestParam(value="id") Long id) {
-    	userService.deleteUser(id);
+    public void deleteUser(@RequestParam(value="idUser") Long idUser) {
+    	userService.deleteUser(idUser);
     }
     
     @RequestMapping(value = "modifyuser", method=RequestMethod.POST)
     @ResponseBody
     public void modifyUser(@RequestParam(value="first") String firstName, @RequestParam(value="last") String lastName, @RequestParam(value="username") String username,
     		@RequestParam(value="password") String password, @RequestParam(value="email") String email, @RequestParam(value="phone") Long phone, 
-    		@RequestParam(value="admin") boolean admin, @RequestParam(value="lab") List<Long> labIds, @RequestParam(value="userid") Long userId) {
+    		@RequestParam(value="admin") boolean admin, @RequestParam(value="lab") List<Long> labIds, @RequestParam(value="idUser") Long idUser) {
  
     	//Get lab
     	List<Lab> labList = new ArrayList<Lab>();
-    	for (Long lidx: labIds) {
-    		labList.add(labService.getLab(lidx));
+    	for (Long idLab: labIds) {
+    		labList.add(labService.getLab(idLab));
     	}
     	
     	//Create new password if updated
@@ -97,7 +97,7 @@ public class UserController {
     	User user = new User(firstName,lastName,username,npass,salt,email,phone,admin,labList);
     	
     	//Update user
-    	userService.updateUser(userId,user);
+    	userService.updateUser(idUser,user);
     }
     
     public String createSalt() {

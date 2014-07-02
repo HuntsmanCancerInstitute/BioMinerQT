@@ -61,6 +61,123 @@ var services = angular.module('services', ['ngResource'])
             }
         });
     }
-]);
+])
+.factory('StaticDictionary',['$http','$q',
+    function($http) {
+		var organismBuildList;
+		var analysisTypeList;
+		var sampleTypeList;
+		var samplePrepList;
+		var projectVisibilityList;
+		var instituteList;
+		
+		return {
+			organismBuildList: function(callback) {
+				if (organismBuildList) {
+					return organismBuildList;
+				} else {
+					organismBuildList = $http({
+						url: "shared/getAllBuilds",
+						method: "POST",
+					}).success(callback);
+					return organismBuildList;
+				};
+			},
+			analysisTypeList: function(callback) {
+				if(analysisTypeList) {
+					return analysisTypeList;
+				} else {
+					analysisTypeList = $http({
+						url: "shared/getAllAnalysisTypes",
+			    		method: "POST",
+					}).success(callback);
+					return analysisTypeList;
+				};
+			},
+			sampleTypeList: function(callback) {
+				if (sampleTypeList) {
+					return sampleTypeList;
+				} else {
+					sampleTypeList = $http({
+						url: "shared/getAllSampleTypes",
+			    		method: "POST",
+					}).success(callback);
+					return sampleTypeList;
+				};
+			},
+			samplePrepList: function(callback) {
+				if(samplePrepList) {
+					return samplePrepList;
+				} else {
+					samplePrepList = $http({
+						method: 'POST',
+						url: 'shared/getAllSamplePreps',
+					}).success(callback);
+					return samplePrepList;
+				};
+			},
+			projectVisibilityList: function(callback) {
+				if(projectVisibilityList) {
+					return projectVisibilityList;
+				} else {
+					projectVisibilityList = $http({
+						method: 'POST',
+						url: 'shared/getAllProjectVisibilities',
+					}).success(callback);
+					return projectVisibilityList;
+				};
+			},
+			instituteList: function(callback) {
+				if(instituteList) {
+					return instituteList;
+				}  else {
+					$http({
+						method: 'POST',
+						url: 'shared/getAllInstitutes',
+					}).success(callback);
+					return instituteList;
+				}
+			}
+		};
+	}
+])
+
+
+.factory('DynamicDictionary',['$http',
+    function($http) {
+		var dict = {};
+		
+		dict.loadLabs = function() {
+			return $http({
+		    	method: 'POST',
+		    	url: 'lab/all'
+		    });
+		};
+	
+		dict.loadSamplePrepsBySampleType = function(idSampleType) {
+			return $http({
+				method: 'POST',
+				url: 'shared/getSamplePrepsBySampleType',
+				params : {idSampleType: idSampleType},
+			});
+		};
+		
+		dict.loadSampleSources = function() {
+			return $http({
+				method: 'POST',
+				url: 'shared/getAllSampleSources',
+			});
+		};
+		
+		dict.loadSampleConditions = function() {
+			return $http({
+				method: 'POST',
+				url: 'shared/getAllSampleConditions',
+			});
+		};
+
+		return dict;
+                   
+}]);
 
 
