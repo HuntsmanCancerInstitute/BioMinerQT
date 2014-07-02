@@ -11,7 +11,7 @@
 		   <button class="btn btn-primary" ng-disabled="queryForm.$invalid" ng-click="runQuery()">
 		   		<span class="glyphicon glyphicon-play"></span > Run
 		   </button>
-		   <button class="btn" ng-click="runQuery()">
+		   <button class="btn" ng-click="clearQuery()">
    				<span class="glyphicon glyphicon-remove"></span> Clear
 		   </button>
 	</div>
@@ -85,7 +85,7 @@
 					<!--  Lab -->
 					<div class="form-group">
 						<label class="col-md-4 control-label" for=""labEntry">Labs</label>  
-					    <select data-placeholder="Choose labs..." multiple class="col-md-7 chosen-select" ng-model="selectedLabs" chosen="labList" ng-options="lab.name for lab in labList"  ></select>
+					    <select data-placeholder="Choose labs..." multiple class="col-md-7 chosen-select" ng-model="selectedLabs" chosen ng-options="lab.name for lab in labList"  ></select>
 					</div>
 					
 					<!--  Analysis Project -->
@@ -103,7 +103,7 @@
 					<!--  Sample Source  -->
 					<div class="form-group">
 						<label class="col-md-4 control-label" for=""labEntry">Sample Source</label>  
-					    <select data-placeholder="Choose sample source..." multiple class="col-md-7 chosen-select" ng-model="selectedSampleSources" chosen="sampleSourceList" ng-options="sampleSource.name for sampleSource in sampleSourceList"  ></select>
+					    <select data-placeholder="Choose sample source..." multiple class="col-md-7 chosen-select" ng-model="selectedSampleSources" chosen  ng-options="sampleSource.name for sampleSource in sampleSourceList"  ></select>
 					</div>
 
 
@@ -167,7 +167,7 @@
 					 	<div class="col-md-2" style="padding-right: 0px;">
 					    </div>
 					    <div class="col-md-7" ng-show="intersectionTarget == 'GENE'" style="padding-left: 1px; padding-right: 0px;">
-						    <select data-placeholder="Choose gene annotations..."   multiple class="col-md-12 chosen-select" ng-model="selectedGeneAnnotations" chosen="geneAnnotationList" ng-options="geneAnnotation.name for geneAnnotation in geneAnnotationList"  ></select>
+						    <select data-placeholder="Choose gene annotations..."   multiple class="col-md-12 chosen-select" ng-model="selectedGeneAnnotations" chosen ng-options="geneAnnotation.name for geneAnnotation in geneAnnotationList"  ></select>
 					    </div>
 				    	<div class="col-md-3" ng-show="intersectionTarget == 'GENE'" style="padding-left: 1px; padding-right: 0px;">
 							&nbsp;&nbsp;+/-
@@ -259,7 +259,7 @@
 					<div class="form-group" ng-hide="isThresholdBasedQuery">
 					 	<label class="col-md-3 control-label" for="genotypes">Genotype</label>
 					    <div class="col-md-9">
-						    <select name="genotypes" data-placeholder="Choose genotypes..."   multiple class="col-md-12 chosen-select" ng-model="selectedGenotypes" chosen="genotypeList" ng-options="genotype.name for genotype in genotypeList"  ></select>
+						    <select name="genotypes" data-placeholder="Choose genotypes..."   multiple class="col-md-12 chosen-select" ng-model="selectedGenotypes" chosen ng-options="genotype.name for genotype in genotypeList"  ></select>
 					    </div>
 					</div>
 

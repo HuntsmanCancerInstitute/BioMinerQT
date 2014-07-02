@@ -5,7 +5,7 @@
  * QueryController
  * @constructor
  */
-var query     = angular.module('query',     ['filters', 'services', 'directives', 'ui.bootstrap']);
+var query     = angular.module('query',     ['filters', 'services', 'directives', 'ui.bootstrap', 'chosen']);
 
 
 angular.module("query").controller("QueryController", 
@@ -29,11 +29,11 @@ function($scope, $http, $filter) {
 	$scope.isIntersect = "true";
 	$scope.intersectionTarget = "";
 	$scope.regions = "";
-	$scope.regionMargins = "";
+	$scope.regionMargins = "1000";
 	$scope.genes = "";
-	$scope.geneMargins = "";
+	$scope.geneMargins = "1000";
 	$scope.selectedGeneAnnotations = [];
-	$scope.geneAnnotationMargins = "";
+	$scope.geneAnnotationMargins = "1000";
 	
 	$scope.isThresholdBasedQuery = true;
 	$scope.thresholdFDR = "";
@@ -199,6 +199,48 @@ function($scope, $http, $filter) {
 	
 	};
 	
+	$scope.clearQuery = function() {
+		$scope.queryForm.$setPristine();
+		
+		$scope.querySummary = [];
+		$scope.codeResultType = "";
+		$scope.isGeneBasedQuery = true;
+		$scope.genomeBuild = "";
+
+		
+		$scope.selectedAnalysisTypes.length = 0;
+		$scope.selectedLabs.length = 0;;
+		$scope.projects.length = 0;
+		$scope.analyses.length = 0;
+		$scope.selectedSampleSources.length = 0;
+		
+		$scope.isIntersect = "true";
+		$scope.intersectionTarget = "";
+		$scope.regions = "";
+		$scope.regionMargins = "1000";
+		$scope.genes = "";
+		$scope.geneMargins = "1000";
+		$scope.selectedGeneAnnotations.length = 0;
+		$scope.geneAnnotationMargins = "1000";
+		
+		$scope.isThresholdBasedQuery = true;
+		$scope.thresholdFDR = "";
+		$scope.codeThresholdFDRComparison = ">";
+		$scope.thresholdLog2Ratio = "";
+		$scope.codeThresholdLog2RatioComparison = "> abs";
+		
+		$scope.thresholdVariantQual = "";
+		$scope.codeThresholdVariantQualComparison = ">";
+		$scope.codeVariantFilterType = "";
+		$scope.codeVariantFilterType = "";
+		$scope.selectedGenotypes.length = 0;
+		
+		for (var x =0; x < $scope.analysisTypeCheckedList.length; x++) {
+			$scope.analysisTypeCheckedList[x].show = true;
+			$scope.analysisTypeCheckedList[x].selected = false;
+		}
+	};
+	
 	$scope.someAnalysisTypeChecked = function() {
 		var someSelected = false;
 		for (var i=0; i < $scope.analysisTypeCheckedList.length; i++) {
@@ -208,26 +250,20 @@ function($scope, $http, $filter) {
 			}
 		}
 		return someSelected;
-	}
+	};
 	
 	
 	$scope.buildQuerySummary = function() {
 		$scope.querySummary.length = 0;
 		
-		// type of results
+		// Type of results
 		$scope.querySummary.push("FIND  " + $scope.mapResultType[$scope.codeResultType]);
 		
-		// genome build
+		// Genome build
 		$scope.querySummary.push("FOR BUILD  " + $scope.genomeBuild.species + ' ' + $scope.genomeBuild.name);
 		
-		// lab
-		$scope.display = "";
-		$scope.selectedLabs.forEach($scope.concatDisplayName);
-		if ($scope.display.length > 0) {
-			$scope.querySummary.push("SUBMITTED BY  " + $scope.display);
-		}
-		
-		// analysis types (data sets)
+		// Data sets
+		var datasetSummary = "";
 		$scope.selectedAnalysisTypes.length = 0;
 		for (var i=0; i < $scope.analysisTypeCheckedList.length; i++) {
 			if ($scope.analysisTypeCheckedList[i].selected) {
@@ -237,15 +273,24 @@ function($scope, $http, $filter) {
 		$scope.display = "";
 		$scope.selectedAnalysisTypes.forEach($scope.concatDisplayName);
 		if ($scope.display.length > 0) {
-			$scope.querySummary.push("ON  " + $scope.display + " data sets");
+			datasetSummary = "ON  " + $scope.display + " data sets";
+			
+			// lab
+			$scope.display = "";
+			$scope.selectedLabs.forEach($scope.concatDisplayName);
+			if ($scope.display.length > 0) {
+				datasetSummary += "  submitted by  " + $scope.display;
+			}
+			// sample source
+			$scope.display = "";
+			$scope.selectedSampleSources.forEach($scope.concatDisplayName);
+			if ($scope.display.length > 0) {
+				datasetSummary += " for samples from " + $scope.display;
+			}
+			$scope.querySummary.push(datasetSummary);
+
 		}
 		
-		// sample source
-		$scope.display = "";
-		$scope.selectedSampleSources.forEach($scope.concatDisplayName);
-		if ($scope.display.length > 0) {
-			$scope.querySummary.push("FOR SAMPLES FROM " + $scope.display);
-		}
 
 		// intersect
 		var intersectSummary = "";

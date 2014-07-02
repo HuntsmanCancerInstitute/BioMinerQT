@@ -26,23 +26,7 @@ var directives = angular.module('directives', [])
 	    };
 	}
 ])
-.directive('chosen',[ 
-    function() {
-		var linker = function(scope,element,attrs) {
-			scope.$watch(attrs.chosen,function(){
-				element.chosen();
-				element.trigger('chosen:updated');
-			});
-			
-		};
-		
-		return {
-			restrict: 'A',
-			link: linker
-		};
-    }
-	
-]).directive('resize', function ($window) {
+.directive('resize', function ($window) {
     return function (scope, element, attrs) {
         var w = angular.element($window);
         scope.getWindowDimensions = function () {
