@@ -9,15 +9,15 @@ var query     = angular.module('query',     ['filters', 'services', 'directives'
 
 
 angular.module("query").controller("QueryController", 
-[ '$scope', '$http', '$modal',
+[ '$scope', '$http', '$modal','DynamicDictionary','StaticDictionary',
   
-function($scope, $http, $filter) {
+function($scope, $http, $filter, DynamicDictionary, StaticDictionary) {
 	
 	
 	$scope.querySummary = [];
 	$scope.codeResultType = "";
 	$scope.isGeneBasedQuery = true;
-	$scope.genomeBuild = "";
+	$scope.idOrganismBuild = "";
 
 	
 	$scope.selectedAnalysisTypes = [];
@@ -33,7 +33,6 @@ function($scope, $http, $filter) {
 	$scope.genes = "";
 	$scope.geneMargins = "1000";
 	$scope.selectedGeneAnnotations = [];
-	$scope.geneAnnotationMargins = "1000";
 	
 	$scope.isThresholdBasedQuery = true;
 	$scope.thresholdFDR = "";
@@ -47,19 +46,6 @@ function($scope, $http, $filter) {
 	$scope.codeVariantFilterType = "";
 	$scope.selectedGenotypes = [];
 
-	// Temporary mockup code... these should be in a parent model
-	$scope.labList = [
-	                  {"idLab": 1,
-	               	"name": "Yost lab"                	
-	                  },
-	                  {"idLab": 2,
-	                  	"name": "Bruneau lab"                	
-	                  },
-	                  {"idLab": 3,
-	                  	"name": "Pu lab"                	
-	                      }
-	                        
-    ];
 	
 	$scope.mapResultType = {
 			'GENE' :     'Genes',
@@ -111,21 +97,6 @@ function($scope, $http, $filter) {
    		
    ];
        
-	$scope.genomeBuildList = [
-	                 {"idGenomeBuild": 1, name: "hg17", species: "Human"},
-	                 {"idGenomeBuild": 2, name: "hg18", species: "Human"},
-	                 {"idGenomeBuild": 3, name: "mm18", species: "Mouse"},
-	                 {"idGenomeBuild": 4, name: "mm19", species: "Mouse"},
-	                 {"idGenomeBuild": 5, name: "zb 1", species: "Zebrafish"},
-	                 {"idGenomeBuild": 6, name: "zb 2", species: "Zebrafish"},
-	                 {"idGenomeBuild": 7, name: "zb 3", species: "Zebrafish"}
-	];
-	$scope.speciesList = [
-	     	                 {"idSpecies": 1, name: "Human"},
-	     	                 {"idSpecies": 2, name: "Mouse"},
-	     	                 {"idSpecies": 3, name: "Chicken"},
-	     	                 {"idSpecies": 4, name: "Zebrafish"},
-   ];
 	
 	$scope.sampleTypeList = [
 	                  {idSampleType: 1, name: "RNA -> polyA"},
@@ -135,26 +106,8 @@ function($scope, $http, $filter) {
 	                  
 	];
 	
-	$scope.sampleSourceList = [
-	 	   	              {idSampleSource: 0, name: "Cell Line", organ: "Cell Line"},
-	   	                  {idSampleSource: 1, name: "Heart Left ventricle", organ: "Heart"},
-	   	                  {idSampleSource: 2, name: "Heart Right ventricle", organ: "Heart"},
-	   	                  {idSampleSource: 3, name: "Heart Aortic valve", organ: "Heart"},
-	   	                  {idSampleSource: 4, name: "Lung Left interior lobe", organ: "Lung"},
-	   	                  {idSampleSource: 5, name: "Lung Right interior lobe", organ: "Lung"}
-	   	                  
-	];
-	
-	
-	$scope.sampleGroupList = [
-	                      {idSampleGroup: 1, name: "Effect (wildtype)"}, 
-	                      {idSampleGroup: 2, name: "Treated"}, 
-	                      {idSampleGroup: 3, name: "Tumor"}, 
-	                      {idSampleGroup: 4, name: "Normal"}, 
-	                      {idSampleGroup: 5, name: "Control"}, 
-	                      {idSampleGroup: 6, name: "Other (specify)"} 
-   	                      
-	];
+
+
 	$scope.analysisTypeList = [
 	   	          {idAnalysisType: 1, name: "ChIP Seq"},
 	              {idAnalysisType: 2, name: "RNA Seq"},
@@ -162,6 +115,29 @@ function($scope, $http, $filter) {
 	              {idAnalysisType: 4, name: "Variant Calling"}
 	   	                  
 	];
+	
+	//Static dictionaries.
+	StaticDictionary.organismBuildList(function(data) {
+		$scope.organismBuildList = data;
+	});
+	
+	//Dynamic dictionaries.  These dictionaries can be loaded on-demand.
+    $scope.loadLabs = function() {
+    	DynamicDictionary.loadLabs().success(function(data) {
+    		$scope.labList = data;
+    	});
+    };
+    $scope.loadSampleSources = function() {
+    	DynamicDictionary.loadSampleSources().success(function(data) {
+    		$scope.sampleSourceList = data;
+    	});
+    };
+    
+    //Load up dynamic dictionaries
+	$scope.loadLabs();
+	$scope.loadSampleSources();
+
+
 	
 	$scope.pickResultType = function() {
 		for (var x = 0; x < $scope.analysisTypeCheckedList.length; x++) {
@@ -205,7 +181,7 @@ function($scope, $http, $filter) {
 		$scope.querySummary = [];
 		$scope.codeResultType = "";
 		$scope.isGeneBasedQuery = true;
-		$scope.genomeBuild = "";
+		$scope.idOrganismBuild = "";
 
 		
 		$scope.selectedAnalysisTypes.length = 0;
@@ -221,7 +197,6 @@ function($scope, $http, $filter) {
 		$scope.genes = "";
 		$scope.geneMargins = "1000";
 		$scope.selectedGeneAnnotations.length = 0;
-		$scope.geneAnnotationMargins = "1000";
 		
 		$scope.isThresholdBasedQuery = true;
 		$scope.thresholdFDR = "";
@@ -252,6 +227,17 @@ function($scope, $http, $filter) {
 		return someSelected;
 	};
 	
+	$scope.lookup = function(array, idAttributeName, id) {
+		var element = null;
+		for (var x = 0; x < array.length; x++) {
+			if (array[x][idAttributeName] == id) {
+				element = array[x];
+				break;
+			}
+		}
+		return element;
+	};
+	
 	
 	$scope.buildQuerySummary = function() {
 		$scope.querySummary.length = 0;
@@ -260,7 +246,8 @@ function($scope, $http, $filter) {
 		$scope.querySummary.push("FIND  " + $scope.mapResultType[$scope.codeResultType]);
 		
 		// Genome build
-		$scope.querySummary.push("FOR BUILD  " + $scope.genomeBuild.species + ' ' + $scope.genomeBuild.name);
+		var ob = $scope.lookup($scope.organismBuildList, 'idOrganismBuild', $scope.idOrganismBuild);
+		$scope.querySummary.push("FOR BUILD  " + ob.organism.common + ' ' + ob.name);
 		
 		// Data sets
 		var datasetSummary = "";
@@ -276,16 +263,18 @@ function($scope, $http, $filter) {
 			datasetSummary = "ON  " + $scope.display + " data sets";
 			
 			// lab
-			$scope.display = "";
-			$scope.selectedLabs.forEach($scope.concatDisplayName);
-			if ($scope.display.length > 0) {
-				datasetSummary += "  submitted by  " + $scope.display;
+			var labDisplay = $.map($scope.selectedLabs, function(lab){
+			    return lab.first + ' ' + lab.last + ' lab';
+			}).join(', ');
+			if (labDisplay.length > 0) {
+				datasetSummary += "  submitted by  " + labDisplay;
 			}
 			// sample source
-			$scope.display = "";
-			$scope.selectedSampleSources.forEach($scope.concatDisplayName);
-			if ($scope.display.length > 0) {
-				datasetSummary += " for samples from " + $scope.display;
+			var sampleSourcesDisplay = $.map($scope.selectedSampleSources, function(ss){
+			    return ss.source;
+			}).join(', ');
+			if (sampleSourcesDisplay.length > 0) {
+				datasetSummary += " for samples from " + sampleSourcesDisplay;
 			}
 			$scope.querySummary.push(datasetSummary);
 
@@ -310,12 +299,12 @@ function($scope, $http, $filter) {
 				// Gene based query
 				var geneSummary = "";
 				if ($scope.genes.length > 0) {
-					geneSummary = $scope.genes + " +/- " + $scope.geneMargins;		
+					geneSummary = $scope.genes;		
 				}
 				$scope.display = "";
 				$scope.selectedGeneAnnotations.forEach($scope.concatDisplayName);
 				if ($scope.display.length > 0) {
-					geneSummary = geneSummary + " IDENTIFIED AS " + $scope.display + " +/- " + $scope.geneAnnotationMargins;	
+					geneSummary = geneSummary + " IDENTIFIED AS " + $scope.display + " +/- " + $scope.geneMargins;	
 				}
 				$scope.querySummary.push(intersectSummary + "GENES   " + geneSummary );
 			}
@@ -364,11 +353,11 @@ function($scope, $http, $filter) {
 	
 	$scope.concatDisplayName = function(element, index, array) {
   	  if ($scope.display.length > 0) {
-		  $scope.display = $scope.display + ", ";
+		  $scope.display += ", ";
 	  }
-  	  $scope.display =  $scope.display + element.name;
+  	  $scope.display +=  element.name;
 	};
-	
+
 
 
 }]);

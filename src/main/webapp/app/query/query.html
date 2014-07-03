@@ -59,9 +59,9 @@
 					<div class="form-group" >
 		  				<div class="col-md-12">
 		    				<select name="gb-select"
-		    				        ng-model="genomeBuild" 
+		    				        ng-model="idOrganismBuild" 
 		    				        required
-		    				        ng-options="gb.name group by gb.species  for gb in genomeBuildList" 
+		    				        ng-options="gb.idOrganismBuild as gb.name group by gb.organism.common for gb in organismBuildList" 
 		    				        class="form-control">
 		    				        <option value="">Select genome build</option>
 		    				</select>
@@ -85,7 +85,7 @@
 					<!--  Lab -->
 					<div class="form-group">
 						<label class="col-md-4 control-label" for=""labEntry">Labs</label>  
-					    <select data-placeholder="Choose labs..." multiple class="col-md-7 chosen-select" ng-model="selectedLabs" chosen ng-options="lab.name for lab in labList"  ></select>
+					    <select data-placeholder="Choose labs..." multiple class="col-md-7 chosen-select" ng-model="selectedLabs" chosen ng-options=" (lab.first + ' ' + lab.last + ' lab' ) for lab in labList"  ></select>
 					</div>
 					
 					<!--  Analysis Project -->
@@ -103,7 +103,7 @@
 					<!--  Sample Source  -->
 					<div class="form-group">
 						<label class="col-md-4 control-label" for=""labEntry">Sample Source</label>  
-					    <select data-placeholder="Choose sample source..." multiple class="col-md-7 chosen-select" ng-model="selectedSampleSources" chosen  ng-options="sampleSource.name for sampleSource in sampleSourceList"  ></select>
+					    <select data-placeholder="Choose sample source..." multiple class="col-md-7 chosen-select" ng-model="selectedSampleSources" chosen  ng-options="sampleSource.source for sampleSource in sampleSourceList"  ></select>
 					</div>
 
 
@@ -126,11 +126,11 @@
           	 		<!-- Regions-->
 					<div class="form-group"  ng-show="isIntersect">
 					    <div class="col-md-2" style="padding-right: 0px;">
-					    	<div class="checkbox" style="display: inline; padding-left: 0px;">
-						   		<label for="radios-region">
-							    	<input name="radio-region" ng-model="intersectionTarget" value="REGION" type="radio"> Regions
+					      <div class="radio">
+						   		<label for="radio-region">
+							    	<input name="radios-region-gene" id="radio-region" ng-model="intersectionTarget" value="REGION" type="radio"> Regions
 						   		</label>
-							</div>
+						  </div>
 					    </div>
 					    <div class="col-md-7"  ng-show="intersectionTarget == 'REGION'" style="padding-left: 1px; padding-right: 0px;">
 				    		<input type="text" ng-model="regions" style="display: inline;" class="form-control" placeholder="chr1:4500-8900">
@@ -146,11 +146,11 @@
           	 		<!-- Genes-->
 					<div class="form-group" ng-show="isGeneBasedQuery">
 						<div class="col-md-2" style="padding-right: 0px;">
-							<div class="checkbox" style="display: inline; padding-left: 0px;">
-						   		<label for="radios-region">
-							    	<input name="radio-region"  ng-model="intersectionTarget" value="GENE" type="radio"> Genes
+					      <div class="radio">
+						   		<label for="radio-gene">
+							    	<input name="radios-region-gene" id="radio-gene"  ng-model="intersectionTarget" value="GENE" type="radio"> Genes
 						   		</label>
-							</div>
+						  </div>
 						</div>
 					 	<div class="col-md-7" ng-show="intersectionTarget == 'GENE'" style="padding-left: 1px; padding-right: 0px;">
 				    		<input type="text" ng-model="genes" style="display: inline;" class="form-control" placeholder="gene, gene, ...">
@@ -169,11 +169,6 @@
 					    <div class="col-md-7" ng-show="intersectionTarget == 'GENE'" style="padding-left: 1px; padding-right: 0px;">
 						    <select data-placeholder="Choose gene annotations..."   multiple class="col-md-12 chosen-select" ng-model="selectedGeneAnnotations" chosen ng-options="geneAnnotation.name for geneAnnotation in geneAnnotationList"  ></select>
 					    </div>
-				    	<div class="col-md-3" ng-show="intersectionTarget == 'GENE'" style="padding-left: 1px; padding-right: 0px;">
-							&nbsp;&nbsp;+/-
-					    	<input type="text" ng-model="geneAnnotationMargins" style="display: inline; max-width: 60px;"class="form-control" placeholder="1000"/> 
-					    	bp
-				    	</div>
 					</div>
 					
 					
