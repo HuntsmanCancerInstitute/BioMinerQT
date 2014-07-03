@@ -6,6 +6,7 @@ import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.Entity;
 import javax.persistence.Enumerated;
+import javax.persistence.GenerationType;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.ManyToOne;
@@ -21,8 +22,7 @@ import hci.biominer.util.Enumerated.*;
 @Table(name="FileUpload")
 public class FileUpload {
 	@Id
-	@GeneratedValue(generator="increment")
-	@GenericGenerator(name="increment",strategy="increment")
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="idFileUpload")
 	Long idFileUpload;
 	

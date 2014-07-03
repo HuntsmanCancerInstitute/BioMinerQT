@@ -1,7 +1,9 @@
 package hci.biominer.model.access;
 
 import org.hibernate.annotations.GenericGenerator;
+
 import javax.persistence.Entity;
+import javax.persistence.GenerationType;
 import javax.persistence.Table;
 import javax.persistence.Column;
 import javax.persistence.Id;
@@ -11,8 +13,7 @@ import javax.persistence.GeneratedValue;
 @Table (name = "Institute")
 public class Institute {
 	@Id
-	@GeneratedValue(generator="increment")
-	@GenericGenerator(name="increment",strategy="increment")
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="idInstitute")
 	private Long idInstitute;
 	

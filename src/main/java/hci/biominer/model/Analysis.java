@@ -14,6 +14,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.JoinColumn;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.GenerationType;
 
 import java.util.Date;
 import java.util.List;
@@ -22,8 +23,7 @@ import java.util.List;
 @Table(name="Analysis")
 public class Analysis {
 	@Id
-	@GeneratedValue(generator="increment")
-	@GenericGenerator(name="increment",strategy="increment")
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="idAnalysis")
 	Long idAnalysis;
 	

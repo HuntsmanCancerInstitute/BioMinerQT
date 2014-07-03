@@ -4,6 +4,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.Entity;
+import javax.persistence.GenerationType;
 import javax.persistence.Table;
 import javax.persistence.Column;
 import javax.persistence.Id;
@@ -15,8 +16,7 @@ import javax.persistence.JoinColumn;
 @Table(name="DataTrack")
 public class DataTrack {
 	@Id
-	@GeneratedValue(generator="increment")
-	@GenericGenerator(name="increment",strategy="increment")
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="idDataTrack")
 	Long idDataTrack;
 	
