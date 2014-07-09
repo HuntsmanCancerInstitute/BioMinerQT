@@ -72,7 +72,7 @@ public class DataTrackDAO {
 		DataTrackToUpdate.setName(dataTrack.getName());
 		DataTrackToUpdate.setUrl(dataTrack.getUrl());
 		DataTrackToUpdate.setProject(dataTrack.getProject());
-		DataTrackToUpdate.setAnalysis(dataTrack.getAnalysis());
+		DataTrackToUpdate.setAnalyses(dataTrack.getAnalyses());
 		session.update(DataTrackToUpdate);
 		session.getTransaction().commit();
 		session.close();	
@@ -83,16 +83,6 @@ public class DataTrackDAO {
 		session.beginTransaction();
 		DataTrack dataTrack = (DataTrack) session.get(DataTrack.class, idDataTrack);
 		session.delete(dataTrack);
-		session.getTransaction().commit();
-		session.close();
-	}
-	
-	public void updateDataTrackAnalysis(Long idDataTrack, Analysis analysis) {
-		Session session = getCurrentSession();
-		session.beginTransaction();
-		DataTrack dataTrack = (DataTrack) session.get(DataTrack.class, idDataTrack);
-		dataTrack.setAnalysis(analysis);
-		session.update(dataTrack);
 		session.getTransaction().commit();
 		session.close();
 	}

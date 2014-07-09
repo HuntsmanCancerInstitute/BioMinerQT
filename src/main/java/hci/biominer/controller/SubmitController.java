@@ -4,8 +4,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+
+import javax.servlet.http.HttpServletResponse;
 
 import hci.biominer.util.Enumerated.ProjectVisibilityEnum;
 
@@ -20,6 +24,9 @@ import hci.biominer.service.SampleConditionService;
 import hci.biominer.service.SamplePrepService;
 import hci.biominer.service.SampleTypeService;
 import hci.biominer.service.SampleSourceService;
+import hci.biominer.service.AnalysisService;
+import hci.biominer.service.FileUploadService;
+import hci.biominer.service.AnalysisTypeService;
 
 //Models
 import hci.biominer.model.Project;
@@ -31,7 +38,9 @@ import hci.biominer.model.SampleCondition;
 import hci.biominer.model.SamplePrep;
 import hci.biominer.model.SampleType;
 import hci.biominer.model.SampleSource;
+import hci.biominer.model.FileUpload;
 import hci.biominer.model.access.Lab;
+import hci.biominer.model.AnalysisType;
 
 /**
  * 
@@ -53,6 +62,9 @@ public class SubmitController {
     private LabService labService;
     
     @Autowired
+    private AnalysisService analysisService;
+    
+    @Autowired
     private OrganismBuildService organismBuildService;
     
     @Autowired
@@ -69,6 +81,12 @@ public class SubmitController {
     
     @Autowired
     private SampleTypeService sampleTypeService;
+    
+    @Autowired
+    private FileUploadService fileUploadService;
+    
+    @Autowired
+    private AnalysisTypeService analysisTypeService;
     
     
     /***************************************************
@@ -322,6 +340,156 @@ public class SubmitController {
     public void updateDataTrackAnalysis(@RequestParam(value="idDataTrack") Long idDataTrack, @RequestParam(value="idAnalysis") Long idAnalysis) {
     	
     }
+    
+    
+    /***************************************************
+	 * URL: /project/createAnalysis
+	 * createAnalysis(): creates a new project and returns the id
+	 * method: post
+	 * @param name : Analysis name
+	 * @param description: Descripton of the analyis
+	 * @param date: Date of analysis
+	 * @param idAnalysisType: analysis type
+	 * @param idProject: project
+	 * @param List<Long> idSampleList: list of sample ids
+	 * @param List<Long> idDataTrackList: list of datetrack ids
+	 * @param List<Long> idFileUploadList: list of file upload ids
+	 * @return Long idAnalysis
+	 ****************************************************/
+    @RequestMapping(value="createAnalysis",method=RequestMethod.POST)
+    @ResponseBody
+    public Long createAnalysis(@RequestParam(value="name") String name, @RequestParam(value="description") String description, @RequestParam(value="idProject") Long idProject,
+    		@RequestParam(value="date") Long date, @RequestParam(value="idAnalysisType") Long idAnalysisType, @RequestParam(value="idSampleList",required=false) List<Long> idSampleList,
+    		@RequestParam(value="idDataTrackList",required=false) List<Long> idDataTrackList, @RequestParam(value="idFileUpload") Long idFileUpload,
+    		HttpServletResponse response) {
+
+    	//Create analysis basics.
+    	AnalysisType analysisType = analysisTypeService.getAnalysisTypeById(idAnalysisType);
+    	Project project = projectService.getProjectById(idProject);
+    	
+    	Analysis analysis = new Analysis();
+    	analysis.setName(name);
+    	analysis.setDescription(description);
+    	analysis.setDate(date);
+    	analysis.setAnalysisType(analysisType);
+    	analysis.setProject(project);
+    	
+    	//Assign datatracks
+    	if (idDataTrackList != null) {
+    		List<DataTrack> dataTracks = new ArrayList<DataTrack>();
+    		for (Long idDataTrack: idDataTrackList) {
+    			DataTrack dataTrack = this.dataTrackService.getDataTrackById(idDataTrack);
+    			dataTracks.add(dataTrack);
+    		}
+    		analysis.setDataTracks(dataTracks);
+    	}
+    	
+    	//Assign samples
+    	if (idSampleList != null) {
+    		List<Sample> samples = new ArrayList<Sample>();
+    		for (Long idSample: idSampleList) {
+    			Sample sample = this.sampleService.getSampleById(idSample);
+    			samples.add(sample);
+    		}
+    		analysis.setSamples(samples);
+    	}
+    	
+    	//Assign files
+    	FileUpload fileUpload = this.fileUploadService.getFileUploadById(idFileUpload);
+    	analysis.setFile(fileUpload);
+    
+    	return this.analysisService.addAnalysis(analysis);
+    }
+
+    /***************************************************
+	 * URL: /project/updateAnalysis
+	 * updateAnalysis(): Updates analysis information
+	 * method: post
+	 * @param idAnalysis: Analysis id
+	 * @param name : Analysis name
+	 * @param description: Descripton of the analyis
+	 * @param date: Date of analysis
+	 * @param idAnalysisType: analysis type
+	 * @param idProject: project
+	 * @param List<Long> idSampleList: list of sample ids
+	 * @param List<Long> idDataTrackList: list of datetrack ids
+	 * @param List<Long> idFileUploadList: list of file upload ids
+	 ****************************************************/
+    @RequestMapping(value="updateAnalysis",method=RequestMethod.POST)
+    @ResponseBody
+    public void updateAnalysis(@RequestParam(value="idAnalysis") Long idAnalysis, @RequestParam(value="name") String name, @RequestParam(value="description") String description, @RequestParam(value="idProject") Long idProject,
+    		@RequestParam(value="date") Long date, @RequestParam(value="idAnalysisType") Long idAnalysisType, @RequestParam(value="idSampleList",required=false) List<Long> idSampleList,
+    		@RequestParam(value="idDataTrackList",required=false) List<Long> idDataTrackList, @RequestParam(value="idFileUpload") Long idFileUpload,
+    		HttpServletResponse response) {
+    	
+ 
+    	//Create analysis basics.
+    	AnalysisType analysisType = analysisTypeService.getAnalysisTypeById(idAnalysisType);
+    	Project project = projectService.getProjectById(idProject);
+    	
+    	Analysis analysis = analysisService.getAnalysisById(idAnalysis);
+    	analysis.setName(name);
+    	analysis.setDescription(description);
+    	analysis.setDate(date);
+    	analysis.setAnalysisType(analysisType);
+    	analysis.setProject(project);
+    	
+    	//Assign datatracks
+    	if (idDataTrackList != null) {
+    		List<DataTrack> dataTracks = new ArrayList<DataTrack>();
+    		for (Long idDataTrack: idDataTrackList) {
+    			DataTrack dataTrack = this.dataTrackService.getDataTrackById(idDataTrack);
+    			dataTracks.add(dataTrack);
+    		}
+    		analysis.setDataTracks(dataTracks);
+    	}
+    	
+    	//Assign samples
+    	if (idSampleList != null) {
+    		List<Sample> samples = new ArrayList<Sample>();
+    		for (Long idSample: idSampleList) {
+    			Sample sample = this.sampleService.getSampleById(idSample);
+    			samples.add(sample);
+    		}
+    		analysis.setSamples(samples);
+    	}
+    	
+    	//Assign files
+    	FileUpload fileUpload = this.fileUploadService.getFileUploadById(idFileUpload);
+    	analysis.setFile(fileUpload);
+    
+    	this.analysisService.updateAnalysis(analysis,idAnalysis);
+    
+    }
+
+    /***************************************************
+	 * URL: /project/getAnalysisByProject
+	 * getAnalysisByProject(): get analyses by project
+	 * method: post
+	 * @param Long idProject: project identifier
+	 * @return list of analyses
+	 ****************************************************/
+    @RequestMapping(value="getAnalysisByProject",method=RequestMethod.POST)
+    @ResponseBody
+    public List<Analysis> getAnalysisByProject(@RequestParam(value="idProject") Long idProject) {
+    	Project project = this.projectService.getProjectById(idProject);
+    	List<Analysis> analyses = this.analysisService.getAnalysesByProject(project);
+    	return analyses;
+    }
+    
+    /***************************************************
+	 * URL: /project/deleteAnalysis
+	 * deleteAnalysis(): deletes analysis based on primary index
+	 * method: post
+	 * @param idAnalysis analysis identifier
+	 ****************************************************/
+    @RequestMapping(value="deleteAnalysis",method=RequestMethod.POST)
+    @ResponseBody
+    public void deleteAnalysis(@RequestParam(value="idAnalysis") Long idAnalysis) {
+    	this.analysisService.deleteAnalysis(idAnalysis);
+    }
+    
+    
     
     
     

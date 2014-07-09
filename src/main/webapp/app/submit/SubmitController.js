@@ -20,13 +20,14 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary) {
 	//current project
 	$scope.projectId = -1;
 	
+	
 	//containers
-	$scope.uploadedFiles = [];
-	$scope.importedFiles = [];
+	$scope.files = {uploadedFiles: [], importedFiles: [], projectFiles: []};
     $scope.samples = [];
     $scope.datatracks = [];
     $scope.results = [];
     $scope.samplePrepList = [];
+
     
     //active
     $scope.sample = {sampleType: null};
@@ -37,6 +38,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary) {
     //flags
     $scope.sampleEditMode = false;
     $scope.datatrackEditMode = false;
+    $scope.resultEditMode = false;
 	
 	//Static dictionaries.
 	StaticDictionary.organismBuildList(function(data) {
@@ -106,6 +108,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary) {
 			$scope.projects = data;
 			
 			$scope.setActiveProject();
+			
 		});
     };
     
@@ -117,22 +120,13 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary) {
             	$scope.project = $scope.projects[i];
             	$scope.samples = $scope.projects[i].samples;
             	$scope.datatracks = $scope.projects[i].dataTracks;
-            	
-            	//Replace project labs with objects in labList.  Track-by doesn't appear to work in chosen widgets...
-            	var ids = [];
-            	for (var idx=0; idx< $scope.project.labs.length; idx++) {
-            		ids.push($scope.project.labs[idx].idLab);
-            	}
-            	
-            	var labs = [];
-            	for (var idx=0; idx< $scope.labList.length; idx++) {
-            		if (ids.indexOf($scope.labList[idx].idLab) != -1) {
-            			labs.push($scope.labList[idx]);
+            	$scope.results = $scope.projects[i].analyses;
+            	$scope.files.projectFiles = [];
+            	for (var x in $scope.projects[i].files) {
+            		if ($scope.projects[i].files[x].type == "IMPORTED") {
+            			$scope.files.projectFiles.push($scope.projects[i].files[x]);
             		}
-            	}
-
-            	$scope.project.labs = labs;
-            	
+            	}	
             } else {
             	$scope.projects[i].cssClass = "";
             }
@@ -277,18 +271,6 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary) {
 	};
 	
 	
-//	$scope.duplicateSample = function(sample) {
-//		var newSample = {};
-//		newSample.idSample = ++$scope.nextIdSample;
-//		newSample.name = sample.name;
-//		newSample.idSampleType = sample.idSampleType;
-//		newSample.idSite = sample.idSite;
-//		newSample.idSampleGroup = sample.idSampleGroup;
-//
-//		$scope.samples.push(newSample);
-//	};
-	
-	
 	/**********************
 	 * Datatrack management
 	 *********************/
@@ -339,131 +321,84 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary) {
 		$scope.datatrack = {};
 	}; 
 	
-//	$scope.duplicateDataTrack = function(datatrack) {
-//		var newDataTrack = {};
-//		newDataTrack.idDataTrack = ++$scope.nextIdDataTrack;
-//		newDataTrack.name = datatrack.name;
-//		newDataTrack.url = datatrack.url;
-//		
-//		
-//		$scope.addDataTrack(datatrack);
-//	};
 	
 	
-	//
-	// Results
-	//
+	/**********************
+	 * Analysis Management
+	 *********************/
 
 	$scope.editResult = function(result) {
 		$scope.result = result;
 		$scope.resultEditMode = true;
-		
-		for (var x in $scope.samples) {
-			var isFound = false;
-			for (var y in $scope.result.samples) {
-				if ($scope.samples[x].idSample == $scope.result.samples[y].idSample) {
-					isFound = true;
-					break;
-				}
-			}
-			$scope.samples[x].isChecked = isFound;
-		}
-		for (var x in $scope.datatracks) {
-			var isFound = false;
-			for (var y in $scope.result.datatracks) {
-				if ($scope.datatracks[x].idDataTrack == $scope.result.datatracks[y].idDataTrack) {
-					isFound = true;
-					break;
-				}
-			}
-			$scope.datatracks[x].isChecked = isFound;
-		}
-		
     };
 	
 	$scope.saveResult = function(result) {
 		$scope.resultEditMode = false;
 		
-		var newResult = {};
-		$scope.result = newResult;
-		$scope.clearResult();
+		var sampleList = [];
+		for (var x in result.samples) {
+			sampleList.push(result.samples[x].idSample);
+		}
+		
+		var dataTrackList = [];
+		for (var x in result.dataTracks) {
+			dataTrackList.push(result.dataTracks[x].idDataTrack);
+		}
+		
+		$http({
+			url: "project/updateAnalysis",
+			method: "POST",
+			params: {idAnalysis: result.idAnalysis, name: result.name, description: result.description, date: result.date, idProject: $scope.projectId, 
+				idSampleList: sampleList, idDataTrackList: dataTrackList, idFileUpload: result.file.idFileUpload, idAnalysisType: result.analysisType.idAnalysisType}
+		}).success(function(data) {
+			$scope.loadProjects($scope.projectId);
+			$scope.result = {};
+		}).error(function(data) {
+			console.log("Could not update analysis.");
+		});
+		$scope.result = {};
 	};
 	
-	$scope.removeResult = function(id) {
-        for(var i in $scope.results) {
-            if($scope.results[i].idResult == id) {
-            	$scope.results.splice(i, 1);
-            	break;
-            }
-        }
-       
+	$scope.removeResult = function(result) {
+		$http({
+			url: "project/deleteAnalysis",
+			method: "POST",
+			params: {idAnalysis: result.idAnalysis}
+		}).success(function(data) {
+			$scope.loadProjects($scope.projectId);
+		}).error(function(data) {
+			console.log("Error deleting analysis");
+		});
+		$scope.result = {};
     };
 	
 	$scope.addResult = function(result) {
-		var newResult = {};
-		newResult.idResult = ++$scope.nextIdResult;
-		newResult.name = result.name;
-		newResult.description = result.description;
-		newResult.idAnalysisType = result.idAnalysisType;
-		newResult.date = result.date;
-		newResult.samples = [];
-		for (var x in $scope.samples) {
-			if ($scope.samples[x].isChecked) {
-				var newSample = {};
-				newSample.idSample = $scope.samples[x].idSample;
-				newSample.name = $scope.samples[x].name;
-				newResult.samples.push(newSample);
-			}
-		}
-		newResult.datatracks = [];
-		for (var x in $scope.datatracks) {
-			if ($scope.datatracks[x].isChecked) {
-				var dt = {};
-				dt.idDataTrack = $scope.datatracks[x].idDataTrack;
-				dt.name = $scope.datatracks[x].name;
-				newResult.datatracks.push(dt);
-			}
+		var sampleList = [];
+		for (var x in result.samples) {
+			sampleList.push(result.samples[x].idSample);
 		}
 		
-		$scope.results.push(newResult);
+		var dataTrackList = [];
+		for (var x in result.dataTracks) {
+			dataTrackList.push(result.dataTracks[x].idDataTrack);
+		}
 		
-		$scope.clearResult();
+		$http({
+			url: "project/createAnalysis",
+			method: "POST",
+			params: {name: result.name, description: result.description, date: result.date.getTime(), idProject: $scope.projectId, 
+				idSampleList: sampleList, idDataTrackList: dataTrackList, idFileUpload: result.file.idFileUpload, idAnalysisType: result.analysisType.idAnalysisType}
+		}).success(function(data) {
+			$scope.loadProjects($scope.projectId);
+			$scope.result = {};
+		}).error(function(data) {
+			console.log("Could not create analysis.");
+		});
 	};
 	
-	$scope.clearResult = function() {
-		$scope.result.idResult = -1;
-		$scope.result.name = "";
-		$scope.result.description = "";
-		$scope.result.idAnalysisType = "";
-		$scope.result.date = "";
-		$scope.result.samples = [];
-		$scope.result.datatracks = [];
-		
-		for (var x in $scope.samples) {
-			$scope.samples[x].isChecked = false;
-		}
-		for (var x in $scope.datatracks) {
-			$scope.datatracks[x].isChecked = false;
-		}
-
-		
-	};
-	
-	$scope.duplicateResult = function(result) {
-		var newResult = {};
-		newResult.idResult = ++$scope.nextIdResult;
-		newResult.name = result.name;
-		newResult.description = result.description;
-		newResult.idAnalysisType = result.idAnalysisType;
-		newResult.date = result.date;
-		
-		$scope.results.push(newResult);
-	};
-	
-	
-	
-	
-	
+	/*****************
+	 * Files
+	 ****************/
 	
 }]);
 

@@ -55,7 +55,6 @@ public class FileUploadDAO {
 		FileUploadToUpdate.setParent(fileUpload.getParent());
 		FileUploadToUpdate.setType(fileUpload.getType());
 		FileUploadToUpdate.setProject(fileUpload.getProject());
-		FileUploadToUpdate.setAnalysis(fileUpload.getAnalysis());
 		session.update(FileUploadToUpdate);
 		session.getTransaction().commit();
 		session.close();	
@@ -97,7 +96,8 @@ public class FileUploadDAO {
 		List<FileUpload> fileUploads = query.list();
 		session.close();
 		return fileUploads;
-		
 	}
+	
+	
 	
 }

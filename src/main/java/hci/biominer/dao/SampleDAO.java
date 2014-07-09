@@ -71,7 +71,7 @@ public class SampleDAO {
 		Sample SampleToUpdate = (Sample) session.get(Sample.class, idSample);
 		SampleToUpdate.setName(sample.getName());
 		SampleToUpdate.setProject(sample.getProject());
-		SampleToUpdate.setAnalysis(sample.getAnalysis());
+		SampleToUpdate.setAnalyses(sample.getAnalyses());
 		SampleToUpdate.setSampleType(sample.getSampleType());
 		SampleToUpdate.setSamplePrep(sample.getSamplePrep());
 		SampleToUpdate.setSampleSource(sample.getSampleSource());
@@ -90,14 +90,5 @@ public class SampleDAO {
 		session.close();
 	}
 	
-	public void updateSampleAnalysis(Long idSample, Analysis analysis) {
-		Session session = getCurrentSession();
-		session.beginTransaction();
-		Sample sample = (Sample) session.get(Sample.class, idSample);
-		sample.setAnalysis(analysis);
-		session.update(sample);
-		session.getTransaction().commit();
-		session.close();
-	}
 	
 }

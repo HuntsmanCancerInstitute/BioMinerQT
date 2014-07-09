@@ -40,19 +40,19 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 				
 				
 				//Check to see if there are any matching files in list (match on name only)
-				for (var j=0; j<$scope.$parent.uploadedFiles.length; j++) {
-					if (file.name == $scope.$parent.uploadedFiles[j].name || (file.name + ".gz") == $scope.$parent.uploadedFiles[j].name ) {
+				for (var j=0; j<$scope.files.uploadedFiles.length; j++) {
+					if (file.name == $scope.files.uploadedFiles[j].name || (file.name + ".gz") == $scope.files.uploadedFiles[j].name ) {
 						index = j;
-						$scope.$parent.uploadedFiles[j].state = "started";
-						$scope.$parent.uploadedFiles[j].complete = 0;
+						$scope.files.uploadedFiles[j].state = "started";
+						$scope.files.uploadedFiles[j].complete = 0;
 					}
 				}
 				
 				//If no match, create new file object.
 				if (index == -1) {
 					var f = {name: file.name, state: "started", complete: 0};
-					index = $scope.$parent.uploadedFiles.length;
-					$scope.$parent.uploadedFiles.push(f);
+					index = $scope.files.uploadedFiles.length;
+					$scope.files.uploadedFiles.push(f);
 				}
 				
 				//upload the file
@@ -62,7 +62,7 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 							file: file,
 							data: {idProject: $scope.$parent.projectId},
 							progress: function(evt) {
-								$scope.$parent.uploadedFiles[index].complete = 100.0 * evt.loaded / evt.total;
+								$scope.files.uploadedFiles[index].complete = 100.0 * evt.loaded / evt.total;
 								
 								//Set global progress
 								$scope.localTotals[i] = evt.loaded;
@@ -75,16 +75,16 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 						}).success(function(data) {
 							if (data.state != "SUCCESS") {
 								//Only set message on failure
-								$scope.$parent.uploadedFiles[index].message = data.message;
-								$scope.$parent.uploadedFiles[index].state = "FAILURE";
+								$scope.files.uploadedFiles[index].message = data.message;
+								$scope.files.uploadedFiles[index].state = "FAILURE";
 							} else {
 								//Set everything on success
-								$scope.$parent.uploadedFiles[index] = data;
+								$scope.files.uploadedFiles[index] = data;
 							}
-							$scope.$parent.uploadedFiles[index].selected = false;
+							$scope.files.uploadedFiles[index].selected = false;
 							
 						}).error(function(data) {
-							$scope.$parent.uploadedFiles[index].status = "FAILURE";
+							$scope.files.uploadedFiles[index].status = "FAILURE";
 						});
 				})(i,index,file);
 				
@@ -143,17 +143,17 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 		 ********************/
 		$scope.parse = function() {
 			$scope.selectedFiles = [];	
-			for (var i=0; i<$scope.$parent.uploadedFiles.length;i++) {
-				if ($scope.$parent.uploadedFiles[i].selected == true) {
+			for (var i=0; i<$scope.files.uploadedFiles.length;i++) {
+				if ($scope.files.uploadedFiles[i].selected == true) {
 					var outname = "";
-					var inputname = $scope.$parent.uploadedFiles[i].name;
+					var inputname = $scope.files.uploadedFiles[i].name;
 					if (inputname.indexOf(".gz",this.length-3) !== -1) {
 						outname = inputname.substring(0,inputname.length-3) + ".PARSED.gz";
 					} else {
 						outname = inputname + ".PARSED";
 					}
 		
-					var sf = {file : $scope.$parent.uploadedFiles[i], outname: outname};
+					var sf = {file : $scope.files.uploadedFiles[i], outname: outname};
 					$scope.selectedFiles.push(sf);
 				}
 			}
@@ -234,19 +234,19 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 						
 						//Check to see if there are any matching files in list (match on name only)
 						var index = -1;
-						for (var j=0; j<$scope.$parent.importedFiles.length; j++) {
-							if (params.outputFile == $scope.$parent.importedFiles[j].name) {
+						for (var j=0; j<$scope.files.importedFiles.length; j++) {
+							if (params.outputFile == $scope.files.importedFiles[j].name) {
 								index = j;
-								$scope.$parent.importedFiles[j].state = "started";
-								$scope.$parent.importedFiles[j].size = null;
+								$scope.files.importedFiles[j].state = "started";
+								$scope.files.importedFiles[j].size = null;
 							}
 						}
 						
 						//If no match, create new file object.
 						if (index == -1) {
 							var f = {name: params.outputFile, state: "started"};
-							index = $scope.$parent.importedFiles.length;
-							$scope.$parent.importedFiles.push(f);
+							index = $scope.files.importedFiles.length;
+							$scope.files.importedFiles.push(f);
 						}
 						
 						//add columndefs to parameters.
@@ -262,7 +262,7 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 									params: params
 								}).success(function(data) {
 									data.selected = false;
-									$scope.$parent.importedFiles[index] = data;
+									$scope.files.importedFiles[index] = data;
 								});
 							});
 						}(params,index));
@@ -318,8 +318,8 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 		 ********************/
         $scope.$parent.$watch('project',function() {
         	if ($scope.$parent.project.idProject > 0) {
-        		$scope.$parent.uploadedFiles = $scope.loadExisting("UPLOADED");
-            	$scope.$parent.importedFiles = $scope.loadExisting("IMPORTED");	
+        		$scope.files.uploadedFiles = $scope.loadExisting("UPLOADED");
+            	$scope.files.importedFiles = $scope.loadExisting("IMPORTED");	
         	}
         	        	
         });

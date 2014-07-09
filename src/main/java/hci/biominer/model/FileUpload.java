@@ -1,8 +1,6 @@
 package hci.biominer.model;
 
 import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.Entity;
 import javax.persistence.Enumerated;
@@ -10,6 +8,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.ManyToOne;
+import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
 import javax.persistence.Column;
 import javax.persistence.Id;
@@ -22,23 +21,19 @@ import hci.biominer.util.Enumerated.*;
 @Table(name="FileUpload")
 public class FileUpload {
 	@Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="idFileUpload")
 	Long idFileUpload;
 	
 	@OneToOne
 	@JoinColumn(name="idParentFileUpload")
+	@JsonIgnore
 	FileUpload parent;
 	
 	@ManyToOne
 	@JoinColumn(name="idProject")
 	@JsonIgnore()
 	Project project;
-	
-	@ManyToOne
-	@JoinColumn(name="idAnalysis")
-	@JsonIgnore()
-	Analysis analysis;
 	
 	@Column(name="name")
 	String name;
@@ -60,6 +55,12 @@ public class FileUpload {
 	@Enumerated(EnumType.STRING)
 	FileTypeEnum type;
 	
+	@OneToOne(mappedBy="file")
+	@JsonIgnore
+	Analysis analysis;
+	
+	
+
 	public FileUpload() {
 		
 	}
@@ -156,5 +157,12 @@ public class FileUpload {
 		this.analysis = analysis;
 	}
 	
-	
+	public boolean getIsAnalysisSet() {
+		if (this.analysis == null) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+
 }

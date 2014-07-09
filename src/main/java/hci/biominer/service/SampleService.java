@@ -45,7 +45,4 @@ public class SampleService {
         sampleDAO.updateSample(idSample, sample);
 	}
 	
-	public void updateSampleAnalysis(Long idSample, Analysis analysis) {
-		sampleDAO.updateSampleAnalysis(idSample, analysis);
-	}
 }

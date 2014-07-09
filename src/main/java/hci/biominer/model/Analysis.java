@@ -1,16 +1,17 @@
 package hci.biominer.model;
 
 import org.codehaus.jackson.annotate.JsonIgnore;
-import org.hibernate.annotations.GenericGenerator;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.JoinTable;
 import javax.persistence.Table;
 import javax.persistence.Column;
 import javax.persistence.Id;
 import javax.persistence.GeneratedValue;
 import javax.persistence.OneToOne;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
+import javax.persistence.ManyToMany;
 import javax.persistence.JoinColumn;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -34,23 +35,29 @@ public class Analysis {
 	String description;
 	
 	@Column(name="date")
-	@Temporal(TemporalType.DATE)
-	Date date;
+	Long date;
 	
-	@OneToMany(mappedBy="analysis")
+	@ManyToMany()
+	@JoinTable(name="AnalysisSample",
+				joinColumns={@JoinColumn(name="idAnalysis")},
+				inverseJoinColumns={@JoinColumn(name="idSample")})
 	List<Sample> samples;
 	
-	@OneToMany(mappedBy="analysis")
+	@ManyToMany()
+	@JoinTable(name="AnalysisDataTrack",
+				joinColumns={@JoinColumn(name="idAnalysis")},
+				inverseJoinColumns={@JoinColumn(name="idDataTrack")})
 	List<DataTrack> dataTracks;
 	
-	@OneToMany(mappedBy="analysis")
-	List<FileUpload> files;
+	@OneToOne
+	@JoinColumn(name="idFileUpload")
+	FileUpload file;
 	
 	@OneToOne
 	@JoinColumn(name="idAnalysisType")
 	AnalysisType analysisType;
 	
-	@ManyToOne
+	@ManyToOne()
 	@JoinColumn(name="idProject")
 	@JsonIgnore
 	Project project;
@@ -83,11 +90,11 @@ public class Analysis {
 		this.description = description;
 	}
 
-	public Date getDate() {
+	public Long getDate() {
 		return date;
 	}
 
-	public void setDate(Date date) {
+	public void setDate(Long date) {
 		this.date = date;
 	}
 
@@ -107,12 +114,12 @@ public class Analysis {
 		this.dataTracks = dataTracks;
 	}
 
-	public List<FileUpload> getFiles() {
-		return files;
+	public FileUpload getFile() {
+		return file;
 	}
 
-	public void setFiles(List<FileUpload> files) {
-		this.files = files;
+	public void setFile(FileUpload files) {
+		this.file = files;
 	}
 
 	public AnalysisType getAnalysisType() {
@@ -130,6 +137,8 @@ public class Analysis {
 	public void setProject(Project project) {
 		this.project = project;
 	}
+	
+	
 	
 	
 }

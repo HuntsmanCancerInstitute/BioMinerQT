@@ -44,8 +44,5 @@ public class DataTrackService {
 	public void updateDataTrack(Long idDataTrack, DataTrack dataTrack) {
         dataTrackDAO.updateDataTrack(idDataTrack, dataTrack);
 	}
-	
-	public void updateDataTrackAnalysis(Long idDataTrack, Analysis analysis) {
-		dataTrackDAO.updateDataTrackAnalysis(idDataTrack, analysis);
-	}
+
 }
