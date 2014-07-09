@@ -86,8 +86,8 @@ font-weight: 400;
 
 
 .toolbar {
-	margin-bottom:  32px;
-	margin-top:     32px;
+	margin-bottom:  16px;
+	margin-top:     16px;
 	margin-right:   4px;
 	margin-left:    4px;
 	vertical-align: middle;
@@ -96,7 +96,7 @@ font-weight: 400;
 div.toolbar h3 {
 	float:         left;
 	display:       inline;
-	margin-top:    0px;		
+	margin-top:    4px;		
 	margin-bottom: 0px;	
 	margin-right:  40px;
 	margin-left:   0px;
@@ -104,6 +104,17 @@ div.toolbar h3 {
 	color:         #777;
 	font-family: "Raleway", sans-serif !important;
 }
+
+.h3-toolbar {
+	margin-right: 20px; 
+	margin-left: 18px;
+	margin-top:  0px;
+	margin-bottom: 5px;
+	font-size:     22px;	
+	color:         #777;
+	font-family: "Raleway", sans-serif !important;
+}
+
 div.toolbar > *  {
 	float:         left;
 	margin-top:    4px; 
@@ -113,6 +124,8 @@ div.toolbar > *  {
 	font-family: "Raleway", sans-serif !important;
 	font-size:    14px;
 }
+
+
 
 .right {
 	float: right !important;
@@ -222,6 +235,17 @@ h6,
 	font-family: "Raleway", Helvetica, Arial, sans-serif !important;
     font-weight: 300 !important;
 }
+
+.panel-heading-accordion {
+	background-color: white; 
+	padding-left: 15px; 
+	padding-top: 6px; 
+	padding-bottom: 6px; 
+	padding-right: 6px;
+	border-bottom: 1px solid transparent;
+	border-top-right-radius: 3px;
+	border-top-left-radius: 3px;
+}
 label {
     font-family:  'Muli', Helvetica, Arial, sans-serif!important;	
      font-weight: 400 !important;	
@@ -238,6 +262,10 @@ body {
      
 }
 
+.panel-heading {
+	font-size: 18px;
+}
+
 
 /* Grey out the label when it is disabled */
 .grey-out {
@@ -247,11 +275,13 @@ body {
 /* Query box */
 .well-querysum {
 	margin-right: 10px;
-	background-color: rgba(255, 248, 216, 1);
-	border: solid 1px rgb(216, 197, 146);
+	background-color: rgba(255, 251, 234, 1);
+	border: solid 1px rgb(231, 222, 198);
 	border-radius: 2px;
 	padding: 4px;
 	line-height: 2.2;
+	color: #666;
+	font-size: 13px;
 }
 
 
@@ -401,4 +431,14 @@ body {
 	-webkit-font-smoothing: antialiased;
 }
 
+
+/* Special section header that deliniates using a border */
+.section-header {
+	border-bottom: solid thin lightgray;
+	font-size: 16px;
+	display: block;
+	padding-top: 28px;
+	margin-bottom: 10px;
+	color: #777;
+}
 

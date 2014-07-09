@@ -13,6 +13,7 @@ angular.module("query").controller("QueryController",
   
 function($scope, $http, $filter, DynamicDictionary, StaticDictionary) {
 	
+	$scope.hasResults = false;
 	
 	$scope.querySummary = [];
 	$scope.codeResultType = "";
@@ -90,23 +91,6 @@ function($scope, $http, $filter, DynamicDictionary, StaticDictionary) {
     ];
        
        
-   $scope.visibilityList = [
-                   {"codeVisibility": "MEM", "name": "Lab members"},
-                   {"codeVisibility": "INST", "name": "Institution"},
-                   {"codeVisibility": "PUBLIC", "name": "Public"}
-   		
-   ];
-       
-	
-	$scope.sampleTypeList = [
-	                  {idSampleType: 1, name: "RNA -> polyA"},
-	                  {idSampleType: 2, name: "RNA->RiboZero"},
-	                  {idSampleType: 3, name: "ChIP DNA"},
-	                  {idSampleType: 4, name: "DNA"}
-	                  
-	];
-	
-
 
 	$scope.analysisTypeList = [
 	   	          {idAnalysisType: 1, name: "ChIP Seq"},
@@ -167,15 +151,19 @@ function($scope, $http, $filter, DynamicDictionary, StaticDictionary) {
 	
 	
 	$scope.runQuery = function() {
+		$scope.hasResults = false;
 		
 		// Build a summary of the query that is being performed.  This will display
 		// in the results panel
 		$scope.buildQuerySummary();
 		
+		$scope.hasResults = true;
+		
 	
 	};
 	
 	$scope.clearQuery = function() {
+		$scope.hasResults = false;
 		$scope.queryForm.$setPristine();
 		
 		$scope.querySummary = [];
