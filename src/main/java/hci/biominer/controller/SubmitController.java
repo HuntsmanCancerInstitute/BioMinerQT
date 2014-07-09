@@ -216,9 +216,15 @@ public class SubmitController {
     	SampleCondition sampleCondition = this.sampleConditionService.getSampleConditionById(idSampleCondition);
     	SampleSource sampleSource = this.sampleSourceService.getSampleSourceById(idSampleSource);
     	
-    	//Create sample object
-    	Sample updatedSample = new Sample(name, sampleType, samplePrep, sampleSource, sampleCondition, project);
-    	
+    	//Create updated sample from existing
+    	Sample updatedSample = this.sampleService.getSampleById(idSample);
+    	updatedSample.setName(name);
+    	updatedSample.setProject(project);
+    	updatedSample.setSampleCondition(sampleCondition);
+    	updatedSample.setSamplePrep(samplePrep);
+    	updatedSample.setSampleSource(sampleSource);
+    	updatedSample.setSampleType(sampleType);
+    	   	
     	//Update sample
     	this.sampleService.updateSample(idSample, updatedSample);
     }
@@ -298,8 +304,11 @@ public class SubmitController {
     	Project project = this.projectService.getProjectById(idProject);
     	
     	//Create datatrack object
-    	DataTrack updatedDataTrack = new DataTrack(name, url, project);
-    	
+    	DataTrack updatedDataTrack = this.dataTrackService.getDataTrackById(idDataTrack);
+    	updatedDataTrack.setName(name);
+    	updatedDataTrack.setUrl(url);
+    	updatedDataTrack.setProject(project);
+
     	//Update sample
     	this.dataTrackService.updateDataTrack(idDataTrack, updatedDataTrack);
     }

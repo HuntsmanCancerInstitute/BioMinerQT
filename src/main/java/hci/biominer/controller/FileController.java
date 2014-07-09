@@ -61,6 +61,8 @@ public class FileController {
 		
 		genomePaths = new HashMap<String,File>();
 		genomePaths.put("hg19",new File("/Users/timmosbruger/Documents/eclipse4.3/BiominerQT/AnnotationFiles/hg19_GRCh37_Genome.txt"));
+		genomePaths.put("mm10",new File("/Users/timmosbruger/Documents/eclipse4.3/BiominerQT/AnnotationFiles/mm10_GRCm38_Genome.txt"));
+		
 		
 		
 		for (String key: genomePaths.keySet()) {
@@ -308,6 +310,9 @@ public class FileController {
 			
 			File importDir = new File(FILES_PATH,id);
 			File parseDir = new File(PARSED_PATH,id);
+			if (!parseDir.exists()) {
+				parseDir.mkdirs();
+			}
 			File inputFile = new File(importDir, input);
 			File outputFile = new File(parseDir, output);
 			

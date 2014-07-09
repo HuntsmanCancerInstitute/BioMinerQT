@@ -2,104 +2,101 @@
 
 	<div class="row" style="padding-top: 10px;">
 		<form class="form" name="result_form">
-		<fieldset>
+			<fieldset>
+		
+		<div class="row">
 
-		<!-- Name -->	
-		<div class="col-lg-2">
-			<div class="form-group">
-				<label class="control-label" for="analysis_result_name">Name</label>  
-		  		<input id="analysis_result_name" ng-model="result.name" placeholder="name" class="form-control input-md" required type="text">
-			</div>
-		</div> 
+			<!-- Name -->	
+			<div class="col-lg-2">
+				<div class="form-group">
+					<label class="control-label" for="analysis_result_name">Name</label>  
+			  		<input id="analysis_result_name" ng-model="result.name" placeholder="name" class="form-control input-md" required type="text">
+				</div>
+			</div> 
+			
+			<!-- Description -->
+			<div class="col-lg-3">
+				<div class="form-group">
+					<label class="control-label" for="analysis_description">Description</label>
+			  		<textarea class="form-control" placeholder="method / description" ng-model="result.description" required id="analysis_description"></textarea>
+				</div>
+			</div> 
+			
 		
-		<!-- Description -->
-		<div class="col-lg-3">
-			<div class="form-group">
-				<label class="control-label" for="analysis_description">Description</label>
-		  		<textarea class="form-control" placeholder="method / description" ng-model="result.description" required id="analysis_description"></textarea>
-			</div>
-		</div> 
-		
+			<!-- Date -->
+			<div class="col-lg-3">
+				<div class="form-group">
+					<label class="control-label" for="">Date</label>
+					<p class="input-group">
+		              <input type="text" class="form-control" datepicker-popup="MM/dd/yyyy" ng-model="result.date"  required />
+		              <span class="input-group-btn">
+		                <button class="btn btn-default"><i class="glyphicon glyphicon-calendar"></i></button>
+		              </span>
+		        	</p>
+	        	</div>
+			</div> 
+			
 	
-		<!-- Date -->
-		<div class="col-lg-3">
-			<div class="form-group">
-				<label class="control-label" for="">Date</label>
-				<p class="input-group">
-	              <input type="text" class="form-control" datepicker-popup="MM/dd/yyyy" ng-model="result.date"  required />
-	              <span class="input-group-btn">
-	                <button class="btn btn-default"><i class="glyphicon glyphicon-calendar"></i></button>
-	              </span>
-	        	</p>
-        	</div>
-		</div> 
-		
-
-		<!-- Analysis Type -->
-		<div class="col-lg-3">
-			<div class="form-group">
-				<label class="control-label" for="analysis_type">Analysis type</label>  
-				<select id="analysis_type" ng-model="result.analysisType" ng-options="at as at.type for at in analysisTypeList track by at.idAnalysisType" placeholder="Analysis type" class="form-control" required>
-					<option value=""></option>
-				</select>			
-			</div>
-		</div> 
-
-
-		
-	</div> <!--  end row -->
-	
-	
-	<div class="row">
-		<!--Files -->
-		<div class="col-lg-3">
-			<div class="form-group">
-			  <label class="control-label" for="applicable_files">Files</label>
-			  <select required id="applicable_files" data-placeholder="Choose File..." ng-model="result.file" chosen class="form-control" ng-options="file as file.name for file in files.projectFiles track by file.idFileUpload" options-disabled="file.isAnalysisSet for file in files.projectFiles">
-			  <option value=""></option>
-			  </select> 
-			</div>	
-		</div> 
-
-		<!-- Samples -->
-		<div class="col-lg-3">
-			<div class="form-group">
-			  <label class="control-label" for="applicable_samples">Samples</label>
-			  <select required id="applicable_samples" data-placeholder="Choose Samples..." ng-model="result.samples" chosen multiple class="chosen-select" ng-options="sample as sample.name for sample in samples track by sample.idSample"></select> 
-			  <option value=""></option>
-			</div>	
-		</div> 
-
-		<!-- Data Tracks -->
-		<div class="col-lg-3">
-			<div class="form-group">
-			  <label class="control-label" for="applicable_datatracks">Data tracks</label>
-			  <select required id="applicable_datatracks" data-placeholder="Choose DataTracks..." ng-model="result.dataTracks" chosen multiple class="chosen-select" ng-options="dt as dt.name for dt in datatracks track by dt.idDataTrack"></select> 
-		      <option value=""></option>
-			</div>	
-		</div> 
-		
-
-		<!-- Add/Save buttons  -->
-		<div class="col-lg-3">
-			<div class="form-group">
-			  	<label class="control-label" for=""></label>  
-				<div class="animate-switch-container" ng-switch on="resultEditMode">
-					<button id="add_result_button"  class="animate-switch btn btn-primary" ng-switch-when="false" ng-click="addResult(result)" ng-disabled="result_form.$invalid">Add</button>
-					<button id="save_result_button" class="animate-switch btn btn-primary" ng-switch-when="true" ng-click="saveResult(result)" ng-disabled="result_form.$invalid">Save</button>
+			<!-- Analysis Type -->
+			<div class="col-lg-3">
+				<div class="form-group">
+					<label class="control-label" for="analysis_type">Analysis type</label>  
+					<select id="analysis_type" data-placeholder="Choose Analysis Type..." ng-model="result.analysisType" ng-options="at as at.type for at in analysisTypeList track by at.idAnalysisType" placeholder="Analysis type" class="form-control" required>
+						<option value=""></option>
+					</select>			
 				</div>
 			</div>
-		</div> <!-- end col -->
+		</div> <!--  end row -->
+		<div class="row">
+			<!--Files -->
+			<div class="col-lg-3">
+				<div class="form-group">
+				  <label class="control-label" for="applicable_files">Files</label>
+				  <select id="applicable_files" data-placeholder="Choose File..." ng-model="result.file" chosen class="chosen-select" ng-options="file as file.name for file in files.importedFiles track by file.idFileUpload" options-disabled="file.isAnalysisSet for file in files.importedFiles" required>
+				  	<option value=""></option>
+				  </select> 
+				</div>	
+			</div> 
+	
+			<!-- Samples -->
+			<div class="col-lg-3">
+				<div class="form-group">
+				  <label class="control-label" for="applicable_samples">Samples</label>
+				  <select required id="applicable_samples" data-placeholder="Choose Samples..." ng-model="result.samples" chosen multiple class="chosen-select" ng-options="sample as sample.name for sample in samples track by sample.idSample" required></select> 
+				</div>	
+			</div> 
+	
+			<!-- Data Tracks -->
+			<div class="col-lg-3">
+				<div class="form-group">
+				  <label class="control-label" for="applicable_datatracks">Data tracks</label>
+				  <select id="applicable_datatracks" data-placeholder="Choose DataTracks..." ng-model="result.dataTracks" chosen multiple class="chosen-select" ng-options="dt as dt.name for dt in datatracks track by dt.idDataTrack" required></select> 
+				</div>	
+			</div> 
+		</div> <!--  end row -->
+		<div class="row">
+		<!-- Add/Save buttons  -->
+			<div class="col-lg-3">
+				<div class="form-group">
+				  	<label class="control-label" for=""></label>  
+					<div class="animate-switch-container" ng-switch on="resultEditMode">
+						<button id="add_result_button"  class="animate-switch btn btn-primary" ng-switch-when="false" ng-click="addResult(result)" ng-disabled="result_form.$invalid">Add</button>
+						<button id="save_result_button" class="animate-switch btn btn-primary" ng-switch-when="true" ng-click="saveResult(result)" ng-disabled="result_form.$invalid">Save</button>
+						<button id="save_sample_button" class="animate-switch btn btn-warning" ng-click="clearResult()">Clear</button>
+					</div>
+				</div>
+			</div> <!-- end col -->
+		</div>		
+
+		
 		
 		</fieldset>
 		</form>
-	</div> <!--  end row -->
-
-
+	</div> <!--  end form  -->
 	
-	<div class="row">
+	<div class="row well" ng-show="results.length > 0">
 		<div class="col-lg-12">
-			<table class="table table-striped table-hover" ng-show="results.length > 0">
+			<table class="table table-striped table-hover">
 			    <thead>
 			        <tr>
 			            <th >Name</th>
@@ -114,14 +111,14 @@
 			    </thead>
 			    <tbody>
 			        <tr ng-repeat="result in results">
-			            <td style="width: 10%;">{{result.name}}</td>
-			            <td style="width: 15%;">{{result.description}}</td>
-			            <td style="width: 10%;">{{result.date | date:'MM/dd/yyyy'}}</td>
-			            <td style="width: 10%;">{{result.idAnalysisType | lookupAnalysisType:analysisTypeList}}</td>
-			            <td style="width: 20%;">{{result.file.name}}</div></td>
-			            <td style="width: 10%;"><div ng-repeat="sample in result.samples">{{sample.name}}<br></div></td>
-			            <td style="width: 10%;"><div ng-repeat="dt in result.dataTracks">{{dt.name}}<br></div></td>
-			            <td style="width: 15%;">
+			            <td>{{result.name}}</td>
+			            <td>{{result.description}}</td>
+			            <td>{{result.date | date:'MM/dd/yyyy'}}</td>
+			            <td>{{result.idAnalysisType | lookupAnalysisType:analysisTypeList}}</td>
+			            <td>{{result.file.name}}</div></td>
+			            <td><div ng-repeat="sample in result.samples">{{sample.name}}<br></div></td>
+			            <td><div ng-repeat="dt in result.dataTracks">{{dt.name}}<br></div></td>
+			            <td>
 		                <button class="btn btn-sm btn-primary" ng-click="editResult(result)" data-toggle="tooltip" data-placement="top" title="edit">
 			        		<span class="glyphicon glyphicon-pencil"></span>
 		                </button>

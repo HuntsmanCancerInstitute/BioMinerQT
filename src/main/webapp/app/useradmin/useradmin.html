@@ -81,7 +81,7 @@
 					             	<td>{{user.email}}</td>
 					             	<td><span class="glyphicon glyphicon-wrench" ng-show="user.admin"></span></td>
 					             	<td>{{user.phone | displayPhone}}</td> 
-					             	<td><span ng-repeat="l in user.lab">{{l.last}}{{$last ? ' Lab' : ', '}}</span></td>
+					             	<td><span ng-repeat="l in user.labs">{{l.last}}{{$last ? ' Lab' : ', '}}</span></td>
 					             	<td ng-show="false">{{user.idUser}}</td>
 					         	</tr>
 				         	</tbody>

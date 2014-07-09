@@ -121,10 +121,13 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary) {
             	$scope.samples = $scope.projects[i].samples;
             	$scope.datatracks = $scope.projects[i].dataTracks;
             	$scope.results = $scope.projects[i].analyses;
-            	$scope.files.projectFiles = [];
+            	$scope.files.importedFiles = [];
+            	$scope.files.uploadedFiles = [];
             	for (var x in $scope.projects[i].files) {
             		if ($scope.projects[i].files[x].type == "IMPORTED") {
-            			$scope.files.projectFiles.push($scope.projects[i].files[x]);
+            			$scope.files.importedFiles.push($scope.projects[i].files[x]);
+            		} else if ($scope.projects[i].files[x].type == "UPLOADED") {
+            			$scope.files.uploadedFiles.push($scope.projects[i].files[x]);
             		}
             	}	
             } else {
@@ -219,6 +222,10 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary) {
 	/**********************
 	* Sample management
 	*********************/
+	
+	$scope.clearSample = function() {
+		$scope.sample = {};
+	};
 
 	$scope.editSample = function(sample) {
 		$scope.sample = sample;
@@ -240,6 +247,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary) {
 		}).error(function(data, status, headers, config) {
 			console.log("Could not update sample.");
 		});
+		$scope.sample = {};
 	};
 	
 	$scope.removeSample = function(sample) {
@@ -252,6 +260,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary) {
 		}).error(function(data, status, headers, config) {
 			console.log("Could not delete sample.");
 		});
+		$scope.sample = {};
     };
 	
 	$scope.addSample = function(sample) {
@@ -266,7 +275,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary) {
 		}).error(function(data, status, headers, config) {
 			console.log("Could not create sample.");
 		});
-		
+		$scope.sample = {};
 		
 	};
 	
@@ -274,6 +283,9 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary) {
 	/**********************
 	 * Datatrack management
 	 *********************/
+	$scope.clearDataTrack = function() {
+		$scope.datatrack = {};
+	}
 	
 	$scope.editDataTrack = function(datatrack) {
 		$scope.datatrack = datatrack;
@@ -326,6 +338,10 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary) {
 	/**********************
 	 * Analysis Management
 	 *********************/
+	
+	$scope.clearResult = function() {
+		$scope.result = {};
+	};
 
 	$scope.editResult = function(result) {
 		$scope.result = result;

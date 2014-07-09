@@ -1,65 +1,72 @@
-<div class="container-fluid">
 
- <form class="form-horizontal">
-	<fieldset>
-		<!-- Text input-->
-		<div class="form-group">
-		  <label class="col-md-4 control-label" for="project_name">Name</label>  
-		  <div class="col-md-6">
-		  <input id="project_name" ng-model="project.name" name="project_name" placeholder="name" class="form-control input-md" required="" type="text">
-		    
-		  </div>
-		</div>
-		
-		<!-- Textarea -->
-		<div class="form-group">
-		  <label class="col-md-4 control-label" for="project_description">Description</label>
-		  <div class="col-md-4">                     
-		    <textarea class="form-control" id="project_description" ng-model="project.description" name="project_description"></textarea>
-		  </div>
-		</div>
-		
-		<!-- Select Basic -->
-		<div class="form-group">
-		  <label class="col-md-4 control-label" for="species_build">Species and Genome Build</label>
-		  <div class="col-md-6">
-		    <select id="species_build" ng-model="project.organismBuild.idOrganismBuild"  ng-options="gb.idOrganismBuild as gb.name group by gb.organism.common for gb in organismBuildList" class="form-control">
-		    </select>
-		  </div>
-		</div>
-		
-		<!-- Select Basic -->
-		<div class="form-group">
-		  <label class="col-md-4 control-label" for="lab">Lab</label>
-		  	<div class="col-md-6">
-  		    	<select data-placeholder="Choose labs..." ng-model="project.labs" multiple chosen class="col-md-6 chosen-select" ng-options="lab as (lab.first + ' ' + lab.last + ' lab' ) for lab in labList track by lab.idLab"></select> 
-		    </div>
-		</div>
-		
-		<!-- Multiple Radios (inline) -->
-		<div class="form-group">
-		  <label class="col-md-4 control-label" for="visibility">Visibility</label>
-		  <div class="col-md-4"> 
-		    <label class="radio-inline" ng-repeat="visibility in projectVisibilities">
-		      <input name="visibility"  ng-value="visibility.enum" ng-model="project.visibility" type="radio">
-		         {{ visibility.name }}
-		      </input>
-		    </label> 
-		  </div>		  		  
-		</div>
-		
-		<!-- Button -->
-		<div class="form-group">
-		  <label class="col-md-11 control-label" for="save_analysis_project_button"></label>
-		  <div class="col-md-1">
-		    <button id="save_analysis_project_button" name="save_analysis_project_button" class="btn btn-primary" ng-click="edit()">Save</button>
-		  </div>
-		</div>
+<div class="container-fluid">
+   <div class="container-fluid">
+   <h4>Project</h4>
+	 <form class="form-horizontal">
+		<fieldset>
+		   <div class="row">
+		   
+				<!-- Text input-->
+				<div class="form-group">
+				  <label class="col-md-4 control-label" for="project_name">Name</label>  
+				  <div class="col-md-6">
+				  <input id="project_name" ng-model="project.name" name="project_name" placeholder="name" class="form-control input-md" required="" type="text">
+				    
+				  </div>
+				</div>
 				
-		
-	</fieldset>
-</form>
-	
+				<!-- Textarea -->
+				<div class="form-group">
+				  <label class="col-md-4 control-label" for="project_description">Description</label>
+				  <div class="col-md-4">                     
+				    <textarea class="form-control" id="project_description" ng-model="project.description" name="project_description"></textarea>
+				  </div>
+				</div>
+				
+				<!-- Select Basic -->
+				<div class="form-group">
+				  <label class="col-md-4 control-label" for="species_build">Species and Genome Build</label>
+				  <div class="col-md-6">
+				    <select id="species_build" ng-model="project.organismBuild.idOrganismBuild"  ng-options="gb.idOrganismBuild as gb.name group by gb.organism.common for gb in organismBuildList" class="form-control">
+				    </select>
+				  </div>
+				</div>
+				
+				<!-- Select Basic -->
+				<div class="form-group">
+				  <label class="col-md-4 control-label" for="lab">Lab</label>
+				  	<div class="col-md-6">
+		  		    	<select data-placeholder="Choose labs..." ng-model="project.labs" multiple chosen class="col-md-6 chosen-select" ng-options="lab as (lab.first + ' ' + lab.last + ' lab' ) for lab in labList track by lab.idLab"></select> 
+				    </div>
+				</div>
+				
+				<!-- Multiple Radios (inline) -->
+				<div class="form-group">
+				  <label class="col-md-4 control-label" for="visibility">Visibility</label>
+				  <div class="col-md-4"> 
+				    <label class="radio-inline" ng-repeat="visibility in projectVisibilities">
+				      <input name="visibility"  ng-value="visibility.enum" ng-model="project.visibility" type="radio">
+				         {{ visibility.name }}
+				      </input>
+				    </label> 
+				  </div>		  		  
+				</div>
+			</div>
+			
+			<!-- Button -->
+			<div class="container-fluid">
+				<div class="form-group">
+				  <label class="control-label" for="save_analysis_project_button"></label>
+				  <div >
+				    <button id="save_analysis_project_button" name="save_analysis_project_button" class="btn btn-primary" ng-click="edit()">Save</button>
+				  </div>
+				</div>
+			</div>
+			
+					
+		</fieldset>
+	</form>
+  </div>
 <hr>
 <h4>Samples</h4>
 <ng:include src="'app/submit/samples.html'"></ng:include>		

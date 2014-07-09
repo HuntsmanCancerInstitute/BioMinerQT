@@ -17,13 +17,13 @@
 			
 			<div class="form-group">
 				<label class="col-md-4 control-label" for=""labEntry">Institutes</label>  
-			    <select data-placeholder="Choose Institutes ..." multiple class="col-md-6 chosen-select" ng-model="lab.institutes" chosen="availInst" ng-options="inst.name for inst in availInst" required ></select>
+			    <select data-placeholder="Choose Institutes ..." multiple class="col-md-6 chosen-select" ng-model="lab.institutes" chosen ng-options="inst.name for inst in availInst track by inst.idInstitute" required ></select>
 			</div>
 					
 		</fieldset>
 	</form>
 </div>
 <div class="modal-footer">
-            <button class="btn btn-primary" ng-click="ok()" ng-disabled="newlabForm.$invalid">{{bFace}}</button>
+            <button class="btn btn-primary" ng-click="ok()" ng-disabled="newLabForm.$invalid">{{bFace}}</button>
             <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
 </div>

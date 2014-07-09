@@ -99,7 +99,6 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 			for (var i=0; i < collection.length;i++) {
 				collection[i].selected = status;
 			}
-			console.log($scope.$parent.projectId);
 		};
 		
 		/********************
@@ -229,7 +228,7 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 						params.idFileUpload = $scope.selectedFiles[i].file.idFileUpload;
 						
 						//This will be tied to build going forward!!
-						params.genome = "hg19";
+						params.genome = $scope.project.organismBuild.name;
 						params.analysisID = $scope.$parent.projectId;
 						
 						//Check to see if there are any matching files in list (match on name only)
