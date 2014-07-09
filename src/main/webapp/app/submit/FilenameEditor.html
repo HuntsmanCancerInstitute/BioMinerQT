@@ -8,11 +8,26 @@
 	</div>
 </div>
 <div class="modal-body" resize per="{{alertHover == true ? 60 : 70}}" ng-style="style()">
-   <ul ng-repeat="file in selectedFiles">
-   		<li>
-   </ul>
+	<table class="table">
+		<thead>
+			<th>Index</th>
+			<th>Imported file name</th>
+			<th>Parsed file name</th>
+		</thead>
+		<tbody ng-repeat="s in selected track by $index">
+			<td>
+				<span><span>{{$index+1}}</span></span>
+			</td>
+			<td>
+				<span><span>{{s.file.name}}</span></span>
+			</td>
+			<td>
+				<span><input class="input col-lg-10" type="input" ng-model="s.outname"/></span>
+			</td>
+		</tbody>
+	</table>
 </div>
 <div class="modal-footer">
-            <button class="btn btn-primary" ng-click="ok()">Parse</button>
-            <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
-</div>
+	<button class="btn btn-primary" ng-click="ok()">Parse</button>
+	<button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+</div> 
