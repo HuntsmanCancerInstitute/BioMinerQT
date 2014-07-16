@@ -1,7 +1,7 @@
 'use strict';
 
 
-var upload  = angular.module('upload',  ['ui.bootstrap', 'angularFileUpload','filters', 'services', 'directives','error','fneditor']);
+var upload  = angular.module('upload',  ['ui.bootstrap', 'angularFileUpload','filters', 'services', 'directives','error','fneditor','acute.select']);
 
 angular.module("upload").controller("UploadController", ['$scope','$upload','$http','$modal','$q',
                                                       
@@ -31,7 +31,7 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 				$scope.totalGlobalSize += $files[i].size;
 				$scope.localTotals.push(0);
 			}
-			
+		
 			var promise = $q.all(null);
 			for (var i=0; i<$files.length; i++) {
 				//initialize variables
@@ -57,21 +57,12 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 				
 				//upload the file
 				(function (i,index,file) {
+					 promise = promise.then(function() {
+						 
 						return $scope.upload = $upload.upload({
 							url: "submit/upload",
 							file: file,
 							data: {idProject: $scope.$parent.projectId},
-							progress: function(evt) {
-								$scope.files.uploadedFiles[index].complete = 100.0 * evt.loaded / evt.total;
-								
-								//Set global progress
-								$scope.localTotals[i] = evt.loaded;
-								$scope.currGlobalSize = 0;
-								for (var j = 0; j < $scope.localTotals.length; j++) {
-									$scope.currGlobalSize += $scope.localTotals[j];
-								}
-								$scope.complete = 100.0 * $scope.currGlobalSize / $scope.totalGlobalSize;
-							}
 						}).success(function(data) {
 							if (data.state != "SUCCESS") {
 								//Only set message on failure
@@ -85,9 +76,18 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 							
 						}).error(function(data) {
 							$scope.files.uploadedFiles[index].status = "FAILURE";
+						}).progress(function(evt) {
+							$scope.files.uploadedFiles[index].complete = 100 * evt.loaded / evt.total;
+					        
+							$scope.localTotals[i] = evt.loaded;
+							$scope.currGlobalSize = 0;
+							for (var j = 0; j < $scope.localTotals.length; j++) {
+								$scope.currGlobalSize += $scope.localTotals[j];
+							}
+							$scope.complete = 100.0 * $scope.currGlobalSize / $scope.totalGlobalSize;
 						});
+					 });
 				})(i,index,file);
-				
 			}
 		};
 		
@@ -105,6 +105,29 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 		 * Delete selected files
 		 ********************/
 		$scope.deleteSelected = function(collection) {
+			//Make sure files are unbound
+			var fileList = [];
+			for (var i=0; i < collection.length; i++) {
+				var file = collection[i];
+				if (file.selected == true && file.isAnalysisSet) {
+					fileList.push(file);
+				}
+			}
+			
+			if (fileList.length > 0) {
+				var message = "";
+				message += "<p>The following files are associated with existing analyses and can't be deleted. Please delete the appropriate analyses and try again.</p>";
+				message += "<br/>";
+				message += "<ul>";
+				for (var i=0;i<fileList.length;i++) {
+					message += "<li>" + fileList[i].name + "</li>";
+				}
+				message += "</ul>";
+			
+				$scope.showErrorMessage("Can't Delete Selected Files",message);
+				return;
+			}
+			
 			for (var i = 0; i < collection.length; i++) {
 				var file = collection[i];
 				var name = collection[i].name;
@@ -295,20 +318,7 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 			return collection;
 		};
 		
-		/********************
-		 * Display error message in modal
-		 ********************/
-		$scope.showError = function(file) {
-			$modal.open({
-	    		templateUrl: 'app/common/error.html',
-	    		controller: 'ErrorController',
-	    		resolve: {
-	    			file: function() {
-	    				return file;
-	    			}
-	    		}
-	    	});
-		};
+		
 		
 		
 		
@@ -322,6 +332,27 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
         	}
         	        	
         });
+        
+        
+        /********************
+    	 * Display error message in modal
+    	 ********************/
+    	$scope.showFileError = function(file) {
+    		$modal.open({
+        		templateUrl: 'app/common/error.html',
+        		controller: 'ErrorController',
+        		resolve: {
+        			title: function() {
+        				var title = "Error processing " + file.name;
+        				return title;
+        			},
+        			message: function() {
+        				var message = file.message;
+        				return message;
+        			}
+        		}
+        	});
+    	};
         
   
 	

@@ -52,7 +52,6 @@ public class FileUploadDAO {
 		FileUploadToUpdate.setName(fileUpload.getName());
 		FileUploadToUpdate.setDirectory(fileUpload.getDirectory());
 		FileUploadToUpdate.setSize(fileUpload.getSize());
-		FileUploadToUpdate.setParent(fileUpload.getParent());
 		FileUploadToUpdate.setType(fileUpload.getType());
 		FileUploadToUpdate.setProject(fileUpload.getProject());
 		session.update(FileUploadToUpdate);

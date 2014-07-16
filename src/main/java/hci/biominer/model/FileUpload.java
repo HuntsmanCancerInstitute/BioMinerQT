@@ -25,11 +25,6 @@ public class FileUpload {
 	@Column(name="idFileUpload")
 	Long idFileUpload;
 	
-	@OneToOne
-	@JoinColumn(name="idParentFileUpload")
-	@JsonIgnore
-	FileUpload parent;
-	
 	@ManyToOne
 	@JoinColumn(name="idProject")
 	@JsonIgnore()
@@ -66,14 +61,13 @@ public class FileUpload {
 	}
 	
 	public FileUpload(String name, String directory, Long size, FileStateEnum state, String message, 
-			FileTypeEnum type, FileUpload parent, Project project) {
+			FileTypeEnum type, Project project) {
 		this.name = name;
 		this.directory = directory;
 		this.size = size;
 		this.state = state;
 		this.message = message;
 		this.type = type;
-		this.parent = parent;
 		this.project = project;
 	}
 	
@@ -131,14 +125,6 @@ public class FileUpload {
 
 	public void setSize(Long size) {
 		this.size = size;
-	}
-	
-	public FileUpload getParent() {
-		return parent;
-	}
-
-	public void setParent(FileUpload parent) {
-		this.parent = parent;
 	}
 
 	public FileTypeEnum getType() {

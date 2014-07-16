@@ -91,5 +91,13 @@ public class DataTrack {
 		this.analyses = analyses;
 	}
 	
+	public boolean isAnalysisSet() {
+		if (this.analyses == null || this.analyses.size() == 0) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+	
 	
 }

@@ -1,9 +1,11 @@
 package hci.biominer.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -499,10 +501,69 @@ public class SubmitController {
     }
     
     
+    /***************************************************
+	 * URL: /project/addSamplePrep
+	 * addSamplePrep(): add new sample prep to database
+	 * method: post
+	 * @param description: description of the sample prep
+	 * @param idSampleType: primary index of the associated sample type
+	 ****************************************************/
     
+    @RequestMapping(value="addSamplePrep",method=RequestMethod.POST)
+    @ResponseBody
+    public SamplePrep addSamplePrep(@RequestParam(value="description") String description, @RequestParam(value="idSampleType") Long idSampleType) throws Exception {
+    	SampleType sampleType = this.sampleTypeService.getSampleTypeById(idSampleType);
+    	SamplePrep samplePrep  = new SamplePrep();
+    	samplePrep.setSampleType(sampleType);
+    	samplePrep.setDescription(description);
+ 
+    	this.samplePrepService.addSamplePrep(samplePrep);
+    	
+    	return samplePrep;
+    }
     
+ 
+    /***************************************************
+	 * URL: /project/addSampleCondition
+	 * addSampleCondition(): add new sample condition to database
+	 * method: post
+	 * @param condition: sample condition
+	 ****************************************************/
+    @RequestMapping(value="addSampleCondition",method=RequestMethod.POST)
+    @ResponseBody
+    public SampleCondition addSampleCondition(@RequestParam(value="condition") String condition) {
+    	SampleCondition sampleCondition = new SampleCondition();
+    	sampleCondition.setCond(condition);
+ 
+    	
+    	this.sampleConditionService.addSampleCondition(sampleCondition);
+    	
+    	return sampleCondition;
+    }
     
-    
+    /***************************************************
+	 * URL: /project/addSampleSource
+	 * addSampleSource(): add new sample source to the database
+	 * method: post
+	 * @param source: sample source 
+	 ****************************************************/
+    @RequestMapping(value="addSampleSource",method=RequestMethod.POST)
+    @ResponseBody
+    public SampleSource addSampleSource(@RequestParam(value="source") String source) {
+    	SampleSource sampleSource = new SampleSource();
+    	sampleSource.setSource(source);
+    	
+    	this.sampleSourceService.addSampleSource(sampleSource);
+    	
+    	return sampleSource;
+    }
+
+    @RequestMapping(value="testError",method=RequestMethod.POST)
+    @ResponseBody
+    public void testError(HttpServletResponse response) throws IOException{
+    	throw new IOException("This is a test to see if I can get errors");
+    }
    
+    
     
 }

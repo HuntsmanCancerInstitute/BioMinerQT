@@ -48,11 +48,11 @@
 			          			<span class="glyphicon glyphicon-ok-sign"></span>
 			          		</span>
 			          		
-			          		<span class="label-warning label" ng-switch-when="WARNING" ng-click="showError(file)">
+			          		<span class="label-warning label" ng-switch-when="WARNING" ng-click="showErrorMessage('Warning while parsing ' + file.name,file.message)">
 			          			<span class="glyphicon glyphicon-info-sign"></span>
 			          		</span>
 			          		
-			          		<span class="label-danger label" ng-switch-default ng-click="showError(file)">
+			          		<span class="label-danger label" ng-switch-default ng-click="showErrorMessage('Error while parsing ' + file.name,file.message)">
 			          			<span class="glyphicon glyphicon-remove-sign"></span>
 			          		</span>
 			          		
@@ -98,11 +98,11 @@
 			          			<span class="glyphicon glyphicon-ok-sign"></span>
 			          		</span>
 			          		
-			          		<span class="label-warning label" ng-switch-when="WARNING" ng-click="showError(file)">
+			          		<span class="label-warning label" ng-switch-when="WARNING" ng-click="showErrorMessage('Warning while parsing ' + file.name,file.message)">
 			          			<span class="glyphicon glyphicon-info-sign"></span>
 			          		</span>
 			          		
-			          		<span class="label-danger label" ng-switch-default ng-click="showError(file)">
+			          		<span class="label-danger label" ng-switch-default ng-click="showErrorMessage('Error while parsing ' + file.name,file.message)">
 			          			<span class="glyphicon glyphicon-remove-sign"></span>
 			          		</span>
 			          		

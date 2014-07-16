@@ -27,7 +27,13 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary) {
     $scope.datatracks = [];
     $scope.results = [];
     $scope.samplePrepList = [];
+    $scope.samplePrepListAll = [];
 
+    //new dictionary entries
+    
+    $scope.newSamplePrep = { description : "" };
+    $scope.newSampleCond = { condition : "" };
+    $scope.newSampleSource = { source : "" };
     
     //active
     $scope.sample = {sampleType: null};
@@ -53,9 +59,10 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary) {
 		$scope.sampleTypeList = data;
 	});
 	
-	StaticDictionary.samplePrepList(function(data) {
-		$scope.samplePrepListAll = data;
-	});
+//	StaticDictionary.samplePrepList(function(data) {
+//		$scope.samplePrepListAll = data;
+//	});
+	
 	
     
     //Dynamic dictionaries.  These dictionaries can be loaded on-demand.
@@ -68,28 +75,45 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary) {
     $scope.loadSampleSources = function() {
     	DynamicDictionary.loadSampleSources().success(function(data) {
     		$scope.sampleSourceList = data;
+    		var addNew = {source: "Add New", idSampleSource: -1};
+    		$scope.sampleSourceList.unshift(addNew);
     	});
     };
     
     $scope.loadSampleConditions = function() {
     	DynamicDictionary.loadSampleConditions().success(function(data) {
     		$scope.sampleConditionList = data;
+    		var addNew = {cond: "Add New", idSampleCondition: -1};
+    		$scope.sampleConditionList.unshift(addNew);
     	});
+    };
+    
+    $scope.loadSamplePreps = function() {
+    	DynamicDictionary.loadSamplePreps().success(function(data) {
+    		$scope.samplePrepListAll = data;
+    	});
+    };
+    
+    $scope.loadSamplePrepsBySampleType = function() {
+    	DynamicDictionary.loadSamplePrepsBySampleType($scope.sample.sampleType.idSampleType).success(function(data) {
+			$scope.samplePrepList = data;
+			var addNew = {description : "Add New", idSamplePrep: -1};
+			$scope.samplePrepList.unshift(addNew);
+		});
     };
   
     //Load up dynamic dictionaries
 	$scope.loadLabs();
 	$scope.loadSampleConditions();
 	$scope.loadSampleSources();
+	$scope.loadSamplePreps();
     
     //Watchers
     $scope.$watch('sample.sampleType',function() {
     	if ($scope.sample.sampleType == null) {
     		$scope.samplePrepList = null;
     	} else {
-    		DynamicDictionary.loadSamplePrepsBySampleType($scope.sample.sampleType.idSampleType).success(function(data) {
-    			$scope.samplePrepList = data;
-    		});
+    		$scope.loadSamplePrepsBySampleType();
     	}
     });
     
@@ -230,6 +254,9 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary) {
 	$scope.editSample = function(sample) {
 		$scope.sample = sample;
 		$scope.sampleEditMode = true;
+		
+		console.log($scope.samplePrepList);
+		console.log($scope.samplePrepListAll);
     };
 	
 	$scope.saveSample = function(sample) {
@@ -251,6 +278,27 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary) {
 	};
 	
 	$scope.removeSample = function(sample) {
+		//Don't remove samples that are associated with analyses.
+		
+		//Keeping it a list in case we move over to checkboxes
+		var fileList = [];
+		fileList.push(sample);
+		
+		if (sample.analysisSet) {
+			var message = "";
+			message += "<p>The following samples are associated with existing analyses and can't be deleted. Please delete the appropriate analyses and try again.</p>";
+			message += "<br/>";
+			message += "<ul>";
+			for (var i=0;i<fileList.length;i++) {
+				message += "<li>" + sample.name + "</li>";
+			}
+			message += "</ul>";
+		
+			$scope.showErrorMessage("Can't Delete Selected Samples",message);
+			return;
+		}
+		
+		
 		$http({
 			url: "project/deleteSample",
 			method: "POST",
@@ -285,7 +333,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary) {
 	 *********************/
 	$scope.clearDataTrack = function() {
 		$scope.datatrack = {};
-	}
+	};
 	
 	$scope.editDataTrack = function(datatrack) {
 		$scope.datatrack = datatrack;
@@ -308,6 +356,25 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary) {
 	};
 	
 	$scope.removeDataTrack = function(datatrack) {
+		//Keeping it a list in case we move over to checkboxes
+		var fileList = [];
+		fileList.push(datatrack);
+		
+		
+		if (datatrack.analysisSet) {
+			var message = "";
+			message += "<p>The following Datatracks are associated with existing analyses and can't be deleted. Please delete the appropriate analyses and try again.</p>";
+			message += "<br/>";
+			message += "<ul>";
+			for (var i=0;i<fileList.length;i++) {
+				message += "<li>" + datatrack.name + "</li>";
+			}
+			message += "</ul>";
+		
+			$scope.showErrorMessage("Can't Delete Selected Datatracks",message);
+			return;
+		}
+		
 		$http({
 			url : "project/deleteDataTrack",
 			method: "POST",
@@ -412,9 +479,122 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary) {
 		});
 	};
 	
-	/*****************
-	 * Files
-	 ****************/
+	
+	$scope.showErrorMessage = function(title,message) {
+		$modal.open({
+    		templateUrl: 'app/common/error.html',
+    		controller: 'ErrorController',
+    		resolve: {
+    			title: function() {
+    				return title;
+    			},
+    			message: function() {
+    				return message;
+    			}
+    		}
+    	});
+	};
+	
+	
+	$scope.testError = function() {
+		$http({
+			url : "project/testError",
+			method : "POST",
+		}).success(function(data) {
+			
+		});
+	};
+	
+	$scope.addNewPrep = function() {
+		if ($scope.newSamplePrep.description == null || $scope.newSamplePrep.description == "") {
+			return;
+		}
+		
+		var found = false;
+		for (var i=0; i < $scope.samplePrepList.length; i++) {
+			if ($scope.samplePrepList[i].description == $scope.newSamplePrep.description) {
+				found = true;
+			}
+		}
+		
+		if (found) {
+			var message = "<p>The specified sample prep " + $scope.newSamplePrep.description + " already exists!</p>";
+			$scope.showErrorMessage("Duplicate sample prep",message);
+			return;
+		}
+		
+		$http({
+			url: "project/addSamplePrep",
+			method: "POST",
+			params: {description: $scope.newSamplePrep.description, idSampleType: $scope.sample.sampleType.idSampleType},
+		}).success(function(data) {
+			$scope.newSamplePrep.description = "";
+			$scope.loadSamplePreps();
+			$scope.loadSamplePrepsBySampleType();
+			$scope.sample.samplePrep = data;
+		});
+	};
+	
+	$scope.addNewSource = function() {
+		if ($scope.newSampleSource.source == null || $scope.newSampleSource.source == "") {
+			return;
+		}
+		
+		var found = false;
+		for (var i=0; i < $scope.sampleSourceList.length; i++) {
+			if ($scope.sampleSourceList[i].source == $scope.newSampleSource.source) {
+				found = true;
+			}
+		}
+		
+		if (found) {
+			var message = "<p>The specified sample souce " + $scope.newSampleSource.source + " already exists!</p>";
+			$scope.showErrorMessage("Duplicate sample source",message);
+			return;
+		}
+		
+		
+		$http({
+			url: "project/addSampleSource",
+			method: "POST",
+			params: {source: $scope.newSampleSource.source},
+		}).success(function(data) {
+			$scope.newSampleSource.source = "";
+			$scope.loadSampleSources();
+			$scope.sample.sampleSource = data;
+		});
+	};
+	
+	$scope.addNewCondition = function() {
+		if ($scope.newSampleCond.cond == null || $scope.newSampleCond.cond == "") {
+			return;
+		}
+		
+		var found = false;
+		for (var i=0; i < $scope.sampleConditionList.length; i++) {
+			if ($scope.sampleConditionList[i].cond == $scope.newSampleCond.cond) {
+				found = true;
+			}
+		}
+		
+		if (found) {
+			var message = "<p>The specified sample condition " + $scope.newSampleCond.cond + " already exists!</p>";
+			$scope.showErrorMessage("Duplicate sample condition",message);
+			return;
+		}
+		
+		$http({
+			url: "project/addSampleCondition",
+			method: "POST",
+			params: {condition: $scope.newSampleCond.cond},
+		}).success(function(data) {
+			$scope.newSampleCond.cond = "";
+			$scope.loadSampleConditions();
+			$scope.sample.sampleCondition = data;
+		});
+	};
+	
+
 	
 }]);
 

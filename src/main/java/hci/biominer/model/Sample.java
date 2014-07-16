@@ -47,8 +47,8 @@ public class Sample {
 	
 	@ManyToMany
 	@JoinTable(name="AnalysisSample",
-				joinColumns={@JoinColumn(name="idAnalysis")},
-				inverseJoinColumns={@JoinColumn(name="idSample")}) 
+				joinColumns={@JoinColumn(name="idSample")},
+				inverseJoinColumns={@JoinColumn(name="idAnalysis")})
 	@JsonIgnore
 	List<Analysis> analyses;
 	
@@ -132,6 +132,14 @@ public class Sample {
 
 	public void setAnalyses(List<Analysis> analyses) {
 		this.analyses = analyses;
+	}
+	
+	public boolean isAnalysisSet() {
+		if (this.analyses == null || this.analyses.size() == 0) {
+			return false;
+		} else {
+			return true;
+		}
 	}
 	
 }

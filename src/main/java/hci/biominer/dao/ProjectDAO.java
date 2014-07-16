@@ -2,8 +2,10 @@ package hci.biominer.dao;
 
 import java.util.List;
 
+import hci.biominer.model.DataTrack;
 import hci.biominer.model.Project;
 import hci.biominer.model.Analysis;
+import hci.biominer.model.Sample;
 import hci.biominer.model.access.Lab;
 import hci.biominer.model.access.User;
 import hci.biominer.model.access.Institute;
@@ -43,6 +45,14 @@ public class ProjectDAO {
 				Hibernate.initialize(a.getSamples());
 				Hibernate.initialize(a.getFile());
 				Hibernate.initialize(a.getDataTracks());
+			}
+			
+			for (Sample s: p.getSamples()) {
+				Hibernate.initialize(s.isAnalysisSet());
+			}
+			
+			for (DataTrack d: p.getDataTracks()) {
+				Hibernate.initialize(d.isAnalysisSet());
 			}
 		}
 		
@@ -102,6 +112,16 @@ public class ProjectDAO {
 			Hibernate.initialize(a.getFile());
 			Hibernate.initialize(a.getDataTracks());
 		}
+		
+		for (Sample s: project.getSamples()) {
+			Hibernate.initialize(s.isAnalysisSet());
+		}
+		
+		for (DataTrack d: project.getDataTracks()) {
+			Hibernate.initialize(d.isAnalysisSet());
+		}
+		
+		
 		
 		session.close();
 		return project;

@@ -3,7 +3,7 @@
 /* Services */
 
 
-var services = angular.module('services', ['ngResource'])
+var services = angular.module('services', ['ngResource','ui.bootstrap'])
 
 .service('dashboardService', function() {
 	
@@ -62,6 +62,36 @@ var services = angular.module('services', ['ngResource'])
         });
     }
 ])
+.factory('BiominerHttpInterceptor',['$q','$injector', 
+    function($q,$injector) {
+	 
+		return {
+			'responseError': function(rejection) {
+					
+				var $modal = $injector.get('$modal');
+				
+				$modal.open({
+		    		templateUrl: 'app/common/error.html',
+		    		controller: 'ErrorController',
+		    		resolve: {
+		    			title: function() {
+		    				return rejection.data.errorName;
+		    			},
+		    			message: function() {
+		    				return rejection.data.errorMessage;
+		    			}
+		    		}
+		    	});
+		       
+		        return $q.reject(rejection);
+		     }
+		};
+}])
+ 
+.config(function($httpProvider) {
+	$httpProvider.interceptors.push('BiominerHttpInterceptor');
+})
+
 .factory('StaticDictionary',['$http','$q',
     function($http) {
 		var organismBuildList;
@@ -173,6 +203,13 @@ var services = angular.module('services', ['ngResource'])
 			return $http({
 				method: 'POST',
 				url: 'shared/getAllSampleConditions',
+			});
+		};
+		
+		dict.loadSamplePreps = function() {
+			return $http({
+				method: 'POST',
+				url: 'shared/getAllSamplePreps',
 			});
 		};
 

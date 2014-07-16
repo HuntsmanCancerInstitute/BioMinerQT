@@ -125,7 +125,6 @@ public class FileController {
 				fileUpload.setState(FileStateEnum.SUCCESS);
 				fileUpload.setMessage("");
 				fileUpload.setType(FileTypeEnum.UPLOADED);
-				fileUpload.setParent(null);
 				fileUpload.setProject(project);
 				
 				
@@ -349,13 +348,9 @@ public class FileController {
 			outputMeta.setDirectory(parseDir.getAbsolutePath());
 			outputMeta.setSize(new Long(outputFile.length()));
 			
-			FileUpload parent = this.fileUploadService.getFileUploadById(idParent);
-			if (parent == null) {
-				System.out.println("Nope");
-			} else {
-				System.out.println(parent.getDirectory());
-			}
-			outputMeta.setParent(parent);
+			
+			FileUpload parent = this.fileUploadService.getFileUploadById(idParent);		
+			
 			outputMeta.setType(FileTypeEnum.IMPORTED);
 			outputMeta.setProject(parent.getProject());
 			
@@ -366,8 +361,7 @@ public class FileController {
 				this.fileUploadService.updateFileUpload(existing.getIdFileUpload(),outputMeta);
 			}
 			
-			
-			
+		
 		} catch (Exception ioex) {
 			outputMeta.setName(output);
 			outputMeta.setSize(null);

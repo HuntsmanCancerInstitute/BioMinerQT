@@ -1,8 +1,8 @@
 <div class="modal-header">
-	<h3>{{file.state}} processing: {{file.name}}</h3>
+	<h4>{{title}}</h4>
 </div>
 <div class="modal-body">
-	{{file.message}}
+	<p ng-bind-html="message"><p>
 </div>
 <div class="modal-footer">
 	<button class="btn btn-info" ng-click="ok()">OK</button>
