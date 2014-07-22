@@ -100,6 +100,62 @@ function($scope, $http, $filter, DynamicDictionary, StaticDictionary) {
 	   	                  
 	];
 	
+	$scope.queryResults = [
+	 {
+		  projectName: "Cell 2012 Wamstad Alexander",
+		  analysisName: "ChIP-seq at four stages during cardiomyocyte differentiation",
+		  analysisType: "ChIP Seq",
+		  sampleConditions: "Global occupancy for histone modifications and RNA polymerase II",
+		  analysisDescription: "Mouse Embryonic - Stage ESC",
+		  region: "ch4:23454-23898",
+		  fdr: .03,
+		  log2Ratio: 1.5
+	 },
+	 {
+		  projectName: "Cell 2012 Wamstad Alexander",
+		  analysisName: "ChIP-seq at four stages during cardiomyocyte differentiation",
+		  analysisType: "ChIP Seq",
+		  sampleConditions: "Global occupancy for histone modifications and RNA polymerase II",
+		  analysisDescription: "Mouse Embryonic - Stage ESC",
+		  region: "ch4:23454-23898",
+		  fdr: .03,
+		  log2Ratio: 1.5
+	 },
+	 {
+		  projectName: "Cell 2012 Wamstad Alexander",
+		  analysisName: "ChIP-seq at four stages during cardiomyocyte differentiation",
+		  analysisType: "ChIP Seq",
+		  sampleConditions: "Global occupancy for histone modifications and RNA polymerase II",
+		  analysisDescription: "Mouse Embryonic - Stage ESC",
+		  region: "ch6:89000-90000",
+		  fdr: .02,
+		  log2Ratio: 1.5
+	 },
+	 {
+		  projectName: "Cell 2012 Wamstad Alexander",
+		  analysisName: "ChIP-seq at four stages during cardiomyocyte differentiation",
+		  analysisType: "ChIP Seq",
+		  sampleConditions: "Global occupancy for histone modifications and RNA polymerase II",
+		  analysisDescription: "Mouse Embryonic - Stage MES",
+		  region: "ch3:23454-23898",
+		  fdr: .01,
+		  log2Ratio: 1.8
+	 },
+	 {
+		  projectName: "Cell 2012 Wamstad Alexander",
+		  analysisName: "ChIP-seq at four stages during cardiomyocyte differentiation",
+		  analysisType: "ChIP Seq",
+		  sampleConditions: "Global occupancy for histone modifications and RNA polymerase II",
+		  analysisDescription: "Mouse Embryonic - Stage MES",
+		  region: "ch13:123454-123898",
+		  fdr: .01,
+		  log2Ratio: 1.8
+	 }
+	                  
+	                  
+	];
+	
+	
 	//Static dictionaries.
 	StaticDictionary.organismBuildList(function(data) {
 		$scope.organismBuildList = data;

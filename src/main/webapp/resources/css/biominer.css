@@ -109,7 +109,7 @@ div.toolbar h3 {
 	margin-right: 20px; 
 	margin-left: 18px;
 	margin-top:  0px;
-	margin-bottom: 5px;
+	margin-bottom: 15px;
 	font-size:     22px;	
 	color:         #777;
 	font-family: "Raleway", sans-serif !important;
@@ -442,3 +442,14 @@ body {
 	color: #777;
 }
 
+
+/* No wrap for table cells */
+.nowrap-ellipsis {
+	white-space: nowrap; 
+	text-overflow:ellipsis; 
+	overflow: hidden; 
+	max-width:1px;
+}
+.nowrap {
+	white-space: nowrap; 
+}
