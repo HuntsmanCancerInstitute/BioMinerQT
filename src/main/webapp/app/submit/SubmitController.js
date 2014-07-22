@@ -5,7 +5,7 @@
  * @constructor
  */
  
-var submit    = angular.module('submit', ['ui.bootstrap', 'blueimp.fileupload','filters', 'services', 'directives','chosen']);
+var submit    = angular.module('submit', ['ui.bootstrap','filters', 'services', 'directives','chosen']);
 
 angular.module("submit").controller("SubmitController", [
 '$scope', '$http', '$modal','DynamicDictionary','StaticDictionary',
