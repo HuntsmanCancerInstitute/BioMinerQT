@@ -5,7 +5,7 @@
 
 	var url = 'submit/upload';
 
-	angular.module('app', ['ngRoute', 'ui.bootstrap', 'dashboard', 'submit', 'query', 'useradmin']);
+	angular.module('app', ['ngRoute', 'ui.bootstrap', 'dashboard', 'submit', 'query', 'useradmin', 'upload','navbar']);
 
 
 	angular.module('app').config(['$routeProvider', 
@@ -39,6 +39,12 @@
 			
 
 	}]);
+	
+	
+	
+	
+	
+
 
 	
 

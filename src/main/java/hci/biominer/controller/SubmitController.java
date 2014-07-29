@@ -29,6 +29,7 @@ import hci.biominer.service.SampleSourceService;
 import hci.biominer.service.AnalysisService;
 import hci.biominer.service.FileUploadService;
 import hci.biominer.service.AnalysisTypeService;
+import hci.biominer.service.UserService;
 
 //Models
 import hci.biominer.model.Project;
@@ -41,8 +42,9 @@ import hci.biominer.model.SamplePrep;
 import hci.biominer.model.SampleType;
 import hci.biominer.model.SampleSource;
 import hci.biominer.model.FileUpload;
-import hci.biominer.model.access.Lab;
 import hci.biominer.model.AnalysisType;
+import hci.biominer.model.access.User;
+import hci.biominer.model.access.Lab;
 
 /**
  * 
@@ -89,6 +91,9 @@ public class SubmitController {
     
     @Autowired
     private AnalysisTypeService analysisTypeService;
+    
+    @Autowired
+    private UserService userService;
     
     
     /***************************************************
@@ -168,6 +173,34 @@ public class SubmitController {
     	List<Project> projects = this.projectService.getAllProjects();
     	return projects;
     }
+    
+    /***************************************************
+	 * URL: /project/getProjectsByUser
+	 * getAllProjects(): gets all projects, regardless of ownership
+	 * method: post
+	 * @return list of projects
+	 ****************************************************/
+    @RequestMapping(value="getProjectsByVisibility",method=RequestMethod.POST)
+    @ResponseBody
+    public List<Project> getProjectsByVisibility(@RequestParam(value="idUser") Long idUser) {
+    	User user = this.userService.getUser(idUser);
+    	List<Project> projects = this.projectService.getProjectByVisibility(user);
+    	return projects;
+    }
+    
+    /***************************************************
+	 * URL: /project/getPublicProjects
+	 * getPublicProjects(): gets all projects, regardless of ownership
+	 * method: post
+	 * @return list of public projects
+	 ****************************************************/
+    @RequestMapping(value="getPublicProjects",method=RequestMethod.POST)
+    @ResponseBody
+    public List<Project> getPublicProjects() {
+    	List<Project> projects = this.projectService.getPublicProjects();
+    	return projects;
+    }
+    
     
     /***************************************************
 	 * URL: /project/deleteProject

@@ -19,6 +19,7 @@ public class ExceptionController {
 		ErrorModel em = new ErrorModel();
 		em.setErrorName("Server error encountered: " + ex.getClass().getSimpleName());
 		em.setErrorMessage(ex.getMessage());
+		ex.printStackTrace();
 		
 		return em;
 	}

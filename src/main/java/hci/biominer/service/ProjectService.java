@@ -24,6 +24,10 @@ public class ProjectService {
 		return projectDAO.getProjectsByVisibility(user);
 	}
 	
+	public List<Project> getPublicProjects() {
+		return projectDAO.getPublicProjects();
+	}
+	
 	public Long addProject(Project project) {
 		return projectDAO.addProject(project);
 	}
@@ -39,4 +43,6 @@ public class ProjectService {
 	public void deleteProject(Long idProject) {
 		projectDAO.deleteProject(idProject);
 	}
+	
+	
 }

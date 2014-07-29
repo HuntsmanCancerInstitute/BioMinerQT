@@ -128,14 +128,14 @@ public class UserController {
     
     @RequestMapping(value = "checkpass", method=RequestMethod.POST)
     @ResponseBody
-    public boolean checkPass(@RequestParam(value="password") String password, @RequestParam(value="username") String username) {
+    public User checkPass(@RequestParam(value="password") String password, @RequestParam(value="username") String username) {
    
     	//Grab user object that matches username 	
     	User user = this.userService.getUserByUsername(username);
     	
     	//if username doesn't exist, return false
     	if (user == null) {
-    		return false;
+    		return null;
     	}
     	
     	//build password making machine
@@ -156,9 +156,9 @@ public class UserController {
     	//Check if passwords match
     	String toCheck =  String.format("%x", new BigInteger(hashedPassword));
     	if (toCheck.equals(user.getPassword())) {
-    		return true;
+    		return user;
     	} else {
-    		return false;
+    		return null;
     	}
     }
     

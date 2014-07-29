@@ -47,7 +47,7 @@
 <body>
 
 	<nav  class="navbar navbar-default navbar-fixed-top" role="navigation">
-	   <div class="container-fluid">
+	   <div class="container-fluid" ng-controller="NavbarController">
 	      <!-- Brand and toggle get grouped for better mobile display -->
 	      <div class="navbar-header">
 	        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
@@ -65,7 +65,7 @@
 	          
 	    	    <li><a href="#/query"><span class="glyphicon glyphicon-zoom-in"></span> Query</a></li>
 	    	    <li><a href="#/submit"><span class="glyphicon glyphicon-cloud-upload"></span> Submit Your Data</a></li>
-	        	<li><a href="#/useradmin"><span class="glyphicon glyphicon-cog"></span> Admin</a></li>
+	        	<li><a href="#/useradmin" ng-hide="$root.loggedUser == null || $root.loggedUser.admin == false"><span class="glyphicon glyphicon-cog"></span> Admin</a></li>
 	            
 	          </ul>
 	          <div class="nav navbar-nav navbar-right">
@@ -75,8 +75,12 @@
 		          </div>
 		        </form>
 		     
+		     	<span ng-hide="user == null">Welcome {{user.name}}</span>
 		        
 		        <ul class="nav navbar-nav">
+		          <li><a ng-hide="$root.loggedUser != null" href="#" ng-click="getLogin()">Login</a></li>
+		          <li><a href="#" ng-hide="$root.loggedUser == null">{{$root.loggedUser.username}}</a></li>
+		          <li><a href="#" ng-show="$root.loggedUser != null" ng-click="logout()">Logout</a></li>
 		          <li><a href="#">Help</a></li>
 		        </ul>
 	          </div>
@@ -125,6 +129,8 @@
 <script src="app/common/services.js"></script>
 <script src="app/common/ConfirmationController.js"></script>
 <script src="app/common/ErrorController.js"></script>
+<script src="app/common/LoginController.js"></script>
+<script src="app/common/NavbarController.js"></script>
 <script src="app/submit/SubmitController.js"></script>
 <script src="app/submit/ProjectWindowController.js"></script>
 <script src="app/submit/UploadController.js"></script>
@@ -135,6 +141,7 @@
 <script src="app/useradmin/UserAdminController.js"></script>
 <script src="app/useradmin/UserController.js"></script>
 <script src="app/useradmin/LabController.js"></script>
+
 
 
 

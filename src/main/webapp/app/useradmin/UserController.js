@@ -10,9 +10,6 @@ function ($scope, $http, $modalInstance, labList, userData, title,bFace) {
 	$scope.user = angular.copy(userData);
 	$scope.usedNames = [];
 	
-	console.log(userData);
-	console.log(labList);
-	
 	$http({
 		method: 'POST',
 		url: 'user/usernames'

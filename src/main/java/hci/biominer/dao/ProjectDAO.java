@@ -1,14 +1,16 @@
 package hci.biominer.dao;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import hci.biominer.model.DataTrack;
 import hci.biominer.model.Project;
 import hci.biominer.model.Analysis;
 import hci.biominer.model.Sample;
+import hci.biominer.model.access.Institute;
 import hci.biominer.model.access.Lab;
 import hci.biominer.model.access.User;
-import hci.biominer.model.access.Institute;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Query;
@@ -16,6 +18,8 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+
+import hci.biominer.util.Enumerated.ProjectVisibilityEnum;;
 
 @Repository
 public class ProjectDAO {
@@ -30,8 +34,57 @@ public class ProjectDAO {
 	public List<Project> getAllProjects() {
 		Session session = this.getCurrentSession();
 		List<Project> projects = session.createQuery("from Project").list();
+		List<Project> initProjects = initializeProjects(projects);
+		session.close();
+		return initProjects;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public List<Project> getProjectsByVisibility(User user) {
+		List<Long> labList = new ArrayList<Long>();
+		List<Long> instituteList = new ArrayList<Long>();
+		HashSet<Long> instituteSet = new HashSet<Long>();
 		
-		for (Project p: projects) {
+		
+		for (Lab l: user.getLabs()) {
+			labList.add(l.getIdLab());
+			for (Institute i: l.getInstitutes()) {
+				instituteList.add(i.getIdInstitute());
+			}
+		}
+		instituteList.addAll(instituteSet);
+		
+		Session session = this.getCurrentSession();
+		Query query = session.createQuery("select distinct p from Project as p "
+				+ "left join fetch p.labs as l "
+				+ "left join fetch l.institutes as i " 
+				+ "where (l.idLab in (:userLabs) and p.visibility = :vis1) or "
+				+ "(i.idInstitute in (:userInstitute) and p.visibility = :vis2) or "
+				+ "(p.visibility = :vis3)");
+		query.setParameterList("userLabs", labList);
+		query.setParameterList("userInstitute", instituteList);
+		query.setParameter("vis1",ProjectVisibilityEnum.LAB);
+		query.setParameter("vis2",ProjectVisibilityEnum.INSTITUTE);
+		query.setParameter("vis3", ProjectVisibilityEnum.PUBLIC);
+		List<Project> projects = query.list();
+		List<Project> initProjects = initializeProjects(projects);
+		session.close();
+		return initProjects;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public List<Project> getPublicProjects() {
+		Session session = this.getCurrentSession();
+		Query query = session.createQuery("select p from Project as p where p.visibility = :visibility");
+		query.setParameter("visibility", ProjectVisibilityEnum.PUBLIC);
+		List<Project> projects = query.list();
+		List<Project> initProjects = initializeProjects(projects);
+		session.close();
+		return initProjects;
+	}
+	
+	public List<Project> initializeProjects(List<Project> projects) {
+		for (Project p: projects) { 
 			Hibernate.initialize(p.getSamples());
 			Hibernate.initialize(p.getDataTracks());
 			Hibernate.initialize(p.getFiles());
@@ -56,19 +109,10 @@ public class ProjectDAO {
 			}
 		}
 		
-		session.close();
 		return projects;
 	}
 	
-	@SuppressWarnings("unchecked")
-	public List<Project> getProjectsByVisibility(User user) {
-		Session session = this.getCurrentSession();
-		Query query = session.createQuery("select p from Project p left join p.labs l where l.idLab in (:userLabs)");
-		query.setParameter("userLabs", user.getLabs());
-		List<Project> projects = query.list();
-		session.close();
-		return projects;
-	}
+	
 	
 	public Long addProject(Project project) {
 		Session session = getCurrentSession();

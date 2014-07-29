@@ -10,38 +10,6 @@ angular.module("useradmin").controller("UserAdminController", ['$scope','$http',
                                                       
 function($scope, $http, $modal, $timeout, DynamicDictionary, StaticDictionary) {
 	
-	/**********************
-	 * Temporary password validation fun!
-	 * 
-	 */
-	
-	$scope.username = "";
-	$scope.password = "";
-	$scope.goodCreds = false;
-	$scope.credSubmitted = false;
-	
-	$scope.submitCreds = function() {
-		$http({
-    		method: 'POST',
-    		url: 'user/checkpass',
-    		params: {username: $scope.username, password: $scope.password}
-        }).success(function(data,status) {
-        	if (data == "true") {
-        		$scope.goodCreds = true;
-        	} else {
-        		$scope.goodCreds = false;
-        	}
-        	$scope.credSubmitted = true;
-    	});
-	};
-	
-	
-	/**
-	 * End of temporary password fun
-	 * 
-	 ************************/
-	
-	
 	//user table variables
 	$scope.userLimit = 5;
 	$scope.userCurrentPage = 0;
@@ -175,8 +143,8 @@ function($scope, $http, $modal, $timeout, DynamicDictionary, StaticDictionary) {
     	modalInstance.result.then(function (user) {
     		//Create a list of lab ids
 	    	var ids = [];
-	    	for (var i=0; i<user.lab.length;i++) {
-	    		ids.push(user.lab[i].idLab);
+	    	for (var i=0; i<user.labs.length;i++) {
+	    		ids.push(user.labs[i].idLab);
 	    	}
 	    	
 	    	$http({
@@ -258,8 +226,8 @@ function($scope, $http, $modal, $timeout, DynamicDictionary, StaticDictionary) {
 	    modalInstance.result.then(function (user) {
 	    	//Create a list of lab ids
 	    	var ids = [];
-	    	for (var i=0; i<user.lab.length;i++) {
-	    		ids.push(user.lab[i].idLab);
+	    	for (var i=0; i<user.labs.length;i++) {
+	    		ids.push(user.labs[i].idLab);
 	    	}
 	    	
 	    	$http({

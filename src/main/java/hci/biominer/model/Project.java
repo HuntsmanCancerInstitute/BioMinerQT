@@ -3,6 +3,7 @@ package hci.biominer.model;
 import java.util.List;
 
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.IndexColumn;
 
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -59,6 +60,7 @@ public class Project {
     @JoinTable(name="ProjectLab",
                 joinColumns={@JoinColumn(name="idProject")},
                 inverseJoinColumns={@JoinColumn(name="idLab")})
+	@IndexColumn(name = "labOrder")
     List<Lab> labs;
 	
 	public Project() {

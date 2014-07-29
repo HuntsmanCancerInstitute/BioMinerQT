@@ -1,7 +1,7 @@
 'use strict';
 
 
-var upload  = angular.module('upload',  ['ui.bootstrap', 'angularFileUpload','filters', 'services', 'directives','error','fneditor','acute.select']);
+var upload  = angular.module('upload',  ['ui.bootstrap', 'angularFileUpload','filters', 'services', 'directives','error','fneditor']);
 
 angular.module("upload").controller("UploadController", ['$scope','$upload','$http','$modal','$q',
                                                       
