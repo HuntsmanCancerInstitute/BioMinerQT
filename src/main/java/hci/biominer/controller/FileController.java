@@ -234,7 +234,7 @@ public class FileController {
 	 * @param file : filename
 	 * @return PreviewMap: Container that holds the file preview
 	 ****************************************************/
-	@RequestMapping(value = "parse/preview", method = RequestMethod.POST)
+	@RequestMapping(value = "parse/preview", method = RequestMethod.GET)
     @ResponseBody
 	public PreviewMap getHeader(@RequestParam(value="name") String name, @RequestParam("idProject") Long idProject) {
 		 Project project = this.projectService.getProjectById(idProject);

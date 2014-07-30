@@ -69,7 +69,8 @@
 						        <th ng-click="userOrderByField='email'; userReverseSort=!userReverseSort">Email Address</th>
 						        <th>Admin</th>
 						        <th ng-click="userOrderByField='phone'; userReverseSort=!userReverseSort">Phone Number</th>
-						        <th>Affiliation</th>
+						        <th>Labs</th>
+						        <th>Institutions</th>
 						      </tr>
 						    </thead>
 						    <tbody>
@@ -82,6 +83,7 @@
 					             	<td><span class="glyphicon glyphicon-wrench" ng-show="user.admin"></span></td>
 					             	<td>{{user.phone | displayPhone}}</td> 
 					             	<td><span ng-repeat="l in user.labs">{{l.last}}{{$last ? ' Lab' : ', '}}</span></td>
+					             	<td><span ng-repeat="i in user.institutes">{{i.name}}{{$last ? '' : ', '}}</span></td>
 					             	<td ng-show="false">{{user.idUser}}</td>
 					         	</tr>
 				         	</tbody>
@@ -116,7 +118,6 @@
 						        <th ng-click="labOrderByField='first'; labReverseSort=!labReverseSort">First Name</th>
 						        <th ng-click="labOrderByField='last'; labReverseSort=!labReverseSort">Last Name</th>
 						        <th ng-click="labOrderByField='count'; labReverseSort=!labReverseSort">Member Count</th>
-						        <th>Institutions</th>
 						      </tr>
 					    </thead>
 					    <tbody>				         	
@@ -125,7 +126,6 @@
 				             	<td>{{lab.first}}</td>
 				             	<td>{{lab.last}}</td>
 				             	<td>{{lab.count}}</td>
-				             	<td><span ng-repeat="i in lab.institutes">{{i.name}}{{$last ? '' : ', '}}</span></td>
 			         		</tr>
 					    </tbody>
 			    	</table>

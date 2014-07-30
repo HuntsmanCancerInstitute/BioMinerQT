@@ -339,8 +339,8 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
     	 ********************/
     	$scope.showFileError = function(file) {
     		$modal.open({
-        		templateUrl: 'app/common/error.html',
-        		controller: 'ErrorController',
+        		templateUrl: 'app/common/userError.html',
+        		controller: 'userErrorController',
         		resolve: {
         			title: function() {
         				var title = "Error processing " + file.name;

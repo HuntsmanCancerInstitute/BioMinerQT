@@ -5,7 +5,7 @@
  * @constructor
  */
  
-var submit    = angular.module('submit', ['ui.bootstrap','filters', 'services', 'directives','chosen']);
+var submit    = angular.module('submit', ['ui.bootstrap','filters', 'services', 'directives','chosen','error']);
 
 angular.module("submit").controller("SubmitController", [
 '$scope', '$http', '$modal','DynamicDictionary','StaticDictionary','$rootScope',
@@ -46,32 +46,33 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
     $scope.datatrackEditMode = false;
     $scope.resultEditMode = false;
 	
-	//Static dictionaries.
-	StaticDictionary.organismBuildList(function(data) {
-		$scope.organismBuildList = data;
-	});
-	
-	StaticDictionary.analysisTypeList(function(data) {
-		$scope.analysisTypeList = data;
-	});
-	
-	StaticDictionary.sampleTypeList(function(data) {
-		$scope.sampleTypeList = data;
-	});
-	
-//	StaticDictionary.samplePrepList(function(data) {
-//		$scope.samplePrepListAll = data;
-//	});
-	
-	
-    
-    //Dynamic dictionaries.  These dictionaries can be loaded on-demand.
-    $scope.loadLabs = function() {
-    	DynamicDictionary.loadLabs().success(function(data) {
-    		$scope.labList = data;
+	//Static dictionaries. These http calls are cached.
+    $scope.loadOrganismBuildList = function () {
+    	StaticDictionary.getOrganismBuildList().success(function(data) {
+    		$scope.organismBuildList = data;
     	});
     };
     
+    $scope.loadAnalysisTypeList = function () {
+    	StaticDictionary.getAnalysisTypeList().success(function(data) {
+    		$scope.analysisTypeList = data;
+    	});
+    };
+    
+    $scope.loadSampleTypeList = function () {
+    	StaticDictionary.getSampleTypeList().success(function(data) {
+    		$scope.sampleTypeList = data;
+    	});
+    };
+    
+    $scope.loadOrganismBuildList = function () {
+    	StaticDictionary.getOrganismBuildList().success(function(data) {
+    		$scope.organismBuildList = data;
+    	});
+    };
+    
+     
+    //Dynamic dictionaries.  These http calls aren't cached.
     $scope.loadSampleSources = function() {
     	DynamicDictionary.loadSampleSources().success(function(data) {
     		$scope.sampleSourceList = data;
@@ -102,11 +103,14 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
 		});
     };
   
-    //Load up dynamic dictionaries
-	$scope.loadLabs();
+    //Load up all dictionaries
 	$scope.loadSampleConditions();
 	$scope.loadSampleSources();
 	$scope.loadSamplePreps();
+	$scope.loadOrganismBuildList();
+	$scope.loadAnalysisTypeList();
+	$scope.loadSampleTypeList();
+	$scope.loadOrganismBuildList();
     
     //Watchers
     $scope.$watch('sample.sampleType',function() {
@@ -115,6 +119,14 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
     	} else {
     		$scope.loadSamplePrepsBySampleType();
     	}
+    });
+    
+    $rootScope.$watch('loggedUser', function() {
+    	if ($rootScope.loggedUser != null) {
+    		$scope.labList = $rootScope.loggedUser.labs;
+        	$scope.instituteList = $rootScope.loggedUser.institutes;
+    	}
+    	
     });
     
     /**********************
@@ -140,7 +152,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
     	if ($rootScope.loggedUser == null) {
     		$http({
     			url: "project/getPublicProjects",
-    			method: "POST",
+    			method: "GET",
     			params: {projectId: projectId},
     		}).success(function(data, status, headers, config) {
     			$scope.projectId = config.params.projectId;
@@ -150,7 +162,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
     	} else {
     		$http({
     			url: "project/getProjectsByVisibility",
-    			method: "POST",
+    			method: "GET",
     			params: {projectId: projectId, idUser: $rootScope.loggedUser.idUser},
     		}).success(function(data, status, headers, config) {
     			$scope.projectId = config.params.projectId;
@@ -191,7 +203,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
     $scope.add = function(project) {
 		$http({
 			url: "project/createProject",
-			method: "POST",
+			method: "PUT",
 			params: {name: project.name, description: project.description, visibility: "PUBLIC"},
 		}).success(function(data) {
 			$scope.loadProjects(data);			
@@ -200,10 +212,15 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
 	
 	//Update project
 	$scope.edit = function() {
-		var ids = [];
+		var lids = [];
+		var iids = [];
 		
 		for (var idx=0; idx<$scope.project.labs.length;idx++) {
-			ids.push($scope.project.labs[idx].idLab);
+			lids.push($scope.project.labs[idx].idLab);
+		}
+		
+		for (var idx=0; idx<$scope.project.institutes.length;idx++) {
+			iids.push($scope.project.institutes[idx].idInstitute);
 		}
 		
 		var buildId = -1;
@@ -213,10 +230,10 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
 		
 		$http({
 			url: "project/updateProject",
-			method: "POST",
+			method: "PUT",
 			params: {name: $scope.project.name, description: $scope.project.description,
-				idLab: ids, idOrganismBuild: buildId, idProject: $scope.projectId,
-				visibility: $scope.project.visibility},
+				idLab: lids, idOrganismBuild: buildId, idProject: $scope.projectId,
+				visibility: $scope.project.visibility, idInstitute: iids, dataUrls: $scope.project.dataUrls},
 		}).success(function(data) {
 			$scope.loadProjects($scope.projectId);
 		});
@@ -237,7 +254,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
     	if ($scope.idProject != -1) {
     		$http({
     			url: "project/deleteProject",
-    			method: "POST",
+    			method: "DELETE",
     			params: {idProject: $scope.projectId},
         	}).success(function(data) {
         		$scope.loadProjects(-1);
@@ -289,7 +306,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
 		
 		$http({
 			url: "project/updateSample",
-			method: "POST",
+			method: "PUT",
 			params: {idProject: $scope.projectId, name: sample.name, idSampleType: sample.sampleType.idSampleType,
 				idSamplePrep: sample.samplePrep.idSamplePrep, idSampleSource: sample.sampleSource.idSampleSource, 
 				idSampleCondition: sample.sampleCondition.idSampleCondition, idSample: sample.idSample},
@@ -326,7 +343,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
 		
 		$http({
 			url: "project/deleteSample",
-			method: "POST",
+			method: "DELETE",
 			params: {idSample: sample.idSample},
 		}).success(function(data) {
 			$scope.loadProjects($scope.projectId);
@@ -339,7 +356,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
 	$scope.addSample = function(sample) {
 		$http({
 			url: "project/createSample",
-			method: "POST",
+			method: "PUT",
 			params: {idProject: $scope.projectId, name: sample.name, idSampleType: sample.sampleType.idSampleType,
 				idSamplePrep: sample.samplePrep.idSamplePrep, idSampleSource: sample.sampleSource.idSampleSource, 
 				idSampleCondition: sample.sampleCondition.idSampleCondition},
@@ -368,7 +385,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
 	$scope.saveDataTrack = function(datatrack) {
 		$http({
 			url : "project/updateDataTrack",
-			method: "POST",
+			method: "PUT",
 			params: {idProject: $scope.projectId, name: datatrack.name, url: datatrack.url, idDataTrack: datatrack.idDataTrack},
 		}).success(function(data) {
 			$scope.loadProjects($scope.projectId);
@@ -402,7 +419,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
 		
 		$http({
 			url : "project/deleteDataTrack",
-			method: "POST",
+			method: "DELETE",
 			params: {idDataTrack: datatrack.idDataTrack},
 		}).success(function(data) {
 			$scope.loadProjects($scope.projectId);
@@ -414,7 +431,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
 	$scope.addDataTrack = function(datatrack) {
 		$http({
 			url : "project/createDataTrack",
-			method: "POST",
+			method: "PUT",
 			params: {idProject: $scope.projectId, name: datatrack.name, url: datatrack.url},
 		}).success(function(data) {
 			$scope.loadProjects($scope.projectId);
@@ -455,7 +472,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
 		
 		$http({
 			url: "project/updateAnalysis",
-			method: "POST",
+			method: "PUT",
 			params: {idAnalysis: result.idAnalysis, name: result.name, description: result.description, date: result.date, idProject: $scope.projectId, 
 				idSampleList: sampleList, idDataTrackList: dataTrackList, idFileUpload: result.file.idFileUpload, idAnalysisType: result.analysisType.idAnalysisType}
 		}).success(function(data) {
@@ -470,7 +487,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
 	$scope.removeResult = function(result) {
 		$http({
 			url: "project/deleteAnalysis",
-			method: "POST",
+			method: "DELETE",
 			params: {idAnalysis: result.idAnalysis}
 		}).success(function(data) {
 			$scope.loadProjects($scope.projectId);
@@ -493,7 +510,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
 		
 		$http({
 			url: "project/createAnalysis",
-			method: "POST",
+			method: "PUT",
 			params: {name: result.name, description: result.description, date: result.date.getTime(), idProject: $scope.projectId, 
 				idSampleList: sampleList, idDataTrackList: dataTrackList, idFileUpload: result.file.idFileUpload, idAnalysisType: result.analysisType.idAnalysisType}
 		}).success(function(data) {
@@ -507,8 +524,8 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
 	
 	$scope.showErrorMessage = function(title,message) {
 		$modal.open({
-    		templateUrl: 'app/common/error.html',
-    		controller: 'ErrorController',
+    		templateUrl: 'app/common/userError.html',
+    		controller: 'userErrorController',
     		resolve: {
     			title: function() {
     				return title;
@@ -550,7 +567,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
 		
 		$http({
 			url: "project/addSamplePrep",
-			method: "POST",
+			method: "PUT",
 			params: {description: $scope.newSamplePrep.description, idSampleType: $scope.sample.sampleType.idSampleType},
 		}).success(function(data) {
 			$scope.newSamplePrep.description = "";
@@ -581,7 +598,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
 		
 		$http({
 			url: "project/addSampleSource",
-			method: "POST",
+			method: "PUT",
 			params: {source: $scope.newSampleSource.source},
 		}).success(function(data) {
 			$scope.newSampleSource.source = "";
@@ -610,7 +627,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
 		
 		$http({
 			url: "project/addSampleCondition",
-			method: "POST",
+			method: "PUT",
 			params: {condition: $scope.newSampleCond.cond},
 		}).success(function(data) {
 			$scope.newSampleCond.cond = "";

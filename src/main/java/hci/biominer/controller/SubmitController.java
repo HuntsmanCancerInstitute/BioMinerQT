@@ -30,6 +30,7 @@ import hci.biominer.service.AnalysisService;
 import hci.biominer.service.FileUploadService;
 import hci.biominer.service.AnalysisTypeService;
 import hci.biominer.service.UserService;
+import hci.biominer.service.InstituteService;
 
 //Models
 import hci.biominer.model.Project;
@@ -43,6 +44,7 @@ import hci.biominer.model.SampleType;
 import hci.biominer.model.SampleSource;
 import hci.biominer.model.FileUpload;
 import hci.biominer.model.AnalysisType;
+import hci.biominer.model.access.Institute;
 import hci.biominer.model.access.User;
 import hci.biominer.model.access.Lab;
 
@@ -95,6 +97,9 @@ public class SubmitController {
     @Autowired
     private UserService userService;
     
+    @Autowired
+    private InstituteService instituteService;
+    
     
     /***************************************************
 	 * URL: /project/createProject
@@ -105,7 +110,7 @@ public class SubmitController {
 	 * @param visibility: Project visibility
 	 * @return Long projectID
 	 ****************************************************/
-    @RequestMapping(value="createProject",method=RequestMethod.POST)
+    @RequestMapping(value="createProject",method=RequestMethod.PUT)
     @ResponseBody
     public Long createProject(@RequestParam(value="name") String name, @RequestParam(value="description") String description,
     		@RequestParam(value="visibility") ProjectVisibilityEnum visibility) {
@@ -129,17 +134,19 @@ public class SubmitController {
 	 * @param idProject: Project id
 	 * @return nada
 	 ****************************************************/
-    @RequestMapping(value="updateProject",method=RequestMethod.POST)
+    @RequestMapping(value="updateProject",method=RequestMethod.PUT)
     @ResponseBody
     public void updateProject(@RequestParam(value="name") String name, @RequestParam(value="description") String description,
     		@RequestParam(value="idLab",required=false) List<Long> idLab, @RequestParam(value="idOrganismBuild",required=false) Long idOrganismBuild,
-    		@RequestParam(value="visibility") ProjectVisibilityEnum visibility, @RequestParam(value="idProject") Long idProject) {
+    		@RequestParam(value="visibility") ProjectVisibilityEnum visibility, @RequestParam(value="idProject") Long idProject,
+    		@RequestParam(value="idInstitute",required=false) List<Long> idInstitute, @RequestParam(value="dataUrls", required=false) String dataUrls) {
     	
     	//Update basic information
     	Project project = new Project();
     	project.setName(name);
     	project.setDescription(description);
     	project.setVisibility(visibility);
+    	project.setDataUrls(dataUrls);
     	
     	//Create lab objects and add to project
     	
@@ -149,6 +156,15 @@ public class SubmitController {
         		labs.add(this.labService.getLab(id));
         	}
     		project.setLabs(labs);
+    	}
+    	
+    	//Create intitute objects and add to project
+    	if (idInstitute != null) {
+    		List<Institute> institutes = new ArrayList<Institute>();
+    		for (Long id: idInstitute) {
+    			institutes.add(this.instituteService.getInstituteById(id));
+    		}
+    		project.setInstitutes(institutes);
     	}
     	
     	//Create organismBuild object and add to project
@@ -167,7 +183,7 @@ public class SubmitController {
 	 * method: post
 	 * @return list of projects
 	 ****************************************************/
-    @RequestMapping(value="getAllProjects",method=RequestMethod.POST)
+    @RequestMapping(value="getAllProjects",method=RequestMethod.GET)
     @ResponseBody
     public List<Project> getAllProjects() {
     	List<Project> projects = this.projectService.getAllProjects();
@@ -180,7 +196,7 @@ public class SubmitController {
 	 * method: post
 	 * @return list of projects
 	 ****************************************************/
-    @RequestMapping(value="getProjectsByVisibility",method=RequestMethod.POST)
+    @RequestMapping(value="getProjectsByVisibility",method=RequestMethod.GET)
     @ResponseBody
     public List<Project> getProjectsByVisibility(@RequestParam(value="idUser") Long idUser) {
     	User user = this.userService.getUser(idUser);
@@ -194,7 +210,7 @@ public class SubmitController {
 	 * method: post
 	 * @return list of public projects
 	 ****************************************************/
-    @RequestMapping(value="getPublicProjects",method=RequestMethod.POST)
+    @RequestMapping(value="getPublicProjects",method=RequestMethod.GET)
     @ResponseBody
     public List<Project> getPublicProjects() {
     	List<Project> projects = this.projectService.getPublicProjects();
@@ -208,7 +224,7 @@ public class SubmitController {
 	 * method: post
 	 * @param idProject project identifier
 	 ****************************************************/
-    @RequestMapping(value="deleteProject",method=RequestMethod.POST)
+    @RequestMapping(value="deleteProject",method=RequestMethod.DELETE)
     @ResponseBody
     public void deleteProject(@RequestParam(value="idProject") Long idProject) {
     	this.projectService.deleteProject(idProject);
@@ -220,7 +236,7 @@ public class SubmitController {
 	 * method: post
 	 * @param idSample primary index of the sample
 	 ****************************************************/
-    @RequestMapping(value="deleteSample",method=RequestMethod.POST)
+    @RequestMapping(value="deleteSample",method=RequestMethod.DELETE)
     @ResponseBody
     public void deleteSample(@RequestParam(value="idSample") Long idSample) {
     	this.sampleService.deleteSampleById(idSample);
@@ -238,7 +254,7 @@ public class SubmitController {
 	 * @param idSampleSource
 	 * @param idSampleCondition
 	 ****************************************************/
-    @RequestMapping(value="updateSample",method=RequestMethod.POST)
+    @RequestMapping(value="updateSample",method=RequestMethod.PUT)
     @ResponseBody
     public void updateSample(@RequestParam(value="idProject") Long idProject, @RequestParam(value="idSample") Long idSample, @RequestParam(value="name") String name, 
     		@RequestParam(value="idSampleType") Long idSampleType, @RequestParam(value="idSamplePrep") Long idSamplePrep,
@@ -276,7 +292,7 @@ public class SubmitController {
 	 * @param idSampleSource
 	 * @param idSampleCondition
 	 ****************************************************/
-    @RequestMapping(value="createSample",method=RequestMethod.POST)
+    @RequestMapping(value="createSample",method=RequestMethod.PUT)
     @ResponseBody
     public void createSample(@RequestParam(value="idProject") Long idProject, @RequestParam(value="name") String name, 
     		@RequestParam(value="idSampleType") Long idSampleType, @RequestParam(value="idSamplePrep") Long idSamplePrep, 
@@ -303,7 +319,7 @@ public class SubmitController {
 	 * @param idSample
 	 * @param idAnalysis
 	 ****************************************************/
-    @RequestMapping(value="updateSampleAnalysis",method=RequestMethod.POST)
+    @RequestMapping(value="updateSampleAnalysis",method=RequestMethod.PUT)
     @ResponseBody
     public void updateSampleAnalysis(@RequestParam(value="idSample") Long idSample, @RequestParam(value="idAnalysis") Long idAnalysis) {
     	
@@ -315,7 +331,7 @@ public class SubmitController {
 	 * method: post
 	 * @param idDataTrack primary index of the sample
 	 ****************************************************/
-    @RequestMapping(value="deleteDataTrack",method=RequestMethod.POST)
+    @RequestMapping(value="deleteDataTrack",method=RequestMethod.DELETE)
     @ResponseBody
     public void deleteDataTrack(@RequestParam(value="idDataTrack") Long idDataTrack) {
     	this.dataTrackService.deleteDataTrackById(idDataTrack);
@@ -330,7 +346,7 @@ public class SubmitController {
 	 * @param name
 	 * @param url
 	 ****************************************************/
-    @RequestMapping(value="updateDataTrack",method=RequestMethod.POST)
+    @RequestMapping(value="updateDataTrack",method=RequestMethod.PUT)
     @ResponseBody
     public void updateDataTrack(@RequestParam(value="idProject") Long idProject, @RequestParam(value="idDataTrack") Long idDataTrack, 
     		@RequestParam(value="name") String name, @RequestParam(value="url") String url) {
@@ -357,7 +373,7 @@ public class SubmitController {
 	 * @param name
 	 * @param url
 	 ****************************************************/
-    @RequestMapping(value="createDataTrack",method=RequestMethod.POST)
+    @RequestMapping(value="createDataTrack",method=RequestMethod.PUT)
     @ResponseBody
     public void createDataTrack(@RequestParam(value="idProject") Long idProject, @RequestParam(value="name") String name, 
     		@RequestParam(value="url") String url) {
@@ -379,7 +395,7 @@ public class SubmitController {
 	 * @param idDataTrack
 	 * @param idAnalysis
 	 ****************************************************/
-    @RequestMapping(value="updateDataTrackAnalysis",method=RequestMethod.POST)
+    @RequestMapping(value="updateDataTrackAnalysis",method=RequestMethod.PUT)
     @ResponseBody
     public void updateDataTrackAnalysis(@RequestParam(value="idDataTrack") Long idDataTrack, @RequestParam(value="idAnalysis") Long idAnalysis) {
     	
@@ -400,7 +416,7 @@ public class SubmitController {
 	 * @param List<Long> idFileUploadList: list of file upload ids
 	 * @return Long idAnalysis
 	 ****************************************************/
-    @RequestMapping(value="createAnalysis",method=RequestMethod.POST)
+    @RequestMapping(value="createAnalysis",method=RequestMethod.PUT)
     @ResponseBody
     public Long createAnalysis(@RequestParam(value="name") String name, @RequestParam(value="description") String description, @RequestParam(value="idProject") Long idProject,
     		@RequestParam(value="date") Long date, @RequestParam(value="idAnalysisType") Long idAnalysisType, @RequestParam(value="idSampleList",required=false) List<Long> idSampleList,
@@ -459,7 +475,7 @@ public class SubmitController {
 	 * @param List<Long> idDataTrackList: list of datetrack ids
 	 * @param List<Long> idFileUploadList: list of file upload ids
 	 ****************************************************/
-    @RequestMapping(value="updateAnalysis",method=RequestMethod.POST)
+    @RequestMapping(value="updateAnalysis",method=RequestMethod.PUT)
     @ResponseBody
     public void updateAnalysis(@RequestParam(value="idAnalysis") Long idAnalysis, @RequestParam(value="name") String name, @RequestParam(value="description") String description, @RequestParam(value="idProject") Long idProject,
     		@RequestParam(value="date") Long date, @RequestParam(value="idAnalysisType") Long idAnalysisType, @RequestParam(value="idSampleList",required=false) List<Long> idSampleList,
@@ -513,7 +529,7 @@ public class SubmitController {
 	 * @param Long idProject: project identifier
 	 * @return list of analyses
 	 ****************************************************/
-    @RequestMapping(value="getAnalysisByProject",method=RequestMethod.POST)
+    @RequestMapping(value="getAnalysisByProject",method=RequestMethod.GET)
     @ResponseBody
     public List<Analysis> getAnalysisByProject(@RequestParam(value="idProject") Long idProject) {
     	Project project = this.projectService.getProjectById(idProject);
@@ -527,7 +543,7 @@ public class SubmitController {
 	 * method: post
 	 * @param idAnalysis analysis identifier
 	 ****************************************************/
-    @RequestMapping(value="deleteAnalysis",method=RequestMethod.POST)
+    @RequestMapping(value="deleteAnalysis",method=RequestMethod.DELETE)
     @ResponseBody
     public void deleteAnalysis(@RequestParam(value="idAnalysis") Long idAnalysis) {
     	this.analysisService.deleteAnalysis(idAnalysis);
@@ -542,7 +558,7 @@ public class SubmitController {
 	 * @param idSampleType: primary index of the associated sample type
 	 ****************************************************/
     
-    @RequestMapping(value="addSamplePrep",method=RequestMethod.POST)
+    @RequestMapping(value="addSamplePrep",method=RequestMethod.PUT)
     @ResponseBody
     public SamplePrep addSamplePrep(@RequestParam(value="description") String description, @RequestParam(value="idSampleType") Long idSampleType) throws Exception {
     	SampleType sampleType = this.sampleTypeService.getSampleTypeById(idSampleType);
@@ -562,7 +578,7 @@ public class SubmitController {
 	 * method: post
 	 * @param condition: sample condition
 	 ****************************************************/
-    @RequestMapping(value="addSampleCondition",method=RequestMethod.POST)
+    @RequestMapping(value="addSampleCondition",method=RequestMethod.PUT)
     @ResponseBody
     public SampleCondition addSampleCondition(@RequestParam(value="condition") String condition) {
     	SampleCondition sampleCondition = new SampleCondition();
@@ -580,7 +596,7 @@ public class SubmitController {
 	 * method: post
 	 * @param source: sample source 
 	 ****************************************************/
-    @RequestMapping(value="addSampleSource",method=RequestMethod.POST)
+    @RequestMapping(value="addSampleSource",method=RequestMethod.PUT)
     @ResponseBody
     public SampleSource addSampleSource(@RequestParam(value="source") String source) {
     	SampleSource sampleSource = new SampleSource();

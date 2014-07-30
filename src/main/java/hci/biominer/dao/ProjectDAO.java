@@ -48,16 +48,17 @@ public class ProjectDAO {
 		
 		for (Lab l: user.getLabs()) {
 			labList.add(l.getIdLab());
-			for (Institute i: l.getInstitutes()) {
-				instituteList.add(i.getIdInstitute());
-			}
+		}
+		
+		for (Institute i: user.getInstitutes()) {
+			instituteList.add(i.getIdInstitute());
 		}
 		instituteList.addAll(instituteSet);
 		
 		Session session = this.getCurrentSession();
 		Query query = session.createQuery("select distinct p from Project as p "
 				+ "left join fetch p.labs as l "
-				+ "left join fetch l.institutes as i " 
+				+ "left join fetch p.institutes as i " 
 				+ "where (l.idLab in (:userLabs) and p.visibility = :vis1) or "
 				+ "(i.idInstitute in (:userInstitute) and p.visibility = :vis2) or "
 				+ "(p.visibility = :vis3)");
@@ -90,9 +91,7 @@ public class ProjectDAO {
 			Hibernate.initialize(p.getFiles());
 			Hibernate.initialize(p.getAnalyses());
 			Hibernate.initialize(p.getLabs());
-			for (Lab l: p.getLabs()) {
-				Hibernate.initialize(l.getInstitutes());
-			}
+			Hibernate.initialize(p.getInstitutes());
 			
 			for (Analysis a: p.getAnalyses()) {
 				Hibernate.initialize(a.getSamples());
@@ -130,9 +129,11 @@ public class ProjectDAO {
 		session.beginTransaction();
 		projectToUpdate.setName(project.getName());
 		projectToUpdate.setDescription(project.getDescription());
+		projectToUpdate.setDataUrls(project.getDataUrls());
 		projectToUpdate.setOrganismBuild(project.getOrganismBuild());
 		projectToUpdate.setVisibility(project.getVisibility());
 		projectToUpdate.setLabs(project.getLabs());
+		projectToUpdate.setInstitutes(project.getInstitutes());
 		session.update(projectToUpdate);
 		session.getTransaction().commit();
 		session.close();
@@ -147,9 +148,8 @@ public class ProjectDAO {
 		Hibernate.initialize(project.getFiles());
 		Hibernate.initialize(project.getAnalyses());
 		Hibernate.initialize(project.getLabs());
-		for (Lab l: project.getLabs()) {
-			Hibernate.initialize(l.getInstitutes());
-		}
+		Hibernate.initialize(project.getInstitutes());
+		
 		
 		for (Analysis a: project.getAnalyses()) {
 			Hibernate.initialize(a.getSamples());

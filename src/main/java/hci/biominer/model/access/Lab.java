@@ -30,20 +30,15 @@ public class Lab {
 	@Column(name="last")
 	private String last;
 	
-	@ManyToMany()
-	@JoinTable(name="LabInstitute",
-	joinColumns={@JoinColumn(name="idLab",referencedColumnName="idLab")},
-	inverseJoinColumns={@JoinColumn(name="idInstitute",referencedColumnName="idInstitute")})
-	private List<Institute> institutes = null;
+	
 	
 	public Lab() {
 		
 	}
 	
-	public Lab(String first, String last, List<Institute> institutes) {
+	public Lab(String first, String last) {
 		this.first = first;
 		this.last = last;
-		this.institutes = institutes;
 	}
 	
 	
@@ -63,14 +58,6 @@ public class Lab {
 		this.last = last;
 	}
 	
-	public void setInstitutes(List<Institute> institutes) {
-		this.institutes = institutes;
-	}
-	
-	public List<Institute> getInstitutes() {
-		return this.institutes;
-	}
-
 	public Long getIdLab() {
 		return idLab;
 	}

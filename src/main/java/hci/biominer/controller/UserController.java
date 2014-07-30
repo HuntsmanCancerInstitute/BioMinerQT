@@ -1,9 +1,11 @@
 package hci.biominer.controller;
 
+import hci.biominer.model.access.Institute;
 import hci.biominer.model.access.User;
 import hci.biominer.model.access.Lab;
 import hci.biominer.service.UserService;
 import hci.biominer.service.LabService;
+import hci.biominer.service.InstituteService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -11,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.ArrayList;
-
 import java.security.SecureRandom;
 
 import javax.crypto.SecretKeyFactory;
@@ -31,14 +32,17 @@ public class UserController {
 	
 	@Autowired
 	private LabService labService;
+	
+	@Autowired
+	private InstituteService instituteService;
 
-    @RequestMapping(value = "all", method = RequestMethod.POST)
+    @RequestMapping(value = "all", method = RequestMethod.GET)
     @ResponseBody
     public List<User> getUserList() {
         return userService.getAllUsers();
     }
     
-    @RequestMapping(value = "bylab", method = RequestMethod.POST)
+    @RequestMapping(value = "bylab", method = RequestMethod.GET)
     @ResponseBody
     public List<User> getUserListByLab(@RequestParam(value="idLab") Long idLab) {
         return userService.getUsersByLab(idLab);
@@ -48,26 +52,31 @@ public class UserController {
     @ResponseBody
     public void addUser(@RequestParam(value="first") String firstName, @RequestParam(value="last") String lastName, @RequestParam(value="username") String username,
     		@RequestParam(value="password") String password, @RequestParam(value="email") String email, @RequestParam(value="phone") Long phone, 
-    		@RequestParam(value="admin") boolean admin, @RequestParam(value="lab") List<Long> labIds) {
+    		@RequestParam(value="admin") boolean admin, @RequestParam(value="lab") List<Long> labIds, @RequestParam(value="institutes") List<Long> instituteIds) {
  
     	List<Lab> labList = new ArrayList<Lab>();
     	for (Long idLab: labIds) {
     		labList.add(labService.getLab(idLab));
     	}
     	
+    	List<Institute> instituteList = new ArrayList<Institute>();
+		for (Long idInstitute: instituteIds) {
+			instituteList.add(instituteService.getInstituteById(idInstitute));
+		}
+    	
     	String salt = this.createSalt();
     	String npass = this.createPassword(password, salt);
-    	User newUser = new User(firstName,lastName,username,npass,salt,email,phone,admin,labList);
+    	User newUser = new User(firstName,lastName,username,npass,salt,email,phone,admin,labList, instituteList);
     	userService.addUser(newUser);
     }
     
-    @RequestMapping(value = "usernames", method=RequestMethod.POST)
+    @RequestMapping(value = "usernames", method=RequestMethod.GET)
     @ResponseBody
     public List<String> getUsernames() {
     	return userService.getUsernames();
     }
     
-    @RequestMapping(value="deleteuser",method=RequestMethod.POST)
+    @RequestMapping(value="deleteuser",method=RequestMethod.DELETE)
     @ResponseBody
     public void deleteUser(@RequestParam(value="idUser") Long idUser) {
     	userService.deleteUser(idUser);
@@ -77,13 +86,18 @@ public class UserController {
     @ResponseBody
     public void modifyUser(@RequestParam(value="first") String firstName, @RequestParam(value="last") String lastName, @RequestParam(value="username") String username,
     		@RequestParam(value="password") String password, @RequestParam(value="email") String email, @RequestParam(value="phone") Long phone, 
-    		@RequestParam(value="admin") boolean admin, @RequestParam(value="lab") List<Long> labIds, @RequestParam(value="idUser") Long idUser) {
+    		@RequestParam(value="admin") boolean admin, @RequestParam(value="lab") List<Long> labIds, @RequestParam(value="institutes") List<Long> instituteIds, @RequestParam(value="idUser") Long idUser) {
  
     	//Get lab
     	List<Lab> labList = new ArrayList<Lab>();
     	for (Long idLab: labIds) {
     		labList.add(labService.getLab(idLab));
     	}
+    	
+    	List<Institute> instituteList = new ArrayList<Institute>();
+		for (Long idInstitute: instituteIds) {
+			instituteList.add(instituteService.getInstituteById(idInstitute));
+		}
     	
     	//Create new password if updated
     	String salt = null;
@@ -94,7 +108,7 @@ public class UserController {
     	}
     	
     	//Create a new user
-    	User user = new User(firstName,lastName,username,npass,salt,email,phone,admin,labList);
+    	User user = new User(firstName,lastName,username,npass,salt,email,phone,admin,labList, instituteList);
     	
     	//Update user
     	userService.updateUser(idUser,user);

@@ -7,7 +7,6 @@ import hci.biominer.model.SampleType;
 import hci.biominer.model.SamplePrep;
 import hci.biominer.model.SampleSource;
 import hci.biominer.model.SampleCondition;
-
 import hci.biominer.model.access.Institute;
 import hci.biominer.service.InstituteService;
 import hci.biominer.service.OrganismBuildService;
@@ -19,6 +18,11 @@ import hci.biominer.service.SampleSourceService;
 import hci.biominer.service.SampleConditionService;
 
 import java.util.List;
+import java.util.Properties;
+
+import javax.activation.*;
+import javax.mail.internet.*;
+import javax.mail.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -53,19 +57,19 @@ public class SharedController {
 	private InstituteService instituteService;
 	
 
-	@RequestMapping(value="getAllInstitutes",method=RequestMethod.POST)
+	@RequestMapping(value="getAllInstitutes",method=RequestMethod.GET)
 	@ResponseBody
 	public List<Institute> getInstituteList() {
 		return instituteService.getAllInstitutes();
 	}
 	
-	@RequestMapping(value="getAllOrganisms",method=RequestMethod.POST)
+	@RequestMapping(value="getAllOrganisms",method=RequestMethod.GET)
 	@ResponseBody
 	public List<Organism> getAllOrganisms() {
 		return organismService.getAllOrganisms();
 	}
 	
-	@RequestMapping(value="getAllBuilds",method=RequestMethod.POST)
+	@RequestMapping(value="getAllBuilds",method=RequestMethod.GET)
 	@ResponseBody
 	public List<OrganismBuild> getAllBuilds() {
 		return organismBuildService.getAllOrganismBuilds();
@@ -78,40 +82,64 @@ public class SharedController {
 		return organismBuildService.getOrganismBuildByOrganism(organism);
 	}
 	
-	@RequestMapping(value="getAllSampleTypes",method=RequestMethod.POST)
+	@RequestMapping(value="getAllSampleTypes",method=RequestMethod.GET)
 	@ResponseBody
 	public List<SampleType> getAllSampleTypesTypes() {
 		return sampleTypeService.getAllSampleTypes();
 	}
 	
-	@RequestMapping(value="getAllAnalysisTypes",method=RequestMethod.POST)
+	@RequestMapping(value="getAllAnalysisTypes",method=RequestMethod.GET)
 	@ResponseBody
 	public List<AnalysisType> getAllAnalysisTypes() {
 		return analysisTypeService.getAllAnalysisTypes();
 	}
 	
-	@RequestMapping(value="getAllSamplePreps",method=RequestMethod.POST)
+	@RequestMapping(value="getAllSamplePreps",method=RequestMethod.GET)
 	@ResponseBody
 	public List<SamplePrep> getAllSamplePreps() {
 		return samplePrepService.getAllSamplePreps();
 	}
 	
-	@RequestMapping(value="getSamplePrepsBySampleType",method=RequestMethod.POST)
+	@RequestMapping(value="getSamplePrepsBySampleType",method=RequestMethod.GET)
 	@ResponseBody
 	public List<SamplePrep> getSamplePrepsBySampleType(@RequestParam(value="idSampleType") Long idSampleType) {
 		return samplePrepService.getSamplePrepBySampleType(idSampleType);
 	}
 	
-	@RequestMapping(value="getAllSampleSources",method=RequestMethod.POST)
+	@RequestMapping(value="getAllSampleSources",method=RequestMethod.GET)
 	@ResponseBody
 	public List<SampleSource> getAllSampleSources() {
 		return sampleSourceService.getAllSampleSources();
 	}
 	
-	@RequestMapping(value="getAllSampleConditions",method=RequestMethod.POST)
+	@RequestMapping(value="getAllSampleConditions",method=RequestMethod.GET)
 	@ResponseBody
 	public List<SampleCondition> getAllSampleConditions() {
 		return sampleConditionService.getAllSampleConditions();
+	}
+	
+	@RequestMapping(value="sendMail",method=RequestMethod.POST) 
+	@ResponseBody
+	public void sendMail(@RequestParam(value="body") String body, @RequestParam(value="subject") String subject) throws MessagingException {
+		String recipient = "tim.mosbruger@hci.utah.edu";
+		String from = "biominer@hci.utah.edu";
+		
+		Properties properties = System.getProperties();
+	
+		properties.put("mail.smtp.host", "hci-mail.hci.utah.edu");
+		Session session = Session.getDefaultInstance(properties);
+		
+		try {
+			MimeMessage message = new MimeMessage(session);
+			message.setFrom(new InternetAddress(from));
+			message.addRecipient(Message.RecipientType.TO,new InternetAddress(recipient));
+			message.setSubject(subject);
+			message.setText(body);
+			Transport.send(message);
+		} catch (MessagingException mex) {
+			throw mex;
+		}
+
 	}
 	
 	

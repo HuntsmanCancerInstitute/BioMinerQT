@@ -2,7 +2,6 @@ package hci.biominer.model;
 
 import java.util.List;
 
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.IndexColumn;
 
 import javax.persistence.Entity;
@@ -18,10 +17,10 @@ import javax.persistence.ManyToMany;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.Enumerated;
-import javax.persistence.CascadeType;
 
 import hci.biominer.util.Enumerated.ProjectVisibilityEnum;
 import hci.biominer.model.access.Lab;
+import hci.biominer.model.access.Institute;
 
 @Entity
 @Table(name="Project")
@@ -36,10 +35,13 @@ public class Project {
 	@Column(name="description")
 	String description;
 	
+	@Column(name="dataUrls")
+	String dataUrls;
+	
 	@Column(name="visibility")
 	@Enumerated(EnumType.STRING)
 	ProjectVisibilityEnum visibility;
-	
+
 	@OneToOne
 	@JoinColumn(name="idOrganismBuild")
 	OrganismBuild organismBuild;
@@ -62,6 +64,15 @@ public class Project {
                 inverseJoinColumns={@JoinColumn(name="idLab")})
 	@IndexColumn(name = "labOrder")
     List<Lab> labs;
+	
+	@ManyToMany()
+	@JoinTable(name="ProjectInstitute",
+			joinColumns={@JoinColumn(name="idProject")},
+			inverseJoinColumns={@JoinColumn(name="idInstitute")})
+	@IndexColumn(name="instituteOrder")
+	List<Institute> institutes;
+	
+	
 	
 	public Project() {
 		
@@ -145,6 +156,22 @@ public class Project {
 
 	public void setAnalyses(List<Analysis> analyses) {
 		this.analyses = analyses;
+	}
+
+	public List<Institute> getInstitutes() {
+		return institutes;
+	}
+
+	public void setInstitutes(List<Institute> institutes) {
+		this.institutes = institutes;
+	}
+	
+	public String getDataUrls() {
+		return dataUrls;
+	}
+
+	public void setDataUrls(String dataUrls) {
+		this.dataUrls = dataUrls;
 	}
 	
 	

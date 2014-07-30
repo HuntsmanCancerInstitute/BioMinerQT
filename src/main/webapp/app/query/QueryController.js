@@ -157,9 +157,12 @@ function($scope, $http, $filter, DynamicDictionary, StaticDictionary) {
 	
 	
 	//Static dictionaries.
-	StaticDictionary.organismBuildList(function(data) {
-		$scope.organismBuildList = data;
-	});
+	
+	$scope.loadOrganismBuildList = function () {
+    	StaticDictionary.getOrganismBuildList().success(function(data) {
+    		$scope.organismBuildList = data;
+    	});
+    };
 	
 	//Dynamic dictionaries.  These dictionaries can be loaded on-demand.
     $scope.loadLabs = function() {
@@ -176,6 +179,7 @@ function($scope, $http, $filter, DynamicDictionary, StaticDictionary) {
     //Load up dynamic dictionaries
 	$scope.loadLabs();
 	$scope.loadSampleSources();
+	$scope.loadOrganismBuildList();
 
 
 	

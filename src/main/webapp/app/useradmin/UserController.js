@@ -1,17 +1,18 @@
 'use strict';
 
 angular.module("useradmin").controller("UserController", [
- '$scope','$http', '$modalInstance','labList','userData','title','bFace',
-function ($scope, $http, $modalInstance, labList, userData, title,bFace) {
+ '$scope','$http', '$modalInstance','labList','instituteList','userData','title','bFace',
+function ($scope, $http, $modalInstance, labList, instituteList, userData, title,bFace) {
  
 	$scope.title = title;
 	$scope.bFace = bFace;
 	$scope.availLabs = labList;
+	$scope.availInst = instituteList;
 	$scope.user = angular.copy(userData);
 	$scope.usedNames = [];
 	
 	$http({
-		method: 'POST',
+		method: 'GET',
 		url: 'user/usernames'
     }).success(function(data,status) {
 		$scope.usedNames = data;

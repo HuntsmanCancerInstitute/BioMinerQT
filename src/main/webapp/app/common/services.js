@@ -79,7 +79,14 @@ var services = angular.module('services', ['ngResource','ui.bootstrap'])
 		    			},
 		    			message: function() {
 		    				return rejection.data.errorMessage;
+		    			},
+		    			stackTrace: function() {
+		    				return rejection.data.errorStackTrace;
+		    			},
+		    			errorTime: function() {
+		    				return rejection.data.errorTime;
 		    			}
+		    			
 		    		}
 		    	});
 		       
@@ -92,83 +99,51 @@ var services = angular.module('services', ['ngResource','ui.bootstrap'])
 	$httpProvider.interceptors.push('BiominerHttpInterceptor');
 })
 
-.factory('StaticDictionary',['$http','$q',
+.factory('StaticDictionary',['$http',
     function($http) {
-		var organismBuildList;
-		var analysisTypeList;
-		var sampleTypeList;
-		var samplePrepList;
-		var projectVisibilityList;
-		var instituteList;
+		var dict = {};
 		
-		return {
-			organismBuildList: function(callback) {
-				if (organismBuildList) {
-					return organismBuildList;
-				} else {
-					organismBuildList = $http({
-						url: "shared/getAllBuilds",
-						method: "POST",
-					}).success(callback);
-					return organismBuildList;
-				};
-			},
-			analysisTypeList: function(callback) {
-				if(analysisTypeList) {
-					return analysisTypeList;
-				} else {
-					analysisTypeList = $http({
-						url: "shared/getAllAnalysisTypes",
-			    		method: "POST",
-					}).success(callback);
-					return analysisTypeList;
-				};
-			},
-			sampleTypeList: function(callback) {
-				if (sampleTypeList) {
-					return sampleTypeList;
-				} else {
-					sampleTypeList = $http({
-						url: "shared/getAllSampleTypes",
-			    		method: "POST",
-					}).success(callback);
-					return sampleTypeList;
-				};
-			},
-			samplePrepList: function(callback) {
-				if(samplePrepList) {
-					return samplePrepList;
-				} else {
-					samplePrepList = $http({
-						method: 'POST',
-						url: 'shared/getAllSamplePreps',
-					}).success(callback);
-					return samplePrepList;
-				};
-			},
-			projectVisibilityList: function(callback) {
-				if(projectVisibilityList) {
-					return projectVisibilityList;
-				} else {
-					projectVisibilityList = $http({
-						method: 'POST',
-						url: 'shared/getAllProjectVisibilities',
-					}).success(callback);
-					return projectVisibilityList;
-				};
-			},
-			instituteList: function(callback) {
-				if(instituteList) {
-					return instituteList;
-				}  else {
-					$http({
-						method: 'POST',
-						url: 'shared/getAllInstitutes',
-					}).success(callback);
-					return instituteList;
-				}
-			}
+		dict.getOrganismBuildList = function() {
+			return $http({
+				url: "shared/getAllBuilds",
+				method: "GET",
+				cache: true,
+			});
 		};
+		
+		dict.getAnalysisTypeList = function() {
+			return $http({
+				url: "shared/getAllAnalysisTypes",
+	    		method: "GET",
+	    		cache: true,
+			});
+		};
+		
+		dict.getSampleTypeList = function() {
+			return $http({
+				url: "shared/getAllSampleTypes",
+	    		method: "GET",
+	    		cache: true,
+			});
+		};
+		
+		dict.getProjectVisibilityList = function() {
+			return $http({
+				method: 'GET',
+				url: 'shared/getAllProjectVisibilities',
+				cache: true,
+			});
+		};
+		
+		dict.getInstituteList = function() {
+			return $http({
+				method: 'GET',
+				url: 'shared/getAllInstitutes',
+				cache: true,
+			});
+		};
+		
+		return dict;
 	}
 ])
 
@@ -179,14 +154,14 @@ var services = angular.module('services', ['ngResource','ui.bootstrap'])
 		
 		dict.loadLabs = function() {
 			return $http({
-		    	method: 'POST',
+		    	method: 'GET',
 		    	url: 'lab/all'
 		    });
 		};
 	
 		dict.loadSamplePrepsBySampleType = function(idSampleType) {
 			return $http({
-				method: 'POST',
+				method: 'GET',
 				url: 'shared/getSamplePrepsBySampleType',
 				params : {idSampleType: idSampleType},
 			});
@@ -194,21 +169,21 @@ var services = angular.module('services', ['ngResource','ui.bootstrap'])
 		
 		dict.loadSampleSources = function() {
 			return $http({
-				method: 'POST',
+				method: 'GET',
 				url: 'shared/getAllSampleSources',
 			});
 		};
 		
 		dict.loadSampleConditions = function() {
 			return $http({
-				method: 'POST',
+				method: 'GET',
 				url: 'shared/getAllSampleConditions',
 			});
 		};
 		
 		dict.loadSamplePreps = function() {
 			return $http({
-				method: 'POST',
+				method: 'GET',
 				url: 'shared/getAllSamplePreps',
 			});
 		};

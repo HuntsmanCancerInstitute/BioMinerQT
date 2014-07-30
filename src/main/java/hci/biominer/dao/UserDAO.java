@@ -48,6 +48,7 @@ public class UserDAO {
 		
 		userToUpdate.setPhone(user.getPhone());
 		userToUpdate.setLabs(user.getLabs());
+		userToUpdate.setInstitutes(user.getInstitutes());
 		userToUpdate.setUsername(user.getUsername());
 		session.update(userToUpdate);
 		session.getTransaction().commit();
@@ -60,9 +61,7 @@ public class UserDAO {
 		
 		
 		Hibernate.initialize(user.getLabs());
-		for (Lab l: user.getLabs()) {
-			Hibernate.initialize(l.getInstitutes());
-		}
+		Hibernate.initialize(user.getInstitutes());
 		
 		session.close();
 		return user;
@@ -85,9 +84,7 @@ public class UserDAO {
 		
 		for (User u: users) {
 			Hibernate.initialize(u.getLabs());
-			for (Lab l: u.getLabs()) {
-				Hibernate.initialize(l.getInstitutes());
-			}
+			Hibernate.initialize(u.getInstitutes());
 		}
 		
 		session.close();
@@ -104,9 +101,7 @@ public class UserDAO {
 		
 		for (User u: users) {
 			Hibernate.initialize(u.getLabs());
-			for (Lab l: u.getLabs()) {
-				Hibernate.initialize(l.getInstitutes());
-			}
+			Hibernate.initialize(u.getInstitutes());
 		}
 		
 		session.close();
@@ -134,9 +129,7 @@ public class UserDAO {
 		
 		for (User u: users) {
 			Hibernate.initialize(u.getLabs());
-			for (Lab l: u.getLabs()) {
-				Hibernate.initialize(l.getInstitutes());
-			}
+			Hibernate.initialize(u.getInstitutes());
 		}
 		
 		session.close();

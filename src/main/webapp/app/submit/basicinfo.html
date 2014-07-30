@@ -23,6 +23,13 @@
 				  </div>
 				</div>
 				
+				<div class="form-group">
+				  <label class="col-md-4 control-label" for="project_urls">Data URLs</label>
+				  <div class="col-md-4">                     
+				    <textarea class="form-control" id="project_urls" ng-model="project.dataUrls" name="project_urls"></textarea>
+				  </div>
+				</div>
+				
 				<!-- Select Basic -->
 				<div class="form-group">
 				  <label class="col-md-4 control-label" for="species_build">Species and Genome Build</label>
@@ -37,6 +44,14 @@
 				  <label class="col-md-4 control-label" for="lab">Lab</label>
 				  	<div class="col-md-6">
 		  		    	<select data-placeholder="Choose labs..." ng-model="project.labs" multiple chosen class="col-md-6 chosen-select" ng-options="lab as (lab.first + ' ' + lab.last + ' lab' ) for lab in labList track by lab.idLab"></select> 
+				    </div>
+				</div>
+				
+				<!-- Select Basic -->
+				<div class="form-group">
+				  <label class="col-md-4 control-label" for="lab">Institute</label>
+				  	<div class="col-md-6">
+		  		    	<select data-placeholder="Choose institutes..." ng-model="project.institutes" multiple chosen class="col-md-6 chosen-select" ng-options="inst as inst.name for inst in instituteList track by inst.idInstitute"></select> 
 				    </div>
 				</div>
 				

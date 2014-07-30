@@ -30,11 +30,14 @@ function($scope, $http, $modal, $timeout, DynamicDictionary, StaticDictionary) {
 	$scope.labs = [];
 	$scope.selectedUsers = [];
 	$scope.selectedLab;
+
 	
-	//Load static dictionaries
-	StaticDictionary.instituteList(function(data) {
-		$scope.institutes = data;
-	});
+	//Static dictionaries. These http calls are cached.
+    $scope.getInstituteList = function () {
+    	StaticDictionary.getInstituteList().success(function(data) {
+    		$scope.institutes = data;
+    	});
+    };
 	
 	
 	//Select all users
@@ -63,7 +66,7 @@ function($scope, $http, $modal, $timeout, DynamicDictionary, StaticDictionary) {
 	$scope.loadCounts = function() {
 		for (var i=0; i<$scope.labs.length; i++) {
 			$http({
-    	    	method: 'POST',
+    	    	method: 'GET',
     	    	url: 'user/bylab',
     	    	params: {idLab:$scope.labs[i].idLab, localIndex: i}
     	    }).success(function(data,status,headers,config) {
@@ -91,7 +94,7 @@ function($scope, $http, $modal, $timeout, DynamicDictionary, StaticDictionary) {
     $scope.loadSelected = function() {
     	if (angular.isUndefined($scope.selectedLab) || $scope.selectedLab == null) {
     		$http({
-        		method: 'POST',
+        		method: 'GET',
         		url: 'user/all'
             }).success(function(data,status) {
             	$scope.selectedUsers = $scope.addCheckbox(data);
@@ -99,7 +102,7 @@ function($scope, $http, $modal, $timeout, DynamicDictionary, StaticDictionary) {
     		
     	} else {
     		$http({
-    	    	method: 'POST',
+    	    	method: 'GET',
     	    	url: 'user/bylab',
     	    	params: {idLab:$scope.selectedLab.idLab}
     	    }).success(function(data,status) {
@@ -127,6 +130,9 @@ function($scope, $http, $modal, $timeout, DynamicDictionary, StaticDictionary) {
     			labList: function() {
     				return $scope.labs;
     			},
+    			instituteList: function() {
+    				return $scope.institutes;
+    			},
     			userData: function () {
     				e["password"] = "placeholder"; 
     				return e;
@@ -142,16 +148,22 @@ function($scope, $http, $modal, $timeout, DynamicDictionary, StaticDictionary) {
     	
     	modalInstance.result.then(function (user) {
     		//Create a list of lab ids
-	    	var ids = [];
+	    	var lids = [];
+	    	var iids = [];
+	    	
 	    	for (var i=0; i<user.labs.length;i++) {
-	    		ids.push(user.labs[i].idLab);
+	    		lids.push(user.labs[i].idLab);
+	    	}
+	    	
+	    	for (var i=0;i<user.institutes.length;i++) {
+	    		iids.push(user.institutes[i].idInstitute);
 	    	}
 	    	
 	    	$http({
     	    	method: 'POST',
     	    	url: 'user/modifyuser',
     	    	params: {first:user.first,last:user.last,username:user.username,password:user.password,email:user.email,
-    	    		phone:user.phone,admin:user.admin,lab:ids,idUser:user.idUser}
+    	    		phone:user.phone,admin:user.admin,lab:lids,institutes:iids,idUser:user.idUser}
     	    }).success(function(data,status) {
     	    	$scope.loadSelected();
     	    });
@@ -167,9 +179,6 @@ function($scope, $http, $modal, $timeout, DynamicDictionary, StaticDictionary) {
     		templateUrl: 'app/useradmin/labWindow.html',
     		controller: 'LabController',
     		resolve: {
-    			instituteList: function() {
-    				return $scope.institutes;
-    			},
     			labData: function () {
     				return e;
     			},
@@ -183,15 +192,10 @@ function($scope, $http, $modal, $timeout, DynamicDictionary, StaticDictionary) {
     	});
     	
     	modalInstance.result.then(function (lab) {
-    		var ids = [];
-	    	for (var i=0; i<lab.institutes.length;i++) {
-	    		ids.push(lab.institutes[i].idInstitute);
-	    	}
-    		
 	    	$http({
-    	    	method: 'POST',
+    	    	method: 'PUT',
     	    	url: 'lab/modifylab',
-    	    	params: {first:lab.first, last:lab.last, idLab:lab.idLab, institutes:ids}
+    	    	params: {first:lab.first, last:lab.last, idLab:lab.idLab}
     	    }).success(function(data,status) {
     	    	$scope.loadLabs();
     	    });
@@ -209,6 +213,9 @@ function($scope, $http, $modal, $timeout, DynamicDictionary, StaticDictionary) {
 		        labList: function () {
 		          return $scope.labs;
 		        },
+		        instituteList: function() {
+    		  		return $scope.institutes;
+  				},
 		        userData: function () {
 		        	var emptyUser = {first: '', last: '', username: '', password: '',
 			    			phone: '', email: '', admin: false, lab: []};
@@ -225,16 +232,20 @@ function($scope, $http, $modal, $timeout, DynamicDictionary, StaticDictionary) {
 
 	    modalInstance.result.then(function (user) {
 	    	//Create a list of lab ids
-	    	var ids = [];
+	    	var lids = [];
+	    	var iids = [];
 	    	for (var i=0; i<user.labs.length;i++) {
-	    		ids.push(user.labs[i].idLab);
+	    		lids.push(user.labs[i].idLab);
+	    	}
+	    	for (var i=0; i<user.institutes.length;i++) {
+	    		iids.push(user.institutes[i].idInstitute);
 	    	}
 	    	
 	    	$http({
     	    	method: 'POST',
     	    	url: 'user/adduser',
     	    	params: {first:user.first,last:user.last,username:user.username,password:user.password,email:user.email,
-    	    		phone:user.phone,admin:user.admin,lab:ids}
+    	    		phone:user.phone,admin:user.admin,lab:lids,institutes:iids}
     	    }).success(function(data,status) {
     	    	$scope.loadSelected();
     	    	$scope.loadLabs();
@@ -250,9 +261,7 @@ function($scope, $http, $modal, $timeout, DynamicDictionary, StaticDictionary) {
 	      templateUrl: 'app/useradmin/labWindow.html',
 	      controller: 'LabController',
     	  resolve: {
-    		  	instituteList: function() {
-    		  		return $scope.institutes;
-  				},
+    		  	
 		        labData: function () {
 		        	var emptyLab = {first: '', last: '', institutes: []};
     				return emptyLab;
@@ -267,15 +276,10 @@ function($scope, $http, $modal, $timeout, DynamicDictionary, StaticDictionary) {
 	    });
 
 	    modalInstance.result.then(function (lab) {
-	    	var ids = [];
-	    	for (var i=0; i<lab.institutes.length;i++) {
-	    		ids.push(lab.institutes[i].idInstitute);
-	    	}
-	    	
 	    	$http({
-    	    	method: 'POST',
+    	    	method: 'PUT',
     	    	url: 'lab/addlab',
-    	    	params: {first:lab.first,last:lab.last, institutes: ids}
+    	    	params: {first:lab.first,last:lab.last}
     	    }).success(function(data,status) {
     	    	$scope.loadLabs();
     	    });
@@ -312,7 +316,7 @@ function($scope, $http, $modal, $timeout, DynamicDictionary, StaticDictionary) {
    
     	for(var i=0;i<toDelete.length;i++) {
     		$http({
-        		method: 'POST',
+        		method: 'DELETE',
         		url: 'user/deleteuser',
         		params: {idUser: toDelete[i]}
     		}).success(function() {
@@ -335,7 +339,7 @@ function($scope, $http, $modal, $timeout, DynamicDictionary, StaticDictionary) {
    
     	for(var i=0;i<toDelete.length;i++) {
     		$http({
-        		method: 'POST',
+        		method: 'DELETE',
         		url: 'lab/deletelab',
         		params: {idLab: toDelete[i]}
     		}).success(function() {
@@ -417,6 +421,7 @@ function($scope, $http, $modal, $timeout, DynamicDictionary, StaticDictionary) {
     //Load labs and users.
 	$scope.loadLabs();
 	$scope.loadSelected();
+	$scope.getInstituteList();
 	
 	
 }]);

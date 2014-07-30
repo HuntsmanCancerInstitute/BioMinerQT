@@ -33,6 +33,12 @@ public class User {
 	inverseJoinColumns={@JoinColumn(name="idLab",referencedColumnName="idLab")})
 	private List<Lab> labs = null;
 	
+	@ManyToMany()
+	@JoinTable(name="UserInstitute",
+	joinColumns={@JoinColumn(name="idUser",referencedColumnName="idUser")},
+	inverseJoinColumns={@JoinColumn(name="idInstitute",referencedColumnName="idInstitute")})
+	private List<Institute> institutes = null;
+	
 	@Column(name = "first")
 	private String first;
 	
@@ -61,7 +67,7 @@ public class User {
 		
 	}
 	
-	public User(String firstName, String lastName, String userName, String password, String salt, String email, Long phone, boolean admin, List<Lab> labs) {
+	public User(String firstName, String lastName, String userName, String password, String salt, String email, Long phone, boolean admin, List<Lab> labs, List<Institute> institutes) {
 		this.first = firstName;
 		this.last = lastName;
 		this.username = userName;
@@ -70,11 +76,11 @@ public class User {
 		this.phone = phone;
 		this.admin = admin;
 		this.labs = labs;
+		this.institutes = institutes;
 		this.salt = salt;
 	}
 
 	
-
 	public Long getIdUser() {
 		return idUser;
 	}
@@ -157,6 +163,14 @@ public class User {
 	@JsonIgnore
 	public void setSalt(String salt) {
 		this.salt = salt;
+	}
+	
+	public void setInstitutes(List<Institute> institutes) {
+		this.institutes = institutes;
+	}
+	
+	public List<Institute> getInstitutes() {
+		return this.institutes;
 	}
 	
 }

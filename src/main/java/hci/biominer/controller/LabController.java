@@ -23,46 +23,33 @@ public class LabController {
 	@Autowired
 	private InstituteService instituteService;
 
-	@RequestMapping(value = "all", method = RequestMethod.POST)
+	@RequestMapping(value = "all", method = RequestMethod.GET)
 	@ResponseBody
 	public List<Lab> getLabList() {
 		return labService.getAllLabs();
 	}
 	
 	
-	@RequestMapping(value = "addlab", method=RequestMethod.POST)
+	@RequestMapping(value = "addlab", method=RequestMethod.PUT)
     @ResponseBody
-    public void addLab(@RequestParam(value="first") String firstName, @RequestParam(value="last") String lastName, 
-    		@RequestParam(value="institutes") List<Long> instituteIds) {
-		
-		List<Institute> instituteList = new ArrayList<Institute>();
-		for (Long idInstitute: instituteIds) {
-			instituteList.add(instituteService.getInstituteById(idInstitute));
-		}
-		
-    	Lab newLab = new Lab(firstName,lastName, instituteList);
+    public void addLab(@RequestParam(value="first") String firstName, @RequestParam(value="last") String lastName) {
+    	Lab newLab = new Lab(firstName,lastName);
     	labService.addLab(newLab);
     }
 	
-	@RequestMapping(value="deletelab",method=RequestMethod.POST)
+	@RequestMapping(value="deletelab",method=RequestMethod.DELETE)
     @ResponseBody
     public void deleteLab(@RequestParam(value="idLab") Long idLab) {
     	labService.deleteLab(idLab);
     }
     
-    @RequestMapping(value = "modifylab", method=RequestMethod.POST)
+    @RequestMapping(value = "modifylab", method=RequestMethod.PUT)
     @ResponseBody
     public void modifyLab(@RequestParam(value="first") String firstName, @RequestParam(value="last") String lastName,
-    		@RequestParam(value="idLab") Long idLab, @RequestParam(value="institutes") List<Long> instituteIds){
+    		@RequestParam(value="idLab") Long idLab){
     	
-    	List<Institute> instituteList = new ArrayList<Institute>();
-		for (Long idInstitute: instituteIds) {
-			//System.out.println("Identifier: " + instId);
-			instituteList.add(instituteService.getInstituteById(idInstitute));
-		}
- 
     	//Create a new lab
-    	Lab lab = new Lab(firstName,lastName, instituteList);
+    	Lab lab = new Lab(firstName,lastName);
     	
     	//Update user
     	labService.updateLab(lab, idLab);

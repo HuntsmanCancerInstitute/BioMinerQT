@@ -19,6 +19,6 @@ angular.module('navbar').controller("NavbarController",['$scope','$http','$modal
 		};
 			
 		$scope.logout = function() {
-			$scope.loggedUser = null;
+			$rootScope.loggedUser = null;
 		};
 }]);
