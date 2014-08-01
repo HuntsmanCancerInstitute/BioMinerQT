@@ -1,5 +1,7 @@
 package hci.biominer.controller;
 
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.subject.Subject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -198,8 +200,10 @@ public class SubmitController {
 	 ****************************************************/
     @RequestMapping(value="getProjectsByVisibility",method=RequestMethod.GET)
     @ResponseBody
-    public List<Project> getProjectsByVisibility(@RequestParam(value="idUser") Long idUser) {
-    	User user = this.userService.getUser(idUser);
+    public List<Project> getProjectsByVisibility() {
+    	Subject currentUser = SecurityUtils.getSubject();
+    	Long userId = (Long) currentUser.getPrincipal();
+        User user = userService.getUser(userId);
     	List<Project> projects = this.projectService.getProjectByVisibility(user);
     	return projects;
     }

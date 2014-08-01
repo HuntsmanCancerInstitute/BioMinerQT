@@ -11,6 +11,7 @@ import org.hibernate.criterion.Projections;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import hci.biominer.model.access.Role;
 import hci.biominer.model.access.User;
 import hci.biominer.model.access.Lab;
 
@@ -21,7 +22,6 @@ public class UserDAO {
 	private SessionFactory sessionFactory;
 	
 	private Session getCurrentSession() {
-		
 		return sessionFactory.openSession();
 	}
 	
@@ -37,7 +37,7 @@ public class UserDAO {
 		Session session = this.getCurrentSession();
 		session.beginTransaction();
 		User userToUpdate = (User)session.get(User.class, userIdx);
-		userToUpdate.setAdmin(user.getAdmin());
+		userToUpdate.setRoles(user.getRoles());
 		userToUpdate.setEmail(user.getEmail());
 		userToUpdate.setFirst(user.getFirst());
 		userToUpdate.setLast(user.getLast());
@@ -62,6 +62,10 @@ public class UserDAO {
 		
 		Hibernate.initialize(user.getLabs());
 		Hibernate.initialize(user.getInstitutes());
+		Hibernate.initialize(user.getRoles());
+		for (Role r: user.getRoles()) {
+			Hibernate.initialize(r.getPermissions());
+		}
 		
 		session.close();
 		return user;
@@ -85,6 +89,10 @@ public class UserDAO {
 		for (User u: users) {
 			Hibernate.initialize(u.getLabs());
 			Hibernate.initialize(u.getInstitutes());
+			Hibernate.initialize(u.getRoles());
+			for (Role r: u.getRoles()) {
+				Hibernate.initialize(r.getPermissions());
+			}
 		}
 		
 		session.close();
@@ -102,6 +110,10 @@ public class UserDAO {
 		for (User u: users) {
 			Hibernate.initialize(u.getLabs());
 			Hibernate.initialize(u.getInstitutes());
+			Hibernate.initialize(u.getRoles());
+			for (Role r: u.getRoles()) {
+				Hibernate.initialize(r.getPermissions());
+			}
 		}
 		
 		session.close();
@@ -121,6 +133,7 @@ public class UserDAO {
 	
 	@SuppressWarnings("unchecked")
 	public User getUserByUsername(String username) {
+		System.out.println("starting method");
 		Session session = this.getCurrentSession();
 		
 		Query query = session.createQuery("from User where username = :username");
@@ -130,7 +143,13 @@ public class UserDAO {
 		for (User u: users) {
 			Hibernate.initialize(u.getLabs());
 			Hibernate.initialize(u.getInstitutes());
+			Hibernate.initialize(u.getRoles());
+			for (Role r: u.getRoles()) {
+				Hibernate.initialize(r.getPermissions());
+			}
 		}
+		
+		System.out.println("Size of users " + users.size());
 		
 		session.close();
 		if (users.size() == 0) {

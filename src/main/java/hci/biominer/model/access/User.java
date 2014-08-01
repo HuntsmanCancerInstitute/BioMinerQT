@@ -1,19 +1,16 @@
 package hci.biominer.model.access;
 
-import org.hibernate.annotations.GenericGenerator;
-
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Column;
-import javax.persistence.OneToMany;
 import javax.persistence.ManyToMany;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
-import javax.persistence.CascadeType;
-import javax.persistence.FetchType;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 
 import java.util.List;
 
@@ -21,6 +18,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 
 @Entity
 @Table ( name = "User")
+@Cache(usage= CacheConcurrencyStrategy.READ_WRITE)
 public class User {
 	@Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,6 +36,14 @@ public class User {
 	joinColumns={@JoinColumn(name="idUser",referencedColumnName="idUser")},
 	inverseJoinColumns={@JoinColumn(name="idInstitute",referencedColumnName="idInstitute")})
 	private List<Institute> institutes = null;
+	
+	@ManyToMany()
+	@JoinTable(name="UserRole",
+	joinColumns={@JoinColumn(name="idUser",referencedColumnName="idUser")},
+	inverseJoinColumns={@JoinColumn(name="idRole",referencedColumnName="idRole")})
+	@Cache(usage=CacheConcurrencyStrategy.READ_WRITE)
+	private List<Role> roles = null;
+	
 	
 	@Column(name = "first")
 	private String first;
@@ -57,9 +63,6 @@ public class User {
 	@Column(name = "phone")
 	private Long phone;
 	
-	@Column(name = "admin")
-	private Boolean admin;
-	
 	@Column(name = "salt")
 	private String salt;
 	
@@ -67,14 +70,14 @@ public class User {
 		
 	}
 	
-	public User(String firstName, String lastName, String userName, String password, String salt, String email, Long phone, boolean admin, List<Lab> labs, List<Institute> institutes) {
+	public User(String firstName, String lastName, String userName, String password, String salt, String email, Long phone, List<Role> roles, List<Lab> labs, List<Institute> institutes) {
 		this.first = firstName;
 		this.last = lastName;
 		this.username = userName;
 		this.password = password;
 		this.email = email;
 		this.phone = phone;
-		this.admin = admin;
+		this.roles = roles;
 		this.labs = labs;
 		this.institutes = institutes;
 		this.salt = salt;
@@ -147,12 +150,12 @@ public class User {
 		this.phone = phone;
 	}
 
-	public Boolean getAdmin() {
-		return admin;
+	public List<Role> getRoles() {
+		return roles;
 	}
 
-	public void setAdmin(Boolean admin) {
-		this.admin = admin;
+	public void setRoles(List<Role> roles) {
+		this.roles = roles;
 	}
 	
 	@JsonIgnore

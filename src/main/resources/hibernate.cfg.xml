@@ -20,5 +20,7 @@
         <mapping class="hci.biominer.model.access.Lab"/>
         <mapping class="hci.biominer.model.access.User"/>
         <mapping class="hci.biominer.model.access.Institute"/>
+        <mapping class="hci.biominer.model.access.Role"/>
+        <mapping class="hci.biominer.model.access.Permission"/>
     </session-factory>
 </hibernate-configuration>

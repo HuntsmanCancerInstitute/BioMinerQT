@@ -15,8 +15,23 @@ import org.springframework.http.HttpStatus;
 
 import hci.biominer.util.ErrorModel;
 
+import org.apache.shiro.authz.UnauthorizedException;
+import org.apache.shiro.authz.UnauthenticatedException;
+
 @ControllerAdvice
 public class ExceptionController {
+	
+	@ExceptionHandler(UnauthorizedException.class)
+	@ResponseStatus(HttpStatus.UNAUTHORIZED)
+	public void handleUnauthorized(UnauthorizedException ex) {
+		System.out.println(ex.getMessage());
+	}
+	
+	@ExceptionHandler(UnauthenticatedException.class)
+	@ResponseStatus(HttpStatus.UNAUTHORIZED)
+	public void handleUnauthorized(UnauthenticatedException ex) {
+		System.out.println(ex.getMessage());
+	}
 	
 	@ExceptionHandler(Exception.class)
 	@ResponseStatus(HttpStatus.NOT_FOUND)

@@ -1,0 +1,38 @@
+<ehcache>
+
+    <diskStore path="java.io.tmpdir/shiro-sprhib-ehcache"/>
+
+
+    <defaultCache
+        maxElementsInMemory="1000"
+        eternal="false"
+        timeToLiveSeconds="600"
+        overflowToDisk="true"
+        diskPersistent="false"
+        />
+
+    <!--=================================================================
+    Hibernate Object Caches
+    =================================================================-->
+
+    <cache name="hci.biominer.model.access.Role"
+        maxElementsInMemory="100"
+        timeToLiveSeconds="3600"
+        overflowToDisk="true"/>
+
+    <cache name="hci.biominer.model.access.Role.permissions"
+        maxElementsInMemory="100"
+        timeToLiveSeconds="3600"
+        overflowToDisk="true"/>
+
+    <cache name="hci.biominer.model.access.User"
+        maxElementsInMemory="1000"
+        timeToLiveSeconds="3600"
+        overflowToDisk="true"/>
+
+    <cache name="hci.biominer.model.access.User.roles"
+        maxElementsInMemory="1000"
+        timeToLiveSeconds="3600"
+        overflowToDisk="true"/>
+
+</ehcache>
