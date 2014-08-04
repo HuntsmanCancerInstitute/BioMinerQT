@@ -68,29 +68,34 @@ var services = angular.module('services', ['ngResource','ui.bootstrap'])
 		return {
 			'responseError': function(rejection) {
 					
-				var $modal = $injector.get('$modal');
+				if (rejection.data == "") {
+					return $q.reject(rejection);
+				} else {
+					var $modal = $injector.get('$modal');
+					
+					$modal.open({
+			    		templateUrl: 'app/common/error.html',
+			    		controller: 'ErrorController',
+			    		resolve: {
+			    			title: function() {
+			    				return rejection.data.errorName;
+			    			},
+			    			message: function() {
+			    				return rejection.data.errorMessage;
+			    			},
+			    			stackTrace: function() {
+			    				return rejection.data.errorStackTrace;
+			    			},
+			    			errorTime: function() {
+			    				return rejection.data.errorTime;
+			    			}
+			    			
+			    		}
+			    	});
+			       
+			        return $q.reject(rejection);
+				}
 				
-				$modal.open({
-		    		templateUrl: 'app/common/error.html',
-		    		controller: 'ErrorController',
-		    		resolve: {
-		    			title: function() {
-		    				return rejection.data.errorName;
-		    			},
-		    			message: function() {
-		    				return rejection.data.errorMessage;
-		    			},
-		    			stackTrace: function() {
-		    				return rejection.data.errorStackTrace;
-		    			},
-		    			errorTime: function() {
-		    				return rejection.data.errorTime;
-		    			}
-		    			
-		    		}
-		    	});
-		       
-		        return $q.reject(rejection);
 		     }
 		};
 }])
@@ -187,8 +192,17 @@ var services = angular.module('services', ['ngResource','ui.bootstrap'])
 				url: 'shared/getAllSamplePreps',
 			});
 		};
+		
+		dict.isAuthenticated = function() {
+			return $http({
+				method: 'GET',
+				url: 'security/auth',
+			});
+		};
 
 		return dict;
+		
+		
                    
 }]);
 

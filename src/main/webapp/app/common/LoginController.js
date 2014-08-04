@@ -1,36 +1,24 @@
-var login = angular.module("login",[])
+var login = angular.module("login",['services'])
 
-.controller("LoginController", ['$scope','$modalInstance','$http',
+.controller("LoginController", ['$scope','$http','$rootScope','DynamicDictionary',
                                                       
-	function($scope, $modal, $http) {
+	function($scope, $http, $rootScope, DynamicDictionary) {
 		$scope.user = {username : "", password: ""};
-		$scope.goodCreds = false;
-		$scope.currAttempts = 0;
-		$scope.maxAttempts = 3;
+		$scope.remember = false;
+		$scope.message = null;
+		
 		
 		$scope.submitCreds = function() {
-			if ($scope.currAttempts >= $scope.maxAttempts) {
-				return;
-			}
-			
 			
 			$http({
 	    		method: 'POST',
-	    		url: 'user/checkpass',
-	    		params: {username: $scope.user.username, password: $scope.user.password}
+	    		url: 'security/login',
+	    		params: {username: $scope.user.username, password: $scope.user.password, remember: $scope.remember}
 	        }).success(function(data,status) {
-	        	if (data == null || data == "") {
-	        		$scope.goodCreds = false;
-	        		$scope.currAttempts += 1;
-	        	} else {
-	        		$scope.goodCreds = true;
-	        		$modal.close(data);
-	        	}
+	        	console.log(data.message);
+	        	$rootScope.loggedUser = data.username;
+	        	$scope.message = data.message;	
 	    	});
-		};
-	
-		$scope.cancel = function() {
-			$modal.dismiss();
 		};
 	}
 ]);

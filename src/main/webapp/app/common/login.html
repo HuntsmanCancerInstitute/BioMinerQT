@@ -1,24 +1,26 @@
-<div class="modal-header">
-	<h4>Please enter your credentials</h4>
-</div>
-<div class="modal-body">
-	<form class="form-horizontal" name="loginForm">
-	    <span class="label label-danger" ng-show="!goodCreds && currAttempts > 0 && maxAttempts > currAttempts">Username or password invalid, please try again. (Attempt {{currAttempts}} of {{maxAttempts}})</span>
-	    <span class="label label-danger" ng-show="!goodCreds && currAttempts > 0 && maxAttempts <= currAttempts">Username or password invalid, you've reached the maximum login attempts.</span>
-		<fieldset>
-			<div class="form-group">
-				<label class="control-label" for="usernameEntry">Username</label>  
-				<input class="form-control" id="usernameEntry" ng-model="user.username" class="form-control input-lg" required type="text"/>
-			</div>
-	
-			<div class="form-group">
-				<label class="control-label" for="passwordEntry">Password</label>                   
-				<input class="form-control" id="passwordEntry" ng-model="user.password" class="form-control input-lg" required type="password"/>
-			</div>
-		</fieldset>
-	</form>
-</div>
-<div class="modal-footer">
-	<button class="btn btn-primary" ng-click="submitCreds()" ng-disabled="loginForm.$invalid">Submit</button>
-	<button class="btn btn-default" ng-click="cancel()">Cancel</button>
+<div class="container">
+   <div class="row">
+	   	<form class="form-horizontal col-lg-offset-4 col-lg-4" name="loginForm">
+		    <h3>Please enter your credentials</h3>
+		    <span class="label label-danger" ng-show="message != null">{{message}}</span>
+			<fieldset>
+				<div class="form-group">
+					<label class="control-label" for="usernameEntry">Username</label>  
+					<input class="form-control" id="usernameEntry" ng-model="user.username" class="form-control input-lg" required type="text"/>
+				</div>
+		
+				<div class="form-group">
+					<label class="control-label" for="passwordEntry">Password</label>                   
+					<input class="form-control" id="passwordEntry" ng-model="user.password" class="form-control input-lg" required type="password"/>
+				</div>
+				
+				<div>
+					<label class="control-label" for="remember">Remember Me</label>
+				    <input type="checkbox" ng-model="remember" name="remember"/>
+					<button class="btn btn-primary right" ng-click="submitCreds()" ng-disabled="loginForm.$invalid">Submit</button>
+				</div>
+			
+			</fieldset>
+		</form>
+   </div>
 </div>

@@ -63,6 +63,24 @@ function($scope, $http, $modal, $timeout, DynamicDictionary, StaticDictionary) {
 		return selectedUsers;
 	};
 	
+	/** 
+	 * determine if user is an admin
+	 */
+	$scope.isAdmin = function(selectedUsers) {
+		for (var i=0; i<selectedUsers.length; i++) {
+			var admin = false;
+			for (var j=0;j<selectedUsers[i].roles.length;j++) {
+				if (selectedUsers[i].roles[j].name == "admin") {
+					admin = true;
+				}
+			}
+			
+			selectedUsers[i]['admin'] = admin;
+		}
+		
+		return selectedUsers;
+	};
+	
 	$scope.loadCounts = function() {
 		for (var i=0; i<$scope.labs.length; i++) {
 			$http({
@@ -97,7 +115,8 @@ function($scope, $http, $modal, $timeout, DynamicDictionary, StaticDictionary) {
         		method: 'GET',
         		url: 'user/all'
             }).success(function(data,status) {
-            	$scope.selectedUsers = $scope.addCheckbox(data);
+            	var checkData = $scope.addCheckbox(data);
+            	$scope.selectedUsers = $scope.isAdmin(checkData);
         	});
     		
     	} else {
@@ -106,7 +125,8 @@ function($scope, $http, $modal, $timeout, DynamicDictionary, StaticDictionary) {
     	    	url: 'user/bylab',
     	    	params: {idLab:$scope.selectedLab.idLab}
     	    }).success(function(data,status) {
-    	    	$scope.selectedUsers = $scope.addCheckbox(data);
+    	    	var checkData = $scope.addCheckbox(data);
+            	$scope.selectedUsers = $scope.isAdmin(checkData);
     	    });
     	}
     };

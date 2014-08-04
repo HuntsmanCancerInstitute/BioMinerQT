@@ -32,6 +32,11 @@
 		      templateUrl: 'app/useradmin/useradmin.html',
 		      controller: 'UserAdminController'
 		});
+		
+		$routeProvider.when('/login',{
+			templateUrl: 'app/common/login.html',
+			controller: 'LoginController'
+		});
 	
 		
 		$routeProvider.otherwise({redirectTo: '/dashboard'});
