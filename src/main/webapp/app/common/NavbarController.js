@@ -19,7 +19,7 @@ angular.module('navbar').controller("NavbarController",['$scope','$http','$rootS
 		
 		$scope.isAuthenticated = function() {
 	    	DynamicDictionary.isAuthenticated().success(function(data) {
-	    		$rootScope.loggedUser = data.username;
+	    		$rootScope.loggedUser = data.user;
 	    	});
 	
 		};

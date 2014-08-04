@@ -141,43 +141,7 @@ public class UserController {
     	userService.updateUser(idUser,user);
     }
     
-    
-    
-    @RequestMapping(value = "checkpass", method=RequestMethod.POST)
-    @ResponseBody
-    public User checkPass(@RequestParam(value="password") String password, @RequestParam(value="username") String username) {
-   
-    	//Grab user object that matches username 	
-    	User user = this.userService.getUserByUsername(username);
-    	
-    	//if username doesn't exist, return false
-    	if (user == null) {
-    		return null;
-    	}
-    	
-    	//build password making machine
-    	char[] passwordChars = password.toCharArray();
-    	byte[] saltBytes = user.getSalt().getBytes();
-    	
-    	PBEKeySpec spec = new PBEKeySpec(passwordChars, saltBytes, UserController.ITERATIONS, UserController.KEY_LENGTH);
-    	
-    	byte[] hashedPassword = null;
-    	try {
-    		SecretKeyFactory key = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
-    		hashedPassword = key.generateSecret(spec).getEncoded();
- 
-    	} catch(Exception ioex) {
-    		System.out.println(ioex.getMessage());
-    	}
-    	
-    	//Check if passwords match
-    	String toCheck =  String.format("%x", new BigInteger(hashedPassword));
-    	if (toCheck.equals(user.getPassword())) {
-    		return user;
-    	} else {
-    		return null;
-    	}
-    }
+
     
     public String createSalt() {
     	SecureRandom srandom = new SecureRandom();

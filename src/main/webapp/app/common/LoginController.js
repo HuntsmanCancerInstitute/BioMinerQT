@@ -15,8 +15,7 @@ var login = angular.module("login",['services'])
 	    		url: 'security/login',
 	    		params: {username: $scope.user.username, password: $scope.user.password, remember: $scope.remember}
 	        }).success(function(data,status) {
-	        	console.log(data.message);
-	        	$rootScope.loggedUser = data.username;
+	        	$rootScope.loggedUser = data.user;
 	        	$scope.message = data.message;	
 	    	});
 		};

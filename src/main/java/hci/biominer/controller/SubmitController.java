@@ -202,9 +202,17 @@ public class SubmitController {
     @ResponseBody
     public List<Project> getProjectsByVisibility() {
     	Subject currentUser = SecurityUtils.getSubject();
-    	Long userId = (Long) currentUser.getPrincipal();
-        User user = userService.getUser(userId);
-    	List<Project> projects = this.projectService.getProjectByVisibility(user);
+    	List<Project> projects;
+    	if (currentUser.isAuthenticated()) {
+    		System.out.println("User is authenitcated");
+    		Long userId = (Long) currentUser.getPrincipal();
+            User user = userService.getUser(userId);
+        	projects = this.projectService.getProjectByVisibility(user);
+    	} else {
+    		System.out.println("User is anonymous");
+    		projects = this.projectService.getPublicProjects();
+    	}
+    	
     	return projects;
     }
     

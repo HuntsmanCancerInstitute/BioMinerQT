@@ -133,43 +133,17 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
 	 * Project management
 	 *********************/
     
-    //load projects (currently all, will be tied to user going forward)
-//    $scope.loadProjects = function(projectId) {
-//    	$http({
-//			url: "project/getAllProjects",
-//			method: "POST",
-//			params: {projectId: projectId},
-//		}).success(function(data, status, headers, config) {
-//			$scope.projectId = config.params.projectId;
-//			$scope.projects = data;
-//			
-//			$scope.setActiveProject();
-//			
-//		});
-//    };
-    
     $scope.loadProjects = function(projectId) {
-    	if ($rootScope.loggedUser == null) {
-    		$http({
-    			url: "project/getPublicProjects",
-    			method: "GET",
-    			params: {projectId: projectId},
-    		}).success(function(data, status, headers, config) {
-    			$scope.projectId = config.params.projectId;
-    			$scope.projects = data;
-    			$scope.setActiveProject();
-    		});
-    	} else {
-    		$http({
-    			url: "project/getProjectsByVisibility",
-    			method: "GET",
-    			params: {projectId: projectId, idUser: $rootScope.loggedUser.idUser},
-    		}).success(function(data, status, headers, config) {
-    			$scope.projectId = config.params.projectId;
-    			$scope.projects = data;
-    			$scope.setActiveProject();
-    		});
-    	}
+		$http({
+			url: "project/getProjectsByVisibility",
+			method: "GET",
+			params: {projectId: projectId},
+		}).success(function(data, status, headers, config) {
+			$scope.projectId = config.params.projectId;
+			$scope.projects = data;
+			$scope.setActiveProject();
+		});
+    	
     };
     
     

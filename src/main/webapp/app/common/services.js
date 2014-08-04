@@ -199,6 +199,13 @@ var services = angular.module('services', ['ngResource','ui.bootstrap'])
 				url: 'security/auth',
 			});
 		};
+		
+		dict.loadQueryLabs = function() {
+			return $http({
+				method: 'GET',
+				url: 'lab/getQueryLabs',
+			});
+		};
 
 		return dict;
 		

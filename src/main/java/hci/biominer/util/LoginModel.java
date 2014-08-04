@@ -1,15 +1,18 @@
 package hci.biominer.util;
 
+import hci.biominer.model.access.User;
+
+
 public class LoginModel {
-	private String username;
 	private String message;
+	private User user;
 	
 	
-	public String getUsername() {
-		return username;
+	public User getUser() {
+		return user;
 	}
-	public void setUsername(String username) {
-		this.username = username;
+	public void setUser(User user) {
+		this.user = user;
 	}
 	public String getMessage() {
 		return message;

@@ -30,7 +30,7 @@ public class SecurityController {
 			SecurityUtils.getSubject().login(token);
 			Long id = (Long)SecurityUtils.getSubject().getPrincipal();
 			User user = userService.getUser(id);
-			lm.setUsername(user.getUsername());
+			lm.setUser(user);
 		} catch (AuthenticationException e) {
 			lm.setMessage("Invalid username or password. Please try again.");
 		}
@@ -50,7 +50,7 @@ public class SecurityController {
 		if (SecurityUtils.getSubject().isAuthenticated()) {
 			Long id = (Long)SecurityUtils.getSubject().getPrincipal();
 			User user = userService.getUser(id);
-			lm.setUsername(user.getUsername());
+			lm.setUser(user);
 		}
 		
 		return lm;

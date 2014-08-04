@@ -42,12 +42,10 @@ public class BiominerRealm extends AuthorizingRealm {
 		User user = userService.getUserByUsername(token.getUsername());
 			
 		if (user != null) {
-			System.out.println("CHecking up on you yo!");
 			SimpleAuthenticationInfo sai = new SimpleAuthenticationInfo(user.getIdUser(),user.getPassword(),getName());
 			sai.setCredentialsSalt(new SimpleByteSource(user.getSalt()));
 			return sai;
 		} else {
-			System.out.println("User is null");
 			return null;
 		}	
 	

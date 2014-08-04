@@ -79,7 +79,7 @@
 		        
 		        <ul class="nav navbar-nav">
 		          <li><a ng-hide="$root.loggedUser != null" href="#/login">Login</a></li>
-		          <li><a href="#" ng-hide="$root.loggedUser == null">{{$root.loggedUser}}</a></li>
+		          <li><a href="#" ng-hide="$root.loggedUser == null">{{$root.loggedUser.username}}</a></li>
 		          <li><a href="#" ng-show="$root.loggedUser != null" ng-click="logout()">Logout</a></li>
 		          <li><a href="#">Help</a></li>
 		        </ul>

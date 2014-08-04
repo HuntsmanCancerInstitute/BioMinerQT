@@ -43,5 +43,13 @@ public class LabService {
 		return this.labDAO.getAllUsers(lab);
 	}
 	
+	public List<Lab> getQueryLabsPublic() {
+		return this.labDAO.getQueryLabsPublic();
+	}
+	
+	public List<Lab> getQueryLabsByVisibility(User user) {
+		return this.labDAO.getQueryLabsByVisibility(user);
+	}
+	
 
 }
