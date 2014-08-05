@@ -163,6 +163,14 @@ var services = angular.module('services', ['ngResource','ui.bootstrap'])
 		    	url: 'lab/all'
 		    });
 		};
+		
+		dict.loadQueryProjects = function() {
+			return $http({
+		    	method: 'GET',
+		    	url: 'project/getAllProjects'
+		    });
+		};
+
 	
 		dict.loadSamplePrepsBySampleType = function(idSampleType) {
 			return $http({
