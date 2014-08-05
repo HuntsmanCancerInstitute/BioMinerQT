@@ -20,6 +20,10 @@ public class AnalysisType {
 	@Column(name="type")
 	String type;
 	
+  @Column(name="codeResultTypes")
+	String codeResultTypes;
+
+	
 	public AnalysisType() {
 		
 	}
@@ -43,6 +47,14 @@ public class AnalysisType {
 	public void setIdAnalysisType(Long idAnalysisType) {
 		this.idAnalysisType = idAnalysisType;
 	}
+
+  public String getCodeResultTypes() {
+    return codeResultTypes;
+  }
+
+  public void setCodeResultTypes(String codeResultTypes) {
+    this.codeResultTypes = codeResultTypes;
+  }
 	
 	
 	
