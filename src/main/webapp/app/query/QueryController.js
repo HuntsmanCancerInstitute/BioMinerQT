@@ -23,7 +23,7 @@ function($scope, $http, $filter, DynamicDictionary, StaticDictionary) {
 	
 	$scope.selectedAnalysisTypes = [];
 	$scope.selectedLabs = [];
-	$scope.projects = [];
+	$scope.selectedProjects = [];
 	$scope.analyses = [];
 	$scope.selectedSampleSources = [];
 	
@@ -37,9 +37,9 @@ function($scope, $http, $filter, DynamicDictionary, StaticDictionary) {
 	
 	$scope.isThresholdBasedQuery = true;
 	$scope.thresholdFDR = "";
-	$scope.codeThresholdFDRComparison = ">";
+	$scope.codeThresholdFDRComparison = "GT";
 	$scope.thresholdLog2Ratio = "";
-	$scope.codeThresholdLog2RatioComparison = "> abs";
+	$scope.codeThresholdLog2RatioComparison = "GTABS";
 	
 	$scope.thresholdVariantQual = "";
 	$scope.codeThresholdVariantQualComparison = ">";
@@ -53,23 +53,11 @@ function($scope, $http, $filter, DynamicDictionary, StaticDictionary) {
 			'REGION' :   'Genomic Regions',
 			'VARIANT' :  'Variants' };
 	
-	$scope.analysisTypeList = [
-	        {"codeAnalysisType": "RNASeq",  "name": "RNA Seq"},
-	        {"codeAnalysisType": "CHIPSEQ", "name": "ChIP Seq"},
-	        {"codeAnalysisType": "VARIANT", "name": "Variant"},
-	        {"codeAnalysisType": "METHYL",  "name": "Methylation"}
-	];
-	
-	$scope.analysisTypeCheckedList = [
-	               	        {"codeAnalysisType": "RNASeq",  "name": "RNA Seq",     "codeResultTypes" : ["GENE", "REGION"],               
-	               	        	"selected": false, "show" : true, "class": "grey-out"},
-	               	        {"codeAnalysisType": "CHIPSEQ", "name": "ChIP Seq",    "codeResultTypes" : ["REGION"],                       
-	               	        	"selected": false, "show" : true, "class": ""},
-	               	        {"codeAnalysisType": "VARIANT", "name": "Variant",     "codeResultTypes" : ["GENE", "REGION", "VARIANT"],     
-	               	        	"selected": false, "show" : true, "class": ""},
-	               	        {"codeAnalysisType": "METHYL",  "name": "Methylation", "codeResultTypes" : ["REGION"],                        
-	               	        	"selected": false, "show" : true, "class": ""}
-	];
+	$scope.mapComparison = {
+		'GT':    '>',
+		'GTABS': '> abs',
+		'LT':    '<'
+	};
 
     
     $scope.geneAnnotationList = [
@@ -90,70 +78,8 @@ function($scope, $http, $filter, DynamicDictionary, StaticDictionary) {
                    {"idGenotype": 5, "name": "Carrier Reference"}
     ];
        
-       
-
-	$scope.analysisTypeList = [
-	   	          {idAnalysisType: 1, name: "ChIP Seq"},
-	              {idAnalysisType: 2, name: "RNA Seq"},
-	              {idAnalysisType: 3, name: "Methylation Analysis"},
-	              {idAnalysisType: 4, name: "Variant Calling"}
-	   	                  
-	];
 	
-	$scope.queryResults = [
-	 {
-		  projectName: "Cell 2012 Wamstad Alexander",
-		  analysisName: "ChIP-seq at four stages during cardiomyocyte differentiation",
-		  analysisType: "ChIP Seq",
-		  sampleConditions: "Global occupancy for histone modifications and RNA polymerase II",
-		  analysisDescription: "Mouse Embryonic - Stage ESC",
-		  region: "ch4:23454-23898",
-		  fdr: .03,
-		  log2Ratio: 1.5
-	 },
-	 {
-		  projectName: "Cell 2012 Wamstad Alexander",
-		  analysisName: "ChIP-seq at four stages during cardiomyocyte differentiation",
-		  analysisType: "ChIP Seq",
-		  sampleConditions: "Global occupancy for histone modifications and RNA polymerase II",
-		  analysisDescription: "Mouse Embryonic - Stage ESC",
-		  region: "ch4:23454-23898",
-		  fdr: .03,
-		  log2Ratio: 1.5
-	 },
-	 {
-		  projectName: "Cell 2012 Wamstad Alexander",
-		  analysisName: "ChIP-seq at four stages during cardiomyocyte differentiation",
-		  analysisType: "ChIP Seq",
-		  sampleConditions: "Global occupancy for histone modifications and RNA polymerase II",
-		  analysisDescription: "Mouse Embryonic - Stage ESC",
-		  region: "ch6:89000-90000",
-		  fdr: .02,
-		  log2Ratio: 1.5
-	 },
-	 {
-		  projectName: "Cell 2012 Wamstad Alexander",
-		  analysisName: "ChIP-seq at four stages during cardiomyocyte differentiation",
-		  analysisType: "ChIP Seq",
-		  sampleConditions: "Global occupancy for histone modifications and RNA polymerase II",
-		  analysisDescription: "Mouse Embryonic - Stage MES",
-		  region: "ch3:23454-23898",
-		  fdr: .01,
-		  log2Ratio: 1.8
-	 },
-	 {
-		  projectName: "Cell 2012 Wamstad Alexander",
-		  analysisName: "ChIP-seq at four stages during cardiomyocyte differentiation",
-		  analysisType: "ChIP Seq",
-		  sampleConditions: "Global occupancy for histone modifications and RNA polymerase II",
-		  analysisDescription: "Mouse Embryonic - Stage MES",
-		  region: "ch13:123454-123898",
-		  fdr: .01,
-		  log2Ratio: 1.8
-	 }
-	                  
-	                  
-	];
+	$scope.queryResults = [];
 	
 	
 	//Static dictionaries.
@@ -163,11 +89,28 @@ function($scope, $http, $filter, DynamicDictionary, StaticDictionary) {
     		$scope.organismBuildList = data;
     	});
     };
+	$scope.loadAnalysisTypeList = function () {
+    	StaticDictionary.getAnalysisTypeList().success(function(data) {
+    		$scope.analysisTypeCheckedList = data;
+    		for (var idx = 0; idx < $scope.analysisTypeCheckedList.length; idx++) {
+    			$scope.analysisTypeCheckedList[idx].selected  = false;
+    			$scope.analysisTypeCheckedList[idx].show      = true;
+    			$scope.analysisTypeCheckedList[idx].codeResultTypes = $scope.analysisTypeCheckedList[idx].codeResultTypes.split(",");
+    		}
+    	});
+    };
+    
+
 	
 	//Dynamic dictionaries.  These dictionaries can be loaded on-demand.
     $scope.loadLabs = function() {
-    	DynamicDictionary.loadLabs().success(function(data) {
+    	DynamicDictionary.loadQueryLabs().success(function(data) {
     		$scope.labList = data;
+    	});
+    };
+    $scope.loadProjects = function() {
+    	DynamicDictionary.loadQueryProjects().success(function(data) {
+    		$scope.projectList = data;
     	});
     };
     $scope.loadSampleSources = function() {
@@ -180,6 +123,9 @@ function($scope, $http, $filter, DynamicDictionary, StaticDictionary) {
 	$scope.loadLabs();
 	$scope.loadSampleSources();
 	$scope.loadOrganismBuildList();
+	$scope.loadAnalysisTypeList();
+	$scope.loadProjects();
+
 
 
 	
@@ -208,20 +154,7 @@ function($scope, $http, $filter, DynamicDictionary, StaticDictionary) {
 			$scope.isThresholdBasedQuery = true;
 		}
 	};
-	
-	
-	$scope.runQuery = function() {
-		$scope.hasResults = false;
 		
-		// Build a summary of the query that is being performed.  This will display
-		// in the results panel
-		$scope.buildQuerySummary();
-		
-		$scope.hasResults = true;
-		
-	
-	};
-	
 	$scope.clearQuery = function() {
 		$scope.hasResults = false;
 		$scope.queryForm.$setPristine();
@@ -233,8 +166,8 @@ function($scope, $http, $filter, DynamicDictionary, StaticDictionary) {
 
 		
 		$scope.selectedAnalysisTypes.length = 0;
-		$scope.selectedLabs.length = 0;;
-		$scope.projects.length = 0;
+		$scope.selectedLabs.length = 0;
+		$scope.selectedProjects.length = 0;
 		$scope.analyses.length = 0;
 		$scope.selectedSampleSources.length = 0;
 		
@@ -317,6 +250,15 @@ function($scope, $http, $filter, DynamicDictionary, StaticDictionary) {
 			if (labDisplay.length > 0) {
 				datasetSummary += "  submitted by  " + labDisplay;
 			}
+			
+			// project
+			var projectDisplay = $.map($scope.selectedProjects, function(project){
+			    return project.name;
+			}).join(', ');
+			if (projectDisplay.length > 0) {
+				datasetSummary += "  for projects  " + projectDisplay;
+			}
+			
 			// sample source
 			var sampleSourcesDisplay = $.map($scope.selectedSampleSources, function(ss){
 			    return ss.source;
@@ -360,11 +302,11 @@ function($scope, $http, $filter, DynamicDictionary, StaticDictionary) {
 		if ($scope.isThresholdBasedQuery) {
 			var thresholdQuery = "";
 			if ($scope.thresholdFDR.length > 0) {
-				thresholdQuery = "THAT EXCEED THRESHOLD of  " + "FDR " + $scope.codeThresholdFDRComparison + ' ' + $scope.thresholdFDR;
+				thresholdQuery = "THAT EXCEED THRESHOLD of  " + "FDR " + $scope.mapComparison[$scope.codeThresholdFDRComparison] + ' ' + $scope.thresholdFDR;
 			}
 			if ($scope.thresholdLog2Ratio.length > 0) {
 				thresholdQuery = thresholdQuery + ($scope.thresholdFDR.length > 0 ? " AND ": "THAT EXCEED THRESHOLD   ");
-				$scope.querySummary.push(thresholdQuery + "Log2Ratio " + $scope.codeThresholdLog2RatioComparison + ' ' + $scope.thresholdLog2Ratio);
+				$scope.querySummary.push(thresholdQuery + "Log2Ratio " + $scope.mapComparison[$scope.codeThresholdLog2RatioComparison] + ' ' + $scope.thresholdLog2Ratio);
 			}
 		} else {
 			var variantQuery = "";
@@ -405,6 +347,75 @@ function($scope, $http, $filter, DynamicDictionary, StaticDictionary) {
 	  }
   	  $scope.display +=  element.name;
 	};
+	
+
+	
+	$scope.runQuery = function() {
+		$scope.hasResults = false;
+		
+		// Build a summary of the query that is being performed.  This will display
+		// in the results panel
+		$scope.buildQuerySummary();
+		
+		var idAnalysisTypeParams = $.map($scope.selectedAnalysisTypes, function(analysisType){
+		    return analysisType.idAnalysisType;
+		}).join(',');
+		
+		var idLabParams = $.map($scope.selectedLabs, function(lab){
+		    return lab.idLab;
+		}).join(',');
+		
+		var idProjectParams = $.map($scope.selectedProjects, function(project){
+		    return project.idProject;
+		}).join(',');
+		
+		//TODO:  Get selected analysis ids
+		
+		var idSampleSourceParams = $.map($scope.selectedSampleSources, function(ss){
+		    return ss.idSampleSource;
+		}).join(',');
+		
+	
+		var idGeneAnnotationParams = $.map($scope.selectedGeneAnnotations, function(ga){
+		    return ga.idGeneAnnotation;
+		}).join(',');
+
+		
+		// Run the query on the server.
+		$http({
+			url: "query/run",
+			method: "GET",
+			params: {codeResultType:          $scope.codeResultType,
+				     idOrganismBuild:         $scope.idOrganismBuild,
+				     idAnalysisTypes:         idAnalysisTypeParams,
+				     idLabs:                  idLabParams,
+				     idProjects:              idProjectParams,
+				     idSampleSources:         idSampleSourceParams,
+				     isIntersect:             $scope.isIntersect,
+				     regions:                 $scope.regions,
+				     regionMargins:           $scope.regionMargins,
+				     genes:                   $scope.genes,
+				     geneMargins:             $scope.geneMargins,
+				     idGeneAnnotations:       idGeneAnnotationParams,
+				     isThresholdBasedQuery:   $scope.isThresholdBasedQuery,
+				     FDR:                     $scope.thresholdFDR,
+				     codeFDRComparison:       $scope.codeThresholdFDRComparison,
+				     log2Ratio:               $scope.thresholdLog2Ratio,
+				     codeLog2RatioComparison: $scope.codeThresholdLog2RatioComparison},
+				     
+		}).success(function(data) {
+			$scope.queryResults = data;
+			$scope.hasResults = true;
+		}).error(function(data, status, headers, config) {
+			console.log("Could not run query.");
+			$scope.hasResults = true;
+		});
+
+		
+		
+	
+	};
+
 
 
 

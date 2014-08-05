@@ -76,9 +76,17 @@
            	 		<!-- What data sets? -->
 					<div class="form-group">
 					  <div class="col-md-12">
-					    <label ng-repeat="analysisType in analysisTypeCheckedList" ng-class="analysisType.class" ng-disabled="!analysisType.show" class="checkbox-inline" for="checkbox-at-{{ analysisType.codeAnalysisType }}">
-					      <input name="checkbox-at-{{ analysisType.codeAnalysisType }}" ng-required="!someAnalysisTypeChecked()" ng-disabled="!analysisType.show"  id="checkbox-at-{{ analysisType.codeAnalysisType }}" ng-model="analysisType.selected" type="checkbox" >
-					      {{ analysisType.name }}
+					    <label ng-repeat="analysisType in analysisTypeCheckedList" 
+					           ng-class="analysisType.class" 
+					           ng-disabled="!analysisType.show" 
+					           class="checkbox-inline" 
+					           for="checkbox-at-{{ analysisType.idAnalysisType }}">
+					      <input name="checkbox-at-{{ analysisType.idAnalysisType }}" 
+					             ng-required="!someAnalysisTypeChecked()" 
+					             ng-disabled="!analysisType.show"  
+					             id="checkbox-at-{{ analysisType.idAnalysisType }}" 
+					             ng-model="analysisType.selected" type="checkbox" >
+					      {{ analysisType.type }}
 					    </label>
 					  </div>
 					</div>
@@ -93,7 +101,7 @@
 					<!--  Analysis Project -->
 					<div class="form-group">
 						<label class="col-md-4 control-label" for=""labEntry">Analysis Projects</label>  
-					    <select data-placeholder="Choose analysis projects..." multiple class="col-md-7 chosen-select" ng-model="selectedLabs" chosen="labList" ng-options="lab.name for lab in labList"  ></select>
+					    <select data-placeholder="Choose analysis projects..." multiple class="col-md-7 chosen-select" ng-model="selectedProjects" chosen="projectList" ng-options="project.name for project in projectList"  ></select>
 					</div>
 					
 					<!--  Analysis  -->
@@ -181,8 +189,8 @@
 					<div class="form-group" ng-show="isThresholdBasedQuery">
 					  <label class="col-md-3 control-label" >FDR</label>  
 				  	  <div class="col-md-5 btn-group ">
-  					     	<label class="btn btn-toggle" ng-model="codeThresholdFDRComparison" btn-radio="'>'" >&gt;</label>
-       					    <label class="btn btn-toggle" ng-model="codeThresholdFDRComparison" btn-radio="'<'" >&lt;</label>
+  					     	<label class="btn btn-toggle" ng-model="codeThresholdFDRComparison" btn-radio="'GT'" >&gt;</label>
+       					    <label class="btn btn-toggle" ng-model="codeThresholdFDRComparison" btn-radio="'LT'" >&lt;</label>
    					  </div>
 					  <input id="textinput" class="col-md-3 form-control" style="display: inline; max-width: 60px" ng-model="thresholdFDR" name="textinput" placeholder=".05"  type="text">
 					</div>        
@@ -192,9 +200,9 @@
 					<div class="form-group" ng-show="isThresholdBasedQuery">
 					    <label class="col-md-3 control-label">Log2Ratio</label>  
 					  	<div class="col-md-5 btn-group">
-   					     	<label class="btn btn-toggle" ng-model="codeThresholdLog2RatioComparison" btn-radio="'> abs'" >&gt; abs</label>
-   					     	<label class="btn btn-toggle" ng-model="codeThresholdLog2RatioComparison" btn-radio="'>'"     >&gt;</label>
-        					<label class="btn btn-toggle" ng-model="codeThresholdLog2RatioComparison" btn-radio="'<'"     >&lt;</label>
+   					     	<label class="btn btn-toggle" ng-model="codeThresholdLog2RatioComparison" btn-radio="'GTABS'" >&gt; abs</label>
+   					     	<label class="btn btn-toggle" ng-model="codeThresholdLog2RatioComparison" btn-radio="'GT'"     >&gt;</label>
+        					<label class="btn btn-toggle" ng-model="codeThresholdLog2RatioComparison" btn-radio="'LT'"     >&lt;</label>
     					</div>
 					    
 						<input id="textinput" class="col-md-3 form-control"   style="display: inline; max-width: 60px" ng-model="thresholdLog2Ratio" name="textinput" placeholder="1.0"  type="text">
@@ -296,7 +304,6 @@
 			    	<colgroup>
 				        <col width="0%" />
 				        <col width="20%" />
-				        <col width="0%" />
 				        <col width="25%" />
 				        <col width="0%" />
 				        <col width="25%" />
@@ -309,7 +316,6 @@
 			            <tr>
 			                <th></th>
 							<th>Project</th>
-							<th></th>
 							<th>Analysis</th>
 							<th>Type</th>
 							<th>Conditions</th>
@@ -323,23 +329,12 @@
 			            <tr ng-repeat="row in queryResults">
 			            	<td><input type="checkbox"/></td>
 			            	
-			                <td class="nowrap-ellipsis" >{{row.projectName}}</td>
-			                    
-			                <td>
-			                    <div show-on-row-hover style="display:none;float:left">
-									<span class="glyphicon glyphicon-info-sign" 
-									   tooltip-popup-delay="0"
-	                                   tooltip-placement="top"
-	                                   tooltip="{{row.projectName}}">
-   	   	                             </span>
-	                            </div>
-                            </td>
-			                
+			                <td class="nowrap-ellipsis" ><span tooltip="{{row.projectName}}">{{row.projectName}}</td>
 			                <td class="nowrap-ellipsis"><span tooltip="{{row.analysisName}}">{{row.analysisName}}</span></td>
 			                <td class="nowrap">{{row.analysisType}}</td>
-			                <td class="nowrap-ellipsis"><span tooltip="{{row.analysisDescription}}">{{row.analysisDescription}}</span></td>
-			                <td class="nowrap-ellipsis">{{row.sampleConditions}}</td>
-			                <td class="nowrap">{{row.region}}</td>
+			                <td class="nowrap-ellipsis"><span tooltip="{{row.analysisDescription}}">{{row.analysisSummary}}</span></td>
+			                <td class="nowrap-ellipsis"><span tooltip="{{row.sampleConditions}}">{{row.sampleConditions}}</td>
+			                <td class="nowrap">{{row.coordinates}}</td>
 			                <td class="nowrap">{{row.fdr}}</td>
 			                <td class="nowrap">{{row.log2Ratio}}</td>
 			            </tr>
