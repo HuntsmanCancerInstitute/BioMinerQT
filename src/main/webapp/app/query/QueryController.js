@@ -238,10 +238,12 @@ function($scope, $http, $filter, DynamicDictionary, StaticDictionary) {
 				$scope.selectedAnalysisTypes.push($scope.analysisTypeCheckedList[i]);
 			}
 		}
-		$scope.display = "";
-		$scope.selectedAnalysisTypes.forEach($scope.concatDisplayName);
-		if ($scope.display.length > 0) {
-			datasetSummary = "ON  " + $scope.display + " data sets";
+		
+		var atDisplay = $.map($scope.selectedAnalysisTypes, function(analysisType){
+		    return analysisType.type;
+		}).join(', ');
+		if (atDisplay.length > 0) {
+			datasetSummary = "ON  " + atDisplay + " data sets";
 			
 			// lab
 			var labDisplay = $.map($scope.selectedLabs, function(lab){
