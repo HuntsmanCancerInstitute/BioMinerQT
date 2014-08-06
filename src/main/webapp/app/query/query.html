@@ -21,7 +21,7 @@
      	<!--                         -->
         <!--  Query (sidebar) Panel  -->
      	<!--                         -->
-     	<div class="col-sm-7 col-md-4 col-lg-4">  
+     	<div class="col-sm-12 col-md-12 col-lg-4">  
  
 
      	
@@ -142,10 +142,8 @@
 						   		</label>
 						  </div>
 					    </div>
-					    <div class="col-md-6"  ng-show="intersectionTarget == 'REGION'" style="padding-left: 1px; padding-right: 0px;">
-				    		<input type="text" ng-model="regions" style="display: inline;" class="form-control" placeholder="chr1:4500-8900">
-					    </div>
-				    	<div class="col-md-3"  ng-show="intersectionTarget == 'REGION'" style="padding-left: 1px; padding-right: 0px;">
+					    <div class="col-md-9"  ng-show="intersectionTarget == 'REGION'" style="padding-left: 1px; padding-right: 0px;">
+				    		<input type="text" ng-model="regions" style="display: inline; width: 60%" class="form-control" placeholder="chr1:4500-8900">
 					    	&nbsp;&nbsp;+/-
 					    	<input type="text" ng-model="regionMargins" style="display: inline; max-width: 60px;" class="form-control" placeholder="1000"/> 
 					    	bp
@@ -162,10 +160,8 @@
 						   		</label>
 						  </div>
 						</div>
-					 	<div class="col-md-6" ng-show="intersectionTarget == 'GENE'" style="padding-left: 1px; padding-right: 0px;">
-				    		<input type="text" ng-model="genes" style="display: inline;" class="form-control" placeholder="gene, gene, ...">
-					    </div>
-				    	<div class="col-md-3"  ng-show="intersectionTarget == 'GENE'"  style="padding-left: 1px; padding-right: 0px;">
+					 	<div class="col-md-9" ng-show="intersectionTarget == 'GENE'" style="padding-left: 1px; padding-right: 0px;">
+				    		<input type="text" ng-model="genes" style="display: inline; width: 60%" class="form-control" placeholder="gene, gene, ...">
 					    	&nbsp;&nbsp;+/-
 					    	<input type="text" ng-model="geneMargins" style="display: inline; max-width: 60px;"class="form-control" placeholder="1000"/> 
 					    	bp
@@ -281,7 +277,7 @@
      	<!--                 -->
         <!--  Results Panel  -->
      	<!--                 -->
-		<div class="col-sm-7 col-md-8 col-lg-8" >
+		<div class="col-sm-12 col-md-12 col-lg-8" >
 			
 			<div class=" panel panel-default">
 			
