@@ -148,6 +148,22 @@ var services = angular.module('services', ['ngResource','ui.bootstrap'])
 			});
 		};
 		
+		dict.getGenotypeList = function() {
+			return $http({
+				method: 'GET',
+				url: 'shared/getAllGenotypes',
+				cache: true,
+			});
+		};
+		
+		dict.getGeneAnnotationList = function() {
+			return $http({
+				method: 'GET',
+				url: 'shared/getAllGeneAnnotations',
+				cache: true,
+			});
+		};
+		
 		return dict;
 	}
 ])

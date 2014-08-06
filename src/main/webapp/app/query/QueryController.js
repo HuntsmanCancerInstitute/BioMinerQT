@@ -59,25 +59,7 @@ function($scope, $http, $filter, DynamicDictionary, StaticDictionary) {
 		'LT':    '<'
 	};
 
-    
-    $scope.geneAnnotationList = [
-                   {"idGeneAnnotation": 1, "name": "TSS"},
-                   {"idGeneAnnotation": 2, "name": "Genic"},
-                   {"idGeneAnnotation": 3, "name": "Intronic"},
-                   {"idGeneAnnotation": 4, "name": "Exonic"},
-                   {"idGeneAnnotation": 5, "name": "Intergenic"}
-                     		
-    ];
-    
-    
-    $scope.genotypeList = [
-                   {"idGenotype": 1, "name": "Homozygous Mutant"},
-                   {"idGenotype": 2, "name": "Heterozygous"},
-                   {"idGenotype": 3, "name": "Reference"},
-                   {"idGenotype": 4, "name": "Carrier Mutant"},
-                   {"idGenotype": 5, "name": "Carrier Reference"}
-    ];
-       
+   
 	
 	$scope.queryResults = [];
 	
@@ -87,6 +69,16 @@ function($scope, $http, $filter, DynamicDictionary, StaticDictionary) {
 	$scope.loadOrganismBuildList = function () {
     	StaticDictionary.getOrganismBuildList().success(function(data) {
     		$scope.organismBuildList = data;
+    	});
+    };
+    $scope.loadGenotypeList = function () {
+    	StaticDictionary.getGenotypeList().success(function(data) {
+    		$scope.genotypeList = data;
+    	});
+    };
+    $scope.loadGeneAnnotationList = function () {
+    	StaticDictionary.getGeneAnnotationList().success(function(data) {
+    		$scope.geneAnnotationList = data;
     	});
     };
 	$scope.loadAnalysisTypeList = function () {
@@ -125,6 +117,8 @@ function($scope, $http, $filter, DynamicDictionary, StaticDictionary) {
 	$scope.loadOrganismBuildList();
 	$scope.loadAnalysisTypeList();
 	$scope.loadProjects();
+	$scope.loadGenotypeList();
+	$scope.loadGeneAnnotationList();
 
 
 

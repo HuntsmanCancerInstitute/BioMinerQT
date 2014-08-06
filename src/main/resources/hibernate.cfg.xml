@@ -5,6 +5,8 @@
  
 <hibernate-configuration>
     <session-factory>
+        <mapping class="hci.biominer.model.Genotype"/>
+        <mapping class="hci.biominer.model.GeneAnnotation"/>
         <mapping class="hci.biominer.model.Organism"/>
         <mapping class="hci.biominer.model.OrganismBuild"/>
         <mapping class="hci.biominer.model.AnalysisType"/>

@@ -1,32 +1,42 @@
 package hci.biominer.controller;
 
-import hci.biominer.model.OrganismBuild;
-import hci.biominer.model.Organism;
 import hci.biominer.model.AnalysisType;
-import hci.biominer.model.SampleType;
+import hci.biominer.model.GeneAnnotation;
+import hci.biominer.model.Genotype;
+import hci.biominer.model.Organism;
+import hci.biominer.model.OrganismBuild;
+import hci.biominer.model.SampleCondition;
 import hci.biominer.model.SamplePrep;
 import hci.biominer.model.SampleSource;
-import hci.biominer.model.SampleCondition;
+import hci.biominer.model.SampleType;
 import hci.biominer.model.access.Institute;
+import hci.biominer.service.AnalysisTypeService;
+import hci.biominer.service.GeneAnnotationService;
+import hci.biominer.service.GenotypeService;
 import hci.biominer.service.InstituteService;
 import hci.biominer.service.OrganismBuildService;
 import hci.biominer.service.OrganismService;
-import hci.biominer.service.AnalysisTypeService;
-import hci.biominer.service.SampleTypeService;
+import hci.biominer.service.SampleConditionService;
 import hci.biominer.service.SamplePrepService;
 import hci.biominer.service.SampleSourceService;
-import hci.biominer.service.SampleConditionService;
+import hci.biominer.service.SampleTypeService;
 
 import java.util.List;
 import java.util.Properties;
 
-import javax.activation.*;
-import javax.mail.internet.*;
-import javax.mail.*;
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
 @RequestMapping("shared")
@@ -55,7 +65,13 @@ public class SharedController {
 	
 	@Autowired
 	private InstituteService instituteService;
-	
+	 
+  @Autowired
+  private GenotypeService genotypeService;
+  
+  @Autowired
+  private GeneAnnotationService geneAnnotationService;
+
 
 	@RequestMapping(value="getAllInstitutes",method=RequestMethod.GET)
 	@ResponseBody
@@ -117,6 +133,22 @@ public class SharedController {
 	public List<SampleCondition> getAllSampleConditions() {
 		return sampleConditionService.getAllSampleConditions();
 	}
+	
+	 
+  @RequestMapping(value="getAllGenotypes",method=RequestMethod.GET)
+  @ResponseBody
+  public List<Genotype> getAllGenotypes() {
+    return genotypeService.getAllGenotypes();
+  }
+
+  
+  
+  @RequestMapping(value="getAllGeneAnnotations",method=RequestMethod.GET)
+  @ResponseBody
+  public List<GeneAnnotation> getAllGeneAnnotations() {
+    return geneAnnotationService.getAllGeneAnnotations();
+  }
+
 	
 	@RequestMapping(value="sendMail",method=RequestMethod.POST) 
 	@ResponseBody
