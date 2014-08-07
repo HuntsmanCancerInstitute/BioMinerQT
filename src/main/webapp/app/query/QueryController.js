@@ -24,7 +24,7 @@ function($scope, $http, $filter, DynamicDictionary, StaticDictionary) {
 	$scope.selectedAnalysisTypes = [];
 	$scope.selectedLabs = [];
 	$scope.selectedProjects = [];
-	$scope.analyses = [];
+	$scope.selectedAnalyses = [];
 	$scope.selectedSampleSources = [];
 	
 	$scope.isIntersect = "true";
@@ -105,6 +105,11 @@ function($scope, $http, $filter, DynamicDictionary, StaticDictionary) {
     		$scope.projectList = data;
     	});
     };
+    $scope.loadAnalyses = function() {
+    	DynamicDictionary.loadQueryAnalyses().success(function(data) {
+    		$scope.analysisList = data;
+    	});
+    };
     $scope.loadSampleSources = function() {
     	DynamicDictionary.loadSampleSources().success(function(data) {
     		$scope.sampleSourceList = data;
@@ -117,6 +122,7 @@ function($scope, $http, $filter, DynamicDictionary, StaticDictionary) {
 	$scope.loadOrganismBuildList();
 	$scope.loadAnalysisTypeList();
 	$scope.loadProjects();
+	$scope.loadAnalyses();
 	$scope.loadGenotypeList();
 	$scope.loadGeneAnnotationList();
 
@@ -162,7 +168,7 @@ function($scope, $http, $filter, DynamicDictionary, StaticDictionary) {
 		$scope.selectedAnalysisTypes.length = 0;
 		$scope.selectedLabs.length = 0;
 		$scope.selectedProjects.length = 0;
-		$scope.analyses.length = 0;
+		$scope.selectedAalyses.length = 0;
 		$scope.selectedSampleSources.length = 0;
 		
 		$scope.isIntersect = "true";
@@ -254,7 +260,15 @@ function($scope, $http, $filter, DynamicDictionary, StaticDictionary) {
 			if (projectDisplay.length > 0) {
 				datasetSummary += "  for projects  " + projectDisplay;
 			}
-			
+
+			// analysis
+			var analysisDisplay = $.map($scope.selectedAnalyses, function(analysis){
+			    return analysis.name;
+			}).join(', ');
+			if (analysisDisplay.length > 0) {
+				datasetSummary += "  for analysis  " + analysisDisplay;
+			}
+
 			// sample source
 			var sampleSourcesDisplay = $.map($scope.selectedSampleSources, function(ss){
 			    return ss.source;
@@ -365,7 +379,9 @@ function($scope, $http, $filter, DynamicDictionary, StaticDictionary) {
 		    return project.idProject;
 		}).join(',');
 		
-		//TODO:  Get selected analysis ids
+		var idAnalysisParams = $.map($scope.selectedAnalyses, function(analysis){
+		    return analysis.idAnalysis;
+		}).join(',');
 		
 		var idSampleSourceParams = $.map($scope.selectedSampleSources, function(ss){
 		    return ss.idSampleSource;
@@ -386,6 +402,7 @@ function($scope, $http, $filter, DynamicDictionary, StaticDictionary) {
 				     idAnalysisTypes:         idAnalysisTypeParams,
 				     idLabs:                  idLabParams,
 				     idProjects:              idProjectParams,
+				     idAnalyses:              idAnalysisParams,
 				     idSampleSources:         idSampleSourceParams,
 				     isIntersect:             $scope.isIntersect,
 				     regions:                 $scope.regions,

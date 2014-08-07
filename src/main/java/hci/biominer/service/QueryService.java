@@ -19,6 +19,7 @@ public class QueryService {
       List<Integer> idAnalysisTypes,
       List<Integer> idLabs,
       List<Integer> idProjects,
+      List<Integer> idAnalyses,
       List<Integer> idSampleSources,
       boolean        isIntersect,
       String         regions,

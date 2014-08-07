@@ -183,7 +183,7 @@ var services = angular.module('services', ['ngResource','ui.bootstrap'])
 		dict.loadQueryProjects = function() {
 			return $http({
 		    	method: 'GET',
-		    	url: 'project/getAllProjects'
+		    	url: 'project/getProjectsByVisibility'
 		    });
 		};
 
@@ -228,6 +228,13 @@ var services = angular.module('services', ['ngResource','ui.bootstrap'])
 			return $http({
 				method: 'GET',
 				url: 'lab/getQueryLabs',
+			});
+		};
+		
+		dict.loadQueryAnalyses = function() {
+			return $http({
+				method: 'GET',
+				url: 'project/getAllAnalyses',
 			});
 		};
 

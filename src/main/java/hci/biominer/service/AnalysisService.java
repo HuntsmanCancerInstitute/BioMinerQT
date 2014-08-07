@@ -9,6 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 import hci.biominer.dao.AnalysisDAO;
 import hci.biominer.model.Analysis;
 import hci.biominer.model.Project;
+import hci.biominer.model.access.Lab;
+import hci.biominer.model.access.User;
 
 @Service("AnalysisService")
 @Transactional
@@ -21,8 +23,18 @@ public class AnalysisService {
 	}
 	
 	public List<Analysis> getAnalysesByProject(Project project) {
-		return analysisDAO.getProjectsByProject(project);
+		return analysisDAO.getAnalysesByProject(project);
 	}
+	
+	 
+  public List<Analysis> getAnalysesPublic() {
+    return this.analysisDAO.getPublicAnalyses();
+  }
+  
+  public List<Analysis> getAnalysesByVisibility(User user) {
+    return this.analysisDAO.getAnalysesByVisibility(user);
+  }
+
 	
 	public Long addAnalysis(Analysis analysis) {
 		return analysisDAO.addAnalysis(analysis);

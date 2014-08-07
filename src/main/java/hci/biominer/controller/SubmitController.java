@@ -533,6 +533,31 @@ public class SubmitController {
     	this.analysisService.updateAnalysis(analysis,idAnalysis);
     
     }
+    
+
+    /***************************************************
+   * URL: /project/getAllAnalyses
+   * getAllAnalyses(): get all analyses 
+   * method: post
+   * @return list of analyses
+   ****************************************************/
+    @RequestMapping(value="getAllAnalyses",method=RequestMethod.GET)
+    @ResponseBody
+    public List<Analysis> getAllAnalyses() {
+      Subject currentUser = SecurityUtils.getSubject();
+      List<Analysis> analyses;
+      if (currentUser.isAuthenticated()) {
+        System.out.println("ANALYSIS: User is authenticated");
+        Long userId = (Long) currentUser.getPrincipal();
+            User user = userService.getUser(userId);
+            analyses = this.analysisService.getAnalysesByVisibility(user);
+      } else {
+        System.out.println("ANALYSIS: User is anonymous");
+        analyses = this.analysisService.getAnalysesPublic();
+      }
+      return analyses;
+    }
+
 
     /***************************************************
 	 * URL: /project/getAnalysisByProject
