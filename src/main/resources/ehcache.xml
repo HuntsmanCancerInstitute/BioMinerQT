@@ -1,7 +1,7 @@
 <ehcache>
 
     <diskStore path="java.io.tmpdir/shiro-sprhib-ehcache"/>
-
+    
 
     <defaultCache
         maxElementsInMemory="1000"
@@ -10,6 +10,7 @@
         overflowToDisk="true"
         diskPersistent="false"
         />
+ 
 
     <!--=================================================================
     Hibernate Object Caches

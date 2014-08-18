@@ -63,13 +63,12 @@
 	      <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 	          <ul class="nav navbar-nav">
 	          
-	    	    <li><a href="#/query"><span class="glyphicon glyphicon-zoom-in"></span> Query</a></li>
+	    	    <li><a href="#/query" ><span class="glyphicon glyphicon-zoom-in"></span> Query</a></li>
 	    	    <li><a href="#/submit"><span class="glyphicon glyphicon-cloud-upload"></span> Submit Your Data</a></li>
-	        	<li><a href="#/useradmin"><span class="glyphicon glyphicon-cog"></span> Admin</a></li>
+	        	<li><a href="#/useradmin" ng-hide="!admin"><span class="glyphicon glyphicon-cog"></span> Admin</a></li>
 	            
 	          </ul>
 	          <div class="nav navbar-nav navbar-right">
-		     	<span ng-hide="user == null">Welcome {{user.name}}</span>
 		        <ul class="nav navbar-nav">
 		          <li><a ng-hide="$root.loggedUser != null" href="#/login">Login</a></li>
 		          <li><a href="#" ng-hide="$root.loggedUser == null">{{$root.loggedUser.username}}</a></li>

@@ -1,157 +1,157 @@
 
-	
-	<!-- Users tool bar -->
-   	<div class="row toolbar" ng-show="userTabOpen" >
-      		<h3>
-   	        <span class="glyphicon glyphicon-cog"></span>
-			  Users and Labs
-		   </h3>
 
-  
-    		<a ng-click="openNewUserWindow()"  href="#/useradmin">
-   				<span class="glyphicon glyphicon-plus"></span>Add User
-			</a>
-	      
-	
-			<a ng-click="confirmUserDelete()"  href="#/useradmin">
-	 		 	<span class="glyphicon glyphicon-minus"></span>Delete User
-			</a>
+<!-- Users tool bar -->
+  	<div class="row toolbar" ng-show="userTabOpen" >
+     		<h3>
+  	        <span class="glyphicon glyphicon-cog"></span>
+		  Users and Labs
+	   </h3>
+
+ 
+   		<a ng-click="openNewUserWindow()"  href="#/useradmin">
+  				<span class="glyphicon glyphicon-plus"></span>Add User
+		</a>
+      
+
+		<a ng-click="confirmUserDelete()"  href="#/useradmin">
+ 		 	<span class="glyphicon glyphicon-minus"></span>Delete User
+		</a>
+		
+		<label for="labSelect">Lab </label>
+		<select id="labSelect" ng-model="selectedLab"  ng-options="lab.last for lab in labs" >
+			<option value=""></option>
+		</select>
 			
-			<label for="labSelect">Lab </label>
-			<select id="labSelect" ng-model="selectedLab"  ng-options="lab.last for lab in labs" >
-				<option value=""></option>
-			</select>
-				
-			<label class="label label-warning">{{message}}</label>
-				
-		    <div class="form-group right">
-		  		 <label for="search">Filter Users </label>	
-				 <input id="search" ng-model="userQuery">
-		    </div>
-	</div>
-	
-	
-	<!-- Lab tool bar -->
-   	<div class="row toolbar" ng-show="labTabOpen" >
-      		<h3>Users and Labs</h3>
-      		
-			<a ng-click="openNewLabWindow()" href="#/useradmin">
-	 		 	<span class="glyphicon glyphicon-plus"></span>Add Lab
-			</a>
+		<label class="label label-warning">{{message}}</label>
 			
-			<a ng-click="confirmLabDelete()" href="#/useradmin">
-	 		 	<span class="glyphicon glyphicon-minus"></span>Delete lab
-			</a>
+	    <div class="form-group right">
+	  		 <label for="search">Filter Users </label>	
+			 <input id="search" ng-model="userQuery">
+	    </div>
+</div>
+
+
+<!-- Lab tool bar -->
+  	<div class="row toolbar" ng-show="labTabOpen" >
+     		<h3>Users and Labs</h3>
+     		
+		<a ng-click="openNewLabWindow()" href="#/useradmin">
+ 		 	<span class="glyphicon glyphicon-plus"></span>Add Lab
+		</a>
+		
+		<a ng-click="confirmLabDelete()" href="#/useradmin">
+ 		 	<span class="glyphicon glyphicon-minus"></span>Delete lab
+		</a>
+		
+		<label class="label label-warning">{{message}}</label>
 			
-			<label class="label label-warning">{{message}}</label>
-				
-			<div class="form-group right">
-				<label for="search">Filter Labs </label>	
-				<input id="search" ng-model="labQuery">
-		    </div>
-	</div>
-	
-	
-	
-	<div class="row">	
-		<div class="panel panel-default col-lg-12">
-		  <div class="panel-body" style="padding-top: 10px;">	
-		    <tabset>
-		     	<tab heading="Users" active="$parent.userTabOpen" >
-		     		<div>
-				     	<table class="table" id="userTable" >
-				     	    <thead>
-						      <tr>
-						        <th ng-click="selectAllUsersChanged()">Selected</th>
-						        <th ng-click="userOrderByField='first'; userReverseSort=!userReverseSort">First Name</th>
-						        <th ng-click="userOrderByField='last'; userReverseSort=!userReverseSort">Last Name</th>
-						        <th ng-click="userOrderByField='username'; userReverseSort=!userReverseSort">Username</th>
-						        <th ng-click="userOrderByField='email'; userReverseSort=!userReverseSort">Email Address</th>
-						        <th>Admin</th>
-						        <th ng-click="userOrderByField='phone'; userReverseSort=!userReverseSort">Phone Number</th>
-						        <th>Labs</th>
-						        <th>Institutions</th>
-						      </tr>
-						    </thead>
-						    <tbody>
-					         	<tr data-ng-repeat="user in selectedUsers | filter:userQuery | orderBy:userOrderByField:userReverseSort | startFrom:userCurrentPage*userLimit | limitTo:userLimit " ng-dblclick="openEditUserWindow(user)">
-					         	    <td><input ng-model=user.selected type="checkbox"/></td>
-					             	<td>{{user.first}}</td>
-					             	<td>{{user.last}}</td>
-					             	<td>{{user.username}}</td>
-					             	<td>{{user.email}}</td>
-					             	<td><span class="glyphicon glyphicon-wrench" ng-show="user.admin"></span></td>
-					             	<td>{{user.phone | displayPhone}}</td> 
-					             	<td><span ng-repeat="l in user.labs">{{l.last}}{{$last ? ' Lab' : ', '}}</span></td>
-					             	<td><span ng-repeat="i in user.institutes">{{i.name}}{{$last ? '' : ', '}}</span></td>
-					             	<td ng-show="false">{{user.idUser}}</td>
-					         	</tr>
-				         	</tbody>
-				    	</table>
-			    	</div>
-			    	<div class="row show-grid">
-			    			<button ng-disabled="userCurrentPage == 0" ng-click="userCurrentPage=userCurrentPage-1" class="btn btn-mini col-lg-1"><span class="glyphicon glyphicon-chevron-left"></span> </button>
-			    			<div class="center col-lg-10">
-			    			    <div class="row">
-				    			    <select ng-model="userLimit" class="center">
-				 		     	    	<option value=5>Show 5</option>
-				 		     	    	<option value=10>Show 10</option>
-				 		     	    	<option value=25>Show 25</option>
-				 		     	    	<option value=50>Show 50</option>
-			 		     	    	</select>
-			    			    </div>
-			    			    <div class="row">
-			    			    	<small class="center">{{userCurrentPage+1}}/{{ selectedUsers.length / userLimit | ceil}} </small>
-			    			    </div>
-			    			</div>
-			    			
-				    		<button ng-disabled="userCurrentPage >= selectedUsers.length/userLimit - 1" ng-click="userCurrentPage=userCurrentPage+1" class="btn btn-mini col-lg-1">
-				    			<span class="glyphicon glyphicon-chevron-right"></span>
-				    		</button>
-		     	   	</div>
-		     	</tab>
-		     	<tab heading="Labs" active="$parent.labTabOpen">
-		     		<table class="table">
-		     			<thead>
-						      <tr>
-						        <th>Selected</th>
-						        <th ng-click="labOrderByField='first'; labReverseSort=!labReverseSort">First Name</th>
-						        <th ng-click="labOrderByField='last'; labReverseSort=!labReverseSort">Last Name</th>
-						        <th ng-click="labOrderByField='count'; labReverseSort=!labReverseSort">Member Count</th>
-						      </tr>
+		<div class="form-group right">
+			<label for="search">Filter Labs </label>	
+			<input id="search" ng-model="labQuery">
+	    </div>
+</div>
+
+
+
+<div class="row">	
+	<div class="panel panel-default col-lg-12">
+	  <div class="panel-body" style="padding-top: 10px;">	
+	    <tabset>
+	     	<tab heading="Users" active="$parent.userTabOpen" >
+	     		<div>
+			     	<table class="table" id="userTable" >
+			     	    <thead>
+					      <tr>
+					        <th ng-click="selectAllUsersChanged()">Selected</th>
+					        <th ng-click="userOrderByField='first'; userReverseSort=!userReverseSort">First Name</th>
+					        <th ng-click="userOrderByField='last'; userReverseSort=!userReverseSort">Last Name</th>
+					        <th ng-click="userOrderByField='username'; userReverseSort=!userReverseSort">Username</th>
+					        <th ng-click="userOrderByField='email'; userReverseSort=!userReverseSort">Email Address</th>
+					        <th>Admin</th>
+					        <th ng-click="userOrderByField='phone'; userReverseSort=!userReverseSort">Phone Number</th>
+					        <th>Labs</th>
+					        <th>Institutions</th>
+					      </tr>
 					    </thead>
-					    <tbody>				         	
-					    	<tr data-ng-repeat="lab in labs | filter:labQuery | orderBy:labOrderByField:labReverseSort | startFrom:labCurrentPage*labLimit | limitTo:labLimit" ng-dblclick="openEditLabWindow(lab)">
-					    	    <td><input ng-model=lab.selected type="checkbox" ng-disabled="lab.count != 0"/></td>
-				             	<td>{{lab.first}}</td>
-				             	<td>{{lab.last}}</td>
-				             	<td>{{lab.count}}</td>
-			         		</tr>
-					    </tbody>
+					    <tbody>
+				         	<tr data-ng-repeat="user in selectedUsers | filter:userQuery | orderBy:userOrderByField:userReverseSort | startFrom:userCurrentPage*userLimit | limitTo:userLimit " ng-dblclick="openEditUserWindow(user)">
+				         	    <td><input ng-model=user.selected type="checkbox"/></td>
+				             	<td>{{user.first}}</td>
+				             	<td>{{user.last}}</td>
+				             	<td>{{user.username}}</td>
+				             	<td>{{user.email}}</td>
+				             	<td><span class="glyphicon glyphicon-wrench" ng-show="user.admin"></span></td>
+				             	<td>{{user.phone | displayPhone}}</td> 
+				             	<td><span ng-repeat="l in user.labs">{{l.last}}{{$last ? ' Lab' : ', '}}</span></td>
+				             	<td><span ng-repeat="i in user.institutes">{{i.name}}{{$last ? '' : ', '}}</span></td>
+				             	<td ng-show="false">{{user.idUser}}</td>
+				         	</tr>
+			         	</tbody>
 			    	</table>
-			    	<div class="row show-grid">
-			    			<button ng-disabled="labCurrentPage == 0" ng-click="labCurrentPage=labCurrentPage-1" class="btn btn-mini col-lg-1"><span class="glyphicon glyphicon-chevron-left"></span> </button>
-			    			<div class="center col-lg-10">
-			    			    <div class="row">
-				    			    <select ng-model="labLimit" class="center">
-				 		     	    	<option value=5>Show 5</option>
-				 		     	    	<option value=10>Show 10</option>
-				 		     	    	<option value=25>Show 25</option>
-				 		     	    	<option value=50>Show 50</option>
-			 		     	    	</select>
-			    			    </div>
-			    			    <div class="row">
-			    			    	<small class="center">{{labCurrentPage+1}}/{{ (labs.length / labLimit) | ceil }}</small>
-			    			    </div>
-			    			</div>
-				    		<button ng-disabled="labCurrentPage >= labs.length/labLimit - 1" ng-click="labCurrentPage=labCurrentPage+1" class="btn btn-mini col-lg-1">
-				    			<span class="glyphicon glyphicon-chevron-right"></span>
-				    		</button>
-		     	   	</div>
-		     	</tab>
-		    </tabset>
-			</div>
+		    	</div>
+		    	<div class="row show-grid">
+		    			<button ng-disabled="userCurrentPage == 0" ng-click="userCurrentPage=userCurrentPage-1" class="btn btn-mini col-lg-1"><span class="glyphicon glyphicon-chevron-left"></span> </button>
+		    			<div class="center col-lg-10">
+		    			    <div class="row">
+			    			    <select ng-model="userLimit" class="center">
+			 		     	    	<option value=5>Show 5</option>
+			 		     	    	<option value=10>Show 10</option>
+			 		     	    	<option value=25>Show 25</option>
+			 		     	    	<option value=50>Show 50</option>
+		 		     	    	</select>
+		    			    </div>
+		    			    <div class="row">
+		    			    	<small class="center">{{userCurrentPage+1}}/{{ selectedUsers.length / userLimit | ceil}} </small>
+		    			    </div>
+		    			</div>
+		    			
+			    		<button ng-disabled="userCurrentPage >= selectedUsers.length/userLimit - 1" ng-click="userCurrentPage=userCurrentPage+1" class="btn btn-mini col-lg-1">
+			    			<span class="glyphicon glyphicon-chevron-right"></span>
+			    		</button>
+	     	   	</div>
+	     	</tab>
+	     	<tab heading="Labs" active="$parent.labTabOpen">
+	     		<table class="table">
+	     			<thead>
+					      <tr>
+					        <th>Selected</th>
+					        <th ng-click="labOrderByField='first'; labReverseSort=!labReverseSort">First Name</th>
+					        <th ng-click="labOrderByField='last'; labReverseSort=!labReverseSort">Last Name</th>
+					        <th ng-click="labOrderByField='count'; labReverseSort=!labReverseSort">Member Count</th>
+					      </tr>
+				    </thead>
+				    <tbody>				         	
+				    	<tr data-ng-repeat="lab in labs | filter:labQuery | orderBy:labOrderByField:labReverseSort | startFrom:labCurrentPage*labLimit | limitTo:labLimit" ng-dblclick="openEditLabWindow(lab)">
+				    	    <td><input ng-model=lab.selected type="checkbox" ng-disabled="lab.count != 0"/></td>
+			             	<td>{{lab.first}}</td>
+			             	<td>{{lab.last}}</td>
+			             	<td>{{lab.count}}</td>
+		         		</tr>
+				    </tbody>
+		    	</table>
+		    	<div class="row show-grid">
+		    			<button ng-disabled="labCurrentPage == 0" ng-click="labCurrentPage=labCurrentPage-1" class="btn btn-mini col-lg-1"><span class="glyphicon glyphicon-chevron-left"></span> </button>
+		    			<div class="center col-lg-10">
+		    			    <div class="row">
+			    			    <select ng-model="labLimit" class="center">
+			 		     	    	<option value=5>Show 5</option>
+			 		     	    	<option value=10>Show 10</option>
+			 		     	    	<option value=25>Show 25</option>
+			 		     	    	<option value=50>Show 50</option>
+		 		     	    	</select>
+		    			    </div>
+		    			    <div class="row">
+		    			    	<small class="center">{{labCurrentPage+1}}/{{ (labs.length / labLimit) | ceil }}</small>
+		    			    </div>
+		    			</div>
+			    		<button ng-disabled="labCurrentPage >= labs.length/labLimit - 1" ng-click="labCurrentPage=labCurrentPage+1" class="btn btn-mini col-lg-1">
+			    			<span class="glyphicon glyphicon-chevron-right"></span>
+			    		</button>
+	     	   	</div>
+	     	</tab>
+	    </tabset>
 		</div>
 	</div>
-	
+</div>
+
 

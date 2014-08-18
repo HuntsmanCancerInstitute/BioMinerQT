@@ -651,5 +651,55 @@ public class SubmitController {
     }
    
     
+    /***************************************************
+	 * URL: /project/getVisibleLabs
+	 * getVisibleLabs: return a list of labs visible to the user
+	 * method: get
+	 ****************************************************/
+    @RequestMapping(value="getVisibleLabs",method=RequestMethod.GET)
+    @ResponseBody
+    public List<Lab> getVisibleLabs() {
+    	Subject currentUser = SecurityUtils.getSubject();
+    	List<Lab> labs;
+    	if (currentUser.isAuthenticated()) {
+    		if (currentUser.hasRole("admin")) {
+    			labs = this.labService.getAllLabs();
+    		} else {
+    			Long userId = (Long) currentUser.getPrincipal();
+                User user = userService.getUser(userId);
+                labs = user.getLabs();
+    		}
+    	} else {
+    		labs = null;
+    	}
+    	
+    	return labs;
+    }
+    
+    /***************************************************
+	 * URL: /project/getVisibleInstitutes
+	 * getVisibleInstitutes: return a list of institutes visible to the user
+	 * method: get
+	 ****************************************************/
+    @RequestMapping(value="getVisibleInstitutes",method=RequestMethod.GET)
+    @ResponseBody
+    public List<Institute> getVisibleInstitutes() {
+    	Subject currentUser = SecurityUtils.getSubject();
+    	List<Institute> institutes;
+    	if (currentUser.isAuthenticated()) {
+    		if (currentUser.hasRole("admin")) {
+    			institutes = this.instituteService.getAllInstitutes();
+    		} else {
+    			Long userId = (Long) currentUser.getPrincipal();
+                User user = userService.getUser(userId);
+                institutes = user.getInstitutes();
+    		}
+    	} else {
+    		institutes = null;
+    	}
+    	
+    	return institutes;
+    }
+    
     
 }

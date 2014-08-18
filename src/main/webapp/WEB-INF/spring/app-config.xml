@@ -18,6 +18,43 @@
    
     <context:component-scan base-package="hci.biominer" />
     
+    <!--  Shiro -->
+	<bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+        <property name="realm" ref="BiominerRealm"/>
+    </bean>
+    
+	<!-- Post processor that automatically invokes init() and destroy() methods -->
+    <bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor"/>
+
+ 
+    <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+        <property name="securityManager" ref="securityManager"/>
+        <property name="loginUrl" value="login"/>
+        
+        <property name="filters">
+            <util:map>
+                <entry key="authc">
+                    <bean class="org.apache.shiro.web.filter.authc.PassThruAuthenticationFilter"/>
+                </entry>
+            </util:map>
+        </property>
+        
+    </bean>
+    
+    <!-- Required for security annotations to work in this servlet -->
+    <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"/>
+    <bean class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">
+    	<property name="securityManager" ref="securityManager"/>
+    </bean>
+    
+    <bean id="BiominerRealm" class="hci.biominer.security.BiominerRealm">
+		
+	</bean>
+	
+	<bean id="sessionManager" class="org.apache.shiro.web.session.mgt.DefaultWebSessionManager">
+		<property name="sessionIdCookieEnabled" value="true"/>
+	</bean>
+    
     <!-- for hibernate -->
     <bean id="propertyConfigurer"
         class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"
@@ -56,38 +93,7 @@
 	<!-- For File Upload -->
 	<bean id="multipartResolver"  class="org.springframework.web.multipart.commons.CommonsMultipartResolver"/>
 
-	<!-- Required for security annotations to work in this servlet -->
-    <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"/>
-    <bean class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">
-    	<property name="securityManager" ref="securityManager"/>
-    </bean>
 	
-	<!--  Shiro -->
-	<bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
-        <property name="realm" ref="BiominerRealm"/>
-    </bean>
-
-	<!-- Post processor that automatically invokes init() and destroy() methods -->
-    <bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor"/>
-
- 
-    <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
-        <property name="securityManager" ref="securityManager"/>
-        <property name="loginUrl" value="#/login"/>
-        <property name="successUrl" value="#/dashboard"/>
-        <property name="unauthorizedUrl" value="#/dashboard"/>
-        
-        <property name="filters">
-            <util:map>
-                <entry key="authc">
-                    <bean class="org.apache.shiro.web.filter.authc.PassThruAuthenticationFilter"/>
-                </entry>
-            </util:map>
-        </property>
-        
-    </bean>
-    
-    <bean id="BiominerRealm" class="hci.biominer.security.BiominerRealm">
-
-	</bean>
+	
+	
 </beans>

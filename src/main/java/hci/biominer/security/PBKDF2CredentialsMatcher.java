@@ -32,7 +32,6 @@ public class PBKDF2CredentialsMatcher implements CredentialsMatcher {
 		
 		byte[] hashedPassword = null;
 		try {
-			System.out.println("Making keys");
 			SecretKeyFactory key = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
 			hashedPassword = key.generateSecret(spec).getEncoded();
 
@@ -41,17 +40,11 @@ public class PBKDF2CredentialsMatcher implements CredentialsMatcher {
 		}
 		
 		//Check if passwords match
-		System.out.println("Making toCheck");
 		String toCheck =  String.format("%x", new BigInteger(hashedPassword));
 		
-		System.out.println(toCheck);
-		System.out.println((String)sai.getCredentials());
-		
 		if (toCheck.equals((String)sai.getCredentials())) {
-			System.out.println("match");
 			return true;
 		} else {
-			System.out.println("match");
 			return false;
 		}
 	}
