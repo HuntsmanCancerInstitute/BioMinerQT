@@ -57,7 +57,7 @@ public class LabController {
 	
 	@RequestMapping(value = "addlab", method=RequestMethod.PUT)
     @ResponseBody
-    @RequiresPermissions("lab:add")
+    @RequiresPermissions("lab:create")
     public void addLab(@RequestParam(value="first") String firstName, @RequestParam(value="last") String lastName) {
     	Lab newLab = new Lab(firstName,lastName);
     	labService.addLab(newLab);

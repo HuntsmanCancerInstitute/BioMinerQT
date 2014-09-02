@@ -58,7 +58,7 @@ public class UserController {
     
     @RequestMapping(value = "adduser", method=RequestMethod.POST)
     @ResponseBody
-    @RequiresPermissions("user:add")
+    @RequiresPermissions("user:create")
     public void addUser(@RequestParam(value="first") String firstName, @RequestParam(value="last") String lastName, @RequestParam(value="username") String username,
     		@RequestParam(value="password") String password, @RequestParam(value="email") String email, @RequestParam(value="phone") Long phone, 
     		@RequestParam(value="admin") boolean admin, @RequestParam(value="lab") List<Long> labIds, @RequestParam(value="institutes") List<Long> instituteIds) {
