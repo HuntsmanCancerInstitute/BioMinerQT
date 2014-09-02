@@ -7,7 +7,9 @@ import java.util.List;
 import org.hibernate.SessionFactory;
 
 import hci.biominer.model.Analysis;
+import hci.biominer.model.DataTrack;
 import hci.biominer.model.Project;
+import hci.biominer.model.Sample;
 import hci.biominer.model.access.Institute;
 import hci.biominer.model.access.Lab;
 import hci.biominer.model.access.User;
@@ -33,10 +35,9 @@ public class AnalysisDAO {
 		Session session = this.getCurrentSession();
 		List<Analysis> analyses = session.createQuery("from Analysis").list();
 		
+		
 		for (Analysis a: analyses) {
-			Hibernate.initialize(a.getFile());
-			Hibernate.initialize(a.getDataTracks());
-			Hibernate.initialize(a.getSamples());
+			this.initializeAnalysis(a);
 		}
 		
 		session.close();
@@ -61,9 +62,9 @@ public class AnalysisDAO {
     
     Session session = this.getCurrentSession();
     Query query = session.createQuery("select distinct a from Project as p "
-        + "left join fetch p.labs as l "
-        + "left join fetch p.institutes as i " 
-        + "join fetch p.analyses as a " 
+    	+ "join p.analyses as a "
+        + "left join p.labs as l "
+        + "left join p.institutes as i " 
         + "where (l.idLab in (:userLabs) and p.visibility = :vis1) or "
         + "(i.idInstitute in (:userInstitute) and p.visibility = :vis2) or "
         + "(p.visibility = :vis3)");
@@ -74,10 +75,8 @@ public class AnalysisDAO {
     query.setParameter("vis3", ProjectVisibilityEnum.PUBLIC);
     List<Analysis> analyses = query.list();
     for (Analysis a: analyses) {
-      Hibernate.initialize(a.getFile());
-      Hibernate.initialize(a.getDataTracks());
-      Hibernate.initialize(a.getSamples());
-    }
+		this.initializeAnalysis(a);
+	}
     session.close();
     return analyses;
   }
@@ -89,10 +88,8 @@ public class AnalysisDAO {
     query.setParameter("visibility", ProjectVisibilityEnum.PUBLIC);
     List<Analysis> analyses = query.list();
     for (Analysis a: analyses) {
-      Hibernate.initialize(a.getFile());
-      Hibernate.initialize(a.getDataTracks());
-      Hibernate.initialize(a.getSamples());
-    }
+		this.initializeAnalysis(a);
+	}
     session.close();
     return analyses;
   }
@@ -106,9 +103,7 @@ public class AnalysisDAO {
 		List<Analysis> analyses = query.list();
 		
 		for (Analysis a: analyses) {
-			Hibernate.initialize(a.getFile());
-			Hibernate.initialize(a.getDataTracks());
-			Hibernate.initialize(a.getSamples());
+			this.initializeAnalysis(a);
 		}
 		
 		session.close();
@@ -159,6 +154,20 @@ public class AnalysisDAO {
 		session.delete(analysis);
 		session.getTransaction().commit();
 		session.close();
+	}
+	
+	private void initializeAnalysis(Analysis a) {
+		Hibernate.initialize(a.getFile());
+	    Hibernate.initialize(a.getDataTracks());
+	    Hibernate.initialize(a.getSamples());
+	      
+	    for (DataTrack dt: a.getDataTracks()) {
+	      Hibernate.initialize(dt.isAnalysisSet());
+	    }
+	    
+	    for (Sample s: a.getSamples()) {
+			Hibernate.initialize(s.isAnalysisSet());
+		}
 	}
 	
 	

@@ -547,12 +547,10 @@ public class SubmitController {
       Subject currentUser = SecurityUtils.getSubject();
       List<Analysis> analyses;
       if (currentUser.isAuthenticated()) {
-        System.out.println("ANALYSIS: User is authenticated");
         Long userId = (Long) currentUser.getPrincipal();
             User user = userService.getUser(userId);
             analyses = this.analysisService.getAnalysesByVisibility(user);
       } else {
-        System.out.println("ANALYSIS: User is anonymous");
         analyses = this.analysisService.getAnalysesPublic();
       }
       return analyses;
