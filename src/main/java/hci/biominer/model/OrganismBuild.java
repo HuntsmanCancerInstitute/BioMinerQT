@@ -26,6 +26,17 @@ public class OrganismBuild {
 	@Column(name="name")
 	String name;
 	
+	@Column(name="GenomeFile")
+	String genomeFile;
+	
+	public String getGenomeFile() {
+		return genomeFile;
+	}
+
+	public void setGenomeFile(String genomeFile) {
+		this.genomeFile = genomeFile;
+	}
+
 	public OrganismBuild() {
 		
 	}

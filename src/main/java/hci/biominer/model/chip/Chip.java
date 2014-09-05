@@ -1,6 +1,6 @@
 package hci.biominer.model.chip;
 
-public class Chip implements java.io.Serializable {
+public class Chip implements java.io.Serializable  {
 	private static final long serialVersionUID = 1L;
 	private int start;
 	private int stop;

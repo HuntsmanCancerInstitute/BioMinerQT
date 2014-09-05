@@ -183,7 +183,7 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 			if ($scope.selectedFiles.length > 0) {
 				$http({
 					url: "submit/parse/preview/",
-					method: "POST",
+					method: "GET",
 					params: {name: $scope.selectedFiles[0].file.name, idProject: $scope.$parent.projectId}
 				}).success(function(data,status,headers,config) {
 			    	var modalInstance = $modal.open({
@@ -251,7 +251,7 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 						params.idFileUpload = $scope.selectedFiles[i].file.idFileUpload;
 						
 						//This will be tied to build going forward!!
-						params.genome = $scope.project.organismBuild.name;
+						params.build = $scope.project.organismBuild.idOrganismBuild;
 						params.analysisID = $scope.$parent.projectId;
 						
 						//Check to see if there are any matching files in list (match on name only)

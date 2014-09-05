@@ -11,8 +11,8 @@ public class QueryResult {
   private String sampleConditions;
   private String analysisSummary;
   private String coordinates;
-  private BigDecimal log2Ratio;
-  private BigDecimal FDR; 
+  private Float log2Ratio;
+  private Float FDR; 
 	
 	public QueryResult() {
 	}
@@ -57,19 +57,19 @@ public class QueryResult {
     this.coordinates = coordinates;
   }
 
-  public BigDecimal getLog2Ratio() {
+  public Float getLog2Ratio() {
     return log2Ratio;
   }
 
-  public void setLog2Ratio(BigDecimal log2Ratio) {
+  public void setLog2Ratio(Float log2Ratio) {
     this.log2Ratio = log2Ratio;
   }
 
-  public BigDecimal getFDR() {
+  public Float getFDR() {
     return FDR;
   }
 
-  public void setFDR(BigDecimal fDR) {
+  public void setFDR(Float fDR) {
     FDR = fDR;
   }
 

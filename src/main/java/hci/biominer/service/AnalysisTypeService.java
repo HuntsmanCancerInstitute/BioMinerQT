@@ -37,4 +37,8 @@ public class AnalysisTypeService {
 	public void updateAnalysisType(Long idAnalysisType, AnalysisType analysisType) {
         analysisTypeDAO.updateAnalysisType(idAnalysisType, analysisType);
 	}
+	
+	public AnalysisType getAnalysisTypeByName(String name) {
+		return analysisTypeDAO.getAnalysisTypeByName(name);
+	}
 }

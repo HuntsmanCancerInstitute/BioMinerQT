@@ -73,7 +73,10 @@ public class ChipIntervalTreeParser {
 		
 		invlTree = new HashMap<String,IntervalTree<Chip>>();
 		for (String chrom: invlHash.keySet()) {
-			this.invlTree.put(chrom,new IntervalTree<Chip>(invlHash.get(chrom),false));
+			Chromosome chromObj = chromosomeName.get(chrom);
+			for (String alias: chromObj.getAliases()) {
+				this.invlTree.put(alias,new IntervalTree<Chip>(invlHash.get(chrom),false));
+			}
 		}
 	}
 	

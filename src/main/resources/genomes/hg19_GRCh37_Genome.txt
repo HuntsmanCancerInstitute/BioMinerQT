@@ -8,7 +8,7 @@ BuildName	hg19	GRCh37	H_sapiens_Feb_2009	Hg19
 
 #One or more refflat formatted transcript file(s), not merged genes.  The first column is the gene name, the second the transcript name.					
 TranscriptomeName	File
-EnsembleXXXXX	/Users/u0028003/Code/BioMiner/AnnotationFiles/hg19Ens_Transcripts.ucsc.zip	
+EnsembleXXXXX	genomes/hg19Ens_Transcripts.ucsc.zip
 
 #Chromosome lengths and their associated aliases.  The first should be what is used by IGV.					
 ChromosomeLength	Name	Aliases			

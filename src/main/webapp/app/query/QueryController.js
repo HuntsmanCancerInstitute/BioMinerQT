@@ -9,11 +9,12 @@ var query     = angular.module('query',     ['filters', 'services', 'directives'
 
 
 angular.module("query").controller("QueryController", 
-[ '$scope', '$http', '$modal','DynamicDictionary','StaticDictionary',
+[ '$scope', '$http', '$modal','$anchorScroll','DynamicDictionary','StaticDictionary',
   
-function($scope, $http, $filter, DynamicDictionary, StaticDictionary) {
+function($scope, $http, $modal, $anchorScroll, DynamicDictionary, StaticDictionary) {
 	
 	$scope.hasResults = false;
+	$scope.warnings = "";
 	
 	$scope.querySummary = [];
 	$scope.codeResultType = "";
@@ -92,8 +93,6 @@ function($scope, $http, $filter, DynamicDictionary, StaticDictionary) {
     	});
     };
     
-
-	
 	//Dynamic dictionaries.  These dictionaries can be loaded on-demand.
     $scope.loadLabs = function() {
     	DynamicDictionary.loadQueryLabs().success(function(data) {
@@ -358,6 +357,22 @@ function($scope, $http, $filter, DynamicDictionary, StaticDictionary) {
   	  $scope.display +=  element.name;
 	};
 	
+	
+	$scope.displayWarnings = function(){
+		$modal.open({
+			templateUrl: 'app/common/userError.html',
+			controller: 'userErrorController',
+			resolve: {
+				title: function() {
+					var title = "Query Warnings";
+					return title;
+				},
+				message: function() {
+					return $scope.warnings;
+				}
+			}
+		});
+	};
 
 	
 	$scope.runQuery = function() {
@@ -419,14 +434,27 @@ function($scope, $http, $filter, DynamicDictionary, StaticDictionary) {
 		}).success(function(data) {
 			$scope.queryResults = data;
 			$scope.hasResults = true;
+			
+			$http({
+				url: "query/warnings",
+				method: "GET",
+			}).success(function(data) {
+				if (data == "") {
+					$scope.warnings = "";
+				} else {
+					$scope.warnings = data;
+				}
+			});
+			
 		}).error(function(data, status, headers, config) {
 			console.log("Could not run query.");
 			$scope.hasResults = true;
 		});
+		
+		$anchorScroll();
 
 		
 		
-	
 	};
 
 

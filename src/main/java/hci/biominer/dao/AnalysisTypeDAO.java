@@ -3,7 +3,8 @@ package hci.biominer.dao;
 import java.util.List;
 
 import hci.biominer.model.AnalysisType;
-
+import hci.biominer.model.Project;
+import hci.biominer.util.Enumerated.ProjectVisibilityEnum;
 
 import org.hibernate.Query;
 import org.hibernate.Session;
@@ -65,6 +66,23 @@ public class AnalysisTypeDAO {
 		session.flush();
 		session.getTransaction().commit();
 		session.close();
+	}
+	
+	@SuppressWarnings("unchecked")
+	public AnalysisType getAnalysisTypeByName(String name) {
+		Session session  = getCurrentSession();
+		session.beginTransaction();
+		
+		Query query = session.createQuery("select at from AnalysisType at where at.type = :name");
+		query.setParameter("name",name);
+		List<AnalysisType> analysisTypes = query.list();
+		session.close();
+		if (analysisTypes.size() > 0) {
+			return analysisTypes.get(0);
+		} else {
+			return null;
+		}
+		
 	}
 
 }

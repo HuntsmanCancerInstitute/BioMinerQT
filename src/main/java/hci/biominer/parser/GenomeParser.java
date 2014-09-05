@@ -7,10 +7,14 @@ import hci.biominer.util.ModelUtil;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 
 
 public class GenomeParser implements Serializable{
@@ -23,7 +27,8 @@ public class GenomeParser implements Serializable{
 		parseDescriptorFile(desc);
 		makeTranscriptomes();
 	}
-
+	
+	
 	private void makeTranscriptomes() throws Exception {
 		//get name file containers and null them so they are regenerated
 		Transcriptome[] ts = genome.getTranscriptomes();
@@ -36,7 +41,7 @@ public class GenomeParser implements Serializable{
 	
 
 	private void parseDescriptorFile(File desc) throws Exception{
-		if (desc.canRead() == false) throw new Exception ("\nCould not read/ find this descriptor file -> "+desc);
+		
 		genome = new Genome();
 		BufferedReader in = ModelUtil.fetchBufferedReader(desc);
 		String line;
@@ -77,7 +82,9 @@ public class GenomeParser implements Serializable{
 			tokens = ModelUtil.TAB.split(line);
 			if (tokens.length != 2) throw new Exception("Error: could not transcriptome name and file from "+line+", aborting.\n");
 			String transName = tokens[0];
-			File transFile = new File(tokens[1]);
+			Resource transResource = new ClassPathResource(tokens[1]);
+			File transFile = transResource.getFile();
+			
 			if (transFile.exists() == false) throw new Exception("Error: could not find the transcriptome file in "+line+", aborting.\n");
 			if (transFile.canRead() == false) throw new Exception("Error: could not read the transcriptome file in "+line+", aborting.\n");
 			transAL.add(new Transcriptome(transName, transFile));

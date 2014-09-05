@@ -13,6 +13,8 @@ import java.util.zip.GZIPOutputStream;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,16 +24,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import hci.biominer.model.genome.Genome;
+import hci.biominer.model.OrganismBuild;
 import hci.biominer.model.Project;
 import hci.biominer.model.FileUpload;
-
 import hci.biominer.service.FileUploadService;
+import hci.biominer.service.OrganismBuildService;
 import hci.biominer.service.ProjectService;
-
 import hci.biominer.parser.ChipParser;
 import hci.biominer.parser.GenomeParser;
-
 import hci.biominer.util.Enumerated.FileTypeEnum;
+import hci.biominer.util.GenomeBuilds;
 import hci.biominer.util.PreviewMap;
 import hci.biominer.util.ModelUtil;
 import hci.biominer.util.Enumerated.*;
@@ -45,38 +47,25 @@ public class FileController {
 	
 	@Autowired
 	private ProjectService projectService;
+	
+	@Autowired
+	private OrganismBuildService organismBuildService;
 
 	//Hard-coded file locations
 	private final static String FILES_PATH = "/temp/";
 	private final static String PARSED_PATH = "/parsed/";
 
 	
-	
-	//Load genome descriptons
-	private HashMap<String,File> genomePaths; 
-    private HashMap<String,Genome> loadedGenomes;
-	
-	public FileController() {
-		loadedGenomes = new HashMap<String,Genome>();
-		
-		genomePaths = new HashMap<String,File>();
-		genomePaths.put("hg19",new File("/Users/timmosbruger/Documents/eclipse4.3/BiominerQT/AnnotationFiles/hg19_GRCh37_Genome.txt"));
-		genomePaths.put("mm10",new File("/Users/timmosbruger/Documents/eclipse4.3/BiominerQT/AnnotationFiles/mm10_GRCm38_Genome.txt"));
-		
-		
-		
-		for (String key: genomePaths.keySet()) {
-			GenomeParser gp;
-			try {
-				gp = new GenomeParser(genomePaths.get(key));
-				Genome genome = gp.getGenome();
-				loadedGenomes.put(key,genome);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-	}
+	private Genome fetchGenome(OrganismBuild ob) throws Exception {
+    	try {
+    		if (!GenomeBuilds.doesGenomeExist(ob)) {
+        		GenomeBuilds.loadGenome(ob);
+        	} 
+        	return GenomeBuilds.getGenome(ob);
+    	} catch (Exception ex) {
+    		throw ex;
+    	}
+    }
 	
 	
 	/***************************************************
@@ -291,21 +280,26 @@ public class FileController {
 	public @ResponseBody 
 	FileUpload upload(@RequestParam("inputFile") String input, @RequestParam("outputFile") String output,
 			@RequestParam("Chromosome") Integer chrom, @RequestParam("Start") Integer start, @RequestParam("End") Integer end,
-			@RequestParam("Log2Ratio") Integer log, @RequestParam("FDR") Integer fdr, @RequestParam("genome") String genomeName, 
+			@RequestParam("Log2Ratio") Integer log, @RequestParam("FDR") Integer fdr, @RequestParam("build") Long idOrganismBuild, 
 			@RequestParam("analysisID") String id, @RequestParam("-10*log10(FDR)") Integer logFDR, @RequestParam("idFileUpload") Long idParent) {
  
 		FileUpload outputMeta = new FileUpload();
 		
 		try {
 			
-			if (!this.loadedGenomes.containsKey(genomeName)) {
+			OrganismBuild gb = this.organismBuildService.getOrganismBuildById(idOrganismBuild);
+			Genome genome = null;
+			
+			try {
+				genome = this.fetchGenome(gb);
+			} catch (Exception ex) {
+				ex.printStackTrace();
 				outputMeta.setName(output);
 				outputMeta.setSize(null);
-				outputMeta.setMessage(String.format("The selected genome %s does not have a transcriptome object.",genomeName));
+				outputMeta.setMessage(String.format(ex.getMessage(), gb.getName()));
 				return outputMeta;
 			}
 			
-			Genome genome = this.loadedGenomes.get(genomeName);
 			
 			File importDir = new File(FILES_PATH,id);
 			File parseDir = new File(PARSED_PATH,id);
