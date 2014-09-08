@@ -80,12 +80,12 @@
 					  <div class="col-md-12">
 					    <label ng-repeat="analysisType in analysisTypeCheckedList" 
 					           ng-class="analysisType.class" 
-					           ng-disabled="!analysisType.show" 
+					           ng-disabled="!analysisType.show || !analysisType.possible" 
 					           class="checkbox-inline" 
 					           for="checkbox-at-{{ analysisType.idAnalysisType }}">
 					      <input name="checkbox-at-{{ analysisType.idAnalysisType }}" 
 					             ng-required="!someAnalysisTypeChecked()" 
-					             ng-disabled="!analysisType.show"  
+					             ng-disabled="!analysisType.show || !analysisType.possible"  
 					             id="checkbox-at-{{ analysisType.idAnalysisType }}" 
 					             ng-model="analysisType.selected" type="checkbox" >
 					      {{ analysisType.type }}
@@ -190,7 +190,7 @@
   					     	<label class="btn btn-toggle" ng-model="codeThresholdFDRComparison" btn-radio="'GT'" >&gt;</label>
        					    <label class="btn btn-toggle" ng-model="codeThresholdFDRComparison" btn-radio="'LT'" >&lt;</label>
    					  </div>
-					  <input id="textinput" class="col-md-3 form-control" style="display: inline; max-width: 60px" ng-model="thresholdFDR" name="textinput" placeholder=".05"  type="text">
+					  <input id="textinput" class="col-md-4 form-control" style="display: inline; max-width: 180px" ng-model="thresholdFDR" name="textinput" placeholder=".05"  type="number" step="any">
 					</div>        
 					
            	 		
@@ -203,7 +203,7 @@
         					<label class="btn btn-toggle" ng-model="codeThresholdLog2RatioComparison" btn-radio="'LT'"     >&lt;</label>
     					</div>
 					    
-						<input id="textinput" class="col-md-3 form-control"   style="display: inline; max-width: 60px" ng-model="thresholdLog2Ratio" name="textinput" placeholder="1.0"  type="text">
+						<input id="textinput" class="col-md-4 form-control"   style="display: inline; max-width: 180px" ng-model="thresholdLog2Ratio" name="textinput" placeholder="1.0"  type="number", step="any">
 					</div>        
 
 					
@@ -288,7 +288,7 @@
 				  
 			   	  <button class="btn btn-sm btn-info pull-right" ng-show="hasResults" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-eye-open"></span> Display in IGV</button>
 			   	  <button class="btn btn-sm btn-info pull-right" ng-show="hasResults" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-download"></span> Download</button>
-			   	  <button class="btn btn-sm btn-warning pull-right" ng-show="warnings != ''" ng-click="displayWarnings()" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-exclamation-sign"></span></button>
+			   	  <button class="btn btn-sm btn-danger pull-right" ng-show="warnings != ''" ng-click="displayWarnings()" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-exclamation-sign"></span></button>
 				</div>
 				
 				<div class="panel-body">

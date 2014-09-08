@@ -1,5 +1,6 @@
 package hci.biominer.util;
 
+import hci.biominer.controller.FileController;
 import hci.biominer.model.Analysis;
 import hci.biominer.model.chip.Chip;
 import hci.biominer.model.genome.Genome;
@@ -16,7 +17,7 @@ public class IntervalTrees {
 	public static void loadChipIntervalTree(Analysis analysis, Genome genome) throws Exception {
 		if (analysis.getFile() != null) {
 			try {
-				File file = new File(analysis.getFile().getDirectory(),analysis.getFile().getName());
+				File file = FileController.generateFilePath(analysis.getFile());
 				if (!file.exists() || !file.canRead()) {
 					throw new Exception(String.format("Can't read the file %s from analysis %s. Maybe it got deleted?",file.getAbsolutePath(),analysis.getName()));
 				}
@@ -34,7 +35,7 @@ public class IntervalTrees {
 	
 	public static HashMap<String,IntervalTree<Chip>> getChipIntervalTree(Analysis analysis) throws Exception{
 		if (analysis.getFile() != null) {
-			File file = new File(analysis.getFile().getDirectory(),analysis.getFile().getName());
+			File file = FileController.generateFilePath(analysis.getFile());
 			if (chipTrees.containsKey(file.getAbsolutePath())) {
 				return chipTrees.get(file.getAbsolutePath());
 			} else {
@@ -47,7 +48,7 @@ public class IntervalTrees {
 	
 	public static boolean doesChipIntervalTreeExist(Analysis analysis) throws Exception {
 		if (analysis.getFile() != null) {
-			File file = new File(analysis.getFile().getDirectory(),analysis.getFile().getName());
+			File file = FileController.generateFilePath(analysis.getFile());
 			if (chipTrees.containsKey(file.getAbsolutePath())) {
 				return true;
 			} else {

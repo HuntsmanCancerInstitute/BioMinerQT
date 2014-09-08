@@ -3,6 +3,8 @@ package hci.biominer.controller;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -27,6 +29,7 @@ import hci.biominer.model.OrganismBuild;
 import hci.biominer.model.Project;
 import hci.biominer.model.QueryResult;
 import hci.biominer.model.Sample;
+import hci.biominer.model.SampleSource;
 import hci.biominer.model.access.Lab;
 import hci.biominer.model.access.User;
 import hci.biominer.model.chip.Chip;
@@ -124,9 +127,9 @@ public class QueryController {
         @RequestParam(value="geneMargins") Integer geneMargins,
         @RequestParam(value="idGeneAnnotations") List<Long> idGeneAnnotations,
         @RequestParam(value="isThresholdBasedQuery") boolean isThresholdBasedQuery,
-        @RequestParam(value="FDR") String FDR,
+        @RequestParam(value="FDR",required=false) Float FDR,
         @RequestParam(value="codeFDRComparison") String codeFDRComparison,
-        @RequestParam(value="log2Ratio") String log2Ratio,
+        @RequestParam(value="log2Ratio",required=false) Float log2Ratio,
         @RequestParam(value="codeLog2RatioComparison") String codeLog2RatioComparison
         ) throws Exception {
       
@@ -174,6 +177,14 @@ public class QueryController {
         	//Run basic search
         	List<QueryResult> results = this.getIntersectingRegionsChip(itList, analyses, genome, intervalsToCheck);
      
+        	//Run thresholding if neccesary
+        	if (FDR != null) {
+        		results = this.filterChipFdr(results, FDR, codeFDRComparison);
+        	}
+        	
+        	if (log2Ratio != null) {
+        		results = this.filterChipLog2Ratio(results, log2Ratio, codeLog2RatioComparison);
+        	}
         	fullRegionResults.addAll(results);
     	}
     	
@@ -184,6 +195,146 @@ public class QueryController {
     		return fullRegionResults;
     	}
     	
+    }
+    
+    @RequestMapping(value = "getQueryOrganismBuilds", method=RequestMethod.GET)
+    @ResponseBody
+    public List<OrganismBuild> getQueryOrganismBuilds (
+    		@RequestParam(value="idAnalysisTypes") List<Long> idAnalysisTypes,
+    		@RequestParam(value="idLabs") List<Long> idLabs,
+    		@RequestParam(value="idProjects") List<Long> idProjects,
+    		@RequestParam(value="idAnalyses") List<Long> idAnalyses,
+    		@RequestParam(value="idSampleSources") List<Long> idSampleSources
+    ) throws Exception {
+    	
+    	//Get current active user
+    	Subject currentUser = SecurityUtils.getSubject();
+    	User user = null;
+    	if (currentUser.isAuthenticated()) {
+    		Long userId = (Long) currentUser.getPrincipal();
+    		user = userService.getUser(userId);
+    	} 
+    	
+    	List<OrganismBuild> obList = this.analysisService.getOrgansimBuildByQuery(user, idAnalysisTypes, idLabs, idProjects, idAnalyses, idSampleSources);
+    	
+    	return obList;
+    }
+    
+    @RequestMapping(value = "getQueryLabs", method=RequestMethod.GET)
+    @ResponseBody
+    public List<Lab> getQueryLabs (
+    		@RequestParam(value="idAnalysisTypes") List<Long> idAnalysisTypes,
+    		@RequestParam(value="idProjects") List<Long> idProjects,
+    		@RequestParam(value="idAnalyses") List<Long> idAnalyses,
+    		@RequestParam(value="idSampleSources") List<Long> idSampleSources,
+    		@RequestParam(value="idOrganismBuild") Long idOrganismBuild
+    ) throws Exception {
+    	
+    	//Get current active user
+    	Subject currentUser = SecurityUtils.getSubject();
+    	User user = null;
+    	if (currentUser.isAuthenticated()) {
+    		Long userId = (Long) currentUser.getPrincipal();
+    		user = userService.getUser(userId);
+    	} 
+    	
+    	List<Lab> obList = this.analysisService.getLabByQuery(user, idAnalysisTypes, idProjects, idAnalyses, idSampleSources, idOrganismBuild);
+    	
+    	return obList;
+    }
+    
+    @RequestMapping(value = "getQueryProjects", method=RequestMethod.GET)
+    @ResponseBody
+    public List<Project> getQueryProjects (
+    		@RequestParam(value="idAnalysisTypes") List<Long> idAnalysisTypes,
+    		@RequestParam(value="idLabs") List<Long> idLabs,
+    		@RequestParam(value="idAnalyses") List<Long> idAnalyses,
+    		@RequestParam(value="idSampleSources") List<Long> idSampleSources,
+    		@RequestParam(value="idOrganismBuild") Long idOrganismBuild
+    ) throws Exception {
+    	
+    	//Get current active user
+    	Subject currentUser = SecurityUtils.getSubject();
+    	User user = null;
+    	if (currentUser.isAuthenticated()) {
+    		Long userId = (Long) currentUser.getPrincipal();
+    		user = userService.getUser(userId);
+    	} 
+    	
+    	List<Project> projectList = this.analysisService.getProjectsByQuery(idLabs, idAnalyses, idSampleSources, idAnalysisTypes, idOrganismBuild, user );
+    	
+    	return projectList;
+    }
+    
+    @RequestMapping(value = "getQueryAnalyses", method=RequestMethod.GET)
+    @ResponseBody
+    public List<Analysis> getQueryAnalyses (
+    		@RequestParam(value="idAnalysisTypes") List<Long> idAnalysisTypes,
+    		@RequestParam(value="idLabs") List<Long> idLabs,
+    		@RequestParam(value="idProjects") List<Long> idProjects,
+    		@RequestParam(value="idSampleSources") List<Long> idSampleSources,
+    		@RequestParam(value="idOrganismBuild") Long idOrganismBuild
+    ) throws Exception {
+    	
+    	//Get current active user
+    	Subject currentUser = SecurityUtils.getSubject();
+    	User user = null;
+    	if (currentUser.isAuthenticated()) {
+    		Long userId = (Long) currentUser.getPrincipal();
+    		user = userService.getUser(userId);
+    	} 
+    	
+    	List<Analysis> analysisList = this.analysisService.getAnalysesByQuery(idLabs, idProjects,  idSampleSources, idAnalysisTypes, idOrganismBuild, user );
+    	
+    	return analysisList;
+    }
+    
+    @RequestMapping(value = "getQueryAnalysisTypes", method=RequestMethod.GET)
+    @ResponseBody
+    public List<AnalysisType> getQueryAnalysisTypes (
+    		@RequestParam(value="idLabs") List<Long> idLabs,
+    		@RequestParam(value="idProjects") List<Long> idProjects,
+    		@RequestParam(value="idAnalyses") List<Long> idAnalyses,
+    		@RequestParam(value="idSampleSources") List<Long> idSampleSources,
+    		@RequestParam(value="idOrganismBuild") Long idOrganismBuild
+    ) throws Exception {
+    	
+    	//Get current active user
+    	Subject currentUser = SecurityUtils.getSubject();
+    	User user = null;
+    	if (currentUser.isAuthenticated()) {
+    		Long userId = (Long) currentUser.getPrincipal();
+    		user = userService.getUser(userId);
+    	} 
+    	
+    	List<AnalysisType> analysisTypeList = this.analysisService.getAnalysisTypesByQuery(idLabs, idProjects, idAnalyses, idSampleSources, idOrganismBuild, user );
+    	
+    	
+    	return analysisTypeList;
+    }
+    
+    @RequestMapping(value = "getQuerySampleSource", method=RequestMethod.GET)
+    @ResponseBody
+    public List<SampleSource> getQuerySampleSource (
+    		@RequestParam(value="idAnalysisTypes") List<Long> idAnalysisTypes,
+    		@RequestParam(value="idLabs") List<Long> idLabs,
+    		@RequestParam(value="idProjects") List<Long> idProjects,
+    		@RequestParam(value="idAnalyses") List<Long> idAnalyses,
+    		@RequestParam(value="idOrganismBuild") Long idOrganismBuild
+    ) throws Exception {
+    	
+    	//Get current active user
+    	Subject currentUser = SecurityUtils.getSubject();
+    	User user = null;
+    	if (currentUser.isAuthenticated()) {
+    		Long userId = (Long) currentUser.getPrincipal();
+    		user = userService.getUser(userId);
+    	} 
+    	
+    	List<SampleSource> sampleSourceList = this.analysisService.getSampleSourceByQuery(idLabs, idAnalyses, idProjects, idAnalysisTypes, idOrganismBuild, user );
+    	
+    	
+    	return sampleSourceList;
     }
     
     
@@ -209,6 +360,57 @@ public class QueryController {
     	return itList;
     }
     
+    private List<QueryResult> filterChipFdr(List<QueryResult> results, Float fdr, String fdrCode) throws Exception {
+    	List<QueryResult> filteredResults = new ArrayList<QueryResult>();
+    	NumberFormat formatter = new DecimalFormat("0.##E0");
+    	for (QueryResult qr: results) {
+  
+    		Double readFdr = null;
+    		try {
+    		  readFdr = formatter.parse(qr.getFDR()).doubleValue();
+    		} catch (Exception ex) {
+    			throw new Exception("Could not parse FDR value: " + qr.getFDR());
+    		}
+    		boolean pass = true;
+    		if (fdrCode.equals("GT")) {
+    			if (readFdr <= fdr) {
+    				pass = false;
+    			}
+    		} else {
+    			if (readFdr >= fdr) {
+    				pass = false;
+    			}
+    		}
+    		if (pass) {
+    			filteredResults.add(qr);
+    		}
+    	}
+    	return filteredResults;
+    }
+    
+    private List<QueryResult> filterChipLog2Ratio(List<QueryResult> results, Float log2ratio, String log2ratioCode) {
+    	List<QueryResult> filteredResults = new ArrayList<QueryResult>();
+    	for (QueryResult qr: results) {
+    		boolean pass = true;
+    		if (log2ratioCode.equals("GT")) {
+    			if (qr.getLog2Ratio() < log2ratio) {
+    				pass = false;
+    			}
+    		} else if (log2ratioCode.equals("LT")) {
+    			if (qr.getLog2Ratio() > log2ratio) {
+    				pass = false;
+    			}
+    		} else {
+    			if (Math.abs(qr.getLog2Ratio()) < log2ratio) {
+    				pass = false;
+    			}
+    		}
+    		if (pass) {
+    			filteredResults.add(qr);
+    		}
+    	}
+    	return filteredResults;
+    }
     
     private List<QueryResult> getIntersectingRegionsChip(ArrayList<HashMap<String,IntervalTree<Chip>>> treeList, List<Analysis> analyses, Genome genome, 
     		List<Interval> intervals) throws Exception{
@@ -238,10 +440,8 @@ public class QueryController {
         	    		result.setLog2Ratio(c.getLog2Rto());
         	    		queryResults.add(result);
         			}
-    			}
-    			
+    			}	
     		}
-
     	}
     	
     	return queryResults;
@@ -363,7 +563,6 @@ public class QueryController {
     		this.end = end;
     	}
     	
-
     	public String getChrom() {
     		return this.chrom;
     	} 

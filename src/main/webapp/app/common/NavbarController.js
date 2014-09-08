@@ -8,8 +8,8 @@ angular.module('navbar').controller("NavbarController",['$scope','$http','$rootS
 	function($scope,$http,$rootScope,$location,$interval,$route,DynamicDictionary) {
 	    $rootScope.loggedUser = null;
 	    $rootScope.lastLocation = "dashboard";
-		$rootScope.admin = false;	
-	    
+		$rootScope.admin = false;
+	
 		$scope.logout = function() {
 			$http({
 				url: "security/logout",
@@ -20,10 +20,8 @@ angular.module('navbar').controller("NavbarController",['$scope','$http','$rootS
 			});
 		};
 		
-		$interval(function() {$scope.isAuthenticated();},2000000);
-
-				
-		$scope.isAuthenticated = function() {
+		$rootScope.isAuthenticated = function() {
+			//console.log("Calling isAuth");
 			var wasAuth = false;
 			if ($rootScope.loggedUser != null) {
 				wasAuth = true;
@@ -32,9 +30,13 @@ angular.module('navbar').controller("NavbarController",['$scope','$http','$rootS
 	    	DynamicDictionary.isAuthenticated().success(function(data) {
 	    		$rootScope.loggedUser = data.user;
 	    		if ($rootScope.loggedUser == null) {
+	    			if (angular.isDefined($rootScope.checkInterval)) {
+		        		//console.log("Stopping checking (isAuth)");
+	        			$interval.cancel($rootScope.checkInterval);
+	        		}
 	    			$rootScope.admin = false;
 	    			if (wasAuth) {
-						console.log("Reloading");
+						//console.log("Reloading");
 						$route.reload();
 					} 
 	    		} else {

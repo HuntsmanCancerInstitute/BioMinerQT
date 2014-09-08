@@ -32,6 +32,7 @@ import hci.biominer.service.OrganismBuildService;
 import hci.biominer.service.ProjectService;
 import hci.biominer.parser.ChipParser;
 import hci.biominer.parser.GenomeParser;
+import hci.biominer.util.BiominerProperties;
 import hci.biominer.util.Enumerated.FileTypeEnum;
 import hci.biominer.util.GenomeBuilds;
 import hci.biominer.util.PreviewMap;
@@ -50,11 +51,6 @@ public class FileController {
 	
 	@Autowired
 	private OrganismBuildService organismBuildService;
-
-	//Hard-coded file locations
-	private final static String FILES_PATH = "/temp/";
-	private final static String PARSED_PATH = "/parsed/";
-
 	
 	private Genome fetchGenome(OrganismBuild ob) throws Exception {
     	try {
@@ -67,6 +63,49 @@ public class FileController {
     	}
     }
 	
+	public static void checkProperties() throws Exception{
+		if (!BiominerProperties.isLoaded()) {
+			BiominerProperties.loadProperties();
+		}
+	}
+	
+	public static File generateFilePath(FileUpload fileUpload) throws Exception {
+		checkProperties();
+		File localDirectory = new File(BiominerProperties.getProperty("filePath"));
+		File subDirectory = new File(localDirectory,fileUpload.getDirectory());
+		File filePath = new File(subDirectory,fileUpload.getName());
+		return filePath;
+	}
+	
+	public static File getRawDirectory() throws Exception {
+		checkProperties();
+		File localDirectory = new File(BiominerProperties.getProperty("filePath"));
+		File subDirectory = new File(localDirectory,"/raw/");
+		if (!subDirectory.exists()) {
+			subDirectory.mkdir();
+		}
+		return subDirectory;
+	}
+	
+	public static File getParsedDirectory() throws Exception {
+		checkProperties();
+		File localDirectory = new File(BiominerProperties.getProperty("filePath"));
+		File subDirectory = new File(localDirectory,"/parsed/");
+		if (!subDirectory.exists()) {
+			subDirectory.mkdir();
+		}
+		return subDirectory;
+	}
+	
+	public static File getDownloadDirectory() throws Exception {
+		checkProperties();
+		File localDirectory = new File(BiominerProperties.getProperty("filePath"));
+		File subDirectory = new File(localDirectory,"/results/");
+		if (!subDirectory.exists()) {
+			subDirectory.mkdir();
+		}
+		return subDirectory;
+	}
 	
 	/***************************************************
 	 * URL: /submit/upload  
@@ -87,7 +126,7 @@ public class FileController {
 			try {
 				
 				//Create directory
-				File directory = new File(FILES_PATH,String.valueOf(idProject));
+				File directory = new File(getRawDirectory(),String.valueOf(idProject));
 				if (!directory.exists()) {
 					directory.mkdir();
 				}
@@ -148,9 +187,10 @@ public class FileController {
 	 * @param file : filename
 	 * @param type : file type (IMPORTED or UPLOADED)
 	 * @return void
+	 * @throws Exception 
 	 ****************************************************/
 	 @RequestMapping(value = "/upload/get", method = RequestMethod.GET)
-	 public void getUpload(HttpServletResponse response,@RequestParam("file") String file, @RequestParam("type") FileTypeEnum type, @RequestParam("idProject") Long idProject){
+	 public void getUpload(HttpServletResponse response,@RequestParam("file") String file, @RequestParam("type") FileTypeEnum type, @RequestParam("idProject") Long idProject) throws Exception{
 		 Project project = this.projectService.getProjectById(idProject);
 		 FileUpload fileUpload = this.fileUploadService.getFileUploadByName(file,type,project);
 		 
@@ -167,7 +207,7 @@ public class FileController {
 		 	//response.setContentType(getFile.getFileType());
 		 	response.setHeader("Content-disposition", "attachment; filename=\""+fileUpload.getName()+"\"");
 		 	
-		 	File localFile = new File(fileUpload.getDirectory(), fileUpload.getName());
+		 	File localFile = generateFilePath(fileUpload);
 		 	BufferedInputStream bis = new BufferedInputStream(new FileInputStream(localFile));
 		 	
 	        FileCopyUtils.copy(bis, response.getOutputStream());
@@ -184,13 +224,15 @@ public class FileController {
 	 * @param file : filename
 	 * @param type : file type (IMPORTED or UPLOADED)
 	 * @return void
+	 * @throws Exception 
 	 ****************************************************/
 	 @RequestMapping(value = "/upload/delete", method = RequestMethod.DELETE)
-	 public void deleteFile(HttpServletResponse response,@RequestParam("file") String file, @RequestParam("type") FileTypeEnum type, @RequestParam("idProject") Long idProject){
+	 public void deleteFile(HttpServletResponse response,@RequestParam("file") String file, @RequestParam("type") FileTypeEnum type, @RequestParam("idProject") Long idProject) throws Exception{
 		 Project project = this.projectService.getProjectById(idProject);
 		 FileUpload fileUpload = this.fileUploadService.getFileUploadByName(file, type, project);
 		 
-		 File fileToDelete = new File(fileUpload.getDirectory(),fileUpload.getName());
+		 
+		 File fileToDelete = generateFilePath(fileUpload);
 		 
 		 boolean success = fileToDelete.delete();
 		 
@@ -222,10 +264,11 @@ public class FileController {
 	 * post(): Generate a file preview
 	 * @param file : filename
 	 * @return PreviewMap: Container that holds the file preview
+	 * @throws Exception 
 	 ****************************************************/
 	@RequestMapping(value = "parse/preview", method = RequestMethod.GET)
     @ResponseBody
-	public PreviewMap getHeader(@RequestParam(value="name") String name, @RequestParam("idProject") Long idProject) {
+	public PreviewMap getHeader(@RequestParam(value="name") String name, @RequestParam("idProject") Long idProject) throws Exception {
 		 Project project = this.projectService.getProjectById(idProject);
 		 FileUpload fileUpload = this.fileUploadService.getFileUploadByName(name, FileTypeEnum.UPLOADED, project);
 		
@@ -237,7 +280,7 @@ public class FileController {
 			 	int counter = 0;
 			 	
 			 	//Open a buffered reader
-			 	BufferedReader br = ModelUtil.fetchBufferedReader(new File(fileUpload.getDirectory(),fileUpload.getName()));
+			 	BufferedReader br = ModelUtil.fetchBufferedReader(generateFilePath(fileUpload));
 			 
 			 	//Grab the first 20 lines of the file
 			 	while((temp = br.readLine()) != null) {
@@ -301,11 +344,9 @@ public class FileController {
 			}
 			
 			
-			File importDir = new File(FILES_PATH,id);
-			File parseDir = new File(PARSED_PATH,id);
-			if (!parseDir.exists()) {
-				parseDir.mkdirs();
-			}
+			File importDir = new File(getRawDirectory(),id);
+			File parseDir = new File(getParsedDirectory(),id);
+			
 			File inputFile = new File(importDir, input);
 			File outputFile = new File(parseDir, output);
 			

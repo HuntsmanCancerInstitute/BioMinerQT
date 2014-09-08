@@ -14,6 +14,7 @@ import hci.biominer.model.DataTrack;
 import hci.biominer.model.OrganismBuild;
 import hci.biominer.model.Project;
 import hci.biominer.model.Sample;
+import hci.biominer.model.SampleSource;
 import hci.biominer.model.access.Institute;
 import hci.biominer.model.access.Lab;
 import hci.biominer.model.access.User;
@@ -114,6 +115,7 @@ public class AnalysisDAO {
 		return analyses;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public List<Analysis> getAnalysesToPreload(OrganismBuild ob, AnalysisType at) {
 		Session session = this.getCurrentSession();
 		Query query = session.createQuery("select distinct a from Analysis a "
@@ -180,108 +182,41 @@ public class AnalysisDAO {
 		session.close();
 	}
 	
+	@SuppressWarnings("unchecked")
 	public List<Analysis> getAnalysesByQuery(List<Long> labs, List<Long> projects, List<Long> analyses, 
-			List<Long> sources, Long analysisType, Long idGenomeBuild, User user) {
+			List<Long> sources, Long analysisType, Long idOrganismBuild, User user) {
 		
+		//Basics
+		AnalysisQueryBuilder aqb = new AnalysisQueryBuilder(user);
+	    aqb.setSelect(" select distinct a ");
 	    
-	    //create parameter hashmap
-	    HashMap<String,Object> parameterMap = new HashMap<String,Object>();
-	    HashMap<String,Collection> parameterListMap = new HashMap<String,Collection>();
+	    //Add manditiory restrictions
+	    addOrganismRestriction(aqb,idOrganismBuild);
+	    addAnalysisTypeRestriction(aqb,analysisType);
 	    
-	    //Create basic query
-	    String selectString = "select distinct a from Analysis a ";
-	    StringBuilder joinString = new StringBuilder();
-	    StringBuilder whereString = new StringBuilder();
-	    
-	    joinString.append(" left join a.project as p ");
-	    joinString.append(" left join p.labs as l ");
-	    joinString.append(" left join p.institutes as i ");
-	    
-	    //Add public visibility permissions
-	    
-	    whereString.append(" where ");
-	    whereString.append(" ( p.visibility = :pubVisibility ");
-	    
-	    parameterMap.put("pubVisibility", ProjectVisibilityEnum.PUBLIC);
-	    
-	    //If user logged in, add additional visibility permissions
-	    if (user != null) {
-	    	List<Long> labList = new ArrayList<Long>();
-		    List<Long> instituteList = new ArrayList<Long>();
-		    HashSet<Long> instituteSet = new HashSet<Long>();
-		   
-		    for (Lab l: user.getLabs()) {
-		      labList.add(l.getIdLab());
-		    }
-		    
-		    for (Institute i: user.getInstitutes()) {
-		      instituteList.add(i.getIdInstitute());
-		    }
-		    instituteList.addAll(instituteSet);
-	    	
-	    	
-	    	whereString.append(" or (l.idLab in (:userLabs) and p.visibility = :labVisibility) ");
-		    whereString.append(" or (i.idInstitute in (:userInstitute) and p.visibility = :instVisibility) ");
-		    
-		    parameterListMap.put("userLabs", labList);
-		    parameterListMap.put("userInstitute",instituteList);
-		    parameterMap.put("labVisibility", ProjectVisibilityEnum.LAB);
-		    parameterMap.put("instVisibility", ProjectVisibilityEnum.INSTITUTE);
-		    
-	    }
-	    
-	    //Separate out visibilty part of the 'where' clause
-	    whereString.append(" ) ");
-	    
-	    //Make sure there is a parseable file!
-	    whereString.append(" and (a.file IS NOT NULL) ");
-	    
-	    //Add query specific permissions
-	    joinString.append(" left join p.organismBuild as ob ");
-	    whereString.append(" and (ob.idOrganismBuild = :idGenomeBuild) ");
-	    parameterMap.put("idGenomeBuild", idGenomeBuild);
-	    
-	    joinString.append(" left join a.analysisType as at ");
-    	whereString.append(" and (at.idAnalysisType = (:selectAnalysisType)) ");
-    	parameterMap.put("selectAnalysisType", analysisType);
-    	
-	    
+	    //Add optional restrictoins
 	    if (labs.size() > 0) {
-	    	whereString.append(" and (l.idLab in (:selectLabs)) ");
-	    	parameterListMap.put("selectLabs", labs);
+	    	addLabRestrictions(aqb,labs);
 	    }
 	    
 	    if (projects.size() > 0) {
-	    	whereString.append(" and (p.idProject in (:selectProjects)) ");
-	    	parameterListMap.put("selectProjects", projects);
+	    	addProjectRestrictions(aqb,projects);
 	    }
 	    
 	    if (analyses.size() > 0) {
-	    	whereString.append(" and (a.idAnalysis in (:selectAnalyses)) ");
-	    	parameterListMap.put("selectAnalyses", analyses);
+	    	addAnalysisRestrictions(aqb,analyses);
 	    }
 	    
 	
 	    if (sources.size() > 0) {
-	    	joinString.append(" left join a.samples as smp ");
-	    	joinString.append(" left join smp.sampleSource as ss ");
-	    	whereString.append(" and (ss.idSampleSource in (:selectSampleSource)) ");
-	    	parameterListMap.put("selectSampleSource", sources);
+	    	addSampleSourceRestrictions(aqb,sources);
 	    }
 	    
 	      		  
 	    //Create session and query.
 	    Session session = this.getCurrentSession();
 	    
-	    Query query = session.createQuery(selectString + joinString.toString() + whereString.toString() );
-	    
-	    for (String key: parameterListMap.keySet()) {
-	    	query.setParameterList(key, parameterListMap.get(key));
-	    }
-	    
-	    for (String key: parameterMap.keySet()) {
-	    	query.setParameter(key, parameterMap.get(key));
-	    }
+	    Query query = aqb.getQuery(session);
 	    
 	    //Fetch matching results and initialize fields
 	    List<Analysis> analysesResult = query.list();
@@ -290,8 +225,329 @@ public class AnalysisDAO {
 		}
 	    session.close();
 	    return analysesResult;
-	
 	}
+	
+	@SuppressWarnings("unchecked")
+	public List<Analysis> getAnalysesByQuery(List<Long> labs, List<Long> projects, 
+			List<Long> sources, List<Long> analysisTypes, Long idOrganismBuild, User user) {
+		//Basics
+		AnalysisQueryBuilder aqb = new AnalysisQueryBuilder(user);
+		aqb.setSelect(" select distinct a ");
+
+		//Add manditiory restrictions
+		if (idOrganismBuild != null) {
+			addOrganismRestriction(aqb,idOrganismBuild);
+		}
+
+		if (analysisTypes.size() > 0) {
+			addAnalysisTypeRestrictions(aqb,analysisTypes);
+		}
+
+		//Add optional restrictoins
+		if (labs.size() > 0) {
+			addLabRestrictions(aqb,labs);
+		}
+
+		if (projects.size() > 0) {
+			addProjectRestrictions(aqb,projects);
+		}
+
+
+		if (sources.size() > 0) {
+			addSampleSourceRestrictions(aqb,sources);
+		}
+
+
+		//Create session and query.
+		Session session = this.getCurrentSession();
+
+		Query query = aqb.getQuery(session);
+
+		//Fetch matching results and initialize fields
+		List<Analysis> analysisResult = query.list();
+		for (Analysis a: analysisResult) {
+			this.initializeAnalysis(a);
+		}
+		session.close();
+		return analysisResult;
+		
+	}
+	
+	@SuppressWarnings("unchecked")
+	public List<Project> getProjectsByQuery(List<Long> labs, List<Long> analyses, 
+			List<Long> sources, List<Long> analysisTypes, Long idOrganismBuild, User user) {
+		
+		//Basics
+		AnalysisQueryBuilder aqb = new AnalysisQueryBuilder(user);
+		aqb.setSelect(" select distinct p ");
+
+		//Add manditiory restrictions
+		if (idOrganismBuild != null) {
+			addOrganismRestriction(aqb,idOrganismBuild);
+		}
+		
+		if (analysisTypes.size() > 0) {
+			addAnalysisTypeRestrictions(aqb,analysisTypes);
+		}
+		
+		//Add optional restrictoins
+		if (labs.size() > 0) {
+			addLabRestrictions(aqb,labs);
+		}
+
+		if (analyses.size() > 0) {
+			addAnalysisRestrictions(aqb,analyses);
+		}
+
+
+		if (sources.size() > 0) {
+			addSampleSourceRestrictions(aqb,sources);
+		}
+
+
+		//Create session and query.
+		Session session = this.getCurrentSession();
+
+		Query query = aqb.getQuery(session);
+
+		//Fetch matching results and initialize fields
+		List<Project> projectResult = query.list();
+		for (Project p: projectResult) {
+			this.initializeProject(p);
+		}
+		session.close();
+		return projectResult;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public List<AnalysisType> getAnalysisTypesByQuery(List<Long> labs, List<Long> projects, List<Long> analyses, 
+			List<Long> sources, Long idOrganismBuild, User user) {
+		
+		//Basics
+		AnalysisQueryBuilder aqb = new AnalysisQueryBuilder(user);
+		aqb.setSelect(" select distinct at ");
+		aqb.addToJoin(" left join a.analysisType as at ");
+
+		//Add restrictions
+		if (idOrganismBuild != null) {
+			addOrganismRestriction(aqb,idOrganismBuild);
+		}
+		
+		if (projects.size() > 0) {
+			addAnalysisTypeRestrictions(aqb,projects);
+		}
+		
+		if (labs.size() > 0) {
+			addLabRestrictions(aqb,labs);
+		}
+
+		if (analyses.size() > 0) {
+			addAnalysisRestrictions(aqb,analyses);
+		}
+
+
+		if (sources.size() > 0) {
+			addSampleSourceRestrictions(aqb,sources);
+		}
+
+
+		//Create session and query.
+		Session session = this.getCurrentSession();
+
+		Query query = aqb.getQuery(session);
+
+		//Fetch matching results and initialize fields
+		List<AnalysisType> atResult = query.list();
+		
+		session.close();
+		return atResult;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public List<Lab> getLabByQuery(User user, List<Long> analysisTypes, List<Long> projects, List<Long> analyses, List<Long> sources,
+			Long idOrganismBuild) {
+		//Create query object
+		AnalysisQueryBuilder aqb = new AnalysisQueryBuilder(user);
+
+
+		//Create basic query
+		aqb.setSelect(" select distinct l ");
+
+		if (idOrganismBuild != null) {
+			addOrganismRestriction(aqb,idOrganismBuild);
+		}
+
+		if (analyses.size() > 0) {
+			addAnalysisRestrictions(aqb, analyses);
+		}
+
+		if (analysisTypes.size() > 0) {
+			addAnalysisTypeRestrictions(aqb, analysisTypes);
+		}
+
+		if (sources.size() > 0) {
+			addSampleSourceRestrictions(aqb, sources);
+		}
+
+		if (projects.size() > 0) {
+			addProjectRestrictions(aqb,projects);
+		}
+
+		/**********************************************
+		 * Run query object and fetch results
+		 **********************************************/
+
+		//Create session and query.
+		Session session = this.getCurrentSession();
+
+		Query query = aqb.getQuery(session);
+
+		//Fetch matching results and initialize fields
+		List<Lab> labList = query.list();
+
+		session.close();
+		return labList;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public List<OrganismBuild> getOrgansimBuildByQuery(User user, List<Long> analysisTypes, List<Long> labs, List<Long> projects,
+			List<Long> analyses, List<Long> sources) {
+	
+		//Create query object
+		AnalysisQueryBuilder aqb = new AnalysisQueryBuilder(user);
+	    
+	    
+	    /**********************************************
+	     * Create query basics
+	     **********************************************/
+	    //Create basic query
+	    aqb.setSelect("select distinct ob");
+	    
+	    
+	    /**********************************************
+	     * Add restrictions based on dropdowns
+	     **********************************************/
+	    
+	    if (labs.size() > 0) {
+	    	addLabRestrictions(aqb,labs);
+	    }
+	    
+	    if (analyses.size() > 0) {
+	    	addAnalysisRestrictions(aqb, analyses);
+	    }
+	    
+	    if (analysisTypes.size() > 0) {
+	    	addAnalysisTypeRestrictions(aqb, analysisTypes);
+	    }
+	
+	    if (sources.size() > 0) {
+	    	addSampleSourceRestrictions(aqb, sources);
+	    }
+	    
+	    if (projects.size() > 0) {
+	    	addProjectRestrictions(aqb,projects);
+	    }
+	    
+	    /**********************************************
+	     * Run query object and fetch results
+	     **********************************************/
+	      		  
+	    //Create session and query.
+	    Session session = this.getCurrentSession();
+	    
+	    Query query = aqb.getQuery(session);
+	    
+	    //Fetch matching results and initialize fields
+	    List<OrganismBuild> obList = query.list();
+	   
+	    session.close();
+	    return obList;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public List<SampleSource> getSampleSourceByQuery(List<Long> labs, List<Long> analyses, 
+			List<Long> projects, List<Long> analysisTypes, Long idOrganismBuild, User user) {
+		
+		//Basics
+		AnalysisQueryBuilder aqb = new AnalysisQueryBuilder(user);
+		aqb.setSelect(" select distinct ss ");
+		aqb.addToJoin(" left join a.samples as smp ");
+    	aqb.addToJoin(" left join smp.sampleSource as ss ");
+		
+
+		//Add restrictions
+		if (idOrganismBuild != null) {
+			addOrganismRestriction(aqb,idOrganismBuild);
+		}
+		
+		if (analysisTypes.size() > 0) {
+			addAnalysisTypeRestrictions(aqb,analysisTypes);
+		}
+		
+		if (labs.size() > 0) {
+			addLabRestrictions(aqb,labs);
+		}
+
+		if (analyses.size() > 0) {
+			addAnalysisRestrictions(aqb,analyses);
+		}
+
+
+		if (projects.size() > 0) {
+			addProjectRestrictions(aqb,projects);
+		}
+
+		//Create session and query.
+		Session session = this.getCurrentSession();
+
+		Query query = aqb.getQuery(session);
+
+		//Fetch matching results and initialize fields
+		List<SampleSource> ssResult = query.list();
+		
+		session.close();
+		return ssResult;
+	}
+	
+	private void addOrganismRestriction(AnalysisQueryBuilder aqb, Long idOrganismBuild) {
+    	aqb.addToWhere(" and (ob.idOrganismBuild = :idOrganismBuild) ");
+    	aqb.addParameter("idOrganismBuild", idOrganismBuild);
+	}
+	
+	private void addLabRestrictions(AnalysisQueryBuilder aqb, List<Long> labs) {
+		aqb.addToWhere(" and (l.idLab in (:selectLabs)) ");
+    	aqb.addListParameter("selectLabs", labs);
+	}
+	
+	private void  addAnalysisRestrictions(AnalysisQueryBuilder aqb, List<Long> analyses) {
+		aqb.addToWhere(" and (a.idAnalysis in (:selectAnalyses)) ");
+    	aqb.addListParameter("selectAnalyses", analyses);
+	}
+	
+	private void addProjectRestrictions(AnalysisQueryBuilder aqb, List<Long> projects) {
+		aqb.addToWhere(" and (p.idProject in (:selectProjects)) ");
+    	aqb.addListParameter("selectProjects", projects);
+	}
+	
+	private void addSampleSourceRestrictions(AnalysisQueryBuilder aqb, List<Long> sources) {
+		aqb.addToJoin(" left join a.samples as smp ");
+    	aqb.addToJoin(" left join smp.sampleSource as ss ");
+    	aqb.addToWhere(" and (ss.idSampleSource in (:selectSampleSource)) ");
+    	aqb.addListParameter("selectSampleSource", sources);
+	}
+	
+	private void addAnalysisTypeRestrictions(AnalysisQueryBuilder aqb, List<Long> analysisTypes) {
+		aqb.addToJoin(" left join a.analysisType as at ");
+    	aqb.addToWhere(" and (at.idAnalysisType in (:selectAnalysisTypes)) ");
+    	aqb.addListParameter("selectAnalysisTypes", analysisTypes);
+	}
+	
+	private void addAnalysisTypeRestriction(AnalysisQueryBuilder aqb, Long idAnalysisType ) {
+		aqb.addToJoin(" left join a.analysisType as at ");
+    	aqb.addToWhere(" and (at.idAnalysisType = :selectAnalysisType) ");
+    	aqb.addParameter("selectAnalysisType", idAnalysisType);
+	}
+	
 	
 	private void initializeAnalysis(Analysis a) {
 		Hibernate.initialize(a.getFile());
@@ -305,6 +561,131 @@ public class AnalysisDAO {
 	    for (Sample s: a.getSamples()) {
 			Hibernate.initialize(s.isAnalysisSet());
 		}
+	}
+	
+	public Project initializeProject(Project p) {
+		 
+		Hibernate.initialize(p.getSamples());
+		Hibernate.initialize(p.getDataTracks());
+		Hibernate.initialize(p.getFiles());
+		Hibernate.initialize(p.getAnalyses());
+		Hibernate.initialize(p.getLabs());
+		Hibernate.initialize(p.getInstitutes());
+
+		for (Analysis a: p.getAnalyses()) {
+			Hibernate.initialize(a.getSamples());
+			Hibernate.initialize(a.getFile());
+			Hibernate.initialize(a.getDataTracks());
+		}
+
+		for (Sample s: p.getSamples()) {
+			Hibernate.initialize(s.isAnalysisSet());
+		}
+
+		for (DataTrack d: p.getDataTracks()) {
+			Hibernate.initialize(d.isAnalysisSet());
+		}
+		
+		return p;
+	}
+	
+	
+	class AnalysisQueryBuilder {
+		private String selectString;
+		private StringBuilder joinString;
+		private StringBuilder whereString;
+		private HashMap<String,Object> parameterMap;
+		private HashMap<String,Collection> parameterListMap;
+		
+		public AnalysisQueryBuilder(User user) {
+			parameterMap = new HashMap<String,Object>();
+			parameterListMap = new HashMap<String,Collection>();
+			
+			selectString = "";
+			
+			joinString = new StringBuilder(" from Analysis a ");
+			joinString.append(" left join a.project as p ");
+		    joinString.append(" left join p.labs as l ");
+		    joinString.append(" left join p.institutes as i ");
+		    joinString.append(" left join p.organismBuild as ob ");
+		    
+			whereString = new StringBuilder("");
+			
+			//public visibility
+			whereString.append(" where ");
+			whereString.append(" ( p.visibility = :pubVisibility ");
+			parameterMap.put("pubVisibility", ProjectVisibilityEnum.PUBLIC);
+		    
+		    //If user logged in, add additional visibility permissions
+		    if (user != null) {
+		    	List<Long> labList = new ArrayList<Long>();
+			    List<Long> instituteList = new ArrayList<Long>();
+			    HashSet<Long> instituteSet = new HashSet<Long>();
+			   
+			    for (Lab l: user.getLabs()) {
+			      labList.add(l.getIdLab());
+			    }
+			    
+			    for (Institute i: user.getInstitutes()) {
+			      instituteList.add(i.getIdInstitute());
+			    }
+			    instituteList.addAll(instituteSet);
+			    
+			    whereString.append(" or (l.idLab in (:userLabs) and p.visibility = :labVisibility) ");
+			    whereString.append(" or (i.idInstitute in (:userInstitute) and p.visibility = :instVisibility) ");
+			    
+			    parameterListMap.put("userLabs", labList);
+			    parameterListMap.put("userInstitute",instituteList);
+			    parameterMap.put("labVisibility", ProjectVisibilityEnum.LAB);
+			    parameterMap.put("instVisibility", ProjectVisibilityEnum.INSTITUTE);
+			    
+		    }
+		    
+		    //Separate out visibilty part of the 'where' clause
+		    whereString.append(" ) ");
+			
+		    //Only return analyses that can be converted into interval trees
+			whereString.append(" and (ob.genomeFile IS NOT NULL) ");
+		    whereString.append(" and (a.file IS NOT NULL) ");
+			
+			
+		}
+		
+		public Query getQuery(Session session) {
+			Query query = session.createQuery(selectString + joinString.toString() + whereString.toString() );
+		    
+		    for (String key: parameterListMap.keySet()) {
+		    	query.setParameterList(key, parameterListMap.get(key));
+		    }
+		    
+		    for (String key: parameterMap.keySet()) {
+		    	query.setParameter(key, parameterMap.get(key));
+		    }
+			
+		    return query;
+		}
+		
+		
+		public void addListParameter(String parameter, Collection collection) {
+			parameterListMap.put(parameter, collection);
+		}
+		
+		public void addParameter(String parameter, Object object) {
+			parameterMap.put(parameter, object);
+		}
+		
+		public void setSelect(String selectStatement) {
+			selectString = selectStatement;
+		}
+		
+		public void addToJoin(String joinStatement) {
+			joinString.append(" " + joinStatement + " ");
+		}
+		
+		public void addToWhere(String whereStatement) {
+			whereString.append(" " + whereStatement + " ");
+		}
+		
 	}
 	
 	

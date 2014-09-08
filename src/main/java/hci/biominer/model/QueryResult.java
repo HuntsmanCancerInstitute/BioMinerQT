@@ -12,7 +12,7 @@ public class QueryResult {
   private String analysisSummary;
   private String coordinates;
   private Float log2Ratio;
-  private Float FDR; 
+  private String FDR; 
 	
 	public QueryResult() {
 	}
@@ -65,11 +65,11 @@ public class QueryResult {
     this.log2Ratio = log2Ratio;
   }
 
-  public Float getFDR() {
+  public String getFDR() {
     return FDR;
   }
 
-  public void setFDR(Float fDR) {
+  public void setFDR(String fDR) {
     FDR = fDR;
   }
 

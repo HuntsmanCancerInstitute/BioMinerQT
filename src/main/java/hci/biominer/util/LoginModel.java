@@ -8,8 +8,15 @@ public class LoginModel {
 	private User user;
 	private String referring;
 	private String time;
+	private Long timeout;
 	
 	
+	public Long getTimeout() {
+		return timeout;
+	}
+	public void setTimeout(Long timeout) {
+		this.timeout = timeout;
+	}
 	public String getTime() {
 		return time;
 	}

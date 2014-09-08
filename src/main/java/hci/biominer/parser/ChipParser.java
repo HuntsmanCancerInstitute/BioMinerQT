@@ -8,6 +8,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.regex.Matcher;
@@ -163,6 +165,8 @@ public class ChipParser {
 			boolean allLog2RatioPos = true;
 			boolean allLog2RatioNeg = true;
 			
+			NumberFormat formatter = new DecimalFormat("0.##E0");
+			
 			while ((line = br.readLine()) != null) {
 				String[] parts = line.split("\t");
 				
@@ -170,7 +174,7 @@ public class ChipParser {
 				String tempChrom;
 				int tempStart = -1;
 				int tempEnd = -1;
-				float tempFdr = -1;
+				double tempFdr = -1;
 				float tempLog = -1;
 				
 				//Make sure the line length matches header. Parsing might go OK if this fails, but I 
@@ -202,6 +206,13 @@ public class ChipParser {
 					allTransformedFdrLessThanOne = false;
 				}
 				
+				if (this.isConverted) {
+					double decimal = tempFdr / -10;
+					tempFdr = Math.pow(10, decimal);
+				}
+				
+				String stringFdr = formatter.format(tempFdr);
+				
 				//Parse LogRatio
 				tempLog = ColumnValidators.validateLog2Ratio(parts[this.logColumn]);
 				
@@ -213,7 +224,7 @@ public class ChipParser {
 				
 				
 				//Create output string and add to data list
-				String outputFile = String.format("%s\t%d\t%d\t%f\t%f\n",tempChrom,tempStart,tempEnd,tempFdr,tempLog);
+				String outputFile = String.format("%s\t%d\t%d\t%s\t%f\n",tempChrom,tempStart,tempEnd,stringFdr,tempLog);
 				this.parsedData.add(outputFile);
 				
 				lineCount++;

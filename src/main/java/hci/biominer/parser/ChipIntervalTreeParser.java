@@ -48,7 +48,7 @@ public class ChipIntervalTreeParser {
 				}
 				int start = Integer.parseInt(items[1]);
 				int end = Integer.parseInt(items[2]);
-				float fdr = Float.parseFloat(items[3]);
+				String fdr = items[3];
 				float log = Float.parseFloat(items[4]);
 				
 				//Create intervals

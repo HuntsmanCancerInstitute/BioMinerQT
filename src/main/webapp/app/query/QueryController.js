@@ -67,11 +67,7 @@ function($scope, $http, $modal, $anchorScroll, DynamicDictionary, StaticDictiona
 	
 	//Static dictionaries.
 	
-	$scope.loadOrganismBuildList = function () {
-    	StaticDictionary.getOrganismBuildList().success(function(data) {
-    		$scope.organismBuildList = data;
-    	});
-    };
+
     $scope.loadGenotypeList = function () {
     	StaticDictionary.getGenotypeList().success(function(data) {
     		$scope.genotypeList = data;
@@ -82,6 +78,7 @@ function($scope, $http, $modal, $anchorScroll, DynamicDictionary, StaticDictiona
     		$scope.geneAnnotationList = data;
     	});
     };
+    
 	$scope.loadAnalysisTypeList = function () {
     	StaticDictionary.getAnalysisTypeList().success(function(data) {
     		$scope.analysisTypeCheckedList = data;
@@ -89,44 +86,12 @@ function($scope, $http, $modal, $anchorScroll, DynamicDictionary, StaticDictiona
     			$scope.analysisTypeCheckedList[idx].selected  = false;
     			$scope.analysisTypeCheckedList[idx].show      = true;
     			$scope.analysisTypeCheckedList[idx].codeResultTypes = $scope.analysisTypeCheckedList[idx].codeResultTypes.split(",");
+    			$scope.analysisTypeCheckedList[idx].possible = true;
     		}
+    		$scope.loadAnalysisTypes();
     	});
     };
     
-	//Dynamic dictionaries.  These dictionaries can be loaded on-demand.
-    $scope.loadLabs = function() {
-    	DynamicDictionary.loadQueryLabs().success(function(data) {
-    		$scope.labList = data;
-    	});
-    };
-    $scope.loadProjects = function() {
-    	DynamicDictionary.loadQueryProjects().success(function(data) {
-    		$scope.projectList = data;
-    	});
-    };
-    $scope.loadAnalyses = function() {
-    	DynamicDictionary.loadQueryAnalyses().success(function(data) {
-    		$scope.analysisList = data;
-    	});
-    };
-    $scope.loadSampleSources = function() {
-    	DynamicDictionary.loadSampleSources().success(function(data) {
-    		$scope.sampleSourceList = data;
-    	});
-    };
-    
-    //Load up dynamic dictionaries
-	$scope.loadLabs();
-	$scope.loadSampleSources();
-	$scope.loadOrganismBuildList();
-	$scope.loadAnalysisTypeList();
-	$scope.loadProjects();
-	$scope.loadAnalyses();
-	$scope.loadGenotypeList();
-	$scope.loadGeneAnnotationList();
-
-
-
 	
 	$scope.pickResultType = function() {
 		for (var x = 0; x < $scope.analysisTypeCheckedList.length; x++) {
@@ -138,7 +103,12 @@ function($scope, $http, $modal, $anchorScroll, DynamicDictionary, StaticDictiona
 				}
 			}
 			$scope.analysisTypeCheckedList[x].show = allowed;
-			$scope.analysisTypeCheckedList[x].class = allowed ? '' : 'grey-out';
+			if ($scope.analysisTypeCheckedList[x].show && $scope.analysisTypeCheckedList[x].possible) {
+				$scope.analysisTypeCheckedList[x].class = '';
+			} else {
+				$scope.analysisTypeCheckedList[x].class = 'grey-out';
+			}
+			
 		}
 		
 		if ($scope.codeResultType == 'GENE' || $scope.codeResultType == 'VARIANT') {
@@ -167,7 +137,7 @@ function($scope, $http, $modal, $anchorScroll, DynamicDictionary, StaticDictiona
 		$scope.selectedAnalysisTypes.length = 0;
 		$scope.selectedLabs.length = 0;
 		$scope.selectedProjects.length = 0;
-		$scope.selectedAalyses.length = 0;
+		$scope.selectedAnalyses.length = 0;
 		$scope.selectedSampleSources.length = 0;
 		
 		$scope.isIntersect = "true";
@@ -407,6 +377,15 @@ function($scope, $http, $modal, $anchorScroll, DynamicDictionary, StaticDictiona
 		    return ga.idGeneAnnotation;
 		}).join(',');
 
+		var fdr = null;
+		if ($scope.thresholdFDR != "") {
+			fdr = $scope.thresholdFDR;
+		}
+		
+		var log2ratio = null;
+		if ($scope.thresholdLog2Ratio != "") {
+			log2ratio = $scope.thresholdLog2Ratio;
+		}
 		
 		// Run the query on the server.
 		$http({
@@ -426,9 +405,9 @@ function($scope, $http, $modal, $anchorScroll, DynamicDictionary, StaticDictiona
 				     geneMargins:             $scope.geneMargins,
 				     idGeneAnnotations:       idGeneAnnotationParams,
 				     isThresholdBasedQuery:   $scope.isThresholdBasedQuery,
-				     FDR:                     $scope.thresholdFDR,
+				     FDR:                     fdr,
 				     codeFDRComparison:       $scope.codeThresholdFDRComparison,
-				     log2Ratio:               $scope.thresholdLog2Ratio,
+				     log2Ratio:               log2ratio,
 				     codeLog2RatioComparison: $scope.codeThresholdLog2RatioComparison},
 				     
 		}).success(function(data) {
@@ -452,12 +431,305 @@ function($scope, $http, $modal, $anchorScroll, DynamicDictionary, StaticDictiona
 		});
 		
 		$anchorScroll();
-
-		
-		
 	};
+	
+	$scope.loadOrganismBuildList = function() {		
+		var idAnalysisTypeParams = $.map($scope.selectedAnalysisTypes, function(analysisType){
+		    return analysisType.idAnalysisType;
+		}).join(',');
+		
+		var idLabParams = $.map($scope.selectedLabs, function(lab){
+		    return lab.idLab;
+		}).join(',');
+		
+		var idProjectParams = $.map($scope.selectedProjects, function(project){
+		    return project.idProject;
+		}).join(',');
+		
+		var idAnalysisParams = $.map($scope.selectedAnalyses, function(analysis){
+		    return analysis.idAnalysis;
+		}).join(',');
+		
+		var idSampleSourceParams = $.map($scope.selectedSampleSources, function(ss){
+		    return ss.idSampleSource;
+		}).join(',');
+	
+		// Run the query on the server.
+		$http({
+			url: "query/getQueryOrganismBuilds",
+			method: "GET",
+			params: {
+				     idAnalysisTypes:         idAnalysisTypeParams,
+				     idLabs:                  idLabParams,
+				     idProjects:              idProjectParams,
+				     idAnalyses:              idAnalysisParams,
+				     idSampleSources:         idSampleSourceParams},
+		}).success(function(data) {
+			$scope.organismBuildList = data;
+		}).error(function(data, status, headers, config) {
+			console.log("Could not get organismBuildList");
+		});
+	};
+	
+	
+	$scope.loadLabs = function() {		
+		var idAnalysisTypeParams = $.map($scope.selectedAnalysisTypes, function(analysisType){
+		    return analysisType.idAnalysisType;
+		}).join(',');
+		
+		var idProjectParams = $.map($scope.selectedProjects, function(project){
+		    return project.idProject;
+		}).join(',');
+		
+		var idAnalysisParams = $.map($scope.selectedAnalyses, function(analysis){
+		    return analysis.idAnalysis;
+		}).join(',');
+		
+		var idSampleSourceParams = $.map($scope.selectedSampleSources, function(ss){
+		    return ss.idSampleSource;
+		}).join(',');
+	
+		// Run the query on the server.
+		$http({
+			url: "query/getQueryLabs",
+			method: "GET",
+			params: {
+				     idAnalysisTypes:         idAnalysisTypeParams,
+				     idProjects:              idProjectParams,
+				     idAnalyses:              idAnalysisParams,
+				     idSampleSources:         idSampleSourceParams,
+				     idOrganismBuild:         $scope.idOrganismBuild},
+		}).success(function(data) {
+			$scope.labList = data;
+		}).error(function(data, status, headers, config) {
+			console.log("Could not get labList");
+		});
+	};
+	
+	$scope.loadProjects = function() {		
+		var idAnalysisTypeParams = $.map($scope.selectedAnalysisTypes, function(analysisType){
+		    return analysisType.idAnalysisType;
+		}).join(',');
+		
+		var idLabParams = $.map($scope.selectedLabs, function(lab){
+		    return lab.idLab;
+		}).join(',');
+		
+		var idAnalysisParams = $.map($scope.selectedAnalyses, function(analysis){
+		    return analysis.idAnalysis;
+		}).join(',');
+		
+		var idSampleSourceParams = $.map($scope.selectedSampleSources, function(ss){
+		    return ss.idSampleSource;
+		}).join(',');
+	
+		// Run the query on the server.
+		$http({
+			url: "query/getQueryProjects",
+			method: "GET",
+			params: {
+				     idAnalysisTypes:         idAnalysisTypeParams,
+				     idLabs:                  idLabParams,
+				     idAnalyses:              idAnalysisParams,
+				     idSampleSources:         idSampleSourceParams,
+				     idOrganismBuild:         $scope.idOrganismBuild},
+		}).success(function(data) {
+			$scope.projectList = data;
+		}).error(function(data, status, headers, config) {
+			console.log("Could not get project list");
+		});
+	};
+	
+	$scope.loadAnalyses = function() {		
+		var idAnalysisTypeParams = $.map($scope.selectedAnalysisTypes, function(analysisType){
+		    return analysisType.idAnalysisType;
+		}).join(',');
+		
+		var idLabParams = $.map($scope.selectedLabs, function(lab){
+		    return lab.idLab;
+		}).join(',');
+		
+		var idProjectParams = $.map($scope.selectedProjects, function(project){
+		    return project.idProject;
+		}).join(',');
+		
+		var idSampleSourceParams = $.map($scope.selectedSampleSources, function(ss){
+		    return ss.idSampleSource;
+		}).join(',');
+	
+		// Run the query on the server.
+		$http({
+			url: "query/getQueryAnalyses",
+			method: "GET",
+			params: {
+				     idAnalysisTypes:         idAnalysisTypeParams,
+				     idLabs:                  idLabParams,
+				     idProjects:              idProjectParams,
+				     idSampleSources:         idSampleSourceParams,
+				     idOrganismBuild:         $scope.idOrganismBuild},
+		}).success(function(data) {
+			$scope.analysisList = data;
+		}).error(function(data, status, headers, config) {
+			console.log("Could not get analysis list");
+		});
+	};
+	
+	$scope.loadSampleSources = function() {		
+		var idAnalysisTypeParams = $.map($scope.selectedAnalysisTypes, function(analysisType){
+		    return analysisType.idAnalysisType;
+		}).join(',');
+		
+		var idLabParams = $.map($scope.selectedLabs, function(lab){
+		    return lab.idLab;
+		}).join(',');
+		
+		var idProjectParams = $.map($scope.selectedProjects, function(project){
+		    return project.idProject;
+		}).join(',');
+		
+		var idAnalysisParams = $.map($scope.selectedAnalyses, function(analysis){
+		    return analysis.idAnalysis;
+		}).join(',');
+		
+	
+		// Run the query on the server.
+		$http({
+			url: "query/getQuerySampleSource",
+			method: "GET",
+			params: {
+				     idAnalysisTypes:         idAnalysisTypeParams,
+				     idLabs:                  idLabParams,
+				     idProjects:              idProjectParams,
+				     idAnalyses:              idAnalysisParams,
+				     idOrganismBuild:         $scope.idOrganismBuild},
+		}).success(function(data) {
+			$scope.sampleSourceList = data;
+		}).error(function(data, status, headers, config) {
+			console.log("Could not get sample source list");
+		});
+	};
+	
+	$scope.loadAnalysisTypes = function() {		
+		
+		var idLabParams = $.map($scope.selectedLabs, function(lab){
+		    return lab.idLab;
+		}).join(',');
+		
+		var idProjectParams = $.map($scope.selectedProjects, function(project){
+		    return project.idProject;
+		}).join(',');
+		
+		var idAnalysisParams = $.map($scope.selectedAnalyses, function(analysis){
+		    return analysis.idAnalysis;
+		}).join(',');
+		
+		var idSampleSourceParams = $.map($scope.selectedSampleSources, function(ss){
+		    return ss.idSampleSource;
+		}).join(',');
+		
+	
+		// Run the query on the server.
+		$http({
+			url: "query/getQueryAnalysisTypes",
+			method: "GET",
+			params: {
+				     idSampleSources:         idSampleSourceParams,
+				     idLabs:                  idLabParams,
+				     idProjects:              idProjectParams,
+				     idAnalyses:              idAnalysisParams,
+				     idOrganismBuild:         $scope.idOrganismBuild},
+		}).success(function(data) {
+			for (var idx = 0; idx < $scope.analysisTypeCheckedList.length; idx++) {
+				var found  = false;
+				for (var idx2 = 0; idx2 < data.length; idx2++) {
+					if ($scope.analysisTypeCheckedList[idx].idAnalysisType == data[idx2].idAnalysisType) {
+						found = true;
+					}
+				}
+				if (!found) {
+					$scope.analysisTypeCheckedList[idx].possible = false;
+					$scope.analysisTypeCheckedList[idx].class = 'grey-out';
+				} else {
+					$scope.analysisTypeCheckedList[idx].possible = true;
+					$scope.analysisTypeCheckedList[idx].class  = '';
+				}
+    		}
+		}).error(function(data, status, headers, config) {
+			console.log("Could not get analysis type list");
+		});
+	};
+	
+	//Create watchers
+	$scope.$watch("selectedAnalysisTypes",function(newValue, oldValue) {
+		if (newValue != oldValue) {
+			$scope.loadOrganismBuildList();
+			$scope.loadLabs();
+			$scope.loadProjects();
+			$scope.loadAnalyses();
+			$scope.loadSampleSources();
+		}
+	});
+	
+	$scope.$watch("selectedLabs",function(newValue, oldValue) {
+		if (newValue != oldValue) {
+			$scope.loadOrganismBuildList();
+			$scope.loadProjects();
+			$scope.loadAnalyses();
+			$scope.loadSampleSources();
+			$scope.loadAnalysisTypes();
+			
+		}
+	});
+	
+	$scope.$watch("selectedAnalyses",function(newValue, oldValue) {
+		if (newValue != oldValue) {
+			$scope.loadOrganismBuildList();
+			$scope.loadLabs();
+			$scope.loadProjects();
+			$scope.loadSampleSources();
+			$scope.loadAnalysisTypes();
+		}
+	});
+	
+	$scope.$watch("selectedSampleSources",function(newValue, oldValue) {
+		if (newValue != oldValue) {
+			$scope.loadOrganismBuildList();
+			$scope.loadLabs();
+			$scope.loadProjects();
+			$scope.loadAnalyses();
+			$scope.loadAnalysisTypes();
+		}
+	});
+	
+	$scope.$watch("selectedProjects",function(newValue, oldValue) {
+		if (newValue != oldValue) {
+			$scope.loadOrganismBuildList();
+			$scope.loadLabs();
+			$scope.loadAnalyses();
+			$scope.loadSampleSources();
+			$scope.loadAnalysisTypes();
+		}
+	});
+	
+	$scope.$watch("idOrganismBuild",function(newValue, oldValue) {
+		if (newValue != oldValue) {
+			$scope.loadLabs();
+			$scope.loadProjects();
+			$scope.loadAnalyses();
+			$scope.loadSampleSources();
+			$scope.loadAnalysisTypes();
+		}
+	});
 
-
+	//Load up dynamic dictionaries
+	$scope.loadLabs();
+	$scope.loadSampleSources();
+	$scope.loadOrganismBuildList();
+	$scope.loadAnalysisTypeList();
+	$scope.loadProjects();
+	$scope.loadAnalyses();
+	$scope.loadGenotypeList();
+	$scope.loadGeneAnnotationList();
 
 
 }]);
