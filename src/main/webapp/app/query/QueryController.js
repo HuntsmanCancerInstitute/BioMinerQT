@@ -38,7 +38,7 @@ function($scope, $http, $modal, $anchorScroll, DynamicDictionary, StaticDictiona
 	
 	$scope.isThresholdBasedQuery = true;
 	$scope.thresholdFDR = "";
-	$scope.codeThresholdFDRComparison = "GT";
+	$scope.codeThresholdFDRComparison = "LT";
 	$scope.thresholdLog2Ratio = "";
 	$scope.codeThresholdLog2RatioComparison = "GTABS";
 	

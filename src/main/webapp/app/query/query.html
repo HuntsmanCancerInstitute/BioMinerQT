@@ -88,7 +88,7 @@
 					             ng-disabled="!analysisType.show || !analysisType.possible"  
 					             id="checkbox-at-{{ analysisType.idAnalysisType }}" 
 					             ng-model="analysisType.selected" type="checkbox" >
-					      {{ analysisType.type }}
+					     {{ analysisType.type }}
 					    </label>
 					  </div>
 					</div>
@@ -97,25 +97,25 @@
 					<!--  Lab -->
 					<div class="form-group">
 						<label class="col-md-4 control-label" for=""labEntry">Labs</label>  
-					    <select data-placeholder="Choose labs..." multiple class="col-md-7 chosen-select" ng-model="selectedLabs" chosen ng-options=" (lab.first + ' ' + lab.last + ' lab' ) for lab in labList"  ></select>
+					    <select data-placeholder="Choose labs..." multiple class="col-md-7 chosen-select" ng-model="selectedLabs" chosen ng-options="lab as (lab.first + ' ' + lab.last + ' lab' ) for lab in labList track by lab.idLab"  ></select>
 					</div>
 					
 					<!--  Analysis Project -->
 					<div class="form-group">
 						<label class="col-md-4 control-label" for=""labEntry">Analysis Projects</label>  
-					    <select data-placeholder="Choose analysis projects..." multiple class="col-md-7 chosen-select" ng-model="selectedProjects" chosen="projectList" ng-options="project.name for project in projectList"  ></select>
+					    <select data-placeholder="Choose analysis projects..." multiple class="col-md-7 chosen-select" ng-model="selectedProjects" chosen="projectList" ng-options="project as project.name for project in projectList track by project.idProject"  ></select>
 					</div>
 					
 					<!--  Analysis  -->
 					<div class="form-group">
 						<label class="col-md-4 control-label" for=""labEntry">Individual Analysis</label>  
-					    <select data-placeholder="Choose individual analysis..." multiple class="col-md-7 chosen-select" ng-model="selectedAnalyses" chosen="analysisList" ng-options="a.name for a in analysisList"  ></select>
+					    <select data-placeholder="Choose individual analysis..." multiple class="col-md-7 chosen-select" ng-model="selectedAnalyses" chosen="analysisList" ng-options="a as a.name for a in analysisList track by a.idAnalysis"  ></select>
 					</div>
 					
 					<!--  Sample Source  -->
 					<div class="form-group">
 						<label class="col-md-4 control-label" for=""labEntry">Sample Source</label>  
-					    <select data-placeholder="Choose sample source..." multiple class="col-md-7 chosen-select" ng-model="selectedSampleSources" chosen  ng-options="sampleSource.source for sampleSource in sampleSourceList"  ></select>
+					    <select data-placeholder="Choose sample source..." multiple class="col-md-7 chosen-select" ng-model="selectedSampleSources" chosen  ng-options="sampleSource as sampleSource.source for sampleSource in sampleSourceList track by sampleSource.idSampleSource"  ></select>
 					</div>
 
 
@@ -145,7 +145,7 @@
 						  </div>
 					    </div>
 					    <div class="col-md-9"  ng-show="intersectionTarget == 'REGION'" style="padding-left: 1px; padding-right: 0px;">
-				    		<input type="text" ng-model="regions" style="display: inline; width: 60%" class="form-control" placeholder="chr1:4500-8900">
+				    		<textarea ng-model="regions" style="display: inline; width: 60%" class="form-control" placeholder="examples: 'chr1:4500-8900'  or  'chr1   4500   8900'"/>
 					    	&nbsp;&nbsp;+/-
 					    	<input type="text" ng-model="regionMargins" style="display: inline; max-width: 60px;" class="form-control" placeholder="1000"/> 
 					    	bp
@@ -187,8 +187,9 @@
 					<div class="form-group" ng-show="isThresholdBasedQuery">
 					  <label class="col-md-3 control-label" >FDR</label>  
 				  	  <div class="col-md-5 btn-group ">
-  					     	<label class="btn btn-toggle" ng-model="codeThresholdFDRComparison" btn-radio="'GT'" >&gt;</label>
-       					    <label class="btn btn-toggle" ng-model="codeThresholdFDRComparison" btn-radio="'LT'" >&lt;</label>
+				  	  		<label class="btn btn-toggle" ng-model="codeThresholdFDRComparison" btn-radio="'GT'" >&gt;</label>
+				  	  		<label class="btn btn-toggle" ng-model="codeThresholdFDRComparison" btn-radio="'LT'" >&lt;</label>
+  					     	
    					  </div>
 					  <input id="textinput" class="col-md-4 form-control" style="display: inline; max-width: 180px" ng-model="thresholdFDR" name="textinput" placeholder=".05"  type="number" step="any">
 					</div>        
@@ -318,8 +319,8 @@
 							<th>Project</th>
 							<th>Analysis</th>
 							<th>Type</th>
-							<th>Conditions</th>
 							<th>Summary</th>
+							<th>Conditions</th>
 							<th>Coordinates</th>
 							<th>FDR</th>
 							<th>Log2Ratio</th>

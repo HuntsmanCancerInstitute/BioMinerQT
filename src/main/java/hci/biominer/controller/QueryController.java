@@ -429,11 +429,16 @@ public class QueryController {
         	    		result.setAnalysisType(a.getAnalysisType().getType());
         	    		result.setAnalysisName(a.getName());
         	    		result.setAnalysisSummary(a.getDescription());
-        	    		String conditions = "";
+        	    		HashSet<String> conditions = new HashSet<String>();
+        	    		String conditionString = "";
         	    		for (Sample sample: a.getSamples()) {
-        	    			conditions = sample.getSampleCondition().getCond() + ",";
+        	    			String cond = sample.getSampleCondition().getCond();
+        	    			if (!conditions.contains(cond)) {
+        	    				conditions.add(cond);
+        	    				conditionString += cond + ",";
+        	    			}
         	    		}
-        	    		result.setSampleConditions(conditions.substring(0,conditions.length()-1));
+        	    		result.setSampleConditions(conditionString.substring(0,conditionString.length()-1));
         	    		String coordinate = inv.getChrom() + ":" + String.valueOf(c.getStart()) + "-" + String.valueOf(c.getStop());
         	    		result.setCoordinates(coordinate);
         	    		result.setFDR(c.getTransFDR());
@@ -449,9 +454,10 @@ public class QueryController {
    
     
     private class IntervalParser {
-    	private Pattern pattern1 = Pattern.compile("^(.+?):(\\d+)-(\\d+)$");
+    	private Pattern pattern1 = Pattern.compile("^(.+?)(:|\\s+)(\\d+)(-|\\s+)(\\d+)$");
     	private Pattern pattern2 = Pattern.compile("^(.+)$");
-    	private Pattern marginP = Pattern.compile("^(\\d+)$");
+
+  
     	private StringBuilder warnings = new StringBuilder("");
     	
     	
@@ -476,23 +482,25 @@ public class QueryController {
     				intervals.add(inv);
     			}
     		} else {
-    			String[] regionList = region.split(";");
+    			String[] regionList = region.split("\n");
     			for (String r: regionList) {
     				Matcher m1 = pattern1.matcher(r);
     	    		Matcher m2 = pattern2.matcher(r);
     	    		
+    	    		
     	    		if (m1.matches()) {
+    	    		
     	    			int end = 0;
     	    			int start = 0;
     	    			try {
-    	    				start = Integer.parseInt(m1.group(2)) - regionMargin;
+    	    				start = Integer.parseInt(m1.group(3)) - regionMargin;
     	    			} catch (NumberFormatException nfe) {
     	    				warnings.append(String.format("Start boundary not an integer %s, skipping.",m1.group(2)));
     	    				continue;
     	    			}
     	    			
     	    			try {
-    	    				end = Integer.parseInt(m1.group(3)) + regionMargin;
+    	    				end = Integer.parseInt(m1.group(5)) + regionMargin;
     	    			} catch (NumberFormatException nfe) {
     	    				warnings.append(String.format("End boundary not an integer %s, skipping.",m1.group(3)));
     	    				continue;
