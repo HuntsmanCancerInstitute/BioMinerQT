@@ -708,7 +708,8 @@ function($scope, $http, $modal, $anchorScroll, $upload, DynamicDictionary, Stati
 		var idAnalysisParams = $.map($scope.selectedAnalyses, function(analysis){
 		    return analysis.idAnalysis;
 		}).join(',');
-		
+	
+	
 		var idSampleSourceParams = $.map($scope.selectedSampleSources, function(ss){
 		    return ss.idSampleSource;
 		}).join(',');

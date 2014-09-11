@@ -334,7 +334,7 @@ public class AnalysisDAO {
 		}
 		
 		if (projects.size() > 0) {
-			addAnalysisTypeRestrictions(aqb,projects);
+			addProjectRestrictions(aqb,projects);
 		}
 		
 		if (labs.size() > 0) {

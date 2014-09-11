@@ -278,7 +278,11 @@ public class QueryController {
     	
     	QueryResultContainer qrc = new QueryResultContainer(fullRegionResults, fullRegionResults.size(),0, sortType, true);
     	
-    	this.resultsDict.put(user.getUsername(), qrc);
+    	if (user != null) {
+    		this.resultsDict.put(user.getUsername(), qrc);
+    	} else {
+    		this.resultsDict.put("guest", qrc);
+    	}
     	
     	QueryResultContainer qrcSub = qrc.getQrcSubset(resultsPerPage, 0, sortType);
     	
@@ -292,20 +296,23 @@ public class QueryController {
     	//Get current active user
     	Subject currentUser = SecurityUtils.getSubject();
     	User user = null;
+    	String key = "guest";
     	if (currentUser.isAuthenticated()) {
     		Long userId = (Long) currentUser.getPrincipal();
     		user = userService.getUser(userId);
+    		key = user.getUsername();
     	}
     	
-    	if (this.fileDict.containsKey(user.getUsername())) {
-    		File fileToDelete = this.fileDict.get(user.getUsername());
+    	
+    	if (this.fileDict.containsKey(key)) {
+    		File fileToDelete = this.fileDict.get(key);
     		fileToDelete.delete();
     	}
     	
-    	if (this.resultsDict.containsKey(user.getUsername())) {
-    		List<QueryResult> results = this.resultsDict.get(user.getUsername()).getResultList();
+    	if (this.resultsDict.containsKey(key)) {
+    		List<QueryResult> results = this.resultsDict.get(key).getResultList();
     		if (results.size() > 0) {
-    			File localFile = new File(FileController.getDownloadDirectory(),user.getUsername() + ".query.txt.gz");
+    			File localFile = new File(FileController.getDownloadDirectory(),key + ".query.txt.gz");
     			BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(localFile))));
                         
     			bw.write("Index\tProjectName\tAnalysisType\tAnalysisName\tSampleConditions\tAnalysisSummary\tCoordinates\tLog2Ratio\tFDR\n");
@@ -316,12 +323,15 @@ public class QueryController {
     			
     			try {		
     			 	//response.setContentType(getFile.getFileType());
-    			 	response.setHeader("Content-disposition", "attachment; filename=\""+user.getUsername() + ".query.txt.gz"+"\"");
+    			 	response.setHeader("Content-disposition", "attachment; filename=\""+ key + ".query.txt.gz"+"\"");
     			 	
     			 	BufferedInputStream bis = new BufferedInputStream(new FileInputStream(localFile));
     			 	
     		        FileCopyUtils.copy(bis, response.getOutputStream());
-    		        this.fileDict.put(user.getUsername(), localFile);
+    		        
+    		        
+    		        this.fileDict.put(key, localFile);
+    		        
     			 }catch (IOException e) {
     				e.printStackTrace();
     			 }
@@ -340,15 +350,20 @@ public class QueryController {
     	//Get current active user
     	Subject currentUser = SecurityUtils.getSubject();
     	User user = null;
+    	String key = "guest";
     	if (currentUser.isAuthenticated()) {
     		Long userId = (Long) currentUser.getPrincipal();
     		user = userService.getUser(userId);
+    		key = user.getUsername();
     	}
     	
-    	System.out.println(user.getUsername() + " " + this.resultsDict.size());
+
     	QueryResultContainer qrc = null;
-    	if (this.resultsDict.containsKey(user.getUsername())) {
-    		QueryResultContainer full = this.resultsDict.get(user.getUsername());
+    	if (this.resultsDict.containsKey(key)) {
+    		
+    		
+    		QueryResultContainer full = this.resultsDict.get(key);
+    		
     		qrc = full.getQrcSubset(resultsPerPage, pageNum, sortType);
     	} else {
     		this.warnings = new StringBuilder("");
@@ -641,6 +656,9 @@ public class QueryController {
     		
     		if (region == "") {
     			for (String chrom: genome.getNameChromosome().keySet()) {
+    				if (chrom.startsWith("chr")) {
+    					continue;
+    				}
     				Interval inv = new Interval(chrom,0,genome.getNameChromosome().get(chrom).getLength());
     				intervals.add(inv);
     			}

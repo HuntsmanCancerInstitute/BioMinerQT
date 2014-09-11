@@ -242,7 +242,8 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
  
     //delete project
     $scope.deleteProject = function() {
-    	if ($scope.results.length > 0 || $scope.samples.length > 0 || $scope.datatracks.length > 0) {
+    	if ($scope.results.length > 0 || $scope.samples.length > 0 || $scope.datatracks.length > 0 || $scope.files.uploadedFiles.length > 0 || 
+    			$scope.files.importedFiles.length > 0) {
     		$scope.showErrorMessage("Can't Delete Selected Project","You must delete any samples, datatracks or analyses before deleting project");
     	} else if ($scope.idProject != -1) {
     		$http({
