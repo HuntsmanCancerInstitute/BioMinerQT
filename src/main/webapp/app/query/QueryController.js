@@ -458,7 +458,7 @@ function($scope, $http, $modal, $anchorScroll, $upload, DynamicDictionary, Stati
 				$scope.hasResults = true;
 			}
 			
-			console.log(data);
+			
 			
 			$http({
 				url: "query/warnings",
@@ -477,6 +477,13 @@ function($scope, $http, $modal, $anchorScroll, $upload, DynamicDictionary, Stati
 		});
 		
 		$anchorScroll();
+	};
+	
+	$scope.downloadAnalysis = function() {
+		$http({
+			url: "query/downloadAnalysis",
+			method: "GET"
+		});
 	};
 	
 	$scope.changeTablePosition = function() {

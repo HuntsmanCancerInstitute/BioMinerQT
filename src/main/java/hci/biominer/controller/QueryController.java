@@ -1,7 +1,12 @@
 package hci.biominer.controller;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
@@ -15,6 +20,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
@@ -23,11 +29,13 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
+import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import hci.biominer.model.Analysis;
 import hci.biominer.model.AnalysisType;
+import hci.biominer.model.FileUpload;
 import hci.biominer.model.OrganismBuild;
 import hci.biominer.model.Project;
 import hci.biominer.model.QueryResult;
@@ -49,11 +57,15 @@ import hci.biominer.util.BiominerProperties;
 import hci.biominer.util.GenomeBuilds;
 import hci.biominer.util.IntervalTrees;
 import hci.biominer.util.ModelUtil;
+import hci.biominer.util.Enumerated.FileTypeEnum;
 
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.GZIPInputStream;
+import java.io.OutputStreamWriter;
+import java.util.zip.GZIPOutputStream;
+
 
 
 @Controller
@@ -79,6 +91,7 @@ public class QueryController {
     private StringBuilder warnings = new StringBuilder("");
     
     private HashMap<String,QueryResultContainer> resultsDict =  new HashMap<String,QueryResultContainer>();
+    private HashMap<String,File> fileDict = new HashMap<String,File>();
     
     @PostConstruct
     public void loadAllData() throws Exception {
@@ -272,6 +285,50 @@ public class QueryController {
     	return qrcSub;
     	
     }
+    
+    @RequestMapping(value = "downloadAnalysis", method = RequestMethod.GET)
+	 public void downloadAnalysis(HttpServletResponse response) throws Exception{
+    	
+    	//Get current active user
+    	Subject currentUser = SecurityUtils.getSubject();
+    	User user = null;
+    	if (currentUser.isAuthenticated()) {
+    		Long userId = (Long) currentUser.getPrincipal();
+    		user = userService.getUser(userId);
+    	}
+    	
+    	if (this.fileDict.containsKey(user.getUsername())) {
+    		File fileToDelete = this.fileDict.get(user.getUsername());
+    		fileToDelete.delete();
+    	}
+    	
+    	if (this.resultsDict.containsKey(user.getUsername())) {
+    		List<QueryResult> results = this.resultsDict.get(user.getUsername()).getResultList();
+    		if (results.size() > 0) {
+    			File localFile = new File(FileController.getDownloadDirectory(),user.getUsername() + ".query.txt.gz");
+    			BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(localFile))));
+                        
+    			bw.write("Index\tProjectName\tAnalysisType\tAnalysisName\tSampleConditions\tAnalysisSummary\tCoordinates\tLog2Ratio\tFDR\n");
+    			for (QueryResult qr: results) {
+    				bw.write(qr.writeRegion());
+    			}
+    			bw.close();
+    			
+    			try {		
+    			 	//response.setContentType(getFile.getFileType());
+    			 	response.setHeader("Content-disposition", "attachment; filename=\""+user.getUsername() + ".query.txt.gz"+"\"");
+    			 	
+    			 	BufferedInputStream bis = new BufferedInputStream(new FileInputStream(localFile));
+    			 	
+    		        FileCopyUtils.copy(bis, response.getOutputStream());
+    		        this.fileDict.put(user.getUsername(), localFile);
+    			 }catch (IOException e) {
+    				e.printStackTrace();
+    			 }
+    			
+    		}
+    	}
+	 }
     
     @RequestMapping(value = "changeTablePosition",method=RequestMethod.GET)
     @ResponseBody

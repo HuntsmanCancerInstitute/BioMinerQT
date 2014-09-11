@@ -89,6 +89,11 @@ public class QueryResult {
   public void setAnalysisName(String analysisName) {
     this.analysisName = analysisName;
   }
+  
+  public String writeRegion() {
+	  String outline = String.format("%d\t%s\t%s\t%s\t%s\t%s\t%s\t%f\t%s\n", index, projectName, analysisType, analysisName, sampleConditions, analysisSummary, coordinates, log2Ratio, FDR);
+	  return outline;
+  }
 	
 
 	

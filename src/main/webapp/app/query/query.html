@@ -295,7 +295,7 @@
 				  Results  
 				  <span class="label label-default" ng-show="totalResults>0">{{totalResults}}</span>
 			   	  <button class="btn btn-sm btn-info pull-right" ng-show="hasResults" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-eye-open"></span> Display in IGV</button>
-			   	  <button class="btn btn-sm btn-info pull-right" ng-show="hasResults" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-download"></span> Download</button>
+			   	  <a class="btn btn-sm btn-info pull-right" ng-show="hasResults" style="margin-top: -6px; margin-left: 10px" target="_self" ng-href="query/downloadAnalysis"><span class="glyphicon glyphicon-download"></span> Download</a>
 			   	  <button class="btn btn-sm btn-danger pull-right" ng-show="warnings != ''" ng-click="displayWarnings()" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-exclamation-sign"></span></button>
 				</div>
 				
