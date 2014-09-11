@@ -131,12 +131,19 @@
    					     	<label class="btn btn-toggle" ng-model="isIntersect" btn-radio="'true'" >Intersect</label>
         					<label class="btn btn-toggle" ng-model="isIntersect" btn-radio="'false'">Don't Intersect</label>
     					</div>
+    					<span class="btn btn-primary pull-right fileinput-button" ng-show="isIntersect == 'true' && !isGeneBasedQuery && intersectionTarget == 'REGION'">
+					        <i class="glyphicon glyphicon-upload"></i>
+					        <span>Import Regions</span>
+					        <input type="file" ng-file-select="loadRegions($files)">            
+					    </span>
+					    
+					
 					  </div>
 					</div>
 					
 					
           	 		<!-- Regions-->
-					<div class="form-group"  ng-show="isIntersect">
+					<div class="form-group"  ng-show="isIntersect == 'true'">
 					    <div class="col-md-3" style="padding-right: 0px;">
 					      <div class="radio">
 						   		<label for="radio-region">
@@ -145,7 +152,7 @@
 						  </div>
 					    </div>
 					    <div class="col-md-9"  ng-show="intersectionTarget == 'REGION'" style="padding-left: 1px; padding-right: 0px;">
-				    		<textarea ng-model="regions" style="display: inline; width: 60%" class="form-control" placeholder="examples: 'chr1:4500-8900'  or  'chr1   4500   8900'"/>
+				    		<textarea ng-model="regions" style="display: inline; width: 60%" class="form-control" placeholder="chr1:4500-8900"/>
 					    	&nbsp;&nbsp;+/-
 					    	<input type="text" ng-model="regionMargins" style="display: inline; max-width: 60px;" class="form-control" placeholder="1000"/> 
 					    	bp

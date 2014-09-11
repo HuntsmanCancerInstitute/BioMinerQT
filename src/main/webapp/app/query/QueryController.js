@@ -5,20 +5,20 @@
  * QueryController
  * @constructor
  */
-var query     = angular.module('query',     ['filters', 'services', 'directives', 'ui.bootstrap', 'chosen']);
+var query     = angular.module('query',     ['angularFileUpload','filters', 'services', 'directives', 'ui.bootstrap', 'chosen']);
 
 
 angular.module("query").controller("QueryController", 
-[ '$scope', '$http', '$modal','$anchorScroll','DynamicDictionary','StaticDictionary',
+[ '$scope', '$http', '$modal','$anchorScroll','$upload','DynamicDictionary','StaticDictionary',
   
-function($scope, $http, $modal, $anchorScroll, DynamicDictionary, StaticDictionary) {
+function($scope, $http, $modal, $anchorScroll, $upload, DynamicDictionary, StaticDictionary) {
 	
 	$scope.hasResults = false;
 	$scope.warnings = "";
 	
 	$scope.querySummary = [];
 	$scope.codeResultType = "";
-	$scope.isGeneBasedQuery = true;
+	$scope.isGeneBasedQuery = false;
 	$scope.idOrganismBuild = "";
 
 	
@@ -66,8 +66,6 @@ function($scope, $http, $modal, $anchorScroll, DynamicDictionary, StaticDictiona
 	
 	
 	//Static dictionaries.
-	
-
     $scope.loadGenotypeList = function () {
     	StaticDictionary.getGenotypeList().success(function(data) {
     		$scope.genotypeList = data;
@@ -91,6 +89,36 @@ function($scope, $http, $modal, $anchorScroll, DynamicDictionary, StaticDictiona
     		$scope.loadAnalysisTypes();
     	});
     };
+    
+    $scope.loadRegions = function(files) {
+    	$upload.upload({
+    		url: "query/upload",
+    		file: files,
+    	}).success(function(data) {
+    		$scope.regions = data.regions;
+    		if (data.message == null) {
+    			$scope.regions = data.regions;
+    		} else {
+    			var message = data.message;
+    			var title = "Error Processing Region File";
+        		$modal.open({
+            		templateUrl: 'app/common/userError.html',
+            		controller: 'userErrorController',
+            		resolve: {
+            			title: function() {
+            				return title;
+            			},
+            			message: function() {
+            				return message;
+            			}
+            		}
+            	});
+    		}
+    	}).error(function(data) {
+    		console.log("Error running upload");
+    	});
+	};
+    
     
 	
 	$scope.pickResultType = function() {

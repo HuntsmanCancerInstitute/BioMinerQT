@@ -1,7 +1,9 @@
 package hci.biominer.controller;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -22,12 +24,14 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import hci.biominer.model.Analysis;
 import hci.biominer.model.AnalysisType;
 import hci.biominer.model.OrganismBuild;
 import hci.biominer.model.Project;
 import hci.biominer.model.QueryResult;
+import hci.biominer.model.RegionUpload;
 import hci.biominer.model.Sample;
 import hci.biominer.model.SampleSource;
 import hci.biominer.model.access.Lab;
@@ -43,6 +47,12 @@ import hci.biominer.service.AnalysisTypeService;
 import hci.biominer.util.BiominerProperties;
 import hci.biominer.util.GenomeBuilds;
 import hci.biominer.util.IntervalTrees;
+import hci.biominer.util.ModelUtil;
+
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
+import java.util.zip.GZIPInputStream;
 
 
 @Controller
@@ -108,6 +118,66 @@ public class QueryController {
     public String getWarnings() {
     	return this.warnings.toString();
     }
+    
+    @RequestMapping(value="upload",method=RequestMethod.POST)
+    @ResponseBody
+    public RegionUpload parseRegions(@RequestParam("file") MultipartFile file) {
+    	RegionUpload regions = new RegionUpload();
+    	Pattern pattern1 = Pattern.compile("^(\\w+)(,|:|\\s+)(\\d+)(,|-|\\s+)(\\d+)");
+    	
+    	if (!file.isEmpty()) {
+    		try {
+    			String name = file.getOriginalFilename();
+    			BufferedReader br = null;
+    			if (name.endsWith(".gz")) {
+    				GZIPInputStream gzip = new GZIPInputStream(file.getInputStream());
+    				br =  new BufferedReader(new InputStreamReader(gzip));
+    			} else if (name.endsWith(".zip")) {
+    				ZipInputStream zip = new ZipInputStream(file.getInputStream());
+    				ZipEntry ze = (ZipEntry) zip.getNextEntry();
+    				br = new BufferedReader(new InputStreamReader(zip));
+    				
+    		
+    			} else {
+    				br = new BufferedReader(new InputStreamReader(file.getInputStream()));
+    			}
+    
+    			String temp;
+    			StringBuilder regionString = new StringBuilder("");
+    			boolean ok = true;
+    			while ((temp = br.readLine()) != null) {
+    				Matcher m = pattern1.matcher(temp);
+    				if (m.matches()) {
+    					regionString.append(String.format("%s:%s-%s\n",m.group(1),m.group(3),m.group(5)));
+    				} else {
+    					regions.setMessage(String.format("Could not parse region line: %s. The first three columns must be chromsome, "
+    							+ "start coordinate and stop coordinate.  Can be tab, space, comma delimited or in the format "
+    							+ "chr:start-end",temp));
+    					ok = false;
+    					break;
+    				}
+    			}
+    			
+    			if (ok) {
+    				regions.setRegions(regionString.toString());
+    			}
+    			
+    			br.close();
+    			
+    			
+    		} catch (IOException ioex) {
+    			regions.setMessage("Error reading file: " + ioex.getMessage());
+    			ioex.printStackTrace();
+    		}
+    		
+    		
+    	} else {
+    		regions.setMessage("File is empty!");
+    	}
+    	
+    	return regions;
+    }
+    
     
     @RequestMapping(value = "run", method=RequestMethod.GET)
     @ResponseBody
