@@ -69,6 +69,7 @@ public class FileController {
 		}
 	}
 	
+	
 	public static File generateFilePath(FileUpload fileUpload) throws Exception {
 		checkProperties();
 		File localDirectory = new File(BiominerProperties.getProperty("filePath"));
@@ -127,6 +128,7 @@ public class FileController {
 				
 				//Create directory
 				File directory = new File(getRawDirectory(),String.valueOf(idProject));
+				File directoryStub = new File("/raw/",String.valueOf(idProject));
 				if (!directory.exists()) {
 					directory.mkdir();
 				}
@@ -149,7 +151,7 @@ public class FileController {
 				Project project = this.projectService.getProjectById(idProject);
 				
 				//Setup fileUpload object.
-				fileUpload.setDirectory(directory.getAbsolutePath());
+				fileUpload.setDirectory(directoryStub.getPath());
 				fileUpload.setState(FileStateEnum.SUCCESS);
 				fileUpload.setMessage("");
 				fileUpload.setType(FileTypeEnum.UPLOADED);
@@ -346,6 +348,10 @@ public class FileController {
 			
 			File importDir = new File(getRawDirectory(),id);
 			File parseDir = new File(getParsedDirectory(),id);
+			if (!parseDir.exists()) {
+				parseDir.mkdir();
+			}
+			File parseStub = new File("/parsed/",id);
 			
 			File inputFile = new File(importDir, input);
 			File outputFile = new File(parseDir, output);
@@ -380,7 +386,7 @@ public class FileController {
 			}
 		
 			outputMeta.setName(output);
-			outputMeta.setDirectory(parseDir.getAbsolutePath());
+			outputMeta.setDirectory(parseStub.getPath());
 			outputMeta.setSize(new Long(outputFile.length()));
 			
 			

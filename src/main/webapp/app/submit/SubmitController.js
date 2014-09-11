@@ -13,7 +13,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
 	/**********************
 	 * Initialization!
 	 *********************/
-	
+
 	//enums!
 	$scope.projectVisibilities = [{enum: "LAB",name: "Lab"},{enum: "INSTITUTE", name: "Institute"},{enum: "PUBLIC", name: "Public"}];
 	
@@ -175,10 +175,27 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
     
     //Create project
     $scope.add = function(project) {
+    	var lids = [];
+		var iids = [];
+		
+		for (var idx=0; idx<project.labs.length;idx++) {
+			lids.push(project.labs[idx].idLab);
+		}
+		
+		for (var idx=0; idx<project.institutes.length;idx++) {
+			iids.push(project.institutes[idx].idInstitute);
+		}
+		
+		var buildId = -1;
+		if (project.organismBuild != null) {
+			buildId = project.organismBuild.idOrganismBuild;
+		}
+    	
 		$http({
 			url: "project/createProject",
 			method: "PUT",
-			params: {name: project.name, description: project.description, visibility: "PUBLIC"},
+			params: {name: project.name, description: project.description, idLab: lids, idOrganismBuild: buildId,
+				idInstitute: iids, visibility: "PUBLIC"},
 		}).success(function(data) {
 			$scope.loadProjects(data);			
 		});
@@ -225,7 +242,9 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
  
     //delete project
     $scope.deleteProject = function() {
-    	if ($scope.idProject != -1) {
+    	if ($scope.results.length > 0 || $scope.samples.length > 0 || $scope.datatracks.length > 0) {
+    		$scope.showErrorMessage("Can't Delete Selected Project","You must delete any samples, datatracks or analyses before deleting project");
+    	} else if ($scope.idProject != -1) {
     		$http({
     			url: "project/deleteProject",
     			method: "DELETE",
@@ -249,6 +268,20 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
 	    var modalInstance = $modal.open({
 	      templateUrl: 'app/submit/newProjectWindow.html',
 	      controller: 'ProjectWindowController',
+	      
+	      resolve: {
+  			labList: function() {
+  				return $scope.labList;
+  			},
+  			instList: function() {
+  				return $scope.instituteList;
+  			},
+  			organismBuildList: function() {
+  				return $scope.organismBuildList;
+  			}
+  		  }
+	      
+	      
 	    });
 
 	    modalInstance.result.then(function (project) {

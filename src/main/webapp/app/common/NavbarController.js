@@ -70,7 +70,7 @@ angular.module('navbar').controller("NavbarController",['$scope','$http','$rootS
 			} else {
 				$rootScope.lastLocation = url;
 			}
-
+		
 		});  
 		
 		$scope.isAuthenticated();

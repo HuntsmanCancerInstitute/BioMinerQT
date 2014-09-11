@@ -88,7 +88,7 @@
 			    <tbody>
 			        <tr ng-repeat="file in files.importedFiles">
 			            <td> <input type="checkbox" ng-model="file.selected"/></td>
-			            <td><a target="_self" ng-href="submit/upload/get?file={{file.name}}&type=IMPORTED&projectId={{projectId}}">{{file.name}}</a></td>
+			            <td><a target="_self" ng-href="submit/upload/get?file={{file.name}}&type=IMPORTED&idProject={{projectId}}">{{file.name}}</a></td>
 			            <td>{{file.size | bytes}}</td>
 			            
 			          	<td ng-switch on="file.state">

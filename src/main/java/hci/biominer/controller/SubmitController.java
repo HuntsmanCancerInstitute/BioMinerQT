@@ -114,11 +114,40 @@ public class SubmitController {
 	 ****************************************************/
     @RequestMapping(value="createProject",method=RequestMethod.PUT)
     @ResponseBody
-    public Long createProject(@RequestParam(value="name") String name, @RequestParam(value="description") String description,
-    		@RequestParam(value="visibility") ProjectVisibilityEnum visibility) {
+    public Long createProject(
+    		@RequestParam(value="name") String name, 
+    		@RequestParam(value="description") String description,
+    		@RequestParam(value="visibility") ProjectVisibilityEnum visibility, 
+    		@RequestParam(value="idLab") List<Long> idLab, 
+    		@RequestParam(value="idOrganismBuild") Long idOrganismBuild,
+    		@RequestParam(value="idInstitute") List<Long> idInstitute) {
+    	
+    	
     	Project project = new Project();
     	project.setName(name);
     	project.setDescription(description);
+    	
+    	//Create lab objects and add to project
+		List<Lab> labs = new ArrayList<Lab>();
+		for (Long id: idLab) {
+    		labs.add(this.labService.getLab(id));
+    	}
+		project.setLabs(labs);
+    	
+    	
+    	//Create intitute objects and add to project
+		List<Institute> institutes = new ArrayList<Institute>();
+		for (Long id: idInstitute) {
+			institutes.add(this.instituteService.getInstituteById(id));
+		}
+		project.setInstitutes(institutes);
+    	
+    	
+    	//Create organismBuild object and add to project
+		OrganismBuild build = this.organismBuildService.getOrganismBuildById(idOrganismBuild);
+    	project.setOrganismBuild(build);
+    	
+
     	project.setVisibility(visibility);
     	
     	return this.projectService.addProject(project);

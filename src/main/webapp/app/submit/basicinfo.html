@@ -2,7 +2,7 @@
 <div class="container-fluid">
    <div class="container-fluid">
    <h4>Project</h4>
-	 <form class="form-horizontal">
+	 <form class="form-horizontal" name="editProjectForm">
 		<fieldset>
 		   <div class="row">
 		   
@@ -34,7 +34,7 @@
 				<div class="form-group">
 				  <label class="col-md-4 control-label" for="species_build">Species and Genome Build</label>
 				  <div class="col-md-6">
-				    <select id="species_build" ng-model="project.organismBuild.idOrganismBuild"  ng-options="gb.idOrganismBuild as gb.name group by gb.organism.common for gb in organismBuildList" class="form-control">
+				    <select id="species_build" ng-model="project.organismBuild.idOrganismBuild"  ng-options="gb.idOrganismBuild as gb.name group by gb.organism.common for gb in organismBuildList" class="form-control" required>
 				    </select>
 				  </div>
 				</div>
@@ -43,7 +43,7 @@
 				<div class="form-group">
 				  <label class="col-md-4 control-label" for="lab">Lab</label>
 				  	<div class="col-md-6">
-		  		    	<select data-placeholder="Choose labs..." ng-model="project.labs" multiple chosen class="col-md-6 chosen-select" ng-options="lab as (lab.first + ' ' + lab.last + ' lab' ) for lab in labList track by lab.idLab"></select> 
+		  		    	<select data-placeholder="Choose labs..." ng-model="project.labs" multiple chosen class="col-md-6 chosen-select" ng-options="lab as (lab.first + ' ' + lab.last + ' lab' ) for lab in labList track by lab.idLab" required></select> 
 				    </div>
 				</div>
 				
@@ -51,7 +51,7 @@
 				<div class="form-group">
 				  <label class="col-md-4 control-label" for="lab">Institute</label>
 				  	<div class="col-md-6">
-		  		    	<select data-placeholder="Choose institutes..." ng-model="project.institutes" multiple chosen class="col-md-6 chosen-select" ng-options="inst as inst.name for inst in instituteList track by inst.idInstitute"></select> 
+		  		    	<select data-placeholder="Choose institutes..." ng-model="project.institutes" multiple chosen class="col-md-6 chosen-select" ng-options="inst as inst.name for inst in instituteList track by inst.idInstitute" required></select> 
 				    </div>
 				</div>
 				
@@ -73,8 +73,7 @@
 				<div class="form-group">
 				  <label class="control-label" for="save_analysis_project_button"></label>
 				  <div >
-				    <button id="save_analysis_project_button" name="save_analysis_project_button" class="btn btn-primary" ng-click="edit()">Save</button>
-				    <button class="btn btn-warning" ng-click="testError()">FAILURE!!!</button>
+				    <button id="save_analysis_project_button" name="save_analysis_project_button" class="btn btn-primary" ng-click="edit()" ng-disabled="editProjectForm.$invalid">Save</button>
 				  </div>
 				</div>
 			</div>

@@ -4,7 +4,7 @@
 				<h4>Add Analysis Project</h4>
 			</div>
 			<div class="modal-body">
-				<form class="form-horizontal">
+				<form class="form-horizontal" name="newProjectForm">
 					<fieldset>
 						
 						<div class="form-group">
@@ -20,12 +20,37 @@
     							<textarea ng-model="project.description" placeholder="description" class="form-control"></textarea>
   							</div>
 						</div>
+						
+						<!-- Select Basic -->
+						<div class="form-group">
+						  <label class="col-md-2 control-label" for="species_build">Genome Build</label>
+						  <div class="col-md-10">
+						    <select id="species_build" ng-model="project.organismBuild.idOrganismBuild"  ng-options="gb.idOrganismBuild as gb.name group by gb.organism.common for gb in organismBuildList" class="form-control" required>
+						    </select>
+						  </div>
+						</div>
+						
+						<!-- Select Basic -->
+						<div class="form-group">
+						  <label class="col-md-2 control-label" for="lab">Lab</label>
+						  	<div class="col-md-10">
+				  		    	<select data-placeholder="Choose labs..." ng-model="project.labs" multiple chosen class="col-md-6 chosen-select" ng-options="lab as (lab.first + ' ' + lab.last + ' lab' ) for lab in labList track by lab.idLab" required></select> 
+						    </div>
+						</div>
+						
+						<!-- Select Basic -->
+						<div class="form-group">
+						  <label class="col-md-2 control-label" for="lab">Institute</label>
+						  	<div class="col-md-10">
+				  		    	<select data-placeholder="Choose institutes..." ng-model="project.institutes" multiple chosen class="col-md-6 chosen-select" ng-options="inst as inst.name for inst in instituteList track by inst.idInstitute" required></select> 
+						    </div>
+						</div>
 
 					</fieldset>
 				</form>
 			</div>
 			<div class="modal-footer">
-			            <button class="btn btn-primary" ng-click="ok()">Add</button>
+			            <button class="btn btn-primary" ng-click="ok()" ng-disabled="newProjectForm.$invalid">Add</button>
 			            <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
 			</div>
   	  

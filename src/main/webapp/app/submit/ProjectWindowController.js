@@ -1,10 +1,13 @@
 'use strict';
 
 angular.module("submit").controller("ProjectWindowController", [
- '$scope', '$modalInstance',                                                     
-function ($scope, $modalInstance) {
+ '$scope', '$modalInstance','labList','instList','organismBuildList',                                                     
+function ($scope, $modalInstance, labList, instList, organismBuildList) {
+	$scope.instituteList = instList;
+	$scope.labList = labList;
+	$scope.organismBuildList = organismBuildList;
 
-	$scope.project = {name: '', description: ''};
+	$scope.project = {name: '', description: '', labs: '', institutes: '', organismBuild: {idOrganismBuild: ''}};
 
 	$scope.ok = function () {
 	 $modalInstance.close($scope.project);

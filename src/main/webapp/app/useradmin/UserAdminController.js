@@ -11,13 +11,13 @@ angular.module("useradmin").controller("UserAdminController", ['$scope','$http',
 function($scope, $http, $modal, $timeout, DynamicDictionary, StaticDictionary) {
 	
 	//user table variables
-	$scope.userLimit = 5;
+	$scope.userLimit = 10;
 	$scope.userCurrentPage = 0;
 	$scope.userReverseSort = false;
 	$scope.userOrderByField = "last";
 	
 	//lab table variables
-	$scope.labLimit = 5;
+	$scope.labLimit = 10;
 	$scope.labCurrentPage = 0;
 	$scope.labReverseSort = false;
 	$scope.labOrderByField = "last";
