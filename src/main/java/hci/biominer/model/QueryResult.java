@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 
 public class QueryResult {
   
+  private Integer index;
   private String projectName;
   private String analysisType;
   private String analysisName;
@@ -16,6 +17,14 @@ public class QueryResult {
 	
 	public QueryResult() {
 	}
+	
+  public int getIndex() {
+	  return this.index;
+  }
+  
+  public void setIndex(int index) {
+	  this.index = index;
+  }
 
   public String getProjectName() {
     return projectName;

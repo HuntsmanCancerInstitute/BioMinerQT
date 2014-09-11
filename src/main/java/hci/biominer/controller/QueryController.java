@@ -31,6 +31,7 @@ import hci.biominer.model.AnalysisType;
 import hci.biominer.model.OrganismBuild;
 import hci.biominer.model.Project;
 import hci.biominer.model.QueryResult;
+import hci.biominer.model.QueryResultContainer;
 import hci.biominer.model.RegionUpload;
 import hci.biominer.model.Sample;
 import hci.biominer.model.SampleSource;
@@ -76,6 +77,8 @@ public class QueryController {
     private AnalysisTypeService analysisTypeService;
     
     private StringBuilder warnings = new StringBuilder("");
+    
+    private HashMap<String,QueryResultContainer> resultsDict =  new HashMap<String,QueryResultContainer>();
     
     @PostConstruct
     public void loadAllData() throws Exception {
@@ -182,7 +185,7 @@ public class QueryController {
     @RequestMapping(value = "run", method=RequestMethod.GET)
     @ResponseBody
     //public List<QueryResult> run(
-    public List<QueryResult> run (
+    public QueryResultContainer run (
         @RequestParam(value="codeResultType") String codeResultType,
         @RequestParam(value="idOrganismBuild") Long idOrganismBuild,
         @RequestParam(value="idAnalysisTypes") List<Long> idAnalysisTypes,
@@ -200,7 +203,9 @@ public class QueryController {
         @RequestParam(value="FDR",required=false) Float FDR,
         @RequestParam(value="codeFDRComparison") String codeFDRComparison,
         @RequestParam(value="log2Ratio",required=false) Float log2Ratio,
-        @RequestParam(value="codeLog2RatioComparison") String codeLog2RatioComparison
+        @RequestParam(value="codeLog2RatioComparison") String codeLog2RatioComparison,
+        @RequestParam(value="resultsPerPage") Integer resultsPerPage,
+        @RequestParam(value="sortType") String sortType
         ) throws Exception {
       
     	//Clear out warnings
@@ -212,7 +217,7 @@ public class QueryController {
     	if (currentUser.isAuthenticated()) {
     		Long userId = (Long) currentUser.getPrincipal();
     		user = userService.getUser(userId);
-    	} 
+    	}
     	
     	//Get Organism Build
     	OrganismBuild ob = this.organismBuildService.getOrganismBuildById(idOrganismBuild);   	
@@ -258,13 +263,42 @@ public class QueryController {
         	fullRegionResults.addAll(results);
     	}
     	
-    	if (fullRegionResults.size() > 100) {
-    		List<QueryResult> subset = fullRegionResults.subList(0, 100);
-    		return subset;	
-    	} else {
-    		return fullRegionResults;
+    	QueryResultContainer qrc = new QueryResultContainer(fullRegionResults, fullRegionResults.size(),0, sortType, true);
+    	
+    	this.resultsDict.put(user.getUsername(), qrc);
+    	
+    	QueryResultContainer qrcSub = qrc.getQrcSubset(resultsPerPage, 0, sortType);
+    	
+    	return qrcSub;
+    	
+    }
+    
+    @RequestMapping(value = "changeTablePosition",method=RequestMethod.GET)
+    @ResponseBody
+    public QueryResultContainer changeTablePosition(
+    		@RequestParam(value="resultsPerPage") Integer resultsPerPage,
+    		@RequestParam(value="pageNum") Integer pageNum,
+    		@RequestParam(value="sortType") String sortType
+    ) {
+    	//Get current active user
+    	Subject currentUser = SecurityUtils.getSubject();
+    	User user = null;
+    	if (currentUser.isAuthenticated()) {
+    		Long userId = (Long) currentUser.getPrincipal();
+    		user = userService.getUser(userId);
     	}
     	
+    	System.out.println(user.getUsername() + " " + this.resultsDict.size());
+    	QueryResultContainer qrc = null;
+    	if (this.resultsDict.containsKey(user.getUsername())) {
+    		QueryResultContainer full = this.resultsDict.get(user.getUsername());
+    		qrc = full.getQrcSubset(resultsPerPage, pageNum, sortType);
+    	} else {
+    		this.warnings = new StringBuilder("");
+    		this.warnings.append("There aren't any available results stored for this user");
+    	}
+    	
+    	return qrc;
     }
     
     @RequestMapping(value = "getQueryOrganismBuilds", method=RequestMethod.GET)
@@ -485,6 +519,7 @@ public class QueryController {
     private List<QueryResult> getIntersectingRegionsChip(ArrayList<HashMap<String,IntervalTree<Chip>>> treeList, List<Analysis> analyses, Genome genome, 
     		List<Interval> intervals) throws Exception{
     	List<QueryResult> queryResults = new ArrayList<QueryResult>();
+    	int index = 1;
     	
     	for (int i=0; i<treeList.size(); i++) {
     		
@@ -495,6 +530,7 @@ public class QueryController {
         			Analysis a = analyses.get(i);
         			for (Chip c: hits) {
         				QueryResult result = new QueryResult();
+        				result.setIndex(index++);
         	    		result.setProjectName(a.getProject().getName());
         	    		result.setAnalysisType(a.getAnalysisType().getType());
         	    		result.setAnalysisName(a.getName());

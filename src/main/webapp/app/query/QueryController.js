@@ -47,6 +47,15 @@ function($scope, $http, $modal, $anchorScroll, $upload, DynamicDictionary, Stati
 	$scope.codeVariantFilterType = "";
 	$scope.codeVariantFilterType = "";
 	$scope.selectedGenotypes = [];
+	
+	//Pagination
+	$scope.queryCurrentPage = 0;
+	$scope.resultPages = 0;
+	$scope.resultsPerPage = 10;
+	$scope.totalResults = 0;
+	
+	//Sorting
+	$scope.sortType = "FDR";
 
 	
 	$scope.mapResultType = {
@@ -375,6 +384,7 @@ function($scope, $http, $modal, $anchorScroll, $upload, DynamicDictionary, Stati
 	
 	$scope.runQuery = function() {
 		$scope.hasResults = false;
+		$scope.queryCurrentPage = 0;
 		
 		// Build a summary of the query that is being performed.  This will display
 		// in the results panel
@@ -436,11 +446,19 @@ function($scope, $http, $modal, $anchorScroll, $upload, DynamicDictionary, Stati
 				     FDR:                     fdr,
 				     codeFDRComparison:       $scope.codeThresholdFDRComparison,
 				     log2Ratio:               log2ratio,
-				     codeLog2RatioComparison: $scope.codeThresholdLog2RatioComparison},
+				     codeLog2RatioComparison: $scope.codeThresholdLog2RatioComparison,
+				     resultsPerPage:          $scope.resultsPerPage,
+				     sortType:                $scope.sortType},
 				     
 		}).success(function(data) {
-			$scope.queryResults = data;
-			$scope.hasResults = true;
+			if (data != null) {
+				$scope.queryResults = data.resultList;
+				$scope.resultPages = data.pages;
+				$scope.totalResults = data.resultNum;
+				$scope.hasResults = true;
+			}
+			
+			console.log(data);
 			
 			$http({
 				url: "query/warnings",
@@ -455,10 +473,43 @@ function($scope, $http, $modal, $anchorScroll, $upload, DynamicDictionary, Stati
 			
 		}).error(function(data, status, headers, config) {
 			console.log("Could not run query.");
-			$scope.hasResults = true;
+			$scope.hasResults = false;
 		});
 		
 		$anchorScroll();
+	};
+	
+	$scope.changeTablePosition = function() {
+		$http({
+			url: "query/changeTablePosition",
+			method: "GET",
+			params: {resultsPerPage:          $scope.resultsPerPage,
+				     pageNum:                 $scope.queryCurrentPage,
+				     sortType:                $scope.sortType},
+				     
+		}).success(function(data) {
+			if (data != null) {
+				$scope.queryResults = data.resultList;
+				$scope.resultPages = data.pages;
+				$scope.totalResults = data.resultNum;
+				$scope.hasResults = true;
+			}
+			
+			$http({
+				url: "query/warnings",
+				method: "GET",
+			}).success(function(data) {
+				if (data == "") {
+					$scope.warnings = "";
+				} else {
+					$scope.warnings = data;
+				}
+			});
+			
+		}).error(function(data, status, headers, config) {
+			console.log("Could not change page!");
+			$scope.hasResults = false;
+		});
 	};
 	
 	$scope.loadOrganismBuildList = function() {		

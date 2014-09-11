@@ -292,8 +292,8 @@
 			<div class=" panel panel-default">
 			
 				<div class="panel-heading" >
-				   	Results
-				  
+				  Results  
+				  <span class="label label-default" ng-show="totalResults>0">{{totalResults}}</span>
 			   	  <button class="btn btn-sm btn-info pull-right" ng-show="hasResults" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-eye-open"></span> Display in IGV</button>
 			   	  <button class="btn btn-sm btn-info pull-right" ng-show="hasResults" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-download"></span> Download</button>
 			   	  <button class="btn btn-sm btn-danger pull-right" ng-show="warnings != ''" ng-click="displayWarnings()" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-exclamation-sign"></span></button>
@@ -323,20 +323,21 @@
 			        <thead>
 			            <tr>
 			                <th></th>
+			                <th>Index</th>
 							<th>Project</th>
 							<th>Analysis</th>
 							<th>Type</th>
 							<th>Summary</th>
 							<th>Conditions</th>
-							<th>Coordinates</th>
-							<th>FDR</th>
-							<th>Log2Ratio</th>
+							<th><span ng-click="sortType='Coordinate';changeTablePosition()">Coordinates</span></th>
+							<th><span ng-click="sortType='FDR';changeTablePosition()">FDR</span></th>
+							<th><span ng-click="sortType='Log2Ratio';changeTablePosition()">Log2Ratio</span></th>
 			            </tr>
 			        </thead>
 			        <tbody>
 			            <tr ng-repeat="row in queryResults">
 			            	<td><input type="checkbox"/></td>
-			            	
+			            	<td class="nowrap">{{row.index}}</td>
 			                <td class="nowrap-ellipsis" ><span tooltip="{{row.projectName}}">{{row.projectName}}</td>
 			                <td class="nowrap-ellipsis"><span tooltip="{{row.analysisName}}">{{row.analysisName}}</span></td>
 			                <td class="nowrap">{{row.analysisType}}</td>
@@ -351,7 +352,27 @@
 			
 			    </table>
 
-				
+				<div class="row show-grid" ng-show="totalResults > 0">
+		    			<button ng-disabled="queryCurrentPage == 0" ng-click="queryCurrentPage=queryCurrentPage-1;changeTablePosition()" class="btn btn-mini col-lg-1"><span class="glyphicon glyphicon-chevron-left"></span> </button>
+		    			<div class="center col-lg-10">
+		    			    <div class="row">
+			    			    <select ng-model="resultsPerPage" class="center" ng-change="changeTablePosition()">
+			    			    	<option value=10>Show 10</option>
+			 		     	    	<option value=25>Show 25</option>
+			 		     	    	<option value=50>Show 50</option>
+			 		     	    	<option value=75>Show 75</option>
+			 		     	    	<option value=100>Show 100</option>
+		 		     	    	</select>
+		    			    </div>
+		    			    <div class="row">
+		    			    	<small class="center">Page {{queryCurrentPage+1}} of {{resultPages}} </small>
+		    			    </div>
+		    			</div>
+		    			
+			    		<button ng-disabled="queryCurrentPage >= resultPages" ng-click="queryCurrentPage=queryCurrentPage+1;changeTablePosition()" class="btn btn-mini col-lg-1">
+			    			<span class="glyphicon glyphicon-chevron-right"></span>
+			    		</button>
+	     	   	</div>
 				
 			</div>
 		
