@@ -451,6 +451,7 @@ public class AnalysisDAO {
 	    /**********************************************
 	     * Run query object and fetch results
 	     **********************************************/
+	    aqb.addToWhere( " and (ob.genomeFile IS NOT null and ob.transcriptFile IS NOT null) " );
 	      		  
 	    //Create session and query.
 	    Session session = this.getCurrentSession();
@@ -510,7 +511,7 @@ public class AnalysisDAO {
 	}
 	
 	private void addOrganismRestriction(AnalysisQueryBuilder aqb, Long idOrganismBuild) {
-    	aqb.addToWhere(" and (ob.idOrganismBuild = :idOrganismBuild) ");
+    	aqb.addToWhere(" and ( ob.idOrganismBuild = :idOrganismBuild ) ");
     	aqb.addParameter("idOrganismBuild", idOrganismBuild);
 	}
 	

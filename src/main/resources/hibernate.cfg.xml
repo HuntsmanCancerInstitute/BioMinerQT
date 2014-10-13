@@ -24,5 +24,7 @@
         <mapping class="hci.biominer.model.access.Institute"/>
         <mapping class="hci.biominer.model.access.Role"/>
         <mapping class="hci.biominer.model.access.Permission"/>
+        <mapping class="hci.biominer.model.BiominerGene"/>
+        <mapping class="hci.biominer.model.ExternalGene"/>
     </session-factory>
 </hibernate-configuration>

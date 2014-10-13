@@ -9,9 +9,9 @@ var dashboard = angular.module('dashboard', ['services']);
 angular.module('dashboard')
 
 .controller('DashboardController', 
-[ '$scope', 'dashboardService',
+[ '$rootScope','$scope', 'dashboardService',
               
-function($scope, dashboardService) {
+function($rootScope, $scope, dashboardService) {
 
     $scope.rnaseq = {};
     $scope.rnaseq.data = [];
@@ -26,7 +26,8 @@ function($scope, dashboardService) {
 	$scope.bisseq.data =  dashboardService.getBisSeqData();
     $scope.rnaseq.data =  dashboardService.getRNASeqData();
 
-  
+    $rootScope.helpMessage = "<p>Placeholder for dashboard help.</p>";
+    
 
     $scope.rnaseq.options = {
         series: {

@@ -46,18 +46,28 @@ import hci.biominer.model.SampleSource;
 import hci.biominer.model.access.Lab;
 import hci.biominer.model.access.User;
 import hci.biominer.model.chip.Chip;
+import hci.biominer.model.genome.Gene;
 import hci.biominer.model.genome.Genome;
+import hci.biominer.model.genome.Transcript;
+import hci.biominer.model.genome.Transcriptome;
 import hci.biominer.model.intervaltree.IntervalTree;
+import hci.biominer.model.ExternalGene;
 import hci.biominer.service.OrganismBuildService;
 import hci.biominer.service.LabService;
 import hci.biominer.service.UserService;
 import hci.biominer.service.AnalysisService;
 import hci.biominer.service.AnalysisTypeService;
+import hci.biominer.service.ExternalGeneService;
 import hci.biominer.util.BiominerProperties;
 import hci.biominer.util.GenomeBuilds;
 import hci.biominer.util.IntervalTrees;
 import hci.biominer.util.ModelUtil;
 import hci.biominer.util.Enumerated.FileTypeEnum;
+
+
+
+
+
 
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -87,6 +97,9 @@ public class QueryController {
     
     @Autowired
     private AnalysisTypeService analysisTypeService;
+    
+    @Autowired
+    private ExternalGeneService externalGeneService;
     
     private StringBuilder warnings = new StringBuilder("");
     
@@ -134,6 +147,56 @@ public class QueryController {
     public String getWarnings() {
     	return this.warnings.toString();
     }
+    
+    @RequestMapping(value="uploadGene",method=RequestMethod.POST)
+    @ResponseBody
+    public RegionUpload parseGenes(@RequestParam("file") MultipartFile file) {
+    	RegionUpload regions = new RegionUpload();
+    	StringBuilder geneString = new StringBuilder("");
+    	if (!file.isEmpty()) {
+    		try {
+    			String name = file.getOriginalFilename();
+    			BufferedReader br = null;
+    			if (name.endsWith(".gz")) {
+    				GZIPInputStream gzip = new GZIPInputStream(file.getInputStream());
+    				br =  new BufferedReader(new InputStreamReader(gzip));
+    			} else if (name.endsWith(".zip")) {
+    				ZipInputStream zip = new ZipInputStream(file.getInputStream());
+    				ZipEntry ze = (ZipEntry) zip.getNextEntry();
+    				br = new BufferedReader(new InputStreamReader(zip));
+    				
+    		
+    			} else {
+    				br = new BufferedReader(new InputStreamReader(file.getInputStream()));
+    			}
+    
+    			String temp;
+    			
+    			while ((temp = br.readLine()) != null) {
+    				String[] parts = temp.split("(,|\\s+)");
+    				for (String p: parts) {
+    					geneString.append(p + "\n");
+    				}
+    				
+    			}
+    			
+    			regions.setRegions(geneString.toString());
+    			br.close();
+    			
+    			
+    		} catch (IOException ioex) {
+    			regions.setMessage("Error reading file: " + ioex.getMessage());
+    			ioex.printStackTrace();
+    		}
+    		
+    		
+    	} else {
+    		regions.setMessage("File is empty!");
+    	}
+    	
+    	return regions;
+    }
+    
     
     @RequestMapping(value="upload",method=RequestMethod.POST)
     @ResponseBody
@@ -218,7 +281,8 @@ public class QueryController {
         @RequestParam(value="log2Ratio",required=false) Float log2Ratio,
         @RequestParam(value="codeLog2RatioComparison") String codeLog2RatioComparison,
         @RequestParam(value="resultsPerPage") Integer resultsPerPage,
-        @RequestParam(value="sortType") String sortType
+        @RequestParam(value="sortType") String sortType,
+        @RequestParam(value="intersectionTarget") String target
         ) throws Exception {
       
     	//Clear out warnings
@@ -247,8 +311,17 @@ public class QueryController {
     	
     	//Create intervals
     	IntervalParser ip = new IntervalParser();
-    	List<Interval> intervalsToCheck = ip.parseIntervals(regions, regionMargins, genome);
-    	this.warnings = ip.getWarnings();
+    	List<Interval> intervalsToCheck = null;
+    	
+    	if (target.equals("GENE")) {
+    		String region = this.getGeneIntervals(genes, genome, "TxBoundary",ob);
+    		intervalsToCheck = ip.parseIntervals(region, geneMargins, genome);
+    	} else {
+    		intervalsToCheck = ip.parseIntervals(regions, regionMargins, genome);
+    	}
+    	
+    
+    	this.warnings.append(ip.getWarnings());
     	
     	List<QueryResult> fullRegionResults = new ArrayList<QueryResult>();
     	
@@ -290,7 +363,7 @@ public class QueryController {
     	
     }
     
-    @RequestMapping(value = "downloadAnalysis", method = RequestMethod.GET)
+     @RequestMapping(value = "downloadAnalysis", method = RequestMethod.GET)
 	 public void downloadAnalysis(HttpServletResponse response) throws Exception{
     	
     	//Get current active user
@@ -339,6 +412,8 @@ public class QueryController {
     		}
     	}
 	 }
+     
+    
     
     @RequestMapping(value = "changeTablePosition",method=RequestMethod.GET)
     @ResponseBody
@@ -512,6 +587,131 @@ public class QueryController {
     	
     	return sampleSourceList;
     }
+    
+    private String getGeneIntervals(String names, Genome genome, String searchType, OrganismBuild ob) {
+    	List<String> regions = new ArrayList<String>();
+    	StringBuilder regionString = new StringBuilder("");
+    	
+    	String[] genes = names.split("\n");
+    	List<String> cleanedGenes = new ArrayList<String>();
+    	if (genes.length == 0) {
+    		this.warnings = new StringBuilder("The gene list is empty!");
+    		return "";
+    	}
+    	
+    	for (String g: genes) {
+    		String[] parts = g.split("[\\s+,\\n]+");
+    		for (String p: parts) {
+    			cleanedGenes.add(p.trim());
+    			System.out.println(p);
+    		}
+    		
+    	}
+    	
+    	this.warnings = new StringBuilder("");
+    	for (String name: cleanedGenes) {
+    		//Grab external ids matching names
+        	List<ExternalGene> extIds = this.externalGeneService.getBiominerIdByExternalName(name,ob.getIdOrganismBuild() );
+        	if (extIds.size() == 0) {
+        		this.warnings.append("The genes '" + name + "' could not be found in our database");
+        		continue;
+        	}
+        	
+        	//Create biominerGene index list
+        	HashSet<Long> bIdSet = new HashSet<Long>();
+        	for (ExternalGene eg: extIds) {
+        		bIdSet.add(eg.getBiominerGene().getIdBiominerGene());
+        	}
+        	
+        	//Search for matches
+        	List<Long> bIdList = new ArrayList<Long>();
+        	bIdList.addAll(bIdSet);
+        	List<ExternalGene> extIdFinal = this.externalGeneService.getExternalGeneByBiominerId(bIdList,"ensembl", ob.getIdOrganismBuild());
+        	if (extIdFinal.size() == 0) {
+        		this.warnings.append("Could not find an Ensembl identifier for gene '" + name + "'.");
+        		continue;
+        	}
+        
+        	HashMap<String, Gene> geneNameGene = genome.getTranscriptomes()[0].getGeneNameGene();
+       
+        	for (ExternalGene eId: extIdFinal) {
+        		String ensemblName = eId.getExternalGeneName();
+        		
+        		if (geneNameGene.containsKey(ensemblName)) {
+        			Gene gene = geneNameGene.get(ensemblName);
+        			String region = null;
+        			if (searchType.equals("TxBoundary")) {
+        				region = geneByTxBoundary(gene);
+        			} else if (searchType.equals("CdsBoundary")) {
+        				region = geneByCdsBoundary(gene);
+        			} else if (searchType.equals("TxStart")) {
+        				region = geneByTxStart(gene);
+        			} else if (searchType.equals("TxEnd")) {
+        				region = geneByTxEnd(gene);
+        			}
+        			regions.add(region);
+        			
+        		} else {
+        			this.warnings.append("Could not find gene: '" + ensemblName + "' in Genome Object.\n");
+        		}
+        	}
+    	}
+    	
+    	for (String r: regions) {
+    		regionString.append("\n" + r);
+    	
+    	}
+    	
+    	String finalString = regionString.toString();
+    	if (finalString.length() > 0) {
+    		finalString = finalString.substring(1);
+    	}
+    	
+    	
+    	return finalString;
+    	
+    }
+    
+    private String geneByTxBoundary(Gene gene) {
+    	Transcript t = gene.getMergedTranscript();
+    	int start = t.getTxStart();
+    	int end = t.getTxEnd();
+    	String chrom = t.getChrom();
+    	
+    	String region = String.format("%s:%d-%d", chrom, start, end);
+    	return region;
+    }
+    
+    private String geneByCdsBoundary(Gene gene) {
+    	Transcript t = gene.getMergedTranscript();
+    	int start = t.getCdsStart();
+    	int end = t.getCdsEnd();
+    	String chrom = t.getChrom();
+    	
+    	String region = String.format("%s:%d-%d", chrom, start, end);
+    	return region;
+    }
+    
+    private String geneByTxStart(Gene gene) {
+    	Transcript t = gene.getMergedTranscript();
+    	int start = t.getTxStart();
+    	int end = t.getTxStart();
+    	String chrom = t.getChrom();
+    	
+    	String region = String.format("%s:%d-%d", chrom, start, end);
+    	return region;
+    }
+    
+    private String geneByTxEnd(Gene gene) {
+    	Transcript t = gene.getMergedTranscript();
+    	int start = t.getTxEnd();
+    	int end = t.getTxEnd();
+    	String chrom = t.getChrom();
+    	
+    	String region = String.format("%s:%d-%d", chrom, start, end);
+    	return region;
+    }
+    
     
     
     private Genome fetchGenome(OrganismBuild ob) throws Exception {
@@ -688,7 +888,8 @@ public class QueryController {
     	    			}
     	    			
     	    			String chrom = m1.group(1);
-    	    			
+    	    			System.out.println("X" + chrom + "X");
+    	    			System.out.println(region);
     	    			if (!genome.getNameChromosome().containsKey(chrom)) {
     	    				warnings.append(String.format("The chromsome %s could not be found in the genome %s.\n",chrom,genome.getBuildName()));
     	    				continue;
@@ -713,6 +914,7 @@ public class QueryController {
     	    			
     	    		} else if (m2.matches()) {
     	    			String chrom  = m2.group(1);
+    	    			
     	    			if (!genome.getNameChromosome().containsKey(chrom)) {
     	    				warnings.append(String.format("The chromsome %s could not be found in the genome %s.\n",chrom,genome.getBuildName()));
     	    				continue;

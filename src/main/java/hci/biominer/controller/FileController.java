@@ -70,7 +70,7 @@ public class FileController {
 	}
 	
 	
-	public static File generateFilePath(FileUpload fileUpload) throws Exception {
+	public static File generateFilePath(FileUpload fileUpload) throws Exception  {
 		checkProperties();
 		File localDirectory = new File(BiominerProperties.getProperty("filePath"));
 		File subDirectory = new File(localDirectory,fileUpload.getDirectory());
@@ -79,29 +79,29 @@ public class FileController {
 	}
 	
 	public static File getRawDirectory() throws Exception {
-		checkProperties();
-		File localDirectory = new File(BiominerProperties.getProperty("filePath"));
-		File subDirectory = new File(localDirectory,"/raw/");
-		if (!subDirectory.exists()) {
-			subDirectory.mkdir();
-		}
-		return subDirectory;
+		return createDirectory("raw");
 	}
 	
 	public static File getParsedDirectory() throws Exception {
-		checkProperties();
-		File localDirectory = new File(BiominerProperties.getProperty("filePath"));
-		File subDirectory = new File(localDirectory,"/parsed/");
-		if (!subDirectory.exists()) {
-			subDirectory.mkdir();
-		}
-		return subDirectory;
+		return createDirectory("parsed");
 	}
 	
 	public static File getDownloadDirectory() throws Exception {
+		return createDirectory("results");
+	}
+	
+	public static File getGenomeDirectory() throws Exception {
+		return createDirectory("genome");
+	}
+	
+	public static File getGenesDirectory() throws Exception {
+		return createDirectory("genes");
+	}
+	
+	private static File createDirectory(String subdir) throws Exception {
 		checkProperties();
 		File localDirectory = new File(BiominerProperties.getProperty("filePath"));
-		File subDirectory = new File(localDirectory,"/results/");
+		File subDirectory = new File(localDirectory,subdir);
 		if (!subDirectory.exists()) {
 			subDirectory.mkdir();
 		}
@@ -286,7 +286,7 @@ public class FileController {
 			 
 			 	//Grab the first 20 lines of the file
 			 	while((temp = br.readLine()) != null) {
-			 		if (counter == 20) {
+			 		if (counter == 10) {
 			 			break;
 			 		}
 			 		

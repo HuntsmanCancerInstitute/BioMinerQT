@@ -23,10 +23,11 @@ public class OrganismBuildDAO {
 	@SuppressWarnings("unchecked")
 	public List<OrganismBuild> getOrganismBuilds() {
 		Session session = this.getCurrentSession();
-		List<OrganismBuild> organismBuilds = session.createQuery("from OrganismBuild").list();
+		List<OrganismBuild> organismBuilds = session.createQuery("from OrganismBuild ob").list();
 		session.close();
 		return organismBuilds;
 	}
+	
 	
 	@SuppressWarnings("unchecked")
 	public List<OrganismBuild> getOrganismBuildByOrganism(Organism organism) {
@@ -76,6 +77,36 @@ public class OrganismBuildDAO {
 		session.close();
 	}
 	
+	public void updateGeneIdFile(Long idOrganismBuild, String GeneIdFile) {
+		Session session = getCurrentSession();
+		session.beginTransaction();
+		OrganismBuild organismBuild = (OrganismBuild)session.get(OrganismBuild.class, idOrganismBuild);
+		organismBuild.setGeneIdFile(GeneIdFile);
+		session.update(organismBuild);
+		session.getTransaction().commit();
+		session.close();
+	}
+	
+	public void updateGenomeFile(Long idOrganismBuild, String GenomeFile) {
+		Session session = getCurrentSession();
+		session.beginTransaction();
+		OrganismBuild organismBuild = (OrganismBuild)session.get(OrganismBuild.class, idOrganismBuild);
+		organismBuild.setGenomeFile(GenomeFile);
+		session.update(organismBuild);
+		session.getTransaction().commit();
+		session.close();
+	}
+	
+	public void updateTranscriptFile(Long idOrganismBuild, String TranscriptFile) {
+		Session session = getCurrentSession();
+		session.beginTransaction();
+		OrganismBuild organismBuild = (OrganismBuild)session.get(OrganismBuild.class, idOrganismBuild);
+		organismBuild.setTranscriptFile(TranscriptFile);
+		session.update(organismBuild);
+		session.getTransaction().commit();
+		session.close();
+	}
 	
 	
+
 }

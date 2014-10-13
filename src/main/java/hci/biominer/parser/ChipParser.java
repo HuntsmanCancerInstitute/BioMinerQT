@@ -74,12 +74,12 @@ public class ChipParser {
 	/*
 	 * Constructor for command line call
 	 */
-	public ChipParser(String[] args) {
-		//Validate command line arguments
-		System.out.println("[ChipParser] Processing command line arguments:");
-		this.processArgs(args);
-	
-	}
+//	public ChipParser(String[] args) {
+//		//Validate command line arguments
+//		System.out.println("[ChipParser] Processing command line arguments:");
+//		this.processArgs(args);
+//	
+//	}
 	
 	
 	/*
@@ -256,141 +256,142 @@ public class ChipParser {
 	/*
 	 * Command line start
 	 */
-	public static void main(String[] args) {
-		if (args.length == 0) {
-			printDocs();
-			System.exit(1);
-		}
-		new ChipParser(args);
-	}
-	
-	/*
-	 * Help docs
-	 */
-	private static void printDocs(){
-		System.out.println("\n" +
-				"**************************************************************************************\n" +
-				"**                                  ChipParserCommand                               **\n" +
-				"**************************************************************************************\n" +
-				"ChipParserCommand reads in ChIPSeq data from a tab-delimited text file.  The user \n" +
-				"specifies the locations of necessary columns and the application reads in the data. \n" +
-				"The application tries to identify errors as it's reading in the data.  If everything \n" +
-				"looks kosher, the data is written out to a text file.\n\n" +
-				
-				"\nNotes:\n" +
-				"1) This application assumes here is a header. If your input file does not have\n " +
-				"a header the first line will be skipped.\n" +
-				"2) This application checks the number of columns using the second line of the input\n" +
-				"file.  The USeq header lines often contain a extra column with DAS2 information.\n" +
-				"3) This application only handles 'standard' chromosomes.\n\n" +
-				
-				"\nRequired:\n" +
-				"-i Input file.  Currently only supports reading tab-delimited files\n" +
-				"-b Genome Build. Currently, the only build supported is hg19.\n" +
-				"-o Output File.  Parsed output file.\n"+
-				"-c Chromosome column index. (1-based)\n" +
-				"-s Region start column index. (1-based)\n" +
-				"-e Region end column index. (1-based)\n" +
-				"-f FDR column index. (1-based)\n" +
-				"-l Log2Ratio column index. (1-based)\n" +
-				
-				"\nOptional:\n" +
-				"-a FDR is already converted to -10 * log10(FDR)\n" +
-				
-				"\n" +
-				"Example: java -Xmx500M -jar path/to/ChipParserCommand -i 10594R.chip.txt -b hg19\n" +
-				"      -o 10594R.parsedChip.txt -c 2 -s 3 -e 4 -f 10 -l 12\n" +
-				
-
-				"**************************************************************************************\n");
-	}
-	
-
-	
-	/*
-	 * Process command line arguments
-	 */
-	private void processArgs(String[] args){
-		File transcriptomeFile = null;
-		
-		Pattern pat = Pattern.compile("-[a-z]");
-		for (int i = 0; i<args.length; i++){
-			String lcArg = args[i].toLowerCase();
-			Matcher mat = pat.matcher(lcArg);
-			if (mat.matches()){
-				char test = args[i].charAt(1);
-				try{
-					switch (test){
-					
-					case 'i': this.inputFile = new File(args[++i]); break;
-					case 'b': transcriptomeFile = new File(args[++i]); break;
-					case 'o': this.outputFile = new File(args[++i]); break;
-					case 'c': this.chromColumn = Integer.parseInt(args[++i])-1; break;
-					case 's': this.startColumn = Integer.parseInt(args[++i])-1; break;
-					case 'e': this.endColumn = Integer.parseInt(args[++i])-1; break;
-					case 'f': this.fdrColumn = Integer.parseInt(args[++i])-1; break;
-					case 'l': this.logColumn = Integer.parseInt(args[++i])-1; break;
-					case 'a': this.isConverted = true; break;
-					
-					case 'h': printDocs(); System.exit(0);
-					default: System.out.println("\nProblem, unknown option! " + mat.group());
-					}
-				}
-				catch (Exception e){
-					System.out.print("\n[ChipParser] Sorry, something doesn't look right with this parameter request: -"+test);
-					System.out.println();
-					System.exit(0);
-				}
-			}
-		}
-		
-		
-		if (transcriptomeFile == null) {
-			System.out.println("[ChipParser] The genome build wasn't specified, please re-run the app with the appropriate parameters\n");
-			System.exit(1);
-		}
-		
-		if (!transcriptomeFile.exists()) {
-			System.out.println("[ChipParser] The transcriptome file does not exist, please re-run the app with the appropriate parameters");
-			System.exit(1);
-		}
-		
-		try {
-			GenomeParser gp = new GenomeParser(transcriptomeFile);
-			this.genomeBuild = gp.getGenome();
-		} catch (Exception ex) {
-			System.out.println("[ChipParser] Error parsing genome file: " + ex.getMessage());
-			System.exit(1);
-		}
-
-		//Make sure the file are formed properly
-		if (this.inputFile ==null){
-			System.out.println("[ChipParser] Input file ( -i ) not specified, please re-run the app with the appropriate parameters.\n");
-			System.exit(1);
-		}
-		
-		if (!this.inputFile.exists()) {
-			System.out.println(String.format("[ChipParser] Specified input file does not exist: %s\n",this.inputFile.getAbsolutePath()));
-			System.exit(1);
-		}
-		
-		if (this.outputFile == null) {
-			System.out.println("[ChipParser] Output file ( -o ) not specified, please re-run the app with the approprate paramaters.\n");
-			System.exit(1);
-		}
-		
-		//Slurp header for number of columns:
-		Integer[] colsToCheck = new Integer[]{this.chromColumn,this.startColumn,this.endColumn,this.fdrColumn,this.logColumn};
-		String[] colNames = new String[] {"Chromsome Column","Start Column","End Column","FDR Column","Log Column"};
-		try {
-			colMax = ColumnValidators.validateColumns(colsToCheck, colNames, this.inputFile);
-		} catch (Exception ex) {
-			System.out.println(ex.getMessage());
-			ex.printStackTrace();
-		}
-		
-	}
-	
+//	public static void main(String[] args) {
+//		if (args.length == 0) {
+//			printDocs();
+//			System.exit(1);
+//		}
+//		new ChipParser(args);
+//	}
+//	
+//	/*
+//	 * Help docs
+//	 */
+//	private static void printDocs(){
+//		System.out.println("\n" +
+//				"**************************************************************************************\n" +
+//				"**                                  ChipParserCommand                               **\n" +
+//				"**************************************************************************************\n" +
+//				"ChipParserCommand reads in ChIPSeq data from a tab-delimited text file.  The user \n" +
+//				"specifies the locations of necessary columns and the application reads in the data. \n" +
+//				"The application tries to identify errors as it's reading in the data.  If everything \n" +
+//				"looks kosher, the data is written out to a text file.\n\n" +
+//				
+//				"\nNotes:\n" +
+//				"1) This application assumes here is a header. If your input file does not have\n " +
+//				"a header the first line will be skipped.\n" +
+//				"2) This application checks the number of columns using the second line of the input\n" +
+//				"file.  The USeq header lines often contain a extra column with DAS2 information.\n" +
+//				"3) This application only handles 'standard' chromosomes.\n\n" +
+//				
+//				"\nRequired:\n" +
+//				"-i Input file.  Currently only supports reading tab-delimited files\n" +
+//				"-b Genome Build. Currently, the only build supported is hg19.\n" +
+//				"-o Output File.  Parsed output file.\n"+
+//				"-c Chromosome column index. (1-based)\n" +
+//				"-s Region start column index. (1-based)\n" +
+//				"-e Region end column index. (1-based)\n" +
+//				"-f FDR column index. (1-based)\n" +
+//				"-l Log2Ratio column index. (1-based)\n" +
+//				
+//				"\nOptional:\n" +
+//				"-a FDR is already converted to -10 * log10(FDR)\n" +
+//				
+//				"\n" +
+//				"Example: java -Xmx500M -jar path/to/ChipParserCommand -i 10594R.chip.txt -b hg19\n" +
+//				"      -o 10594R.parsedChip.txt -c 2 -s 3 -e 4 -f 10 -l 12\n" +
+//				
+//
+//				"**************************************************************************************\n");
+//	}
+//	
+//
+//	
+//	/*
+//	 * Process command line arguments
+//	 */
+//	private void processArgs(String[] args){
+//		File transcriptomeFile = null;
+//		
+//		Pattern pat = Pattern.compile("-[a-z]");
+//		for (int i = 0; i<args.length; i++){
+//			String lcArg = args[i].toLowerCase();
+//			Matcher mat = pat.matcher(lcArg);
+//			if (mat.matches()){
+//				char test = args[i].charAt(1);
+//				try{
+//					switch (test){
+//					
+//					case 'i': this.inputFile = new File(args[++i]); break;
+//					case 'b': transcriptomeFile = new File(args[++i]); break;
+//					case 'o': this.outputFile = new File(args[++i]); break;
+//					case 'c': this.chromColumn = Integer.parseInt(args[++i])-1; break;
+//					case 's': this.startColumn = Integer.parseInt(args[++i])-1; break;
+//					case 'e': this.endColumn = Integer.parseInt(args[++i])-1; break;
+//					case 'f': this.fdrColumn = Integer.parseInt(args[++i])-1; break;
+//					case 'l': this.logColumn = Integer.parseInt(args[++i])-1; break;
+//					case 'a': this.isConverted = true; break;
+//					
+//					case 'h': printDocs(); System.exit(0);
+//					default: System.out.println("\nProblem, unknown option! " + mat.group());
+//					}
+//				}
+//				catch (Exception e){
+//					System.out.print("\n[ChipParser] Sorry, something doesn't look right with this parameter request: -"+test);
+//					System.out.println();
+//					System.exit(0);
+//				}
+//			}
+//		}
+//		
+//		
+//		if (transcriptomeFile == null) {
+//			System.out.println("[ChipParser] The genome build wasn't specified, please re-run the app with the appropriate parameters\n");
+//			System.exit(1);
+//		}
+//		
+//		if (!transcriptomeFile.exists()) {
+//			System.out.println("[ChipParser] The transcriptome file does not exist, please re-run the app with the appropriate parameters");
+//			System.exit(1);
+//		}
+//		
+//		try {
+//			
+//			GenomeParser gp = new GenomeParser(transcriptomeFile);
+//			this.genomeBuild = gp.getGenome();
+//		} catch (Exception ex) {
+//			System.out.println("[ChipParser] Error parsing genome file: " + ex.getMessage());
+//			System.exit(1);
+//		}
+//
+//		//Make sure the file are formed properly
+//		if (this.inputFile ==null){
+//			System.out.println("[ChipParser] Input file ( -i ) not specified, please re-run the app with the appropriate parameters.\n");
+//			System.exit(1);
+//		}
+//		
+//		if (!this.inputFile.exists()) {
+//			System.out.println(String.format("[ChipParser] Specified input file does not exist: %s\n",this.inputFile.getAbsolutePath()));
+//			System.exit(1);
+//		}
+//		
+//		if (this.outputFile == null) {
+//			System.out.println("[ChipParser] Output file ( -o ) not specified, please re-run the app with the approprate paramaters.\n");
+//			System.exit(1);
+//		}
+//		
+//		//Slurp header for number of columns:
+//		Integer[] colsToCheck = new Integer[]{this.chromColumn,this.startColumn,this.endColumn,this.fdrColumn,this.logColumn};
+//		String[] colNames = new String[] {"Chromsome Column","Start Column","End Column","FDR Column","Log Column"};
+//		try {
+//			colMax = ColumnValidators.validateColumns(colsToCheck, colNames, this.inputFile);
+//		} catch (Exception ex) {
+//			System.out.println(ex.getMessage());
+//			ex.printStackTrace();
+//		}
+//		
+//	}
+//	
 
 
 }

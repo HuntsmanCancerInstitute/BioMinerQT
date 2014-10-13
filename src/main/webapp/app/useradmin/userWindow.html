@@ -29,7 +29,8 @@
 			<div class="form-group">
 				<label class="col-md-4 control-label" for="userEntry">Username</label>                   
 				<input class="col-md-6" id="userEntry" name="userInput" ng-model="user.username"  class="form-control input-md" required type="text"  ui-validate="{used: 'checkUsername($value)'}">
-				<span ng-show="newUserForm.userInput.$error.used" class="label label-danger">username already in use</span>
+				<span class="col-md-4"></span>
+				<span ng-show="newUserForm.userInput.$error.used" class="label label-danger col-md-6">username already in use</span>
 			</div>
 			
 			<div class="form-group">

@@ -45,6 +45,9 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
     $scope.sampleEditMode = false;
     $scope.datatrackEditMode = false;
     $scope.resultEditMode = false;
+    
+    $rootScope.helpMessage = "<p>Placeholder for data submission help.</p>";
+    
 	
 	//Static dictionaries. These http calls are cached.
     $scope.loadOrganismBuildList = function () {

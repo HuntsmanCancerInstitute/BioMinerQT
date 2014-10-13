@@ -1,0 +1,28 @@
+<div class="modal-header">
+	<h4>{{title}} Organism</h4>
+</div>
+<div class="modal-body">
+	<form class="form-horizontal" name="newOrganismForm">
+		<fieldset>
+			
+			<div class="form-group">
+				<label class="col-md-4 control-label" for="commonEntry">Common Name</label>  
+				<input class="col-md-6" id="commonEntry" name="commonInput" ng-model="organismData.common"  class="form-control input-md" required type="text" ui-validate="{used: 'checkCommon($value)'}">
+				<span class="col-md-4"></span>
+				<span class="col-md-6 label label-danger" ng-show="newOrganismForm.commonInput.$error.used" >Common name already in use</span>
+			</div>
+
+			<div class="form-group">
+				<label class="col-md-4 control-label" for="binomialEntry">Binomial Name</label>                   
+				<input class="col-md-6" id="binomialEntry" name="binomialInput" ng-model="organismData.binomial" class="form-control input-md" required type="text" ui-validate="{used: 'checkBinomial($value)'}">
+				<span class="col-md-4"></span>
+				<span class="col-md-6 label label-danger" ng-show="newOrganismForm.binomialInput.$error.used" >Binomial name already in use</span>
+			</div>
+					
+		</fieldset>
+	</form>
+</div>
+<div class="modal-footer">
+            <button class="btn btn-primary" ng-click="ok()" ng-disabled="newOrganismForm.$invalid">{{bFace}}</button>
+            <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+</div>

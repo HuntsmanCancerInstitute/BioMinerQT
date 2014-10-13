@@ -10,6 +10,7 @@ function ($scope, $http, $modalInstance, labList, instituteList, userData, title
 	$scope.availInst = instituteList;
 	$scope.user = angular.copy(userData);
 	$scope.usedNames = [];
+	$scope.originalUsername = userData.username;
 	
 	$http({
 		method: 'GET',
@@ -28,7 +29,12 @@ function ($scope, $http, $modalInstance, labList, instituteList, userData, title
 	
 	
 	$scope.checkUsername = function(value) {
-		return $scope.usedNames.indexOf(value) === -1;
+		if ($scope.originalUsername == value) {
+			return true;
+		} else {
+			return $scope.usedNames.indexOf(value) === -1;
+		}
+		
 	};
 	
 }]);

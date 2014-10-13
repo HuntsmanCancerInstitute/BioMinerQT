@@ -9,9 +9,9 @@ var query     = angular.module('query',     ['angularFileUpload','filters', 'ser
 
 
 angular.module("query").controller("QueryController", 
-[ '$scope', '$http', '$modal','$anchorScroll','$upload','DynamicDictionary','StaticDictionary',
+[ '$rootScope','$scope', '$http', '$modal','$anchorScroll','$upload','DynamicDictionary','StaticDictionary',
   
-function($scope, $http, $modal, $anchorScroll, $upload, DynamicDictionary, StaticDictionary) {
+function($rootScope, $scope, $http, $modal, $anchorScroll, $upload, DynamicDictionary, StaticDictionary) {
 	
 	$scope.hasResults = false;
 	$scope.warnings = "";
@@ -56,6 +56,8 @@ function($scope, $http, $modal, $anchorScroll, $upload, DynamicDictionary, Stati
 	
 	//Sorting
 	$scope.sortType = "FDR";
+	
+	$rootScope.helpMessage = "<p>Placeholder for query help</p>";
 
 	
 	$scope.mapResultType = {
@@ -110,6 +112,35 @@ function($scope, $http, $modal, $anchorScroll, $upload, DynamicDictionary, Stati
     		} else {
     			var message = data.message;
     			var title = "Error Processing Region File";
+        		$modal.open({
+            		templateUrl: 'app/common/userError.html',
+            		controller: 'userErrorController',
+            		resolve: {
+            			title: function() {
+            				return title;
+            			},
+            			message: function() {
+            				return message;
+            			}
+            		}
+            	});
+    		}
+    	}).error(function(data) {
+    		console.log("Error running upload");
+    	});
+	};
+	
+	$scope.loadGenes = function(files) {
+    	$upload.upload({
+    		url: "query/uploadGene",
+    		file: files,
+    	}).success(function(data) {
+    		$scope.genes = data.regions;
+    		if (data.message == null) {
+    			$scope.genes = data.regions;
+    		} else {
+    			var message = data.message;
+    			var title = "Error Processing Gene File";
         		$modal.open({
             		templateUrl: 'app/common/userError.html',
             		controller: 'userErrorController',
@@ -448,7 +479,8 @@ function($scope, $http, $modal, $anchorScroll, $upload, DynamicDictionary, Stati
 				     log2Ratio:               log2ratio,
 				     codeLog2RatioComparison: $scope.codeThresholdLog2RatioComparison,
 				     resultsPerPage:          $scope.resultsPerPage,
-				     sortType:                $scope.sortType},
+				     sortType:                $scope.sortType,
+				     intersectionTarget:	  $scope.intersectionTarget},
 				     
 		}).success(function(data) {
 			if (data != null) {
@@ -799,6 +831,7 @@ function($scope, $http, $modal, $anchorScroll, $upload, DynamicDictionary, Stati
 	});
 	
 	$scope.$watch("idOrganismBuild",function(newValue, oldValue) {
+		
 		if (newValue != oldValue) {
 			$scope.loadLabs();
 			$scope.loadProjects();

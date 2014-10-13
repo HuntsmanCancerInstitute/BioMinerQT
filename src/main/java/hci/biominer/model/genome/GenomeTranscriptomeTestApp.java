@@ -24,7 +24,7 @@ public class GenomeTranscriptomeTestApp {
 			
 			System.out.println("Loading genome...");
 			File descriptorFile = new File (localDir,"/AnnotationFiles/hg19_GRCh37_Genome.txt");
-			GenomeParser gp = new GenomeParser (descriptorFile);
+			GenomeParser gp = new GenomeParser (descriptorFile,null);
 			Genome genome = gp.getGenome();
 			//System.out.println(genome);
 			

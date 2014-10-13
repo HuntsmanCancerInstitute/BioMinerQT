@@ -43,15 +43,17 @@ public class TranscriptomeParser {
 		//fetch reader, gz/zip OK
 		in = ModelUtil.fetchBufferedReader(refflatSource);
 		//for each line in the file, collect set with same gene name
+		int counter = 0;
 		while ((line = in.readLine()) != null){
+			counter++;
 			line = line.trim();
 			if (line.length() == 0 || line.startsWith("#")) continue;
 			String[] tokens = line.split("\\t");
-			if (tokens.length != 11) throw new Exception ("\nError: incorrect number of tokens "+tokens.length);				
+			if (tokens.length != 11) throw new Exception ("\nError: transcript file does does not have 11 columns on line: " + counter + ". Number of columns: "+tokens.length);				
 			if (oldGeneName != null){
 				if (oldGeneName.equals(tokens[0]) == false) {
 					//has it been seen before?
-					if (parsedGeneNames.contains(oldGeneName)) throw new Exception ("\nError: file does not appear to be sorted by geneName see "+ oldGeneName);
+					if (parsedGeneNames.contains(oldGeneName)) throw new Exception ("\nError: transcript file does not appear to be sorted by geneName see "+ oldGeneName);
 					parsedGeneNames.add(oldGeneName);
 					genesAL.add(Gene.makeGene(transcriptsAL, nameChromosome));
 					oldGeneName = tokens[0];

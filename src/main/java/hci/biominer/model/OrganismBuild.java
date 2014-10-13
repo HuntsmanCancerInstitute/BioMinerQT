@@ -1,7 +1,5 @@
 package hci.biominer.model;
 
-import org.hibernate.annotations.GenericGenerator;
-
 import javax.persistence.Entity;
 import javax.persistence.GenerationType;
 import javax.persistence.Table;
@@ -29,13 +27,12 @@ public class OrganismBuild {
 	@Column(name="GenomeFile")
 	String genomeFile;
 	
-	public String getGenomeFile() {
-		return genomeFile;
-	}
+	@Column(name="GeneIdFile")
+	String geneIdFile;
+	
+	@Column(name="TranscriptFile")
+	String transcriptFile;
 
-	public void setGenomeFile(String genomeFile) {
-		this.genomeFile = genomeFile;
-	}
 
 	public OrganismBuild() {
 		
@@ -68,6 +65,30 @@ public class OrganismBuild {
 
 	public void setIdOrganismBuild(Long idOrganismBuild) {
 		this.idOrganismBuild = idOrganismBuild;
+	}
+	
+	public String getGeneIdFile() {
+		return geneIdFile;
+	}
+
+	public void setGeneIdFile(String geneIdFile) {
+		this.geneIdFile = geneIdFile;
+	}
+
+	public String getGenomeFile() {
+		return genomeFile;
+	}
+
+	public void setGenomeFile(String genomeFile) {
+		this.genomeFile = genomeFile;
+	}
+	
+	public String getTranscriptFile() {
+		return transcriptFile;
+	}
+
+	public void setTranscriptFile(String transcriptFile) {
+		this.transcriptFile = transcriptFile;
 	}
 	
 	

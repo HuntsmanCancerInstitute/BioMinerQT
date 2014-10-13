@@ -32,8 +32,11 @@
 
 
 <!-- Lab tool bar -->
-  	<div class="row toolbar" ng-show="labTabOpen" >
-     		<h3>Users and Labs</h3>
+<div class="row toolbar" ng-show="labTabOpen" >
+     	<h3>
+     		<span class="glyphicon glyphicon-cog"></span>
+     		Users and Labs
+     	</h3>
      		
 		<a ng-click="openNewLabWindow()" href="#/useradmin">
  		 	<span class="glyphicon glyphicon-plus"></span>Add Lab
@@ -49,6 +52,28 @@
 			<label for="search">Filter Labs </label>	
 			<input id="search" ng-model="labQuery">
 	    </div>
+</div>
+
+<!-- Admin tool bar -->
+<div class="row toolbar" ng-show="genomeTabOpen" >
+     	<h3>
+     		<span class="glyphicon glyphicon-cog"></span>
+     		Users and Labs
+     	</h3>
+     		
+		<a ng-click="openNewOrganismWindow()" href="#/useradmin">
+ 		 	<span class="glyphicon glyphicon-plus"></span>Add Organism
+		</a>
+		
+		<a ng-click="openNewBuildWindow()" href="#/useradmin">
+ 		 	<span class="glyphicon glyphicon-plus"></span>Add Organism Build
+		</a>
+		
+		<a ng-click="confirmOrganismDelete()" href="#/useradmin">
+ 		 	<span class="glyphicon glyphicon-minus"></span>Delete Organism Build
+		</a>
+		
+		<label class="label label-warning">{{message}}</label>
 </div>
 
 
@@ -111,6 +136,7 @@
 	     	   	</div>
 	     	</tab>
 	     	<tab heading="Labs" active="$parent.labTabOpen">
+	     	    <div>
 	     		<table class="table">
 	     			<thead>
 					      <tr>
@@ -129,6 +155,7 @@
 		         		</tr>
 				    </tbody>
 		    	</table>
+		    	</div>
 		    	<div class="row show-grid">
 		    			<button ng-disabled="labCurrentPage == 0" ng-click="labCurrentPage=labCurrentPage-1" class="btn btn-mini col-lg-1"><span class="glyphicon glyphicon-chevron-left"></span> </button>
 		    			<div class="center col-lg-10">
@@ -148,6 +175,91 @@
 			    			<span class="glyphicon glyphicon-chevron-right"></span>
 			    		</button>
 	     	   	</div>
+	     	</tab>
+	     	<tab heading="Organisms" active="$parent.genomeTabOpen">
+	     	   <div>
+		     	<table class="table " >
+				    <thead>
+				        <tr>
+				            <th>Selected</th>
+				            <th>Organism</th>
+				            <th>Build Name</th>
+				            <th>Transcript File</th>
+				            <th></th>
+				            <th>Genome File</th>
+				            <th></th>
+				            <th>Annotation File</th>
+				            <th></th>
+				            <th></th>
+				        </tr>
+				    </thead>
+				    <tbody>
+				        <tr ng-repeat="ob in organismBuildList" ng-mouseenter="hideOrganismControls(ob)" ng-mouseleave="hideOrganismControls(ob)" >
+				        	<td style="width: 10% "><input ng-model=ob.selected type="checkbox"/></td>	
+				        	<td style="width: 12%;" ng-dblclick="openEditOrganismWindow(ob.organism.idOrganism)">{{ob.organism.idOrganism | lookupOrganism:organismList}}</td>
+				            <td style="width: 12%;" ng-dblclick="openEditBuildWindow(ob)">
+				            	{{ob.name}}
+				            	<span class="glyphicon glyphicon-star" ng-show="(ob.transcriptFile != null && ob.genomeFile != null && ob.geneIdFile != null)"></span>
+				            	<span class="glyphicon glyphicon-star-empty" ng-show="(ob.transcriptFile != null && ob.genomeFile != null && ob.geneIdFile == null)"></span>
+				            </td>
+				            <td style="width: 12%;">{{ob.transcriptFile}}</td>
+				            <td style="width: 10%;" >
+				                <div ng-show="ob.show">
+					                <span class="btn btn-xs btn-primary fileinput-button" ng-show="ob.transcriptFile == null">
+								        <i class="glyphicon glyphicon-plus"></i>
+								        <input type="file" ng-file-select="addTranscriptFile($files, ob)"> 
+							        </span>
+							        <span class="btn btn-xs btn-warning fileinput-button" ng-show="ob.transcriptFile != null">
+								        <i class="glyphicon glyphicon-repeat"></i>
+								        <input type="file" ng-file-select="addTranscriptFile($files, ob)"> 
+							        </span>
+					                <button class="btn btn-xs btn-danger" ng-click="removeTranscriptFile(ob)" ng-show="ob.transcriptFile != null">
+					                 	<span class="glyphicon glyphicon-minus"></span>
+					                </button>
+				                
+				                </div>
+					            
+				            </td>
+				            <td style="width: 12%;">{{ob.genomeFile}}</td>
+				            <td style="width: 10%;" >
+				                <div ng-show="ob.show">
+					                <span class="btn btn-xs btn-primary fileinput-button" ng-show="ob.genomeFile == null">
+								        <i class="glyphicon glyphicon-plus"></i>
+								        <input type="file" ng-file-select="addGenomeFile($files, ob)"> 
+							        </span>
+							        <span class="btn btn-xs btn-warning fileinput-button" ng-show="ob.genomeFile != null">
+								        <i class="glyphicon glyphicon-repeat"></i>
+								        <input type="file" ng-file-select="addGenomeFile($files, ob)"> 
+							        </span>
+					                <button class="btn btn-xs btn-danger" ng-click="removeGenomeFile(ob)" ng-show="ob.genomeFile != null">
+					                 	<span class="glyphicon glyphicon-minus"></span>
+					                </button>
+				                
+				                </div>
+				            	
+				            </td>
+				            <td style="width: 12%;">{{ob.geneIdFile}}</td>
+				            <td style="width: 10%;">
+				                <div ng-show="ob.show">
+					                <span class="btn btn-xs btn-primary fileinput-button" ng-show="ob.geneIdFile == null">
+							        	<i class="glyphicon glyphicon-plus"></i>
+							        	<input type="file" ng-file-select="addAnnotationFile($files, ob)"> 
+							        </span>
+							        <span class="btn btn-xs btn-warning fileinput-button" ng-show="ob.geneIdFile != null">
+								        <i class="glyphicon glyphicon-repeat"></i>
+								        <input type="file" ng-file-select="addAnnotationFile($files, ob)"> 
+							        </span>
+					                <button class="btn btn-xs btn-danger" ng-click="removeAnnotationFile(ob)" ng-show="ob.geneIdFile != null">
+					                 	<span class="glyphicon glyphicon-minus"></span>
+					                </button>
+
+				                </div>
+				            	
+				            </td>   
+				        </tr>
+				    </tbody>
+				</table>
+			   </div>
 	     	</tab>
 	    </tabset>
 		</div>

@@ -43,12 +43,12 @@ public class OrganismDAO {
 		session.close();
 	}
 	
-	public void updateOrganism(Long idOrganism, Organism Organism) {
+	public void updateOrganism(Long idOrganism, Organism organism) {
 		Session session = getCurrentSession();
-		session.getTransaction();
+		session.beginTransaction();
 		Organism OrganismToUpdate = (Organism) session.get(Organism.class, idOrganism);
-		OrganismToUpdate.setCommon(OrganismToUpdate.getCommon());
-		OrganismToUpdate.setBinomial(OrganismToUpdate.getBinomial());
+		OrganismToUpdate.setCommon(organism.getCommon());
+		OrganismToUpdate.setBinomial(organism.getBinomial());
 		session.update(OrganismToUpdate);
 		session.flush();
 		session.getTransaction().commit();

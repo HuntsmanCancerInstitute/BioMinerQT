@@ -4,11 +4,12 @@
 
 var useradmin = angular.module('navbar', ['login','services']);
 
-angular.module('navbar').controller("NavbarController",['$scope','$http','$rootScope','$location','$interval','$route','DynamicDictionary',
-	function($scope,$http,$rootScope,$location,$interval,$route,DynamicDictionary) {
+angular.module('navbar').controller("NavbarController",['$modal','$scope','$http','$rootScope','$location','$interval','$route','DynamicDictionary',
+	function($modal,$scope,$http,$rootScope,$location,$interval,$route,DynamicDictionary) {
 	    $rootScope.loggedUser = null;
 	    $rootScope.lastLocation = "dashboard";
 		$rootScope.admin = false;
+		$rootScope.helpMessage = "";
 	
 		$scope.logout = function() {
 			$http({
@@ -74,5 +75,20 @@ angular.module('navbar').controller("NavbarController",['$scope','$http','$rootS
 		});  
 		
 		$scope.isAuthenticated();
+		
+		$scope.displayHelp = function() {
+			$modal.open({
+	    		templateUrl: 'app/common/userError.html',
+	    		controller: 'userErrorController',
+	    		resolve: {
+	    			title: function() {
+	    				return "Help";
+	    			},
+	    			message: function() {
+	    				return $rootScope.helpMessage;
+	    			}
+	    		}
+	    	});
+		};
 		                          	
 }]);

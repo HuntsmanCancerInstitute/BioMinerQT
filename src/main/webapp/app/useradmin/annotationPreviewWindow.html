@@ -1,0 +1,35 @@
+<div class="modal-header">
+	<h4>Preview of {{filename}}</h4>
+	<div>
+		<span class="label label-default" ng-click="alertHover=!alertHover">Click for instructions..</span>
+	</div>
+	<div class="alert alert-info" ng-show="alertHover==true">
+		<p><b>Instructions!</b> Use the dropdowns above the preview columns to specify the locations of required information.  
+		The ensembl and hugo columns must be specified, the rest are optional</p>
+	</div>
+</div>
+<div class="modal-body" resize per="{{alertHover == true ? 60 : 70}}" ng-style="style()">
+   <div class="table-container">
+		<table class="table table-condensed table-bordered">
+		    <thead>
+		        <tr>
+		            <th ng-repeat="h in header track by $index" class="td-container-selected">
+		            	<select class="form-control" ng-model="h.option" >
+		            		<option ng-repeat="d in h.dropdown" ng-disabled="d.index != -1">{{d.name}}</option>
+		            	</select>
+		            </th>
+		        </tr>
+		    </thead>
+		    <tbody>
+		        <tr ng-repeat="row in previewData">
+		            <!--  Track by index to avoid duplicate rows -->
+		            <td ng-repeat="value in row track by $index" ng-class=" (showList.indexOf($index) != -1)  ? 'td-container-selected' : 'td-container-unselected' ">{{value}}</td>
+		        </tr>
+		    </tbody>
+		</table>
+	</div>
+</div>
+<div class="modal-footer">
+            <button class="btn btn-primary" ng-click="ok()" ng-disabled="!allSet" >Parse</button>
+            <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+</div>

@@ -1,23 +1,36 @@
 package hci.biominer.util;
 
+import hci.biominer.controller.FileController;
+import hci.biominer.model.FileUpload;
 import hci.biominer.model.OrganismBuild;
 import hci.biominer.model.genome.Genome;
 import hci.biominer.parser.GenomeParser;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.util.HashMap;
 
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.util.FileCopyUtils;
 
 public class GenomeBuilds {
 	private static HashMap<String,Genome> loadedGenomes = new HashMap<String,Genome>();
 	
 	public static void loadGenome(OrganismBuild ob) throws Exception {
+		//Deploy any available class resources
+		deployResources();
+		
+		//Load genome file
     	if (ob.getGenomeFile() != null) {
-    		Resource cpr = new ClassPathResource(ob.getGenomeFile());
+    		File genomeFile = new File(FileController.getGenomeDirectory(),ob.getGenomeFile());
+    		File transFile = new File(FileController.getGenomeDirectory(),ob.getTranscriptFile());
+    		//Resource cpr = new ClassPathResource(ob.getGenomeFile());
 			try {
 				System.out.println("Loading file " + ob.getGenomeFile() + " for build " + ob.getName());
-				GenomeParser gp = new GenomeParser(cpr.getFile());
+				GenomeParser gp = new GenomeParser(genomeFile, transFile);
 				Genome genome = gp.getGenome();
 				loadedGenomes.put(ob.getGenomeFile(), genome);
 				
@@ -29,6 +42,18 @@ public class GenomeBuilds {
     		throw new Exception("There is no genome file to load! " + ob.getName());
     	}
     }
+	
+	public static void deployResources() throws Exception {
+		PathMatchingResourcePatternResolver rr = new PathMatchingResourcePatternResolver();
+		Resource[] resources = rr.getResources("classpath:genomes/**");
+		for (Resource r: resources) {
+			String resourceName = r.getFilename();
+			File localName = new File(FileController.getGenomeDirectory(),resourceName);
+			if (!localName.exists()) {
+				FileCopyUtils.copy(new FileInputStream(r.getFile()), new FileOutputStream(localName));
+			}
+		}
+	}
 	
 	public static Genome getGenome(OrganismBuild ob) throws Exception {
 		if (loadedGenomes.containsKey(ob.getGenomeFile())) {
@@ -43,6 +68,12 @@ public class GenomeBuilds {
 			return true;
 		} else {
 			return false;
+		}
+	}
+	
+	public static void removeGenome(OrganismBuild ob) {
+		if (loadedGenomes.containsKey(ob.getGenomeFile())) {
+			loadedGenomes.remove(ob.getGenomeFile());
 		}
 	}
  

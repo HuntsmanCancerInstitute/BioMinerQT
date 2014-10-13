@@ -15,32 +15,43 @@ import hci.biominer.model.Organism;
 @Transactional
 public class OrganismBuildService {
 	@Autowired
-	private OrganismBuildDAO organismOrganismBuildDAO;
+	private OrganismBuildDAO organismBuildDAO;
 	
 	public OrganismBuild getOrganismBuildById(Long idOrganismBuild) {
-		return organismOrganismBuildDAO.getOrganismBuildById(idOrganismBuild);
+		return organismBuildDAO.getOrganismBuildById(idOrganismBuild);
 	}
 	
 	public List<OrganismBuild> getOrganismBuildByOrganism(Organism organism) {
-		return organismOrganismBuildDAO.getOrganismBuildByOrganism(organism);
+		return organismBuildDAO.getOrganismBuildByOrganism(organism);
 	}
 	
 	public List<OrganismBuild> getAllOrganismBuilds() {
-		return organismOrganismBuildDAO.getOrganismBuilds();
+		return organismBuildDAO.getOrganismBuilds();
 	}
 	
-	public void addOrganismBuild(OrganismBuild organismOrganismBuild) {
-		organismOrganismBuildDAO.addOrganismBuild(organismOrganismBuild);		
+	public void addOrganismBuild(OrganismBuild organismBuild) {
+		organismBuildDAO.addOrganismBuild(organismBuild);		
 		
 	}
 
 	public void deleteOrganismBuildById(Long idOrganismBuild) {
-        organismOrganismBuildDAO.deleteOrganismBuild(idOrganismBuild);
+        organismBuildDAO.deleteOrganismBuild(idOrganismBuild);
 	}
 
-	public void updateOrganismBuild(Long idOrganismBuild, OrganismBuild organismOrganismBuild) {
-        organismOrganismBuildDAO.updateOrganismBuild(idOrganismBuild, organismOrganismBuild);
+	public void updateOrganismBuild(Long idOrganismBuild, OrganismBuild organismBuild) {
+        organismBuildDAO.updateOrganismBuild(idOrganismBuild, organismBuild);
 	}
 	
+	public void updateGeneIdFile(Long idOrganismBuild, String GeneIdFile) {
+		organismBuildDAO.updateGeneIdFile(idOrganismBuild, GeneIdFile);
+	}
+	
+	public void updateGenomeFile(Long idOrganismBuild, String GenomeFile) {
+		organismBuildDAO.updateGenomeFile(idOrganismBuild, GenomeFile);
+	}
+	
+	public void updateTranscriptFile(Long idOrganismBuild, String TranscriptFile) {
+		organismBuildDAO.updateTranscriptFile(idOrganismBuild, TranscriptFile);
+	}
 	
 }

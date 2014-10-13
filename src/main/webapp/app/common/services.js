@@ -67,8 +67,8 @@ var services = angular.module('services', ['ngResource','ui.bootstrap'])
 	 
 		return {
 			'responseError': function(rejection) {
-					
-				if (rejection.data == "") {
+				
+				if (rejection.data.errorMessage == null) {
 					return $q.reject(rejection);
 				} else {
 					var $modal = $injector.get('$modal');
@@ -235,6 +235,20 @@ var services = angular.module('services', ['ngResource','ui.bootstrap'])
 			return $http({
 				method: 'GET',
 				url: 'project/getAllAnalyses',
+			});
+		};
+		
+		dict.loadOrganismBuilds = function() {
+			return $http({
+				method: 'GET',
+				url: 'shared/getAllBuilds',
+			});
+		};
+		
+		dict.loadOrganisms = function() {
+			return $http({
+				method: 'GET',
+				url: 'shared/getAllOrganisms',
 			});
 		};
 

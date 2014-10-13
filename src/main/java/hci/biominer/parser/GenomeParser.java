@@ -1,5 +1,6 @@
 package hci.biominer.parser;
 
+import hci.biominer.controller.FileController;
 import hci.biominer.model.genome.Chromosome;
 import hci.biominer.model.genome.Genome;
 import hci.biominer.model.genome.Transcriptome;
@@ -23,11 +24,15 @@ public class GenomeParser implements Serializable{
 	private Genome genome;
 	private static final long serialVersionUID = 1L;
 	
-	public GenomeParser(File desc) throws Exception {
-		parseDescriptorFile(desc);
+	public GenomeParser(File desc, File transcriptFile) throws Exception {
+		parseDescriptorFile(desc, transcriptFile);
 		makeTranscriptomes();
 	}
 	
+	public GenomeParser(File desc) throws Exception {
+		parseDescriptorFile(desc, null);
+		makeTranscriptomes();
+	}
 	
 	private void makeTranscriptomes() throws Exception {
 		//get name file containers and null them so they are regenerated
@@ -40,7 +45,7 @@ public class GenomeParser implements Serializable{
 	}
 	
 
-	private void parseDescriptorFile(File desc) throws Exception{
+	private void parseDescriptorFile(File desc, File transFile) throws Exception{
 		
 		genome = new Genome();
 		BufferedReader in = ModelUtil.fetchBufferedReader(desc);
@@ -82,13 +87,17 @@ public class GenomeParser implements Serializable{
 			tokens = ModelUtil.TAB.split(line);
 			if (tokens.length != 2) throw new Exception("Error: could not transcriptome name and file from "+line+", aborting.\n");
 			String transName = tokens[0];
-			Resource transResource = new ClassPathResource(tokens[1]);
-			File transFile = transResource.getFile();
+			if (transFile == null) {
+				transFile = new File(FileController.getGenomeDirectory(),tokens[1]);
+			}
 			
 			if (transFile.exists() == false) throw new Exception("Error: could not find the transcriptome file in "+line+", aborting.\n");
 			if (transFile.canRead() == false) throw new Exception("Error: could not read the transcriptome file in "+line+", aborting.\n");
 			transAL.add(new Transcriptome(transName, transFile));
 		}
+		
+		
+		
 		Transcriptome[] transcriptomes = new Transcriptome[transAL.size()];
 		transAL.toArray(transcriptomes);
 		genome.setTranscriptomes(transcriptomes);

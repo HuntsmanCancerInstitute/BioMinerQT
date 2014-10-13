@@ -31,6 +31,7 @@ public class BiominerProperties {
 				biominerProperties.put(tokens[0], tokens[1]);
 			}
 			loaded = true;
+			br.close();
 		} catch (FileNotFoundException e) {
 			throw new Exception("Can't find the biominer properties file!!");
 		} catch (IOException e) {

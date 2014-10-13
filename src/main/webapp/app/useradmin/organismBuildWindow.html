@@ -1,0 +1,28 @@
+<div class="modal-header">
+	<h4>{{title}} Organism Build</h4>
+</div>
+<div class="modal-body">
+	<form class="form-horizontal" name="newOrganismBuildForm">
+		<fieldset>
+			
+			<div class="form-group">
+				<label class="col-md-4 control-label" for="labEntry">Select Organism</label>  
+				<select data-placeholder="Choose Organism..." class="col-md-6 chosen-select" ng-model="organismBuildData.organism" chosen ng-options="o.common for o in organismList track by o.idOrganism" required ></select>
+			</div>
+			
+			<div class="form-group">
+				<label class="col-md-4 control-label" for="buildEntry">Build Name</label>  
+				<input class="col-md-6" id="buildEntry" name="buildInput" ng-model="organismBuildData.name"  class="form-control input-md" required type="text" ui-validate="{used: 'checkBuild($value)'}">
+				<span class="col-md-4"></span>
+				<span class="col-md-6 label label-danger" ng-show="newOrganismBuildForm.buildInput.$error.used" >Build name already in use</span>
+			</div>
+
+			
+					
+		</fieldset>
+	</form>
+</div>
+<div class="modal-footer">
+            <button class="btn btn-primary" ng-click="ok()" ng-disabled="newOrganismBuildForm.$invalid">{{bFace}}</button>
+            <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+</div>

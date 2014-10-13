@@ -64,7 +64,9 @@
         class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close"
         p:driverClassName="${jdbc.driverClassName}"
         p:url="${jdbc.databaseurl}" p:username="${jdbc.username}"
-        p:password="${jdbc.password}" />
+        p:password="${jdbc.password}" 
+        p:validationQuery="SELECT 1" 
+        p:testOnBorrow="true"/>
   
   
     <bean id="sessionFactory"

@@ -21,6 +21,21 @@ var filters = angular.module('filters', [])
     }
 ])
 
+.filter('lookupOrganism', [
+    function() {
+    	return function(input, organismList) {
+    		var display = input;
+    		for (var x in organismList) {
+    			if (organismList[x].idOrganism == input) {
+    				display = organismList[x].common;
+    				break;
+    			}
+    		}
+    		return display;
+    	};
+    }
+])
+
 .filter('lookupSampleType', [
 	function() {
 		return function(input,sampleTypeList) {

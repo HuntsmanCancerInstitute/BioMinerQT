@@ -67,7 +67,7 @@
 		    				        required
 		    				        ng-options="gb.idOrganismBuild as gb.name group by gb.organism.common for gb in organismBuildList" 
 		    				        class="form-control">
-		    				        <option value="">Select genome build</option>
+		    				        <option value="" disabled selected>Select genome build</option>
 		    				</select>
 		  				</div>
 					</div>
@@ -136,6 +136,11 @@
 					        <span>Import Regions</span>
 					        <input type="file" ng-file-select="loadRegions($files)">            
 					    </span>
+					    <span class="btn btn-primary pull-right fileinput-button" ng-show="isIntersect == 'true' && !isGeneBasedQuery && intersectionTarget == 'GENE'">
+					        <i class="glyphicon glyphicon-upload"></i>
+					        <span>Import Genes</span>
+					        <input type="file" ng-file-select="loadGenes($files)">            
+					    </span>
 					    
 					
 					  </div>
@@ -161,7 +166,7 @@
 					</div>
 							 
           	 		<!-- Genes-->
-					<div class="form-group" ng-show="isGeneBasedQuery">
+					<div class="form-group" ng-show="isIntersect == 'true'">
 						<div class="col-md-3" style="padding-right: 0px;">
 					      <div class="radio">
 						   		<label for="radio-gene">
@@ -170,7 +175,7 @@
 						  </div>
 						</div>
 					 	<div class="col-md-9" ng-show="intersectionTarget == 'GENE'" style="padding-left: 1px; padding-right: 0px;">
-				    		<input type="text" ng-model="genes" style="display: inline; width: 60%" class="form-control" placeholder="gene, gene, ...">
+				    		<textarea ng-model="genes" style="display: inline; width: 60%" class="form-control" placeholder="ACTB, GAPDH, ..."/>
 					    	&nbsp;&nbsp;+/-
 					    	<input type="text" ng-model="geneMargins" style="display: inline; max-width: 60px;"class="form-control" placeholder="1000"/> 
 					    	bp
@@ -192,26 +197,26 @@
            	 		 
            	 		 <!-- FDR-->
 					<div class="form-group" ng-show="isThresholdBasedQuery">
-					  <label class="col-md-3 control-label" >FDR</label>  
+					  <label class="col-md-2 control-label" >FDR</label>  
 				  	  <div class="col-md-5 btn-group ">
 				  	  		<label class="btn btn-toggle" ng-model="codeThresholdFDRComparison" btn-radio="'GT'" >&gt;</label>
 				  	  		<label class="btn btn-toggle" ng-model="codeThresholdFDRComparison" btn-radio="'LT'" >&lt;</label>
   					     	
    					  </div>
-					  <input id="textinput" class="col-md-4 form-control" style="display: inline; max-width: 180px" ng-model="thresholdFDR" name="textinput" placeholder=".05"  type="number" step="any">
+					  <input id="textinput" class="col-md-3 form-control" style="display: inline; max-width: 120px" ng-model="thresholdFDR" name="textinput" placeholder=".05"  type="number" step="any">
 					</div>        
 					
            	 		
            	 		 <!-- Log2 Ratio-->
 					<div class="form-group" ng-show="isThresholdBasedQuery">
-					    <label class="col-md-3 control-label">Log2Ratio</label>  
+					    <label class="col-md-2 control-label">Log2Ratio</label>  
 					  	<div class="col-md-5 btn-group">
    					     	<label class="btn btn-toggle" ng-model="codeThresholdLog2RatioComparison" btn-radio="'GTABS'" >&gt; abs</label>
    					     	<label class="btn btn-toggle" ng-model="codeThresholdLog2RatioComparison" btn-radio="'GT'"     >&gt;</label>
         					<label class="btn btn-toggle" ng-model="codeThresholdLog2RatioComparison" btn-radio="'LT'"     >&lt;</label>
     					</div>
 					    
-						<input id="textinput" class="col-md-4 form-control"   style="display: inline; max-width: 180px" ng-model="thresholdLog2Ratio" name="textinput" placeholder="1.0"  type="number", step="any">
+						<input id="textinput" class="col-md-3 form-control"   style="display: inline; max-width: 120px" ng-model="thresholdLog2Ratio" name="textinput" placeholder="1.0"  type="number", step="any">
 					</div>        
 
 					
