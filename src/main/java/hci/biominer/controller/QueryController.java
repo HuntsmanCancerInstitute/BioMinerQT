@@ -94,6 +94,8 @@ public class QueryController {
     private HashMap<String,QueryResultContainer> resultsDict =  new HashMap<String,QueryResultContainer>();
     private HashMap<String,File> fileDict = new HashMap<String,File>();
     
+    private HashMap<Long,List<ExternalGene>> searchDict = new HashMap<Long,List<ExternalGene>>();
+    
     @PostConstruct
     public void loadAllData() throws Exception {
     	if (!BiominerProperties.isLoaded()) {
@@ -121,8 +123,16 @@ public class QueryController {
         	    		}
         	    	}	
         		}
+        		
+        		if(!searchDict.containsKey(ob.getIdOrganismBuild())) {
+        			System.out.println("Loading common names for: " + ob.getName());
+        			searchDict.put(ob.getIdOrganismBuild(), this.externalGeneService.getHugoNamesGenesByOrganismBuild(ob));
+        			
+        		}
         	}
     	}
+    	
+    	
     }
   
     @RequestMapping("/layout")
@@ -276,6 +286,10 @@ public class QueryController {
     	//Clear out warnings
     	this.warnings = new StringBuilder("");
     	
+    	if (genes != null) {
+    		genes = genes.toUpperCase();
+    	}
+    	
     	//Get current active user
     	Subject currentUser = SecurityUtils.getSubject();
     	User user = null;
@@ -311,9 +325,6 @@ public class QueryController {
     	//Add IP warnings
     	this.warnings.append(ip.getWarnings());
     	
-    	
-    	
-    	
     	//Get analysis entries for the query
     	List<Analysis> analyses = new ArrayList<Analysis>();
     	if (atMap.containsKey(AnalysisTypeEnum.ChIPSeq)) {
@@ -327,6 +338,12 @@ public class QueryController {
     		List<Analysis> rnaseqAnalyses = this.analysisService.getAnalysesByQuery(idLabs, idProjects, idAnalyses, idSampleSources, atMap.get(AnalysisTypeEnum.RNASeq).getIdAnalysisType(), idOrganismBuild, user);
     		System.out.println("Number of analyses: " + rnaseqAnalyses.size());
     		analyses.addAll(rnaseqAnalyses);
+    	}
+    	if (atMap.containsKey(AnalysisTypeEnum.Methylation)) {
+    		System.out.println("Looking for Methylation analyses");
+    		List<Analysis> methAnalyses = this.analysisService.getAnalysesByQuery(idLabs, idProjects, idAnalyses, idSampleSources, atMap.get(AnalysisTypeEnum.Methylation).getIdAnalysisType(), idOrganismBuild, user);
+    		System.out.println("Number of analyses: " + methAnalyses.size());
+    		analyses.addAll(methAnalyses);
     	}
         	
     	//Convert analyses to interval trees
@@ -586,6 +603,20 @@ public class QueryController {
     	
     	
     	return sampleSourceList;
+    }
+    
+    @RequestMapping(value="getHugoNames",method=RequestMethod.GET)
+    @ResponseBody
+    public List<ExternalGene> getHugoNames(@RequestParam(value="idOrganismBuild") Long idOrganismBuild) {
+    	List<ExternalGene> egList = null;
+    	if (this.searchDict.containsKey(idOrganismBuild)) {
+    		egList = this.searchDict.get(idOrganismBuild);
+    	} else {
+    		OrganismBuild ob = this.organismBuildService.getOrganismBuildById(idOrganismBuild);
+        	egList = this.externalGeneService.getHugoNamesGenesByOrganismBuild(ob);
+    	}
+    	
+    	return egList;
     }
     
     

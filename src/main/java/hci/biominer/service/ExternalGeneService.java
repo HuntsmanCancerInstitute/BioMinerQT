@@ -35,5 +35,9 @@ public class ExternalGeneService {
 	public List<ExternalGene> getExternalGenesByOrganismBuild(OrganismBuild ob) {
 		return externalGeneDAO.getExternalGenesByOrganismBuild(ob);
 	}
+	
+	public List<ExternalGene> getHugoNamesGenesByOrganismBuild(OrganismBuild ob) {
+		return externalGeneDAO.getHugoNamesGenesByOrganismBuild(ob);
+	}
 
 }

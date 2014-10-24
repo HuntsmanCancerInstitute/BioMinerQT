@@ -32,6 +32,10 @@ public class IntervalTrees {
 					RnaSeqIntervalTreeParser rtp = new RnaSeqIntervalTreeParser(file, genome);
 					HashMap<String,IntervalTree<GenericResult>> it = rtp.getChromNameIntervalTree();
 					analysisTrees.put(file.getAbsolutePath(), it);
+				} else if (analysis.getAnalysisType().getType() == AnalysisTypeEnum.Methylation) {
+					ChipIntervalTreeParser ctp = new ChipIntervalTreeParser(file, genome);
+					HashMap<String,IntervalTree<GenericResult>> it = ctp.getChromNameIntervalTree();
+					analysisTrees.put(file.getAbsolutePath(), it);
 				}
 				
 			} catch (Exception ex) {

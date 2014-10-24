@@ -5,7 +5,7 @@
  * QueryController
  * @constructor
  */
-var query     = angular.module('query',     ['angularFileUpload','filters', 'services', 'directives', 'ui.bootstrap', 'chosen']);
+var query     = angular.module('query',     ['angularFileUpload','filters', 'services', 'directives', 'ui.bootstrap', 'chosen','angucomplete']);
 
 
 angular.module("query").controller("QueryController", 
@@ -48,6 +48,8 @@ function($rootScope, $scope, $http, $modal, $anchorScroll, $upload, DynamicDicti
 	$scope.codeVariantFilterType = "";
 	$scope.selectedGenotypes = [];
 	
+	$scope.hugoList = [];
+	
 	//Pagination
 	$scope.queryCurrentPage = 0;
 	$scope.resultPages = 0;
@@ -71,7 +73,6 @@ function($rootScope, $scope, $http, $modal, $anchorScroll, $upload, DynamicDicti
 		'LT':    '<'
 	};
 
-   
 	
 	$scope.queryResults = [];
 	
@@ -100,6 +101,20 @@ function($rootScope, $scope, $http, $modal, $anchorScroll, $upload, DynamicDicti
     		$scope.loadAnalysisTypes();
     	});
     };
+    
+    
+    $scope.$watch("idOrganismBuild",function() {
+    	if ($scope.idOrganismBuild != null && $scope.idOrganismBuild != "") {
+    		$http({
+    			url: "query/getHugoNames",
+    			method: "GET",
+    			params: {idOrganismBuild: $scope.idOrganismBuild}
+        	}).success(function(data) {
+        		$scope.hugoList = data;
+        	});
+    	}
+    	
+    });
     
     $scope.loadRegions = function(files) {
     	$upload.upload({

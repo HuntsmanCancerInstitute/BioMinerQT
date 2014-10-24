@@ -286,7 +286,7 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 							params[$scope.columnDefs[k].name] = $scope.columnDefs[k].index;
 						}
 						
-						if ($scope.selectedAnalysisType.type == "ChIPSeq") {
+						if ($scope.selectedAnalysisType.type == "ChIPSeq" || $scope.selectedAnalysisType.type == "Methylation") {
 							(function(params,index) {
 								promise = promise.then(function() {
 									return $http({

@@ -127,12 +127,7 @@
 					    	<select data-placeholder="Choose sample source..." multiple class="form-control chosen-select" ng-model="selectedSampleSources" chosen  ng-options="sampleSource as sampleSource.source for sampleSource in sampleSourceList track by sampleSource.idSampleSource"  ></select>
 						</div>
 					</div>
-					
-
-
-
-          	 		
-					
+			
           	 		<!-- Interest or Don't Intersect -->
            	 		<span class="section-header" >That</span>
           	 		
@@ -186,10 +181,11 @@
 						  </div>
 						</div>
 					 	<div class="col-md-9" ng-show="intersectionTarget == 'GENE'" style="padding-left: 1px; padding-right: 0px;">
-				    		<textarea ng-model="genes" style="display: inline; width: 60%" class="form-control" placeholder="ACTB, GAPDH, ..."/>
+ 							<div class="col-md-7">
+ 								<angucomplete id="test" minlength="3" placeholder="ACTB" pause="400" selectedObject="genes" localdata="hugoList" titlefield="externalGeneName" searchfields="externalGeneName" inputclass="form-control"/>
+ 							</div>
 					    	&nbsp;&nbsp;+/-
 					    	<input type="text" ng-model="geneMargins" style="display: inline; max-width: 60px;"class="form-control" placeholder="1000"/> 
-					    	bp
 				    	</div>
 					</div>
 

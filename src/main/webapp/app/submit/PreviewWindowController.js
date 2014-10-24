@@ -12,7 +12,7 @@ function ($scope, $modalInstance, filename, previewData, analysisType) {
 	 
 	$scope.analysisColumns = [];
 	
-	if (analysisType.type == "ChIPSeq") {
+	if (analysisType.type == "ChIPSeq" || analysisType.type == "Methylation") {
 		
 		$scope.analysisColumns.push({name: "Ignore", index: null, link: -1});
 		$scope.analysisColumns.push({name: "Chromosome", index: -1, link: -1});

@@ -3,6 +3,7 @@ package hci.biominer.dao;
 import hci.biominer.model.ExternalGene;
 import hci.biominer.model.OrganismBuild;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.SessionFactory;
@@ -78,6 +79,9 @@ public class ExternalGeneDAO {
 	}
 
 	
+	
+	
+	
 	public void addExternalGenes(List<ExternalGene> genes) throws Exception {
 		Session session = this.getCurrentSession();
 		session.beginTransaction();
@@ -109,6 +113,18 @@ public class ExternalGeneDAO {
 		query.setParameter("ob", ob);
 		List<ExternalGene> egList = query.list();
 		session.close();
+		return egList;
+	}
+	
+	public List<ExternalGene> getHugoNamesGenesByOrganismBuild(OrganismBuild ob) {
+		Session session = this.getCurrentSession();
+		Query query = session.createQuery("select e from ExternalGene e where organismBuild = :ob and ExternalGeneSource = :hugo");
+		query.setParameter("ob", ob);
+		query.setParameter("hugo","hugo");
+		List<ExternalGene> egList = query.list();
+		session.close();
+		
+	
 		return egList;
 	}
 	

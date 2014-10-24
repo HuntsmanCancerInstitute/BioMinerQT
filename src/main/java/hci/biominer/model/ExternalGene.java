@@ -11,6 +11,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
+import org.codehaus.jackson.annotate.JsonIgnore;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
 
@@ -25,6 +26,7 @@ public class ExternalGene {
 	
 	@ManyToOne()
 	@JoinColumn(name="idBiominerGene")
+	@JsonIgnore
 	BiominerGene biominerGene;
 	
 	@Column(name="ExternalGeneName")
