@@ -12,4 +12,8 @@ public class Enumerated {
 	public static enum ProjectVisibilityEnum {
 		LAB, INSTITUTE, PUBLIC
 	}
+	
+	public static enum AnalysisTypeEnum {
+		ChIPSeq, RNASeq, Methylation, Variant
+	}
 }

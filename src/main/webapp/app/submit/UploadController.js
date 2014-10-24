@@ -1,7 +1,7 @@
 'use strict';
 
 
-var upload  = angular.module('upload',  ['ui.bootstrap', 'angularFileUpload','filters', 'services', 'directives','error','fneditor']);
+var upload  = angular.module('upload',  ['ui.bootstrap', 'angularFileUpload','filters', 'services', 'directives','error','fneditor','chosen']);
 
 angular.module("upload").controller("UploadController", ['$scope','$upload','$http','$modal','$q',
                                                       
@@ -13,6 +13,12 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 		
 		
 		$scope.selectedFiles = [];
+		$scope.selectedAnalysisType = null;
+		
+		$scope.uploadSelected = false;
+		$scope.importedSelected = false;
+		
+		
 		
 		
 		/********************
@@ -196,7 +202,10 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 			    			},
 			    			previewData: function() {
 			    				return data.previewData;
-			    			}
+			    			},
+							analysisType: function() {
+								return $scope.selectedAnalysisType;
+							}
 			    		}
 			    	});
 			    	
@@ -253,6 +262,7 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 						//This will be tied to build going forward!!
 						params.build = $scope.project.organismBuild.idOrganismBuild;
 						params.analysisID = $scope.$parent.projectId;
+						params.idAnalysisType = $scope.selectedAnalysisType.idAnalysisType;
 						
 						//Check to see if there are any matching files in list (match on name only)
 						var index = -1;
@@ -276,18 +286,34 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 							params[$scope.columnDefs[k].name] = $scope.columnDefs[k].index;
 						}
 						
-						(function(params,index) {
-							promise = promise.then(function() {
-								return $http({
-									url: "submit/parse/chip",
-									method: "POST",
-									params: params
-								}).success(function(data) {
-									data.selected = false;
-									$scope.files.importedFiles[index] = data;
+						if ($scope.selectedAnalysisType.type == "ChIPSeq") {
+							(function(params,index) {
+								promise = promise.then(function() {
+									return $http({
+										url: "submit/parse/chip",
+										method: "POST",
+										params: params
+									}).success(function(data) {
+										data.selected = false;
+										$scope.files.importedFiles[index] = data;
+									});
 								});
-							});
-						}(params,index));
+							}(params,index));
+						} else if ($scope.selectedAnalysisType.type == "RNASeq") {
+							(function(params,index) {
+								promise = promise.then(function() {
+									return $http({
+										url: "submit/parse/rnaseq",
+										method: "POST",
+										params: params
+									}).success(function(data) {
+										data.selected = false;
+										$scope.files.importedFiles[index] = data;
+									});
+								});
+							}(params,index));
+						}
+						
 				}
 				
 				//When parsing is finished, clear out objects
@@ -319,7 +345,38 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 		};
 		
 		
+		$scope.$watch('files.importedFiles',function() {
+			var selected = false;
+			for (var i=0; i<$scope.files.importedFiles.length; i++) {
+				
+				if ($scope.files.importedFiles[i].selected) {
+					selected = true;
+				}
+			}
+			if (selected) {
+				$scope.importedSelected = true;
+			} else {
+				$scope.importedSelected = false;
+			}
+		},true); 
+	
+		$scope.$watch('files.uploadedFiles',function() {
+			var selected = false;
+			for (var i=0; i<$scope.files.uploadedFiles.length; i++) {
+				if ($scope.files.uploadedFiles[i].selected) {
+					selected = true;
+				}
+			}
+			if (selected) {
+				$scope.uploadSelected = true;
+			} else {
+				$scope.uploadSelected = false;
+			}
+		},true);
 		
+		$scope.$watch('selectedAnalysisType',function() {
+			console.log($scope.selectedAnalysisType);
+		});
 		
 		
 		/********************

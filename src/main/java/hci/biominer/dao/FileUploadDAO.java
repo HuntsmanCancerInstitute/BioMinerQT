@@ -54,6 +54,7 @@ public class FileUploadDAO {
 		FileUploadToUpdate.setSize(fileUpload.getSize());
 		FileUploadToUpdate.setType(fileUpload.getType());
 		FileUploadToUpdate.setProject(fileUpload.getProject());
+		FileUploadToUpdate.setAnalysisType(fileUpload.getAnalysisType());
 		session.update(FileUploadToUpdate);
 		session.getTransaction().commit();
 		session.close();	

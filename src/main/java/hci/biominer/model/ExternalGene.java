@@ -23,7 +23,7 @@ public class ExternalGene {
 	@Column(name="idExternalGene")
 	Long idExternalGene;
 	
-	@OneToOne()
+	@ManyToOne()
 	@JoinColumn(name="idBiominerGene")
 	BiominerGene biominerGene;
 	

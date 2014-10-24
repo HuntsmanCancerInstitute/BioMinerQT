@@ -31,5 +31,9 @@ public class ExternalGeneService {
 	public void addExternalGenes(List<ExternalGene> genes) throws Exception{
 		externalGeneDAO.addExternalGenes(genes);
 	}
+	
+	public List<ExternalGene> getExternalGenesByOrganismBuild(OrganismBuild ob) {
+		return externalGeneDAO.getExternalGenesByOrganismBuild(ob);
+	}
 
 }

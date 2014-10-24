@@ -30,6 +30,10 @@ public class FileUpload {
 	@JsonIgnore()
 	Project project;
 	
+	@OneToOne
+	@JoinColumn(name="idAnalysisType")
+	AnalysisType analysisType;
+	
 	@Column(name="name")
 	String name;
 	
@@ -55,6 +59,7 @@ public class FileUpload {
 	Analysis analysis;
 	
 	
+	
 
 	public FileUpload() {
 		
@@ -71,6 +76,28 @@ public class FileUpload {
 		this.project = project;
 	}
 	
+	public FileUpload(String name, String directory, Long size, FileStateEnum state, String message, 
+			FileTypeEnum type, Project project, AnalysisType analysisType) {
+		this.name = name;
+		this.directory = directory;
+		this.size = size;
+		this.state = state;
+		this.message = message;
+		this.type = type;
+		this.project = project;
+		this.analysisType = analysisType;
+	}
+	
+	
+	
+	public AnalysisType getAnalysisType() {
+		return analysisType;
+	}
+
+	public void setAnalysisType(AnalysisType analysisType) {
+		this.analysisType = analysisType;
+	}
+
 	public Project getProject() {
 		return project;
 	}

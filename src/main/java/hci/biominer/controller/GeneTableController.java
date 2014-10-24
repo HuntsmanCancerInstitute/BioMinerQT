@@ -109,7 +109,6 @@ public class GeneTableController {
 			HttpServletResponse response) throws Exception {
 		File localFile = null;
 		PreviewMap pm = new PreviewMap();
-		
 		OrganismBuild ob = obService.getOrganismBuildById(idOrganismBuild);
 		this.removeExistingAnnotation(ob);
 		try {
@@ -370,10 +369,21 @@ public class GeneTableController {
 	String parseAnnotations(
 			@RequestParam(value="Ensembl") Integer ensemblIdx, 
 			@RequestParam(value="Hugo") Integer hugoIdx, 
-			@RequestParam(value="RefSeq",required=false) Integer refseqIdx,
-			@RequestParam(value="UCSC",required=false) Integer ucscIdx,
+			@RequestParam(value="RefSeq") Integer refseqIdx,
+			@RequestParam(value="UCSC") Integer ucscIdx,
 			@RequestParam(value="idOrganismBuild") Long idOrganismBuild,
 			HttpServletResponse response) throws Exception {
+		
+		
+		//change -1 to null
+		if (refseqIdx == -1) {
+			refseqIdx = null;
+		}
+		
+		if (ucscIdx == -1) {
+			ucscIdx = null;
+		}
+		
 		
 		//Get organismBuild
 		OrganismBuild ob = obService.getOrganismBuildById(idOrganismBuild);
@@ -401,6 +411,7 @@ public class GeneTableController {
 			bgService.addBiominerGenes(pa.getBiominerGenes());
 			egService.addExternalGenes(pa.getExternalGenes());
 		} catch (Exception ex) {
+			ex.printStackTrace();
 			this.removeExistingAnnotation(ob);
 			message = ex.getMessage();
 			response.setStatus(405);

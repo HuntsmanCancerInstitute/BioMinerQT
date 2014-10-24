@@ -1,9 +1,13 @@
 package hci.biominer.parser;
 
-import hci.biominer.model.AnalysisType;
 import hci.biominer.model.GenericResult;
+import hci.biominer.model.genome.Chromosome;
+import hci.biominer.model.genome.Genome;
 import hci.biominer.model.intervaltree.Interval;
 import hci.biominer.model.intervaltree.IntervalTree;
+import hci.biominer.util.ModelUtil;
+
+import hci.biominer.util.Enumerated;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -12,29 +16,22 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
-import hci.biominer.model.genome.Chromosome;
-import hci.biominer.model.genome.Genome;
-import hci.biominer.util.ModelUtil;
-import hci.biominer.util.Enumerated;
-
-public class ChipIntervalTreeParser {
+public class RnaSeqIntervalTreeParser {
 	private HashMap<String,IntervalTree<GenericResult>> invlTree = null;
-	private File chipFile = null;
+	private File rnaSeqFile = null;
 	private Genome genome = null;
 	private int numParsedLines = 0;
-	private AnalysisType at = null;
 
-	public ChipIntervalTreeParser(File chipFile, Genome genome) throws Exception{
-		if (!chipFile.canRead()) {
-			throw new Exception(String.format("Specified ChIP file does not exist or can't be read: %s",this.chipFile.getAbsolutePath()));
+	public RnaSeqIntervalTreeParser(File rnaSeqFile, Genome genome) throws Exception{
+		if (!rnaSeqFile.canRead()) {
+			throw new Exception(String.format("Specified RNASeq file does not exist or can't be read: %s",this.rnaSeqFile.getAbsolutePath()));
 		}
-		this.chipFile = chipFile;
+		this.rnaSeqFile = rnaSeqFile;
 		this.genome = genome;
-		this.at = at;
 	}
 	
 	public void parseChip() throws Exception{
-		BufferedReader br = ModelUtil.fetchBufferedReader(this.chipFile);
+		BufferedReader br = ModelUtil.fetchBufferedReader(this.rnaSeqFile);
 		HashMap<String,ArrayList<Interval<GenericResult>>> invlHash = new HashMap<String,ArrayList<Interval<GenericResult>>>();
 		LinkedHashMap<String, Chromosome> chromosomeName = genome.getNameChromosome();
 		
@@ -50,12 +47,15 @@ public class ChipIntervalTreeParser {
 				}
 				int start = Integer.parseInt(items[1]);
 				int end = Integer.parseInt(items[2]);
-				String fdr = items[3];
-				float log = Float.parseFloat(items[4]);
+				String originalName = items[3];
+				String parsedName = items[4];
+				String fdr = items[5];
+				float log = Float.parseFloat(items[6]);
 				
 				//Create intervals
 				GenericResult gr = new GenericResult();
-				gr.loadChipData(chrom,start,end,fdr,log, Enumerated.AnalysisTypeEnum.ChIPSeq);
+				gr.loadRnaseqData(chrom, start, end, originalName, parsedName, fdr,log, Enumerated.AnalysisTypeEnum.RNASeq);
+				
 				Interval<GenericResult> invl = new Interval<GenericResult>(start,end,gr); 
 				
 				//Add to hash
@@ -83,8 +83,8 @@ public class ChipIntervalTreeParser {
 		}
 	}
 	
-	public File getChipFile() {
-		return this.chipFile;
+	public File getRnaSeqFile() {
+		return this.rnaSeqFile;
 	}
 	
 	public int getNumberParsedLines() {
@@ -97,5 +97,4 @@ public class ChipIntervalTreeParser {
 		}
 		return this.invlTree;
 	}
-
 }

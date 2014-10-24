@@ -41,36 +41,41 @@
 			<div class="col-lg-3">
 				<div class="form-group">
 					<label class="control-label" for="analysis_type">Analysis type</label>  
-					<select id="analysis_type" data-placeholder="Choose Analysis Type..." ng-model="result.analysisType" ng-options="at as at.type for at in analysisTypeList track by at.idAnalysisType" placeholder="Analysis type" class="form-control" required>
-						<option value=""></option>
+					<select id="analysis_type" ng-model="result.analysisType" ng-options="at as at.type for at in analysisTypeList track by at.idAnalysisType" placeholder="Analysis type" class="form-control" required>
+						<option value="" disabled selected>Choose Analysis Type...</option>
 					</select>			
 				</div>
 			</div>
 		</div> <!--  end row -->
 		<div class="row">
 			<!--Files -->
-			<div class="col-lg-3">
+			<div class="col-lg-4">
 				<div class="form-group">
 				  <label class="control-label" for="applicable_files">Files</label>
-				  <select id="applicable_files" data-placeholder="Choose File..." ng-model="result.file" chosen class="chosen-select" ng-options="file as file.name for file in files.importedFiles track by file.idFileUpload" options-disabled="file.isAnalysisSet for file in files.importedFiles" required>
-				  	<option value=""></option>
+				  <select id="applicable_files" class="form-control chosen-select" ng-model="result.file"  ng-options="file as file.name for file in files.importedFiles" options-disabled="(file.isAnalysisSet || !file.doesAnalysisMatch) for file in files.importedFiles" required>
+				  	<option value="" disabled selected>Select File...</option>
 				  </select> 
 				</div>	
 			</div> 
 	
 			<!-- Samples -->
-			<div class="col-lg-3">
+			<div class="col-lg-4">
 				<div class="form-group">
 				  <label class="control-label" for="applicable_samples">Samples</label>
-				  <select required id="applicable_samples" data-placeholder="Choose Samples..." ng-model="result.samples" chosen multiple class="chosen-select" ng-options="sample as sample.name for sample in samples track by sample.idSample" required></select> 
+				  <select required id="applicable_samples" data-placeholder="Select Samples..." ng-model="result.samples" chosen multiple class="form-control chosen-select" ng-options="sample as sample.name for sample in samples track by sample.idSample" required> 
+				  	
+				  </select>
 				</div>	
 			</div> 
 	
 			<!-- Data Tracks -->
-			<div class="col-lg-3">
+			<div class="col-lg-4">
 				<div class="form-group">
 				  <label class="control-label" for="applicable_datatracks">Data tracks</label>
-				  <select id="applicable_datatracks" data-placeholder="Choose DataTracks..." ng-model="result.dataTracks" chosen multiple class="chosen-select" ng-options="dt as dt.name for dt in datatracks track by dt.idDataTrack" required></select> 
+				  <select id="applicable_datatracks" data-placeholder="Select DataTracks..." ng-model="result.dataTracks" chosen multiple class="form-control chosen-select"  ng-options="dt as dt.name for dt in datatracks track by dt.idDataTrack" required>
+				  	
+				  </select> 
+					
 				</div>	
 			</div> 
 		</div> <!--  end row -->
@@ -114,7 +119,7 @@
 			            <td>{{result.name}}</td>
 			            <td>{{result.description}}</td>
 			            <td>{{result.date | date:'MM/dd/yyyy'}}</td>
-			            <td>{{result.idAnalysisType | lookupAnalysisType:analysisTypeList}}</td>
+			            <td>{{result.analysisType.type}}</td>
 			            <td>{{result.file.name}}</div></td>
 			            <td><div ng-repeat="sample in result.samples">{{sample.name}}<br></div></td>
 			            <td><div ng-repeat="dt in result.dataTracks">{{dt.name}}<br></div></td>

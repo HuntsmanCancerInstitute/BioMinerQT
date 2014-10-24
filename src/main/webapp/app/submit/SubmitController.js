@@ -647,6 +647,28 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
 		});
 	};
 	
+	$scope.$watch("result.analysisType",function() {
+		if ($scope.result.analysisType != null) {
+			for (var i=0; i<$scope.files.importedFiles.length; i++) {
+				if ($scope.files.importedFiles[i].analysisType.idAnalysisType == $scope.result.analysisType.idAnalysisType) {
+					$scope.files.importedFiles[i].doesAnalysisMatch = true;
+				} else {
+					$scope.files.importedFiles[i].doesAnalysisMatch = false;
+				}
+			}
+		}
+		
+		if ($scope.result.file != null &&  $scope.result.analysisType != null) {
+			if ($scope.result.file.analysisType.idAnalysisType != $scope.result.analysisType.idAnalysisType) {
+				$scope.result.file = null;
+			}
+		}
+		
+		console.log($scope.result.analysisType);
+	});
+	
+	
+	
 
 	
 }]);

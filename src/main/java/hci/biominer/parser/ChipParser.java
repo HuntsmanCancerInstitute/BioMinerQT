@@ -4,22 +4,14 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.zip.GZIPOutputStream;
 
-import hci.biominer.model.chip.Chip;
-import hci.biominer.model.chip.ChipIntervalTreeSerialized;
 import hci.biominer.model.genome.Genome;
-import hci.biominer.model.intervaltree.IntervalTree;
 import hci.biominer.util.ColumnValidators;
 import hci.biominer.util.ModelUtil;
 
@@ -99,18 +91,7 @@ public class ChipParser {
 
 	}
 	
-	/*
-	 * Create a IntervalTree and save it
-	 */
-	private void createIntervalTree() throws Exception {
-		ChipIntervalTreeParser citp = new ChipIntervalTreeParser(this.outputFile,this.genomeBuild);
-		HashMap<String,IntervalTree<Chip>> chipTree = citp.getChromNameIntervalTree();
-		File directory = this.outputFile.getParentFile();
-		String name = this.outputFile.getName() + ".ser";
-		ChipIntervalTreeSerialized.saveSerializedTree(chipTree, directory, name);
-		
-	}
-	
+
 	/*
 	 * Write minimum format Chip file
 	 */
@@ -154,7 +135,6 @@ public class ChipParser {
 			//Initialize input file variables
 			this.parsedData = new ArrayList<String>();
 			String line = null;
-			boolean failed = false;
 			int lineCount = 1;
 			
 			//Initialize warning variables

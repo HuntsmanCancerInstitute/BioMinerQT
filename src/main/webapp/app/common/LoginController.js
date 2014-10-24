@@ -24,7 +24,7 @@ var login = angular.module("login",['services'])
         		}
 	        	if ($rootScope.loggedUser != null) {
 	        		//console.log("starting checking");
-	        		$rootScope.checkInterval = $interval(function() {$rootScope.isAuthenticated();},data.timeout + 60000);
+	        		$rootScope.checkInterval = $interval(function() {$rootScope.isAuthenticated();},data.timeout + 180000);
 	        		
 	        		var admin = false;
 					for (var i=0;i<$rootScope.loggedUser.roles.length;i++) {

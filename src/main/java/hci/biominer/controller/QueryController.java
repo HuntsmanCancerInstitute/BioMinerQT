@@ -6,10 +6,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -25,8 +23,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.util.FileCopyUtils;
@@ -35,7 +31,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import hci.biominer.model.Analysis;
 import hci.biominer.model.AnalysisType;
-import hci.biominer.model.FileUpload;
+import hci.biominer.model.GenericResult;
 import hci.biominer.model.OrganismBuild;
 import hci.biominer.model.Project;
 import hci.biominer.model.QueryResult;
@@ -45,11 +41,9 @@ import hci.biominer.model.Sample;
 import hci.biominer.model.SampleSource;
 import hci.biominer.model.access.Lab;
 import hci.biominer.model.access.User;
-import hci.biominer.model.chip.Chip;
 import hci.biominer.model.genome.Gene;
 import hci.biominer.model.genome.Genome;
 import hci.biominer.model.genome.Transcript;
-import hci.biominer.model.genome.Transcriptome;
 import hci.biominer.model.intervaltree.IntervalTree;
 import hci.biominer.model.ExternalGene;
 import hci.biominer.service.OrganismBuildService;
@@ -59,18 +53,12 @@ import hci.biominer.service.AnalysisService;
 import hci.biominer.service.AnalysisTypeService;
 import hci.biominer.service.ExternalGeneService;
 import hci.biominer.util.BiominerProperties;
+import hci.biominer.util.Enumerated.AnalysisTypeEnum;
 import hci.biominer.util.GenomeBuilds;
 import hci.biominer.util.IntervalTrees;
-import hci.biominer.util.ModelUtil;
-import hci.biominer.util.Enumerated.FileTypeEnum;
-
-
-
-
 
 
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.GZIPInputStream;
 import java.io.OutputStreamWriter;
@@ -303,7 +291,7 @@ public class QueryController {
     	Genome genome = this.fetchGenome(ob);
     	
     	//Build AnalysisTypeList
-    	HashMap<String,AnalysisType> atMap = new HashMap<String,AnalysisType>();
+    	HashMap<AnalysisTypeEnum,AnalysisType> atMap = new HashMap<AnalysisTypeEnum,AnalysisType>();
     	for (Long id: idAnalysisTypes) {
     		AnalysisType at = this.analysisTypeService.getAnalysisTypeById(id);
     		atMap.put(at.getType(),at);
@@ -320,36 +308,48 @@ public class QueryController {
     		intervalsToCheck = ip.parseIntervals(regions, regionMargins, genome);
     	}
     	
-    
+    	//Add IP warnings
     	this.warnings.append(ip.getWarnings());
     	
-    	List<QueryResult> fullRegionResults = new ArrayList<QueryResult>();
     	
-    	if (atMap.containsKey("ChIPSeq")) {
+    	
+    	
+    	//Get analysis entries for the query
+    	List<Analysis> analyses = new ArrayList<Analysis>();
+    	if (atMap.containsKey(AnalysisTypeEnum.ChIPSeq)) {
     		System.out.println("Looking for ChIPSeq analyses");
-    		//Get analyses
-        	List<Analysis> analyses = this.analysisService.getAnalysesByQuery(idLabs, idProjects, idAnalyses, idSampleSources, atMap.get("ChIPSeq").getIdAnalysisType(), idOrganismBuild, user);
-        	System.out.println("Number of analyses: " + analyses.size());
+        	List<Analysis> chipAnalyses = this.analysisService.getAnalysesByQuery(idLabs, idProjects, idAnalyses, idSampleSources, atMap.get(AnalysisTypeEnum.ChIPSeq).getIdAnalysisType(), idOrganismBuild, user);
+        	System.out.println("Number of analyses: " + chipAnalyses.size());
+        	analyses.addAll(chipAnalyses);
+    	}
+    	if (atMap.containsKey(AnalysisTypeEnum.RNASeq)) {
+    		System.out.println("Looking for RNAseq analyses");
+    		List<Analysis> rnaseqAnalyses = this.analysisService.getAnalysesByQuery(idLabs, idProjects, idAnalyses, idSampleSources, atMap.get(AnalysisTypeEnum.RNASeq).getIdAnalysisType(), idOrganismBuild, user);
+    		System.out.println("Number of analyses: " + rnaseqAnalyses.size());
+    		analyses.addAll(rnaseqAnalyses);
+    	}
         	
-        	//Convert analyses to interval trees
-        	ArrayList<HashMap<String,IntervalTree<Chip>>> itList = generateIntervalTreesChip(analyses, genome);
-        	System.out.println("Number of interval tree lists " + itList.size());
+    	//Convert analyses to interval trees
+    	ArrayList<HashMap<String,IntervalTree<GenericResult>>> itList = generateIntervalTrees(analyses, genome);
+    	System.out.println("Number of interval tree lists " + itList.size());
         	
-        	//Run basic search
-        	List<QueryResult> results = this.getIntersectingRegionsChip(itList, analyses, genome, intervalsToCheck);
-     
-        	//Run thresholding if neccesary
-        	if (FDR != null) {
-        		results = this.filterChipFdr(results, FDR, codeFDRComparison);
-        	}
-        	
-        	if (log2Ratio != null) {
-        		results = this.filterChipLog2Ratio(results, log2Ratio, codeLog2RatioComparison);
-        	}
-        	fullRegionResults.addAll(results);
+    	//Run basic search
+    	List<QueryResult> results = this.getIntersectingRegions(itList, analyses, genome, intervalsToCheck);
+ 
+    	//Run thresholding if neccesary
+    	List<QueryResult> fullRegionResults = new ArrayList<QueryResult>();
+    	if (FDR != null) {
+    		results = this.filterFdr(results, FDR, codeFDRComparison);
     	}
     	
+    	if (log2Ratio != null) {
+    		results = this.filterLog2Ratio(results, log2Ratio, codeLog2RatioComparison);
+    	}
+    	fullRegionResults.addAll(results);
+    	
+    	
     	QueryResultContainer qrc = new QueryResultContainer(fullRegionResults, fullRegionResults.size(),0, sortType, true);
+    	
     	
     	if (user != null) {
     		this.resultsDict.put(user.getUsername(), qrc);
@@ -588,6 +588,7 @@ public class QueryController {
     	return sampleSourceList;
     }
     
+    
     private String getGeneIntervals(String names, Genome genome, String searchType, OrganismBuild ob) {
     	List<String> regions = new ArrayList<String>();
     	StringBuilder regionString = new StringBuilder("");
@@ -725,8 +726,8 @@ public class QueryController {
     	}
     }
     	
-    private ArrayList<HashMap<String,IntervalTree<Chip>>> generateIntervalTreesChip(List<Analysis> analyses, Genome genome) throws Exception{
-    	ArrayList<HashMap<String,IntervalTree<Chip>>> itList = new ArrayList<HashMap<String,IntervalTree<Chip>>>();
+    private ArrayList<HashMap<String,IntervalTree<GenericResult>>> generateIntervalTrees(List<Analysis> analyses, Genome genome) throws Exception{
+    	ArrayList<HashMap<String,IntervalTree<GenericResult>>> itList = new ArrayList<HashMap<String,IntervalTree<GenericResult>>>();
     	for (Analysis a: analyses) {
     		if (!IntervalTrees.doesChipIntervalTreeExist(a)) {
     			IntervalTrees.loadChipIntervalTree(a, genome);
@@ -736,7 +737,9 @@ public class QueryController {
     	return itList;
     }
     
-    private List<QueryResult> filterChipFdr(List<QueryResult> results, Float fdr, String fdrCode) throws Exception {
+ 
+
+    private List<QueryResult> filterFdr(List<QueryResult> results, Float fdr, String fdrCode) throws Exception {
     	List<QueryResult> filteredResults = new ArrayList<QueryResult>();
     	NumberFormat formatter = new DecimalFormat("0.##E0");
     	for (QueryResult qr: results) {
@@ -764,7 +767,7 @@ public class QueryController {
     	return filteredResults;
     }
     
-    private List<QueryResult> filterChipLog2Ratio(List<QueryResult> results, Float log2ratio, String log2ratioCode) {
+    private List<QueryResult> filterLog2Ratio(List<QueryResult> results, Float log2ratio, String log2ratioCode) {
     	List<QueryResult> filteredResults = new ArrayList<QueryResult>();
     	for (QueryResult qr: results) {
     		boolean pass = true;
@@ -788,19 +791,19 @@ public class QueryController {
     	return filteredResults;
     }
     
-    private List<QueryResult> getIntersectingRegionsChip(ArrayList<HashMap<String,IntervalTree<Chip>>> treeList, List<Analysis> analyses, Genome genome, 
+    private List<QueryResult> getIntersectingRegions(ArrayList<HashMap<String,IntervalTree<GenericResult>>> treeList, List<Analysis> analyses, Genome genome, 
     		List<Interval> intervals) throws Exception{
     	List<QueryResult> queryResults = new ArrayList<QueryResult>();
     	int index = 1;
     	
     	for (int i=0; i<treeList.size(); i++) {
     		
-    		HashMap<String, IntervalTree<Chip>> it = treeList.get(i);
+    		HashMap<String, IntervalTree<GenericResult>> it = treeList.get(i);
     		for (Interval inv: intervals) {
     			if (it.containsKey(inv.getChrom())) {
-    				List<Chip> hits = it.get(inv.getChrom()).search(inv.getStart(), inv.getEnd());
+    				List<GenericResult> hits = it.get(inv.getChrom()).search(inv.getStart(), inv.getEnd());
         			Analysis a = analyses.get(i);
-        			for (Chip c: hits) {
+        			for (GenericResult c: hits) {
         				QueryResult result = new QueryResult();
         				result.setIndex(index++);
         	    		result.setProjectName(a.getProject().getName());

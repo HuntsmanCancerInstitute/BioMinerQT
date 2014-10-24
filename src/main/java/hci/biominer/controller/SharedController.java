@@ -66,11 +66,11 @@ public class SharedController {
 	@Autowired
 	private InstituteService instituteService;
 	 
-  @Autowired
-  private GenotypeService genotypeService;
+	@Autowired
+	private GenotypeService genotypeService;
   
-  @Autowired
-  private GeneAnnotationService geneAnnotationService;
+    @Autowired
+    private GeneAnnotationService geneAnnotationService;
 
 
 	@RequestMapping(value="getAllInstitutes",method=RequestMethod.GET)
@@ -135,19 +135,19 @@ public class SharedController {
 	}
 	
 	 
-  @RequestMapping(value="getAllGenotypes",method=RequestMethod.GET)
-  @ResponseBody
-  public List<Genotype> getAllGenotypes() {
-    return genotypeService.getAllGenotypes();
-  }
-
-  
-  
-  @RequestMapping(value="getAllGeneAnnotations",method=RequestMethod.GET)
-  @ResponseBody
-  public List<GeneAnnotation> getAllGeneAnnotations() {
-    return geneAnnotationService.getAllGeneAnnotations();
-  }
+	@RequestMapping(value="getAllGenotypes",method=RequestMethod.GET)
+	@ResponseBody
+	public List<Genotype> getAllGenotypes() {
+	  return genotypeService.getAllGenotypes();
+	}
+	
+	  
+	  
+	@RequestMapping(value="getAllGeneAnnotations",method=RequestMethod.GET)
+	@ResponseBody
+	public List<GeneAnnotation> getAllGeneAnnotations() {
+	  return geneAnnotationService.getAllGeneAnnotations();
+	}
 
 	
 	@RequestMapping(value="sendMail",method=RequestMethod.POST) 
@@ -171,8 +171,8 @@ public class SharedController {
 		} catch (MessagingException mex) {
 			throw mex;
 		}
-
 	}
+	
 	
 	
 }

@@ -1,10 +1,13 @@
 package hci.biominer.model;
 
+import java.util.List;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 
@@ -19,10 +22,21 @@ public class BiominerGene {
 	@Column(name="BiominerGeneName")
 	String BiominerGeneName;
 	
+	@OneToMany(mappedBy="biominerGene")
+	List<ExternalGene> externalGenes;
+	
 	public BiominerGene() {
 		
 	}
 	
+	public List<ExternalGene> getExternalGenes() {
+		return externalGenes;
+	}
+
+	public void setExternalGenes(List<ExternalGene> externalGenes) {
+		this.externalGenes = externalGenes;
+	}
+
 	public BiominerGene(String biominerGeneName) {
 		this.BiominerGeneName = biominerGeneName;
 	}

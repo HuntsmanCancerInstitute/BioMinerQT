@@ -96,20 +96,6 @@ var filters = angular.module('filters', [])
     }
 ])
 
-.filter('lookupAnalysisType', [
-	function() {
-		return function(input,analysisTypeList) {
-			var display = input;
-			for (var x in analysisTypeList) {
-				if (analysisTypeList[x].idx == input) {
-					display = analysisTypeList[x].type;
-					break;
-				}
-			}
-			return display;
-		};
-	}
-])
 
 .filter('startFrom', [
    function() {

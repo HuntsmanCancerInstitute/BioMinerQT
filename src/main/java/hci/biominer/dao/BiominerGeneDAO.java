@@ -33,26 +33,11 @@ public class BiominerGeneDAO {
 	public void deleteBiominerGenes() throws Exception{
 		Session session = this.getCurrentSession();
 		
-		Query q1 = session.createQuery("from ExternalGene");
-		List<ExternalGene> egList = q1.list();
-		List<Long> bidList = new ArrayList<Long>();
-		for (ExternalGene eg: egList) {
-			bidList.add(eg.getBiominerGene().getIdBiominerGene());
-		}
-		
-		Query q2 = null;
-		if (bidList.size() == 0) {
-			q2 = session.createQuery("from BiominerGene");
-		} else {
-			q2 = session.createQuery("select b from BiominerGene b where b.idBiominerGene not in (:idList) ");
-			q2.setParameterList("idList", bidList);
-		}
-	
-		List<BiominerGene> bgList = q2.list();
-		
-		session.beginTransaction();
+		Query q1 = session.createQuery("select b from BiominerGene b where b.externalGenes is empty");
+		List<BiominerGene> bgList = q1.list();
 		
 		try {
+			session.beginTransaction();
 			int counter = 0;
 			for (BiominerGene bg: bgList) {
 				session.delete(bg);
@@ -70,7 +55,6 @@ public class BiominerGeneDAO {
 			session.getTransaction().rollback();
 			throw ex;
 		}
-		
 		session.close();
 	}
 	

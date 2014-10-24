@@ -110,6 +110,7 @@ public class AnnotationFileParser {
 			
 			br.close();
 		} catch (IOException ioex) {
+			ioex.printStackTrace();
 			throw new Exception(ioex.getMessage());
 		}
 		
@@ -135,19 +136,39 @@ public class AnnotationFileParser {
 		}
 		
 		public void setEnsembl(String ensembl) {
-			this.ensembl = ensembl;
+			if (ensembl != null) {
+				this.ensembl = ensembl.toUpperCase();
+			} else {
+				this.ensembl = null;
+			}
+			
 		}
 		
 		public void setHugo(String hugo) {
-			this.hugo = hugo;
+			if (hugo != null) {
+				this.hugo = hugo.toUpperCase();
+			} else {
+				this.hugo = null;
+			}
+			
 		}
 		
 		public void setUcsc(String ucsc) {
-			this.ucsc = ucsc;
+			if (ucsc != null) {
+				this.ucsc = ucsc.toUpperCase();
+			} else {
+				this.ucsc = null;
+			}
+			
 		}
 		
 		public void setRefseq(String refseq) {
-			this.refseq = refseq;
+			if (refseq != null) {
+				this.refseq = refseq.toUpperCase();
+			} else {
+				this.refseq = null;
+			}
+			
 		}
 		
 		public String getEnsembl() {

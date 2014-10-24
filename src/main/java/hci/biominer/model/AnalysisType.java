@@ -3,24 +3,29 @@ package hci.biominer.model;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GenerationType;
 import javax.persistence.Table;
 import javax.persistence.Column;
 import javax.persistence.Id;
 import javax.persistence.GeneratedValue;
 
+import hci.biominer.util.Enumerated.*;
+
 @Entity
 @Table(name="AnalysisType")
 public class AnalysisType {
 	@Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="idAnalysisType")
 	Long idAnalysisType;
 	
 	@Column(name="type")
-	String type;
+	@Enumerated(EnumType.STRING)
+	AnalysisTypeEnum type;
 	
-  @Column(name="codeResultTypes")
+	@Column(name="codeResultTypes")
 	String codeResultTypes;
 
 	
@@ -28,15 +33,15 @@ public class AnalysisType {
 		
 	}
 	
-	public AnalysisType(String type) {
+	public AnalysisType(AnalysisTypeEnum type) {
 		this.type = type;
 	}
 
-	public String getType() {
+	public AnalysisTypeEnum getType() {
 		return type;
 	}
 
-	public void setType(String type) {
+	public void setType(AnalysisTypeEnum type) {
 		this.type = type;
 	}
 

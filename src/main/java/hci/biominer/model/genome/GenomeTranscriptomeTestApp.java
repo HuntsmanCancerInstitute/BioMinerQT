@@ -5,13 +5,12 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 
+import hci.biominer.model.GenericResult;
 import hci.biominer.model.intervaltree.IntervalTree;
 import hci.biominer.parser.GenomeParser;
 import hci.biominer.parser.VCFIntervalTreeParser;
 import hci.biominer.parser.ChipParser;
 import hci.biominer.parser.ChipIntervalTreeParser;
-import hci.biominer.model.chip.ChipIntervalTreeSerialized;
-import hci.biominer.model.chip.Chip;
 import hci.biominer.util.ModelUtil;
 
 public class GenomeTranscriptomeTestApp {
@@ -68,33 +67,16 @@ public class GenomeTranscriptomeTestApp {
 			timer.start();
 			System.out.println("[TEST] Creating Interval Tree from Parsed ChIP.. ");
 			ChipIntervalTreeParser citp = new ChipIntervalTreeParser(chipParsed, genome);
-			HashMap<String, IntervalTree<Chip>> chipItFull1 = citp.getChromNameIntervalTree();
-			IntervalTree<Chip> chipItChr171 = chipItFull1.get("17");
+			HashMap<String, IntervalTree<GenericResult>> chipItFull1 = citp.getChromNameIntervalTree();
+			IntervalTree<GenericResult> chipItChr171 = chipItFull1.get("17");
 			System.out.println("[TEST] Elapsed time: " + timer.stop());
 			
-			
-			//Load serialized Chip object
-			timer.start();
-			System.out.println("[TEST] Loading serialized interval tree.. ");
-			HashMap<String, IntervalTree<Chip>> chipItFull2 = ChipIntervalTreeSerialized.getSerializedTree(chipIT);
-			IntervalTree<Chip> chipItChr172 = chipItFull2.get("17");
-			System.out.println("[TEST] Elapsed time: " + timer.stop());
 			
 			//fetch Chip over BRCA1
 			timer.start();
 			System.out.println("[TEST] Searching Chip IntervalTree...");
-			ArrayList<Chip> chipLines1 = chipItChr171.search(brca1.getStart(), brca1.getStop());
+			ArrayList<GenericResult> chipLines1 = chipItChr171.search(brca1.getStart(), brca1.getStop());
 			System.out.println("[TEST] Elapsed time: " + timer.stop());
-			
-			ArrayList<Chip> chipLines2 = chipItChr172.search(brca1.getStart(), brca1.getStop());
-			
-			for (int i=0;i<chipLines1.size();i++) {
-				String out1 = chipLines1.get(i).toString();
-				String out2 = chipLines2.get(i).toString();
-				if (!out1.equals(out2)) {
-					System.out.println(String.format("Lines don't match: %s vs %s",out1,out2));
-				}
-			}
 			
 			System.out.println("[TEST] Mcf7Pol2 Chip regions intersecting BRCA1 regions: "+chipLines1.size());
 			String chipRes = ModelUtil.arrayListToString(chipLines1, "\n");

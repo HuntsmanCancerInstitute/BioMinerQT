@@ -102,4 +102,14 @@ public class ExternalGeneDAO {
 		
 		session.close();
 	}
+	
+	public List<ExternalGene> getExternalGenesByOrganismBuild(OrganismBuild ob) {
+		Session session = this.getCurrentSession();
+		Query query = session.createQuery("select e from ExternalGene e where organismBuild = :ob");
+		query.setParameter("ob", ob);
+		List<ExternalGene> egList = query.list();
+		session.close();
+		return egList;
+	}
+	
 }

@@ -24,14 +24,19 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import hci.biominer.model.genome.Genome;
+import hci.biominer.model.AnalysisType;
+import hci.biominer.model.ExternalGene;
 import hci.biominer.model.OrganismBuild;
 import hci.biominer.model.Project;
 import hci.biominer.model.FileUpload;
+import hci.biominer.service.AnalysisTypeService;
+import hci.biominer.service.ExternalGeneService;
 import hci.biominer.service.FileUploadService;
 import hci.biominer.service.OrganismBuildService;
 import hci.biominer.service.ProjectService;
 import hci.biominer.parser.ChipParser;
 import hci.biominer.parser.GenomeParser;
+import hci.biominer.parser.RnaSeqParser;
 import hci.biominer.util.BiominerProperties;
 import hci.biominer.util.Enumerated.FileTypeEnum;
 import hci.biominer.util.GenomeBuilds;
@@ -50,7 +55,13 @@ public class FileController {
 	private ProjectService projectService;
 	
 	@Autowired
+	private ExternalGeneService externalGeneService;
+	
+	@Autowired
 	private OrganismBuildService organismBuildService;
+	
+	@Autowired
+	private AnalysisTypeService analysisTypeService;
 	
 	private Genome fetchGenome(OrganismBuild ob) throws Exception {
     	try {
@@ -319,20 +330,32 @@ public class FileController {
 	 * @param end: column index stop
 	 * @param log: column index log ratio
 	 * @param fdr: column index fdr
+	 * @param idFileUpload: reference to the uploaded file
+	 * @param idAnalysisType: reference to the analysis type
 	 * @return FileMap: parsed file information
 	 ****************************************************/
 	@RequestMapping(value="parse/chip", method = RequestMethod.POST)
 	public @ResponseBody 
-	FileUpload upload(@RequestParam("inputFile") String input, @RequestParam("outputFile") String output,
-			@RequestParam("Chromosome") Integer chrom, @RequestParam("Start") Integer start, @RequestParam("End") Integer end,
-			@RequestParam("Log2Ratio") Integer log, @RequestParam("FDR") Integer fdr, @RequestParam("build") Long idOrganismBuild, 
-			@RequestParam("analysisID") String id, @RequestParam("-10*log10(FDR)") Integer logFDR, @RequestParam("idFileUpload") Long idParent) {
+	FileUpload parseChip(
+			@RequestParam("inputFile") String input, 
+			@RequestParam("outputFile") String output,
+			@RequestParam("Chromosome") Integer chrom, 
+			@RequestParam("Start") Integer start, 
+			@RequestParam("End") Integer end,
+			@RequestParam("Log2Ratio") Integer log, 
+			@RequestParam("FDR") Integer fdr, 
+			@RequestParam("build") Long idOrganismBuild, 
+			@RequestParam("analysisID") String id, 
+			@RequestParam("-10*log10(FDR)") Integer logFDR, 
+			@RequestParam("idFileUpload") Long idParent,
+			@RequestParam("idAnalysisType") Long idAnalysisType) {
  
 		FileUpload outputMeta = new FileUpload();
 		
 		try {
 			
 			OrganismBuild gb = this.organismBuildService.getOrganismBuildById(idOrganismBuild);
+			AnalysisType at = this.analysisTypeService.getAnalysisTypeById(idAnalysisType);
 			Genome genome = null;
 			
 			try {
@@ -394,6 +417,7 @@ public class FileController {
 			
 			outputMeta.setType(FileTypeEnum.IMPORTED);
 			outputMeta.setProject(parent.getProject());
+			outputMeta.setAnalysisType(at);
 			
 			FileUpload existing = this.fileUploadService.getFileUploadByName(outputMeta.getName(), outputMeta.getType(), outputMeta.getProject());
 			if (existing == null) {
@@ -404,6 +428,110 @@ public class FileController {
 			
 		
 		} catch (Exception ioex) {
+			outputMeta.setName(output);
+			outputMeta.setSize(null);
+			outputMeta.setState(FileStateEnum.FAILURE);
+			outputMeta.setMessage(ioex.getMessage());
+		}
+		
+		return outputMeta;
+	}
+	
+	/***************************************************
+	 * URL: /submit/parse/rnaseq/
+	 * post(): call rnaseq parser
+	 * @param input : input filename
+	 * @param output: output filename
+	 * @param gene: gene name
+	 * @param log: column index log ratio
+	 * @param fdr: column index fdr
+	 * @param idFileUpload: reference to the uploaded file
+	 * @param idAnalysisType: reference to the analysis type
+	 * @return FileMap: parsed file information
+	 ****************************************************/
+	@RequestMapping(value="parse/rnaseq", method = RequestMethod.POST)
+	public @ResponseBody 
+	FileUpload parseRnaseq(
+			@RequestParam("inputFile") String input, 
+			@RequestParam("outputFile") String output,
+			@RequestParam("Gene") Integer gene,
+			@RequestParam("Log2Ratio") Integer log, 
+			@RequestParam("FDR") Integer fdr, 
+			@RequestParam("build") Long idOrganismBuild, 
+			@RequestParam("analysisID") String id, 
+			@RequestParam("-10*log10(FDR)") Integer logFDR, 
+			@RequestParam("idFileUpload") Long idParent,
+			@RequestParam("idAnalysisType") Long idAnalysisType) {
+ 
+		FileUpload outputMeta = new FileUpload();
+		
+		try {
+			
+			OrganismBuild gb = this.organismBuildService.getOrganismBuildById(idOrganismBuild);
+			AnalysisType at = this.analysisTypeService.getAnalysisTypeById(idAnalysisType);
+			
+			List<ExternalGene> egList = this.externalGeneService.getExternalGenesByOrganismBuild(gb);
+			
+			File importDir = new File(getRawDirectory(),id);
+			File parseDir = new File(getParsedDirectory(),id);
+			if (!parseDir.exists()) {
+				parseDir.mkdir();
+			}
+			File parseStub = new File("/parsed/",id);
+			
+			File inputFile = new File(importDir, input);
+			File outputFile = new File(parseDir, output);
+			
+			//Add gz extension if it doesn't exist
+			if (!outputFile.getName().endsWith(".gz")) {
+				outputFile = new File(outputFile.getParent(),outputFile.getName() + ".gz");
+			}
+			
+			//Run parser, throw errors if log2 or FDR are not set
+			String warningMessage = "";
+			if (fdr != -1) {
+				RnaSeqParser rp = new RnaSeqParser(inputFile, outputFile, gene, fdr, log, false, gb, egList);
+				warningMessage = rp.run();
+			} else if (logFDR != 1) {
+				RnaSeqParser rp = new RnaSeqParser(inputFile, outputFile, gene, logFDR, log, true, gb, egList);
+				warningMessage = rp.run();
+			} else {
+				outputMeta.setName(output);
+				outputMeta.setSize(null);
+				outputMeta.setMessage("Neither FDR or 10*log10(FDR) were set.");
+				return outputMeta;
+			}
+			
+			//Set result messages
+			if (warningMessage.equals("")) {
+				outputMeta.setState(FileStateEnum.SUCCESS);
+				outputMeta.setMessage("");
+			} else {
+				outputMeta.setState(FileStateEnum.WARNING);
+				outputMeta.setMessage(warningMessage);
+			}
+		
+			outputMeta.setName(output);
+			outputMeta.setDirectory(parseStub.getPath());
+			outputMeta.setSize(new Long(outputFile.length()));
+			
+			
+			FileUpload parent = this.fileUploadService.getFileUploadById(idParent);		
+			
+			outputMeta.setType(FileTypeEnum.IMPORTED);
+			outputMeta.setProject(parent.getProject());
+			outputMeta.setAnalysisType(at); 
+			
+			FileUpload existing = this.fileUploadService.getFileUploadByName(outputMeta.getName(), outputMeta.getType(), outputMeta.getProject());
+			if (existing == null) {
+				this.fileUploadService.addFileUpload(outputMeta);
+			} else {
+				this.fileUploadService.updateFileUpload(existing.getIdFileUpload(),outputMeta);
+			}
+			
+		
+		} catch (Exception ioex) {
+			ioex.printStackTrace();
 			outputMeta.setName(output);
 			outputMeta.setSize(null);
 			outputMeta.setState(FileStateEnum.FAILURE);

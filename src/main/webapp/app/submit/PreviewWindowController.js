@@ -1,6 +1,6 @@
 angular.module("upload").controller("PreviewWindowController", [
- '$scope', '$modalInstance','filename','previewData',
-function ($scope, $modalInstance, filename, previewData) {
+ '$scope', '$modalInstance','filename','previewData','analysisType',
+function ($scope, $modalInstance, filename, previewData, analysisType) {
 	//passed in to the controller
 	$scope.filename = filename;
 	$scope.previewData = previewData;
@@ -10,26 +10,37 @@ function ($scope, $modalInstance, filename, previewData) {
 	//Hide/show instructions
 	$scope.alertHover = false;
 	 
-	//I am hard-coding ChIP-seq columns for now.  This should be passed in to the controller once we have
-	//the other analysis types ready.
-	$scope.chipColumns = [];
-	$scope.chipColumns.push({name: "Ignore", index: null, link: -1});
-	$scope.chipColumns.push({name: "Chromosome", index: -1, link: -1});
-	$scope.chipColumns.push({name: "Start", index: -1, link: -1});
-	$scope.chipColumns.push({name: "End", index: -1, link: -1});
-	$scope.chipColumns.push({name: "Log2Ratio", index: -1, link: -1});
-	$scope.chipColumns.push({name: "FDR", index: -1, link: 6});
-	$scope.chipColumns.push({name: "-10*log10(FDR)", index: -1, link: 5});
+	$scope.analysisColumns = [];
 	
-	//Create global version of chipColumns.  This is used to track the global status of the chipSeq columns.
-	$scope.globalColumns = angular.copy($scope.chipColumns);
+	if (analysisType.type == "ChIPSeq") {
+		
+		$scope.analysisColumns.push({name: "Ignore", index: null, link: -1});
+		$scope.analysisColumns.push({name: "Chromosome", index: -1, link: -1});
+		$scope.analysisColumns.push({name: "Start", index: -1, link: -1});
+		$scope.analysisColumns.push({name: "End", index: -1, link: -1});
+		$scope.analysisColumns.push({name: "Log2Ratio", index: -1, link: -1});
+		$scope.analysisColumns.push({name: "FDR", index: -1, link: 6});
+		$scope.analysisColumns.push({name: "-10*log10(FDR)", index: -1, link: 5});
+	} else if (analysisType.type == "RNASeq") {
+		$scope.analysisColumns.push({name: "Ignore", index: null, link: -1});
+		$scope.analysisColumns.push({name: "Gene", index: -1, link: -1});
+		$scope.analysisColumns.push({name: "Log2Ratio", index: -1, link: -1});
+		$scope.analysisColumns.push({name: "FDR", index: -1, link: 4});
+		$scope.analysisColumns.push({name: "-10*log10(FDR)", index: -1, link: 3});
+	} else {
+		console.log("Uh-oh");
+	}
+	
+	
+	//Create global version of analysisColumns.  This is used to track the global status of the chipSeq columns.
+	$scope.globalColumns = angular.copy($scope.analysisColumns);
 	
 	//create header and dropdown objects (The dropdown menus are generated from copies of the chipColumn objects.  The index
-	//paramter isn't used here, but it seems silly to have two version of chipColumns...)
+	//paramter isn't used here, but it seems silly to have two version of analysisColumns...)
 	$scope.header = [];
 	if ($scope.previewData.length > 0) {
 		for (var i=0; i<$scope.previewData[0].length; i++) {
-			var h = {option: "Ignore", dropdown : angular.copy($scope.chipColumns)};
+			var h = {option: "Ignore", dropdown : angular.copy($scope.analysisColumns)};
 			$scope.header.push(h);
 		}
 	}
