@@ -1,7 +1,7 @@
 
 <div class="container-fluid">
    <div class="container-fluid">
-   <h4>Project</h4>
+   <h5>Project</h5>
 	 <form class="form-horizontal" name="editProjectForm">
 		<fieldset>
 		   <div class="row">
@@ -10,8 +10,8 @@
 				<div class="form-group">
 				  <label class="col-md-4 control-label" for="project_name">Name</label>  
 				  <div class="col-md-6">
-				  <input id="project_name" ng-model="project.name" name="project_name" placeholder="name" class="form-control input-md" required="" type="text">
-				    
+				  <input ng-show="projectEditMode" id="project_name" ng-model="editedProject.name" name="project_name" placeholder="name" class="form-control input-md" required="" type="text">
+				  <h5 ng-hide="projectEditMode"><label ng-hide="projectEditMode" class="label label-default">{{project.name}}</label></h5> 
 				  </div>
 				</div>
 				
@@ -19,14 +19,16 @@
 				<div class="form-group">
 				  <label class="col-md-4 control-label" for="project_description">Description</label>
 				  <div class="col-md-4">                     
-				    <textarea class="form-control" id="project_description" ng-model="project.description" name="project_description"></textarea>
+				    <textarea ng-show="projectEditMode" class="form-control" id="project_description" ng-model="editedProject.description" name="project_description"></textarea>
+				  	<h5 ng-hide="projectEditMode"><label class="label label-default">{{project.description}}</label></h5>
 				  </div>
 				</div>
 				
 				<div class="form-group">
 				  <label class="col-md-4 control-label" for="project_urls">Data URLs</label>
 				  <div class="col-md-4">                     
-				    <textarea class="form-control" id="project_urls" ng-model="project.dataUrls" name="project_urls"></textarea>
+				    <textarea ng-show="projectEditMode" class="form-control" id="project_urls" ng-model="editedProject.dataUrls" name="project_urls"></textarea>
+				    <h5 ng-hide="projectEditMode"><label class="label label-default">{{project.dataUrls}}</label></h5>
 				  </div>
 				</div>
 				
@@ -34,36 +36,45 @@
 				<div class="form-group">
 				  <label class="col-md-4 control-label" for="species_build">Species and Genome Build</label>
 				  <div class="col-md-6">
-				    <select id="species_build" ng-model="project.organismBuild.idOrganismBuild"  ng-options="gb.idOrganismBuild as gb.name group by gb.organism.common for gb in organismBuildList" class="form-control" required>
-				    </select>
+				    <select ng-show="projectEditMode" id="species_build" ng-model="editedProject.organismBuild.idOrganismBuild"  ng-options="gb.idOrganismBuild as gb.name group by gb.organism.common for gb in organismBuildList" class="form-control" required/>
+				    <h5 ng-hide="projectEditMode"><label class="label label-default">{{project.organismBuild.name}}</label></h5>
 				  </div>
 				</div>
 				
 				<!-- Select Basic -->
 				<div class="form-group">
 				  <label class="col-md-4 control-label" for="lab">Lab</label>
-				  	<div class="col-md-6">
-		  		    	<select data-placeholder="Choose labs..." ng-model="project.labs" multiple chosen class="col-md-6 chosen-select" ng-options="lab as (lab.first + ' ' + lab.last + ' lab' ) for lab in labList track by lab.idLab" required></select> 
+				  	<div class="col-md-6" ng-show="projectEditMode">
+		  		    	<select  data-placeholder="Choose labs..." ng-model="editedProject.labs" multiple chosen class="col-md-6 chosen-select" ng-options="lab as (lab.first + ' ' + lab.last + ' lab' ) for lab in labList track by lab.idLab" required/>
+				    </div>
+				    <div class="col-md-6" ng-hide="projectEditMode">
+				    	<ul ng-repeat="lab in project.labs"><h5><label class="label label-default" >{{lab.first}}  {{lab.last}} lab</label></h5></ul>
 				    </div>
 				</div>
 				
 				<!-- Select Basic -->
 				<div class="form-group">
 				  <label class="col-md-4 control-label" for="lab">Institute</label>
-				  	<div class="col-md-6">
-		  		    	<select data-placeholder="Choose institutes..." ng-model="project.institutes" multiple chosen class="col-md-6 chosen-select" ng-options="inst as inst.name for inst in instituteList track by inst.idInstitute" required></select> 
+				  	<div class="col-md-6" ng-show="projectEditMode">
+		  		    	<select data-placeholder="Choose institutes..." ng-model="editedProject.institutes" multiple chosen class="col-md-6 chosen-select" ng-options="inst as inst.name for inst in instituteList track by inst.idInstitute" required/>
+				    </div>
+				    <div class="col-md-6" ng-hide="projectEditMode">
+				    	<ul ng-repeat="institute in project.institutes"><h5><label class="label label-default" >{{institute.name}}</label></h5></ul>
 				    </div>
 				</div>
 				
 				<!-- Multiple Radios (inline) -->
 				<div class="form-group">
 				  <label class="col-md-4 control-label" for="visibility">Visibility</label>
-				  <div class="col-md-4"> 
+				  <div class="col-md-6" ng-show="projectEditMode"> 
 				    <label class="radio-inline" ng-repeat="visibility in projectVisibilities">
-				      <input name="visibility"  ng-value="visibility.enum" ng-model="project.visibility" type="radio">
+				      <input name="visibility"  ng-value="visibility.enum" ng-model="editedProject.visibility" type="radio">
 				         {{ visibility.name }}
 				      </input>
 				    </label> 
+				  </div>
+				  <div class="col-md-6" ng-hide="projectEditMode">
+				  	<h5><label class="label label-default" >{{project.visibility}}</label></h5>
 				  </div>		  		  
 				</div>
 			</div>
@@ -73,7 +84,9 @@
 				<div class="form-group">
 				  <label class="control-label" for="save_analysis_project_button"></label>
 				  <div >
-				    <button id="save_analysis_project_button" name="save_analysis_project_button" class="btn btn-primary" ng-click="edit()" ng-disabled="editProjectForm.$invalid">Save</button>
+				    <button id="save_analysis_project_button" name="save_analysis_project_button" class="btn btn-primary" ng-click="save()" ng-hide="!projectEditMode" ng-disabled="editProjectForm.$invalid">Save</button>
+				    <button id="edit_analysis_project_button" name="edit_analysis_project_button" class="btn btn-primary" ng-click="edit()" ng-hide="projectEditMode">Edit</button>
+				    <button id="cancel_analysis_project_button" name="cancel_analysis_project_button" class="btn btn-danger" ng-click="cancel()" ng-hide="!projectEditMode">Cancel</button>
 				  </div>
 				</div>
 			</div>
@@ -83,12 +96,12 @@
 	</form>
   </div>
 <hr>
-<h4>Samples</h4>
+<h5>Samples</h5>
 <ng:include src="'app/submit/samples.html'"></ng:include>		
 
 	
 <hr>
-<h4>Data Tracks</h4>
+<h5>Data Tracks</h5>
 <ng:include src="'app/submit/datatracks.html'"></ng:include>		
 
 		

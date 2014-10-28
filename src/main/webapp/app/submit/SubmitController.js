@@ -45,6 +45,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
     $scope.sampleEditMode = false;
     $scope.datatrackEditMode = false;
     $scope.resultEditMode = false;
+    $scope.projectEditMode = false;
     
     $rootScope.helpMessage = "<p>Placeholder for data submission help.</p>";
     
@@ -178,6 +179,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
     
     //Create project
     $scope.add = function(project) {
+    	
     	var lids = [];
 		var iids = [];
 		
@@ -200,12 +202,24 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
 			params: {name: project.name, description: project.description, idLab: lids, idOrganismBuild: buildId,
 				idInstitute: iids, visibility: "PUBLIC"},
 		}).success(function(data) {
-			$scope.loadProjects(data);			
+			$scope.loadProjects(data);
+			$scope.editedProject = {};
 		});
 	};
 	
-	//Update project
 	$scope.edit = function() {
+		$scope.editedProject = angular.copy($scope.project);
+		$scope.projectEditMode = true;
+	};
+	
+	$scope.cancel = function() {
+		$scope.editedProject = {};
+    	$scope.projectEditMode = false;
+    };
+	
+	//Update project
+	$scope.save = function() {
+		$scope.project = $scope.editedProject;
 		var lids = [];
 		var iids = [];
 		
@@ -232,7 +246,10 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
 			$scope.loadProjects($scope.projectId);
 		});
 		
+		$scope.projectEditMode = false;
     };
+    
+    
     
     //Select project
     $scope.select = function(id) {
@@ -302,10 +319,11 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
 	
 	$scope.clearSample = function() {
 		$scope.sample = {};
+		$scope.sampleEditMode = false;
 	};
 
 	$scope.editSample = function(sample) {
-		$scope.sample = sample;
+		$scope.sample = angular.copy(sample);
 		$scope.sampleEditMode = true;
 		
 		console.log($scope.samplePrepList);
@@ -386,10 +404,11 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
 	 *********************/
 	$scope.clearDataTrack = function() {
 		$scope.datatrack = {};
+		$scope.datatrackEditMode = false;
 	};
 	
 	$scope.editDataTrack = function(datatrack) {
-		$scope.datatrack = datatrack;
+		$scope.datatrack = angular.copy(datatrack);
 		$scope.datatrackEditMode = true;
     };
 	
@@ -461,10 +480,11 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
 	
 	$scope.clearResult = function() {
 		$scope.result = {};
+		$scope.resultEditMode = false;
 	};
 
 	$scope.editResult = function(result) {
-		$scope.result = result;
+		$scope.result = angular.copy(result);
 		$scope.resultEditMode = true;
     };
 	
@@ -667,7 +687,21 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
 		console.log($scope.result.analysisType);
 	});
 	
+	/****************
+	 * Hide/Show controls
+	 */
 	
+	$scope.hideSampleControls = function(sample) {
+		sample.show = !sample.show;
+	};
+	
+	$scope.hideResultControls = function(result) {
+		result.show = !result.show;
+	};
+	
+	$scope.hideDatatrackControls = function(datatrack) {
+		datatrack.show = !datatrack.show;
+	};
 	
 
 	

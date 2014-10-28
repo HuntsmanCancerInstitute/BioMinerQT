@@ -4,6 +4,14 @@
 
 var filters = angular.module('filters', [])
 
+.filter('newlines', [
+      function() {
+    	  return function(text){
+    		  return text.replace(/\n/g, '<br/>');
+    	  };
+      }
+])
+
 .filter('interpolate', ['version', 
     function (version) {
     	return function (text) {

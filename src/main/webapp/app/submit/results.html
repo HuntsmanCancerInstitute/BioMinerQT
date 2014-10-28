@@ -115,7 +115,7 @@
 			        </tr>
 			    </thead>
 			    <tbody>
-			        <tr ng-repeat="result in results">
+			        <tr ng-repeat="result in results" ng-mouseenter="hideResultControls(result)" ng-mouseleave="hideResultControls(result)">
 			            <td>{{result.name}}</td>
 			            <td>{{result.description}}</td>
 			            <td>{{result.date | date:'MM/dd/yyyy'}}</td>
@@ -124,13 +124,14 @@
 			            <td><div ng-repeat="sample in result.samples">{{sample.name}}<br></div></td>
 			            <td><div ng-repeat="dt in result.dataTracks">{{dt.name}}<br></div></td>
 			            <td>
-		                <button class="btn btn-sm btn-primary" ng-click="editResult(result)" data-toggle="tooltip" data-placement="top" title="edit">
-			        		<span class="glyphicon glyphicon-pencil"></span>
-		                </button>
-		                <button class="btn btn-sm btn-danger" ng-click="removeResult(result)" data-toggle="tooltip" data-placement="top" title="remove">
-		                 	<span class="glyphicon glyphicon-trash"></span>
-		                </button>
-			                
+				            <div ng-show="result.show">
+				            	<button class="btn btn-sm btn-primary" ng-click="editResult(result)" data-toggle="tooltip" data-placement="top" title="edit">
+					        		<span class="glyphicon glyphicon-pencil"></span>
+				                </button>
+				                <button class="btn btn-sm btn-danger" ng-click="removeResult(result)" data-toggle="tooltip" data-placement="top" title="remove">
+				                 	<span class="glyphicon glyphicon-trash"></span>
+				                </button>
+				            </div>
 			            </td>
 
 			        </tr>

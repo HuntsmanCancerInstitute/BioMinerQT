@@ -44,16 +44,19 @@
 			        </tr>
 			    </thead>
 			    <tbody>
-			        <tr ng-repeat="datatrack in datatracks">
+			        <tr ng-repeat="datatrack in datatracks" ng-mouseenter="hideDatatrackControls(datatrack)" ng-mouseleave="hideDatatrackControls(datatrack)">
 			            <td style="width: 30%;">{{datatrack.name}}</td>
 			            <td style="width: 55%;">{{datatrack.url}}</td>
 			            <td style="width: 15%;"">
-			                <button class="btn btn-sm btn-primary" ng-click="editDataTrack(datatrack)" data-toggle="tooltip" data-placement="top" title="edit">
+			                <div ng-show=datatrack.show>
+			                 <button class="btn btn-sm btn-primary" ng-click="editDataTrack(datatrack)" data-toggle="tooltip" data-placement="top" title="edit">
 								<span class="glyphicon glyphicon-pencil"></span>
-							</button>
-			                <button class="btn btn-sm btn-danger" ng-click="removeDataTrack(datatrack)" data-toggle="tooltip" data-placement="top" title="remove">
+							 </button>
+			                 <button class="btn btn-sm btn-danger" ng-click="removeDataTrack(datatrack)" data-toggle="tooltip" data-placement="top" title="remove">
 			                 	<span class="glyphicon glyphicon-trash"></span>
-			                </button>
+			                 </button>
+			                </div>
+			               
 			            </td>
 			        </tr>
 			    </tbody>
