@@ -58,8 +58,6 @@ public class FileUpload {
 	@JsonIgnore
 	Analysis analysis;
 	
-	
-	
 
 	public FileUpload() {
 		

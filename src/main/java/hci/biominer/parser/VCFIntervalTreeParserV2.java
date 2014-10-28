@@ -1,9 +1,13 @@
 package hci.biominer.parser;
 
-import hci.biominer.model.AnalysisType;
 import hci.biominer.model.GenericResult;
+import hci.biominer.model.genome.Chromosome;
+import hci.biominer.model.genome.Genome;
 import hci.biominer.model.intervaltree.Interval;
 import hci.biominer.model.intervaltree.IntervalTree;
+import hci.biominer.util.Enumerated.VarLocationEnum;
+import hci.biominer.util.Enumerated.VarTypeEnum;
+import hci.biominer.util.ModelUtil;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -12,27 +16,23 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
-import hci.biominer.model.genome.Chromosome;
-import hci.biominer.model.genome.Genome;
-import hci.biominer.util.ModelUtil;
-import hci.biominer.util.Enumerated;
 
-public class ChipIntervalTreeParser {
+public class VCFIntervalTreeParserV2 {
 	private HashMap<String,IntervalTree<GenericResult>> invlTree = null;
-	private File chipFile = null;
+	private File vcfFile = null;
 	private Genome genome = null;
 	private int numParsedLines = 0;
 
-	public ChipIntervalTreeParser(File chipFile, Genome genome) throws Exception{
-		if (!chipFile.canRead()) {
-			throw new Exception(String.format("Specified ChIP file does not exist or can't be read: %s",this.chipFile.getAbsolutePath()));
+	public VCFIntervalTreeParserV2(File vcfFile, Genome genome) throws Exception{
+		if (!vcfFile.canRead()) {
+			throw new Exception(String.format("Specified VCF file does not exist or can't be read: %s",this.vcfFile.getAbsolutePath()));
 		}
-		this.chipFile = chipFile;
+		this.vcfFile = vcfFile;
 		this.genome = genome;
 	}
 	
-	public void parseChip() throws Exception{
-		BufferedReader br = ModelUtil.fetchBufferedReader(this.chipFile);
+	public void parseVcf() throws Exception{
+		BufferedReader br = ModelUtil.fetchBufferedReader(this.vcfFile);
 		HashMap<String,ArrayList<Interval<GenericResult>>> invlHash = new HashMap<String,ArrayList<Interval<GenericResult>>>();
 		LinkedHashMap<String, Chromosome> chromosomeName = genome.getNameChromosome();
 		
@@ -48,12 +48,33 @@ public class ChipIntervalTreeParser {
 				}
 				int start = Integer.parseInt(items[1]);
 				int end = Integer.parseInt(items[2]);
-				String fdr = items[3];
-				float log = Float.parseFloat(items[4]);
+				String reference = items[3];
+				String alternate = items[4];
+				Integer wild = Integer.parseInt(items[5]);
+				Integer het = Integer.parseInt(items[6]);
+				Integer mut = Integer.parseInt(items[7]);
+				Integer other = Integer.parseInt(items[8]);
+				String originalName = items[9];
+				String mappedName = items[10];
+				String dbSNP = items[13];
+				
+				VarTypeEnum varType = null;
+				VarLocationEnum varLocation = null;
+				
+				if (!items[11].equals("null")) {
+					varType = VarTypeEnum.valueOf(items[11]);
+				}
+				
+				if (!items[12].equals("null")) {
+					varLocation = VarLocationEnum.valueOf(items[12]);
+				}
+				
+				
 				
 				//Create intervals
 				GenericResult gr = new GenericResult();
-				gr.loadChipData(chrom,start,end,fdr,log, Enumerated.AnalysisTypeEnum.ChIPSeq);
+				gr.loadVariantData(chrom, start, end, reference, alternate, wild, het, mut, other, originalName, mappedName, varType, varLocation, dbSNP);
+				
 				Interval<GenericResult> invl = new Interval<GenericResult>(start,end,gr); 
 				
 				//Add to hash
@@ -81,8 +102,8 @@ public class ChipIntervalTreeParser {
 		}
 	}
 	
-	public File getChipFile() {
-		return this.chipFile;
+	public File getVcfFile() {
+		return this.vcfFile;
 	}
 	
 	public int getNumberParsedLines() {
@@ -91,9 +112,8 @@ public class ChipIntervalTreeParser {
 	
 	public HashMap<String,IntervalTree<GenericResult>> getChromNameIntervalTree() throws Exception {
 		if (invlTree == null) {
-			this.parseChip();
+			this.parseVcf();
 		}
 		return this.invlTree;
 	}
-
 }

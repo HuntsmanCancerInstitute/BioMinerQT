@@ -113,6 +113,7 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 		$scope.deleteSelected = function(collection) {
 			//Make sure files are unbound
 			var fileList = [];
+			
 			for (var i=0; i < collection.length; i++) {
 				var file = collection[i];
 				if (file.selected == true && file.isAnalysisSet) {
@@ -187,142 +188,156 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 			}
 				
 			if ($scope.selectedFiles.length > 0) {
-				$http({
-					url: "submit/parse/preview/",
-					method: "GET",
-					params: {name: $scope.selectedFiles[0].file.name, idProject: $scope.$parent.projectId}
-				}).success(function(data,status,headers,config) {
-			    	var modalInstance = $modal.open({
-			    		templateUrl: 'app/submit/previewWindow.html',
-			    		controller: 'PreviewWindowController',
-			    		windowClass: 'preview-dialog',
-			    		resolve: {
-			    			filename: function() {
-			    				return config.params.filename;
-			    			},
-			    			previewData: function() {
-			    				return data.previewData;
-			    			},
-							analysisType: function() {
-								return $scope.selectedAnalysisType;
-							}
-			    		}
-			    	});
-			    	
-			    	modalInstance.result.then(function (setColumns) {
-			    		$scope.columnDefs = setColumns;
-				    });
-				   
-				}).error(function(data) {
-					console.log("ARG!");
-				});
-			}
+				if ($scope.selectedAnalysisType.type == "Variant") {
+					$scope.columnDefs = {"variant": "variant"};
+					$scope.setFilenames();
+				} else {
+					$http({
+						url: "submit/parse/preview/",
+						method: "GET",
+						params: {name: $scope.selectedFiles[0].file.name, idProject: $scope.$parent.projectId}
+					}).success(function(data,status,headers,config) {
+				    	var modalInstance = $modal.open({
+				    		templateUrl: 'app/submit/previewWindow.html',
+				    		controller: 'PreviewWindowController',
+				    		windowClass: 'preview-dialog',
+				    		resolve: {
+				    			filename: function() {
+				    				return config.params.filename;
+				    			},
+				    			previewData: function() {
+				    				return data.previewData;
+				    			},
+								analysisType: function() {
+									return $scope.selectedAnalysisType;
+								}
+				    		}
+				    	});
+				    	
+				    	modalInstance.result.then(function (setColumns) {
+				    		$scope.columnDefs = setColumns;
+				    		$scope.setFilenames();
+					    });
+					   
+					}).error(function(data) {
+						console.log("ARG!");
+					});
+				}
+			}	
 		};
 		
 		/********************
 		 * When columnDefs is modified (presumabaly from parse), fire this code
 		 ********************/
-		$scope.$watch("columnDefs",function() {
-			if ($scope.columnDefs != null) {
-				var modalInstance = $modal.open({
-		    		templateUrl: 'app/submit/FilenameEditor.html',
-		    		controller: 'FilenameEditorController',
-		    		windowClass: 'filename-dialog',
-		    		resolve: {
-		    			selected: function() {
-		    				return $scope.selectedFiles;
-		    			}
-		    		}
-		    	});
-		    	
-		    	modalInstance.result.then(function (selectedFiles) {
-		    		$scope.selectedFiles = selectedFiles;
-			    });
-		    	
-			}
-			
-		});
+		$scope.setFilenames = function() {
+			var modalInstance = $modal.open({
+	    		templateUrl: 'app/submit/FilenameEditor.html',
+	    		controller: 'FilenameEditorController',
+	    		windowClass: 'filename-dialog',
+	    		resolve: {
+	    			selected: function() {
+	    				return $scope.selectedFiles;
+	    			}
+	    		}
+	    	});
+	    	
+	    	modalInstance.result.then(function (selectedFiles) {
+	    		$scope.selectedFiles = selectedFiles;
+	    		$scope.callParser();
+		    });
+		};
+		
 		
 		
 		/********************
 		 * When selectedFiles is modified (presumabaly from FilenameEditor), fire this code
 		 ********************/
-		$scope.$watch("selectedFiles",function() {
-			if ($scope.selectedFiles.length > 0 && $scope.columnDefs != null) {
+		$scope.callParser = function() {
+			var promise = $q.when(null);
+			for (var i=0; i<$scope.selectedFiles.length;i++) {
 				
-				var promise = $q.when(null);
-				for (var i=0; i<$scope.selectedFiles.length;i++) {
-					
-						//Create paramter list.  Column defs + file names
-						var params = {};
-						params.inputFile = $scope.selectedFiles[i].file.name;
-						params.outputFile = $scope.selectedFiles[i].outname;
-						params.idFileUpload = $scope.selectedFiles[i].file.idFileUpload;
-						
-						//This will be tied to build going forward!!
-						params.build = $scope.project.organismBuild.idOrganismBuild;
-						params.analysisID = $scope.$parent.projectId;
-						params.idAnalysisType = $scope.selectedAnalysisType.idAnalysisType;
-						
-						//Check to see if there are any matching files in list (match on name only)
-						var index = -1;
-						for (var j=0; j<$scope.files.importedFiles.length; j++) {
-							if (params.outputFile == $scope.files.importedFiles[j].name) {
-								index = j;
-								$scope.files.importedFiles[j].state = "started";
-								$scope.files.importedFiles[j].size = null;
-							}
-						}
-						
-						//If no match, create new file object.
-						if (index == -1) {
-							var f = {name: params.outputFile, state: "started"};
-							index = $scope.files.importedFiles.length;
-							$scope.files.importedFiles.push(f);
-						}
-						
-						//add columndefs to parameters.
-						for (var k=0; k<$scope.columnDefs.length; k++) {
-							params[$scope.columnDefs[k].name] = $scope.columnDefs[k].index;
-						}
-						
-						if ($scope.selectedAnalysisType.type == "ChIPSeq" || $scope.selectedAnalysisType.type == "Methylation") {
-							(function(params,index) {
-								promise = promise.then(function() {
-									return $http({
-										url: "submit/parse/chip",
-										method: "POST",
-										params: params
-									}).success(function(data) {
-										data.selected = false;
-										$scope.files.importedFiles[index] = data;
-									});
-								});
-							}(params,index));
-						} else if ($scope.selectedAnalysisType.type == "RNASeq") {
-							(function(params,index) {
-								promise = promise.then(function() {
-									return $http({
-										url: "submit/parse/rnaseq",
-										method: "POST",
-										params: params
-									}).success(function(data) {
-										data.selected = false;
-										$scope.files.importedFiles[index] = data;
-									});
-								});
-							}(params,index));
-						}
-						
+				//Create paramter list.  Column defs + file names
+				var params = {};
+				params.inputFile = $scope.selectedFiles[i].file.name;
+				params.outputFile = $scope.selectedFiles[i].outname;
+				params.idFileUpload = $scope.selectedFiles[i].file.idFileUpload;
+				
+				//This will be tied to build going forward!!
+				params.build = $scope.project.organismBuild.idOrganismBuild;
+				params.analysisID = $scope.$parent.projectId;
+				params.idAnalysisType = $scope.selectedAnalysisType.idAnalysisType;
+				
+				//Check to see if there are any matching files in list (match on name only)
+				var index = -1;
+				for (var j=0; j<$scope.files.importedFiles.length; j++) {
+					if (params.outputFile == $scope.files.importedFiles[j].name) {
+						index = j;
+						$scope.files.importedFiles[j].state = "started";
+						$scope.files.importedFiles[j].size = null;
+					}
 				}
 				
-				//When parsing is finished, clear out objects
-				promise.then(function() {
-					$scope.selectedFiles = [];
-					$scope.columnDefs = null;
-				});
-			}	
-		});
+				//If no match, create new file object.
+				if (index == -1) {
+					var f = {name: params.outputFile, state: "started"};
+					index = $scope.files.importedFiles.length;
+					$scope.files.importedFiles.push(f);
+				}
+				
+				//add columndefs to parameters.
+				for (var k=0; k<$scope.columnDefs.length; k++) {
+					params[$scope.columnDefs[k].name] = $scope.columnDefs[k].index;
+				}
+				
+				if ($scope.selectedAnalysisType.type == "ChIPSeq" || $scope.selectedAnalysisType.type == "Methylation") {
+					(function(params,index) {
+						promise = promise.then(function() {
+							return $http({
+								url: "submit/parse/chip",
+								method: "POST",
+								params: params
+							}).success(function(data) {
+								data.selected = false;
+								$scope.files.importedFiles[index] = data;
+							});
+						});
+					}(params,index));
+				} else if ($scope.selectedAnalysisType.type == "RNASeq") {
+					(function(params,index) {
+						promise = promise.then(function() {
+							return $http({
+								url: "submit/parse/rnaseq",
+								method: "POST",
+								params: params
+							}).success(function(data) {
+								data.selected = false;
+								$scope.files.importedFiles[index] = data;
+							});
+						});
+					}(params,index));
+				} else if ($scope.selectedAnalysisType.type == "Variant") {
+					(function(params,index) {
+						promise = promise.then(function() {
+							return $http({
+								url: "submit/parse/variant",
+								method: "POST",
+								params: params
+							}).success(function(data) {
+								data.selected = false;
+								$scope.files.importedFiles[index] = data;
+							});
+						});
+					}(params,index));
+				}
+					
+			}
+			
+			//When parsing is finished, clear out objects
+			promise.then(function() {
+				$scope.selectedFiles = [];
+				$scope.columnDefs = null;
+			});
+		};
 		
 		
 		/********************
@@ -374,9 +389,6 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 			}
 		},true);
 		
-		$scope.$watch('selectedAnalysisType',function() {
-			console.log($scope.selectedAnalysisType);
-		});
 		
 		
 		/********************

@@ -5,7 +5,7 @@
  * QueryController
  * @constructor
  */
-var query     = angular.module('query',     ['angularFileUpload','filters', 'services', 'directives', 'ui.bootstrap', 'chosen','angucomplete']);
+var query     = angular.module('query',     ['angularFileUpload','filters', 'services', 'directives', 'ui.bootstrap', 'chosen','angucomplete-alt']);
 
 
 angular.module("query").controller("QueryController", 
@@ -33,6 +33,7 @@ function($rootScope, $scope, $http, $modal, $anchorScroll, $upload, DynamicDicti
 	$scope.regions = "";
 	$scope.regionMargins = "1000";
 	$scope.genes = "";
+	$scope.searchGenes = null;
 	$scope.geneMargins = "1000";
 	$scope.selectedGeneAnnotations = [];
 	
@@ -271,6 +272,24 @@ function($rootScope, $scope, $http, $modal, $anchorScroll, $upload, DynamicDicti
 		return element;
 	};
 	
+	$scope.$watch("searchGenes",function() {
+		if ($scope.searchGenes != null) {
+			if ($scope.genes == "") {
+				$scope.genes = $scope.searchGenes.title;
+			} else {
+				$scope.genes = $scope.genes + "," + $scope.searchGenes.title;
+			}
+		}
+		
+	});
+	
+	$scope.addGene = function() {
+		if ($scope.searchGenes != null) {
+			
+			$scope.searchGenes = null;
+		}
+	};
+	
 	
 	$scope.buildQuerySummary = function() {
 		$scope.querySummary.length = 0;
@@ -431,6 +450,7 @@ function($rootScope, $scope, $http, $modal, $anchorScroll, $upload, DynamicDicti
 	$scope.runQuery = function() {
 		$scope.hasResults = false;
 		$scope.queryCurrentPage = 0;
+		
 		
 		// Build a summary of the query that is being performed.  This will display
 		// in the results panel

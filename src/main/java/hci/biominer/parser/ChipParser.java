@@ -53,14 +53,8 @@ public class ChipParser {
 		//Slurp header for number of columns:
 		Integer[] colsToCheck = new Integer[]{this.chromColumn,this.startColumn,this.endColumn,this.fdrColumn,this.logColumn};
 		String[] colNames = new String[] {"Chromsome Column","Start Column","End Column","FDR Column","Log Column"};
-		colMax = ColumnValidators.validateColumns(colsToCheck, colNames, this.inputFile);
+		colMax = ColumnValidators.validateColumns(colsToCheck, colNames, this.inputFile, false);
 		
-		try {
-			this.run();
-		} catch(Exception ex) {
-			//System.out.println(ex);
-			throw ex;
-		}
 	}
 	
 	/*
@@ -78,14 +72,14 @@ public class ChipParser {
 	 * Main workflow
 	 */
 	public String run() throws Exception {
-		System.out.println("[ChipParser] Processing input file...");
+		System.out.println("Processing input file...");
 		this.processData();
 		
 		//Write output
-		System.out.println("[ChipParser] Writing output file...");
+		System.out.println("Writing output file...");
 		this.writeData();
 		
-		System.out.println("[ChipParser] All done!\n");
+		System.out.println("All done!\n");
 		
 		return this.warningMessage;
 
@@ -112,7 +106,7 @@ public class ChipParser {
 			//Close handle
 			bw.close();
 		} catch (IOException ioex) {
-			throw new IOException(String.format("[ChipParser] Error writing to output file file: %s.",ioex.getMessage()));
+			throw new IOException(String.format("Error writing to output file file: %s.",ioex.getMessage()));
 		} finally {
 			try {
 				bw.close();
@@ -160,7 +154,7 @@ public class ChipParser {
 				//Make sure the line length matches header. Parsing might go OK if this fails, but I 
 				//think it's best to error out when the file is at all malformed.
 				if (parts.length != this.colMax) {
-					throw new Exception(String.format("[ChipParser] The number of columns in row %d ( %d ) doesn't match the header ( %d )\n",
+					throw new Exception(String.format("The number of columns in row %d ( %d ) doesn't match the header ( %d )\n",
 							lineCount,parts.length,this.colMax));
 				}
 				
@@ -176,7 +170,7 @@ public class ChipParser {
 			
 				//Check to sure end is greater than start
 				if (tempEnd <= tempStart) {
-					throw new Exception(String.format("[ChipParser] Region end %d is less than or equal to region start %d, exiting.",tempEnd,tempStart));
+					throw new Exception(String.format("Region end %d is less than or equal to region start %d, exiting.",tempEnd,tempStart));
 				}
 				
 				//Parse FDR
@@ -212,16 +206,16 @@ public class ChipParser {
 			
 			//Throw failure message or warning messages
 		    if (allTransformedFdrLessThanOne) {
-		    	this.warningMessage = "[ChipParser] WARNING: FDR formatting style was set as transformed, but all values were between 0 and 1.  Are you sure the FDR values were transformed? "
+		    	this.warningMessage = "WARNING: FDR formatting style was set as transformed, but all values were between 0 and 1.  Are you sure the FDR values were transformed? "
 						+ "FDR values are transformed using the formula -10 * log10(FDR)";		
 			} else if (allLog2RatioNeg) {
-				this.warningMessage = "[ChipParser] WARNING: All log2ratios were less than or equal to zero.  Are you sure the log2Ratios are formatted correctly?";
+				this.warningMessage = "WARNING: All log2ratios were less than or equal to zero.  Are you sure the log2Ratios are formatted correctly?";
 			} else if (allLog2RatioPos) {
-				this.warningMessage = "[ChipParser] WARNING: All log2ratios were greater than or equal to zero.  Are you sure the log2Ratios are formatted correctly?";
+				this.warningMessage = "WARNING: All log2ratios were greater than or equal to zero.  Are you sure the log2Ratios are formatted correctly?";
 			}
 			
 		} catch (IOException ioex) {
-			throw new IOException(String.format("[ChipParser] Error processing data file: %s.",ioex.getMessage()));
+			throw new IOException(String.format("Error processing data file: %s.",ioex.getMessage()));
 		} finally {
 			try {
 				br.close();

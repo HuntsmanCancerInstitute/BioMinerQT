@@ -7,6 +7,7 @@ import hci.biominer.model.genome.Genome;
 import hci.biominer.model.intervaltree.IntervalTree;
 import hci.biominer.parser.ChipIntervalTreeParser;
 import hci.biominer.parser.RnaSeqIntervalTreeParser;
+import hci.biominer.parser.VCFIntervalTreeParserV2;
 import hci.biominer.util.Enumerated.AnalysisTypeEnum;
 
 import java.io.File;
@@ -35,6 +36,10 @@ public class IntervalTrees {
 				} else if (analysis.getAnalysisType().getType() == AnalysisTypeEnum.Methylation) {
 					ChipIntervalTreeParser ctp = new ChipIntervalTreeParser(file, genome);
 					HashMap<String,IntervalTree<GenericResult>> it = ctp.getChromNameIntervalTree();
+					analysisTrees.put(file.getAbsolutePath(), it);
+				} else if (analysis.getAnalysisType().getType() == AnalysisTypeEnum.Variant) {
+					VCFIntervalTreeParserV2 vtp = new VCFIntervalTreeParserV2(file, genome);
+					HashMap<String,IntervalTree<GenericResult>> it = vtp.getChromNameIntervalTree();
 					analysisTrees.put(file.getAbsolutePath(), it);
 				}
 				

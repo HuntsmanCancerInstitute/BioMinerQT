@@ -1,52 +1,42 @@
 package hci.biominer.parser;
 
+import hci.biominer.model.ExternalGene;
+import hci.biominer.model.genome.Gene;
+import hci.biominer.model.genome.Genome;
+import hci.biominer.util.ColumnValidators;
+import hci.biominer.util.ModelUtil;
+import hci.biominer.util.Enumerated.*;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.GZIPOutputStream;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
-import hci.biominer.model.ExternalGene;
-import hci.biominer.model.OrganismBuild;
-import hci.biominer.model.genome.Gene;
-import hci.biominer.model.genome.Genome;
-import hci.biominer.model.genome.Transcript;
-import hci.biominer.service.ExternalGeneService;
-import hci.biominer.util.ColumnValidators;
-import hci.biominer.util.GenomeBuilds;
-import hci.biominer.util.ModelUtil;
-
-public class RnaSeqParser {
-	private int geneColumn = -1;
-	private int fdrColumn = -1;
-	private int logColumn = -1;
+public class VCFParser {
 	private int colMax = -1;
 	private File inputFile = null;
 	private File outputFile = null;
-	private boolean isConverted = false;
-	private ArrayList<String> parsedData = null;
-	private StringBuilder warningMessage = null;
 	private Genome genome = null;
+	private ArrayList<String> parsedData = null;
+	private StringBuilder warningMessage = new StringBuilder("");
 	private HashMap<String,ArrayList<Long>> externalGeneToBiominerId;
 	private HashMap<Long,String> biominerIdToEnsembl;
-	private HashMap<String,Gene> alreadyObserved = new HashMap<String,Gene>();
 	
+	private HashMap<String,Gene> alreadyObserved = new HashMap<String,Gene>();
 	
 	/* 
 	 * Constructor for internal call. Assumes 0-based indexes.
 	 */
-	public RnaSeqParser(File inputFile, File outputFile, Integer geneColumn, Integer fdrColumn, 
-			Integer logColumn, boolean isConverted, List<ExternalGene> egList, Genome genome) throws Exception {
+	public VCFParser(File inputFile, File outputFile, List<ExternalGene> egList, Genome genome) throws Exception {
 				
 		if (!inputFile.exists()) {
 			throw new Exception("Specified input file does not exist");
@@ -54,13 +44,8 @@ public class RnaSeqParser {
 		
 		this.inputFile = inputFile;
 		this.outputFile = outputFile;
-		this.geneColumn = geneColumn;
-		this.fdrColumn = fdrColumn;
-		this.logColumn = logColumn;
-		this.isConverted = isConverted;
 		this.genome = genome;
-		this.warningMessage = new StringBuilder("");
-		
+
 		externalGeneToBiominerId = new HashMap<String,ArrayList<Long>>();
 		biominerIdToEnsembl = new HashMap<Long,String>();
 		
@@ -79,10 +64,10 @@ public class RnaSeqParser {
 		}
 		
 		//Slurp header for number of columns:
-		Integer[] colsToCheck = new Integer[]{this.geneColumn,this.fdrColumn,this.logColumn};
-		String[] colNames = new String[] {"Gene Column","FDR Column","Log Column"};
-		colMax = ColumnValidators.validateColumns(colsToCheck, colNames, this.inputFile, false);
-
+		Integer[] colsToCheck = new Integer[]{0};
+		String[] colNames = new String[] {"Test"};
+		colMax = ColumnValidators.validateColumns(colsToCheck, colNames, this.inputFile, true);
+	
 	}
 	
 	
@@ -133,43 +118,36 @@ public class RnaSeqParser {
 	}
 	
 	/*
-	 * Parse and validate Rnaseq file
+	 * Parse and validate VCF file
 	 */
 	private void processData() throws Exception {
 		BufferedReader br = null;
+		
+		Pattern typePattern = Pattern.compile("VarType=([a-zA-Z0-9_]+).*");
+		Pattern locPattern = Pattern.compile("EnsemblRegion=([a-zA-Z0-9_]+).*");
+		Pattern genePattern = Pattern.compile("EnsemblName=([a-zA-Z0-9_]+).*");
+		Pattern dbsnpPattern = Pattern.compile("DBSNP=([a-zA-Z0-9_]+).*");
+		
 		try {
 			//Open file handle
 			br = ModelUtil.fetchBufferedReader(this.inputFile);
 			
 			//Slurp the header
-			br.readLine();
+			while(true) {
+				String line = br.readLine();
+				if (line.startsWith("#CHROM")) {
+					break;
+				}
+			}
 			
 			//Initialize input file variables
 			this.parsedData = new ArrayList<String>();
 			String line = null;
-			int lineCount = 1;
-			
-			//Initialize warning variables
-			boolean allTransformedFdrLessThanOne = true;
-			if (!this.isConverted) {
-				allTransformedFdrLessThanOne = false;
-			}
-			boolean allLog2RatioPos = true;
-			boolean allLog2RatioNeg = true;
-			
-			NumberFormat formatter = new DecimalFormat("0.##E0");
-			
-			boolean badGene = false;
-			int badGeneCount = 0;
-			int allGeneCount = 0;
+			int lineCount = 1;			
 			
 			while ((line = br.readLine()) != null) {
-				allGeneCount++;
 				String[] parts = line.split("\t");
 				
-				//Initialize line variables
-				double tempFdr = -1;
-				float tempLog = -1;
 				
 				//Make sure the line length matches header. Parsing might go OK if this fails, but I 
 				//think it's best to error out when the file is at all malformed.
@@ -178,78 +156,101 @@ public class RnaSeqParser {
 							lineCount,parts.length,this.colMax));
 				}
 				
-
+				//Variables
+				String tempChrom = null;
+				Integer tempPosition = null;
+				VarTypeEnum tempVarType = null;
+				VarLocationEnum tempVarLocation = null;
+				String tempDbsnp = null;
+				String tempGene = null;
+				String mappedGene = null;
+				
+				
 				//Parse chromsome, check to make sure it's recognizable
-				String geneName = parts[this.geneColumn];
+				tempChrom = ColumnValidators.validateChromosome(this.genome, parts[0]);
 				
-				Gene geneObject = this.checkGene(geneName);
+				//Parse start position, make sure it's an integer and within boundaries
+				tempPosition = ColumnValidators.validateCoordiate(this.genome, tempChrom, parts[1]);
 				
-				if (geneObject == null) {
-					badGeneCount++;
-					if (!badGene) {
-						badGene = true;
-						String body = this.warningMessage.toString();
-						this.warningMessage = new StringBuilder("The RNASeq dataset contained genes that were not found in Biominer's annotation. "
-								+ "Results associated with the following genes can't be searched:<br>");
-						
-						this.warningMessage.append(body);
+				String reference = parts[3];
+				String alternative = parts[4];
+				
+				//Parse genotypes
+				Integer het = 0;
+				Integer mut = 0;
+				Integer wild = 0;
+				Integer other = 0;
+				for (int i=8; i<parts.length; i++) {
+					String[] sampleSpecific = parts[i].split(":");
+					if (sampleSpecific[0] == "0/0") {
+						wild++;
+					} else if (sampleSpecific[0] == "0/1") {
+						het++;
+					} else if (sampleSpecific[0] == "1/1") {
+						mut++;
+					} else {
+						other++;
 					}
-					continue;
 				}
 				
-		
-				//Parse FDR
-				tempFdr = ColumnValidators.validateFdr(parts[this.fdrColumn], this.isConverted);
+				//Parse annotations
+				String[] annotations = parts[7].split(";");
+				for (String ann: annotations) {
+					Matcher typeMatcher = typePattern.matcher(ann);
+					Matcher locMatcher = locPattern.matcher(ann);
+					Matcher geneMatcher = genePattern.matcher(ann);
+					Matcher dbsnpMatcher = dbsnpPattern.matcher(ann);
 					
-				if (this.isConverted && tempFdr > 1) {
-					allTransformedFdrLessThanOne = false;
+					if (typeMatcher.matches()) {
+						try {
+							tempVarType = VarTypeEnum.valueOf(typeMatcher.group(1));
+						} catch (Exception ex) {
+							this.warningMessage.append(String.format("Variant %s %d has unrecognized variant type: %s.<br>",tempChrom,tempPosition,typeMatcher.group(1)));
+						}
+						
+					} else if (locMatcher.matches()) {
+						try {
+							tempVarLocation = VarLocationEnum.valueOf(locMatcher.group(1));
+						} catch (Exception ex) {
+							this.warningMessage.append(String.format("Variant %s %d has unrecognized variant location: %s.<br>",tempChrom, tempPosition, locMatcher.group(1)));
+						}
+					} else if (dbsnpMatcher.matches()) {
+						tempDbsnp = dbsnpMatcher.group(1);
+					} else if (geneMatcher.matches()) {
+						tempGene = geneMatcher.group(1);
+					}
+					
 				}
 				
-				if (this.isConverted) {
-					double decimal = tempFdr / -10;
-					tempFdr = Math.pow(10, decimal);
+				if (tempVarLocation == VarLocationEnum.intergenic) {
+					tempGene = null;
 				}
 				
-				String stringFdr = formatter.format(tempFdr);
-				
-				//Parse LogRatio
-				tempLog = ColumnValidators.validateLog2Ratio(parts[this.logColumn]);
-				
-				if (tempLog > 0) {
-					allLog2RatioNeg = false;
-				} else if (tempLog < 0) {
-					allLog2RatioPos = false;
+				if (tempGene != null) {
+					Gene geneObject = this.checkGene(tempGene);
+					
+					if (geneObject != null) {
+						mappedGene = geneObject.getName();
+					}
 				}
 				
-				Transcript t = geneObject.getMergedTranscript();
-				String mappedName = geneObject.getName();
-				String chromName = t.getChrom();
-				int geneStart = t.getTxStart();
-				int geneEnd = t.getTxEnd();
 				
 				//Create output string and add to data list
-				String outputFile = String.format("%s\t%d\t%d\t%s\t%s\t%s\t%f\n",chromName, geneStart, geneEnd, geneName, mappedName, stringFdr, tempLog);
+				String outputFile = String.format("%s\t%d\t%d\t%s\t%s\t%d\t%d\t%d\t%d\t%s\t%s\t%s\t%s\t%s\n",
+						tempChrom,tempPosition,tempPosition+1,
+						reference,alternative,
+						wild,het,mut,other,
+						tempGene,mappedGene,
+						tempVarType,tempVarLocation,tempDbsnp);
 				this.parsedData.add(outputFile);
-				
 				lineCount++;
 			}
 			
-			if (badGene) {
-				this.warningMessage.append(String.format("Failed to process %d RNASeq records of %d.<br>",badGeneCount,allGeneCount));
-			}
-			
-			//Throw failure message or warning messages
-		    if (allTransformedFdrLessThanOne) {
-		    	this.warningMessage.append("WARNING: FDR formatting style was set as transformed, but all values were between 0 and 1.  Are you sure the FDR values were transformed?<br> "
-						+ "FDR values are transformed using the formula -10 * log10(FDR)");		
-			} else if (allLog2RatioNeg) {
-				this.warningMessage.append("WARNING: All log2ratios were less than or equal to zero.  Are you sure the log2Ratios are formatted correctly?<br>");
-			} else if (allLog2RatioPos) {
-				this.warningMessage.append("WARNING: All log2ratios were greater than or equal to zero.  Are you sure the log2Ratios are formatted correctly?<br>");
-			}
 			
 		} catch (IOException ioex) {
 			throw new IOException(String.format("Error processing data file: %s.",ioex.getMessage()));
+		} catch (Exception ex) {
+		    throw ex;
 		} finally {
 			try {
 				br.close();
@@ -331,6 +332,5 @@ public class RnaSeqParser {
     	}
 		
 	}
-	
 
 }

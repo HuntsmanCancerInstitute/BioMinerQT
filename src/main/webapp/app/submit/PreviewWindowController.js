@@ -27,6 +27,9 @@ function ($scope, $modalInstance, filename, previewData, analysisType) {
 		$scope.analysisColumns.push({name: "Log2Ratio", index: -1, link: -1});
 		$scope.analysisColumns.push({name: "FDR", index: -1, link: 4});
 		$scope.analysisColumns.push({name: "-10*log10(FDR)", index: -1, link: 3});
+	} else if (analysisType.type == "Variant") {
+		$scope.analysisColumns.push({name: "Ignore", index: null, link: -1});
+		$scope.analysisColumns.push({name: "Sample", index: -1, link: -1});
 	} else {
 		console.log("Uh-oh");
 	}

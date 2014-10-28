@@ -11,6 +11,7 @@ import java.io.InputStreamReader;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -31,6 +32,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import hci.biominer.model.Analysis;
 import hci.biominer.model.AnalysisType;
+import hci.biominer.model.GeneNameModel;
 import hci.biominer.model.GenericResult;
 import hci.biominer.model.OrganismBuild;
 import hci.biominer.model.Project;
@@ -56,7 +58,6 @@ import hci.biominer.util.BiominerProperties;
 import hci.biominer.util.Enumerated.AnalysisTypeEnum;
 import hci.biominer.util.GenomeBuilds;
 import hci.biominer.util.IntervalTrees;
-
 
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -94,7 +95,7 @@ public class QueryController {
     private HashMap<String,QueryResultContainer> resultsDict =  new HashMap<String,QueryResultContainer>();
     private HashMap<String,File> fileDict = new HashMap<String,File>();
     
-    private HashMap<Long,List<ExternalGene>> searchDict = new HashMap<Long,List<ExternalGene>>();
+    private HashMap<Long,List<GeneNameModel>> searchDict = new HashMap<Long,List<GeneNameModel>>();
     
     @PostConstruct
     public void loadAllData() throws Exception {
@@ -125,14 +126,32 @@ public class QueryController {
         		}
         		
         		if(!searchDict.containsKey(ob.getIdOrganismBuild())) {
-        			System.out.println("Loading common names for: " + ob.getName());
-        			searchDict.put(ob.getIdOrganismBuild(), this.externalGeneService.getHugoNamesGenesByOrganismBuild(ob));
-        			
+        			loadGeneNames(ob);
         		}
         	}
     	}
+    }
+    
+    private void loadGeneNames(OrganismBuild ob) {
+    	System.out.println("Loading common names for: " + ob.getName());
+    	List<ExternalGene> egList = this.externalGeneService.getHugoNamesGenesByOrganismBuild(ob);
     	
+    	HashSet<String> uniqueNamesHash = new HashSet<String>();
+    	List<String> uniqueNamesSort = new ArrayList<String>();
+    	for (ExternalGene eg: egList) {
+    		uniqueNamesHash.add(eg.getExternalGeneName());
+    	}
     	
+    	uniqueNamesSort.addAll(uniqueNamesHash);
+    	Collections.sort(uniqueNamesSort);
+    	
+    	List<GeneNameModel> uniqueNamesList = new ArrayList<GeneNameModel>();
+    	for (String name: uniqueNamesSort) {
+    		GeneNameModel gnm = new GeneNameModel(name);
+    		uniqueNamesList.add(gnm);
+    	}
+    	
+		searchDict.put(ob.getIdOrganismBuild(), uniqueNamesList);
     }
   
     @RequestMapping("/layout")
@@ -344,6 +363,12 @@ public class QueryController {
     		List<Analysis> methAnalyses = this.analysisService.getAnalysesByQuery(idLabs, idProjects, idAnalyses, idSampleSources, atMap.get(AnalysisTypeEnum.Methylation).getIdAnalysisType(), idOrganismBuild, user);
     		System.out.println("Number of analyses: " + methAnalyses.size());
     		analyses.addAll(methAnalyses);
+    	}
+    	if (atMap.containsKey(AnalysisTypeEnum.Variant)) {
+    		System.out.println("Looking for Variant analyses");
+    		List<Analysis> variantAnalyses = this.analysisService.getAnalysesByQuery(idLabs, idProjects, idAnalyses, idSampleSources, atMap.get(AnalysisTypeEnum.Variant).getIdAnalysisType(), idOrganismBuild, user);
+    		System.out.println("Number of analyses: " + variantAnalyses.size());
+    		analyses.addAll(variantAnalyses);
     	}
         	
     	//Convert analyses to interval trees
@@ -607,15 +632,13 @@ public class QueryController {
     
     @RequestMapping(value="getHugoNames",method=RequestMethod.GET)
     @ResponseBody
-    public List<ExternalGene> getHugoNames(@RequestParam(value="idOrganismBuild") Long idOrganismBuild) {
-    	List<ExternalGene> egList = null;
-    	if (this.searchDict.containsKey(idOrganismBuild)) {
-    		egList = this.searchDict.get(idOrganismBuild);
-    	} else {
+    public List<GeneNameModel> getHugoNames(@RequestParam(value="idOrganismBuild") Long idOrganismBuild) {
+    	List<GeneNameModel> egList = null;
+    	if (!this.searchDict.containsKey(idOrganismBuild)) {
     		OrganismBuild ob = this.organismBuildService.getOrganismBuildById(idOrganismBuild);
-        	egList = this.externalGeneService.getHugoNamesGenesByOrganismBuild(ob);
+    		this.loadGeneNames(ob);
     	}
-    	
+    	egList = this.searchDict.get(idOrganismBuild);
     	return egList;
     }
     

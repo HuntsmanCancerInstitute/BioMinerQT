@@ -33,14 +33,24 @@ public class ColumnValidators {
 //		return genomeBuild;
 //	}
 	
-	public static int validateColumns(Integer[] colsToCheck, String[] colNames, File inputFile) throws Exception {
+	public static int validateColumns(Integer[] colsToCheck, String[] colNames, File inputFile, boolean vcfHeader) throws Exception {
 		System.out.print("[ColumnValidator] Reading input file header to determine number of columns..");
 		
 		int colMax = -1;
 		
 		try {
 			BufferedReader br = ModelUtil.fetchBufferedReader(inputFile);
-			br.readLine(); //Skip header
+			
+			if (vcfHeader) {
+				while(true) {
+					String line = br.readLine();
+					if (line.startsWith("#CHROM")) {
+						break;
+					}
+				}
+			} else {
+				br.readLine(); //Skip header
+			}
 			
 			String line = br.readLine();
 			String[] headParts = line.split("\t");

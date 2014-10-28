@@ -37,6 +37,7 @@ import hci.biominer.service.ProjectService;
 import hci.biominer.parser.ChipParser;
 import hci.biominer.parser.GenomeParser;
 import hci.biominer.parser.RnaSeqParser;
+import hci.biominer.parser.VCFParser;
 import hci.biominer.util.BiominerProperties;
 import hci.biominer.util.Enumerated.FileTypeEnum;
 import hci.biominer.util.GenomeBuilds;
@@ -296,7 +297,17 @@ public class FileController {
 			 	BufferedReader br = ModelUtil.fetchBufferedReader(generateFilePath(fileUpload));
 			 
 			 	//Grab the first 20 lines of the file
+			 	String[] lastHeader = null;
 			 	while((temp = br.readLine()) != null) {
+			 		if (temp.startsWith("#")) {
+			 			lastHeader  = temp.split("\t");
+			 			continue;
+			 		}
+			 		if (lastHeader != null) {
+			 			pm.addPreviewData(lastHeader);
+			 		}
+			 		
+			 		
 			 		if (counter == 10) {
 			 			break;
 			 		}
@@ -472,6 +483,18 @@ public class FileController {
 			
 			List<ExternalGene> egList = this.externalGeneService.getExternalGenesByOrganismBuild(gb);
 			
+			Genome genome = null;
+			
+			try {
+				genome = this.fetchGenome(gb);
+			} catch (Exception ex) {
+				ex.printStackTrace();
+				outputMeta.setName(output);
+				outputMeta.setSize(null);
+				outputMeta.setMessage(String.format(ex.getMessage(), gb.getName()));
+				return outputMeta;
+			}
+			
 			File importDir = new File(getRawDirectory(),id);
 			File parseDir = new File(getParsedDirectory(),id);
 			if (!parseDir.exists()) {
@@ -490,10 +513,10 @@ public class FileController {
 			//Run parser, throw errors if log2 or FDR are not set
 			String warningMessage = "";
 			if (fdr != -1) {
-				RnaSeqParser rp = new RnaSeqParser(inputFile, outputFile, gene, fdr, log, false, gb, egList);
+				RnaSeqParser rp = new RnaSeqParser(inputFile, outputFile, gene, fdr, log, false, egList, genome);
 				warningMessage = rp.run();
 			} else if (logFDR != 1) {
-				RnaSeqParser rp = new RnaSeqParser(inputFile, outputFile, gene, logFDR, log, true, gb, egList);
+				RnaSeqParser rp = new RnaSeqParser(inputFile, outputFile, gene, logFDR, log, true, egList, genome);
 				warningMessage = rp.run();
 			} else {
 				outputMeta.setName(output);
@@ -501,6 +524,106 @@ public class FileController {
 				outputMeta.setMessage("Neither FDR or 10*log10(FDR) were set.");
 				return outputMeta;
 			}
+			
+			//Set result messages
+			if (warningMessage.equals("")) {
+				outputMeta.setState(FileStateEnum.SUCCESS);
+				outputMeta.setMessage("");
+			} else {
+				outputMeta.setState(FileStateEnum.WARNING);
+				outputMeta.setMessage(warningMessage);
+			}
+		
+			outputMeta.setName(output);
+			outputMeta.setDirectory(parseStub.getPath());
+			outputMeta.setSize(new Long(outputFile.length()));
+			
+			
+			FileUpload parent = this.fileUploadService.getFileUploadById(idParent);		
+			
+			outputMeta.setType(FileTypeEnum.IMPORTED);
+			outputMeta.setProject(parent.getProject());
+			outputMeta.setAnalysisType(at); 
+			
+			FileUpload existing = this.fileUploadService.getFileUploadByName(outputMeta.getName(), outputMeta.getType(), outputMeta.getProject());
+			if (existing == null) {
+				this.fileUploadService.addFileUpload(outputMeta);
+			} else {
+				this.fileUploadService.updateFileUpload(existing.getIdFileUpload(),outputMeta);
+			}
+			
+		
+		} catch (Exception ioex) {
+			ioex.printStackTrace();
+			outputMeta.setName(output);
+			outputMeta.setSize(null);
+			outputMeta.setState(FileStateEnum.FAILURE);
+			outputMeta.setMessage(ioex.getMessage());
+		}
+		
+		return outputMeta;
+	}
+	
+	/***************************************************
+	 * URL: /submit/parse/variant/
+	 * post(): call variant parser
+	 * @param input : input filename
+	 * @param output: output filename
+	 * @param idFileUpload: reference to the uploaded file
+	 * @param idAnalysisType: reference to the analysis type
+	 * @return FileMap: parsed file information
+	 ****************************************************/
+	@RequestMapping(value="parse/variant", method = RequestMethod.POST)
+	public @ResponseBody 
+	FileUpload parseVariant(
+			@RequestParam("inputFile") String input, 
+			@RequestParam("outputFile") String output,
+			@RequestParam("build") Long idOrganismBuild, 
+			@RequestParam("analysisID") String id, 
+			@RequestParam("idFileUpload") Long idParent,
+			@RequestParam("idAnalysisType") Long idAnalysisType) {
+ 
+		FileUpload outputMeta = new FileUpload();
+		
+		try {
+			
+			OrganismBuild gb = this.organismBuildService.getOrganismBuildById(idOrganismBuild);
+			AnalysisType at = this.analysisTypeService.getAnalysisTypeById(idAnalysisType);
+			
+			List<ExternalGene> egList = this.externalGeneService.getExternalGenesByOrganismBuild(gb);
+			
+			File importDir = new File(getRawDirectory(),id);
+			File parseDir = new File(getParsedDirectory(),id);
+			if (!parseDir.exists()) {
+				parseDir.mkdir();
+			}
+			File parseStub = new File("/parsed/",id);
+			
+			File inputFile = new File(importDir, input);
+			File outputFile = new File(parseDir, output);
+			
+			//Add gz extension if it doesn't exist
+			if (!outputFile.getName().endsWith(".gz")) {
+				outputFile = new File(outputFile.getParent(),outputFile.getName() + ".gz");
+			}
+			
+			//Run parser, throw errors if log2 or FDR are not set
+			String warningMessage = "";
+			
+			Genome genome = null;
+			
+			try {
+				genome = this.fetchGenome(gb);
+			} catch (Exception ex) {
+				ex.printStackTrace();
+				outputMeta.setName(output);
+				outputMeta.setSize(null);
+				outputMeta.setMessage(String.format(ex.getMessage(), gb.getName()));
+				return outputMeta;
+			}
+			
+			VCFParser vp = new VCFParser(inputFile, outputFile, egList, genome);
+			warningMessage = vp.run();
 			
 			//Set result messages
 			if (warningMessage.equals("")) {
