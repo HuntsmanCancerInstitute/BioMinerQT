@@ -18,6 +18,7 @@ function($rootScope, $scope, $http, $modal, $anchorScroll, $upload, DynamicDicti
 	
 	$scope.querySummary = [];
 	$scope.codeResultType = "";
+	$scope.returedResultType = "";
 	$scope.isGeneBasedQuery = false;
 	$scope.idOrganismBuild = "";
 
@@ -54,7 +55,7 @@ function($rootScope, $scope, $http, $modal, $anchorScroll, $upload, DynamicDicti
 	//Pagination
 	$scope.queryCurrentPage = 0;
 	$scope.resultPages = 0;
-	$scope.resultsPerPage = 10;
+	$scope.resultsPerPage = 25;
 	$scope.totalResults = 0;
 	
 	//Sorting
@@ -106,6 +107,7 @@ function($rootScope, $scope, $http, $modal, $anchorScroll, $upload, DynamicDicti
     
     $scope.$watch("idOrganismBuild",function() {
     	if ($scope.idOrganismBuild != null && $scope.idOrganismBuild != "") {
+    		$scope.hugoList = [];
     		$http({
     			url: "query/getHugoNames",
     			method: "GET",
@@ -191,6 +193,7 @@ function($rootScope, $scope, $http, $modal, $anchorScroll, $upload, DynamicDicti
 				$scope.analysisTypeCheckedList[x].class = '';
 			} else {
 				$scope.analysisTypeCheckedList[x].class = 'grey-out';
+				$scope.analysisTypeCheckedList[x].selected = false;
 			}
 			
 		}
@@ -244,8 +247,11 @@ function($rootScope, $scope, $http, $modal, $anchorScroll, $upload, DynamicDicti
 		$scope.codeVariantFilterType = "";
 		$scope.selectedGenotypes.length = 0;
 		
+		$scope.totalResults = 0;
+		
 		for (var x =0; x < $scope.analysisTypeCheckedList.length; x++) {
 			$scope.analysisTypeCheckedList[x].show = true;
+			$scope.analysisTypeCheckedList[x].possible = true;
 			$scope.analysisTypeCheckedList[x].selected = false;
 		}
 	};
@@ -451,7 +457,6 @@ function($rootScope, $scope, $http, $modal, $anchorScroll, $upload, DynamicDicti
 		$scope.hasResults = false;
 		$scope.queryCurrentPage = 0;
 		
-		
 		// Build a summary of the query that is being performed.  This will display
 		// in the results panel
 		$scope.buildQuerySummary();
@@ -490,6 +495,9 @@ function($rootScope, $scope, $http, $modal, $anchorScroll, $upload, DynamicDicti
 		if ($scope.thresholdLog2Ratio != "") {
 			log2ratio = $scope.thresholdLog2Ratio;
 		}
+		
+		$scope.returnedResultType = $scope.codeResultType;
+		$scope.totalResults = 0;
 		
 		// Run the query on the server.
 		$http({
@@ -541,6 +549,7 @@ function($rootScope, $scope, $http, $modal, $anchorScroll, $upload, DynamicDicti
 		}).error(function(data, status, headers, config) {
 			console.log("Could not run query.");
 			$scope.hasResults = false;
+			$scope.returnedResultType = null;
 		});
 		
 		$anchorScroll();
@@ -803,6 +812,7 @@ function($rootScope, $scope, $http, $modal, $anchorScroll, $upload, DynamicDicti
 				if (!found) {
 					$scope.analysisTypeCheckedList[idx].possible = false;
 					$scope.analysisTypeCheckedList[idx].class = 'grey-out';
+					$scope.analysisTypeCheckedList[idx].selected = false;
 				} else {
 					$scope.analysisTypeCheckedList[idx].possible = true;
 					$scope.analysisTypeCheckedList[idx].class  = '';

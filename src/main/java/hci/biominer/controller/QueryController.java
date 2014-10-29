@@ -330,15 +330,19 @@ public class QueryController {
     		atMap.put(at.getType(),at);
     	}
     	
+    	//Container of mapped gene names, used for gene based searches
+    	List<String> mappedNames = null;
+    	
     	//Create intervals
     	IntervalParser ip = new IntervalParser();
     	List<Interval> intervalsToCheck = null;
-    	
-    	if (target.equals("GENE")) {
-    		String region = this.getGeneIntervals(genes, genome, "TxBoundary",ob);
-    		intervalsToCheck = ip.parseIntervals(region, geneMargins, genome);
-    	} else {
-    		intervalsToCheck = ip.parseIntervals(regions, regionMargins, genome);
+        	
+    	if (codeResultType.equals("GENE") || (codeResultType.equals("REGION") && target.equals("GENE"))) {
+    		List<List<String>> parsed = this.getGeneIntervals(genes, genome, "TxBoundary",ob);
+    		mappedNames = parsed.get(2); //This will be used for gene based filtering, if necessary
+    		intervalsToCheck = ip.parseIntervals(this.convertListToString(parsed.get(0)), this.convertListToString(parsed.get(1)), geneMargins, genome);
+    	} else if (codeResultType.equals("REGION"))  {
+    		intervalsToCheck = ip.parseIntervals(regions, regions, regionMargins, genome);
     	}
     	
     	//Add IP warnings
@@ -378,7 +382,7 @@ public class QueryController {
     	//Run basic search
     	List<QueryResult> results = this.getIntersectingRegions(itList, analyses, genome, intervalsToCheck);
  
-    	//Run thresholding if neccesary
+    	//Run thresholding if necessary
     	List<QueryResult> fullRegionResults = new ArrayList<QueryResult>();
     	if (FDR != null) {
     		results = this.filterFdr(results, FDR, codeFDRComparison);
@@ -387,6 +391,11 @@ public class QueryController {
     	if (log2Ratio != null) {
     		results = this.filterLog2Ratio(results, log2Ratio, codeLog2RatioComparison);
     	}
+    	
+    	if (codeResultType.equals("GENE") && mappedNames != null) {
+    		results = this.filterGene(results, mappedNames);
+    	}
+    	
     	fullRegionResults.addAll(results);
     	
     	
@@ -405,8 +414,12 @@ public class QueryController {
     	
     }
     
+    
+    
+    
+    
      @RequestMapping(value = "downloadAnalysis", method = RequestMethod.GET)
-	 public void downloadAnalysis(HttpServletResponse response) throws Exception{
+	 public void downloadAnalysis(HttpServletResponse response, @RequestParam(value="codeResultType") String codeResultType) throws Exception{
     	
     	//Get current active user
     	Subject currentUser = SecurityUtils.getSubject();
@@ -417,7 +430,6 @@ public class QueryController {
     		user = userService.getUser(userId);
     		key = user.getUsername();
     	}
-    	
     	
     	if (this.fileDict.containsKey(key)) {
     		File fileToDelete = this.fileDict.get(key);
@@ -430,10 +442,26 @@ public class QueryController {
     			File localFile = new File(FileController.getDownloadDirectory(),key + ".query.txt.gz");
     			BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(localFile))));
                         
-    			bw.write("Index\tProjectName\tAnalysisType\tAnalysisName\tSampleConditions\tAnalysisSummary\tCoordinates\tLog2Ratio\tFDR\n");
-    			for (QueryResult qr: results) {
-    				bw.write(qr.writeRegion());
+    			if (codeResultType.equals("REGION")) {
+    				//Write header
+        			if (results.size() > 0) {
+        				bw.write(results.get(0).writeRegionHeader());
+        			}
+        			
+        			for (QueryResult qr: results) {
+        				bw.write(qr.writeRegion());
+        			}
+    			} else if (codeResultType.equals("GENE")) {
+    				//Write header
+        			if (results.size() > 0) {
+        				bw.write(results.get(0).writeGeneHeader());
+        			}
+        			
+        			for (QueryResult qr: results) {
+        				bw.write(qr.writeGene());
+        			}
     			}
+    			
     			bw.close();
     			
     			try {		
@@ -643,24 +671,43 @@ public class QueryController {
     }
     
     
-    private String getGeneIntervals(String names, Genome genome, String searchType, OrganismBuild ob) {
+    
+    private String convertListToString(List<String> listOfStuff) {
+    	StringBuilder concatString = new StringBuilder("");
+    	
+    	//Convert regions and searches into a string
+    	for (String r: listOfStuff) {
+    		concatString.append("\n" + r);
+    	}
+    
+    	//Clean up leading newline
+    	String finalString = concatString.toString();
+    	if (finalString.length() > 0) {
+    		finalString = finalString.substring(1);
+    	}
+    	
+    	return finalString;
+    }
+ 
+    
+    private List<List<String>> getGeneIntervals(String names, Genome genome, String searchType, OrganismBuild ob) {
     	List<String> regions = new ArrayList<String>();
-    	StringBuilder regionString = new StringBuilder("");
+    	List<String> searches = new ArrayList<String>();
+    	List<String> mapped = new ArrayList<String>();
+    	
     	
     	String[] genes = names.split("\n");
     	List<String> cleanedGenes = new ArrayList<String>();
     	if (genes.length == 0) {
     		this.warnings = new StringBuilder("The gene list is empty!");
-    		return "";
+    		return null;
     	}
     	
     	for (String g: genes) {
     		String[] parts = g.split("[\\s+,\\n]+");
     		for (String p: parts) {
     			cleanedGenes.add(p.trim());
-    			System.out.println(p);
-    		}
-    		
+    		}	
     	}
     	
     	this.warnings = new StringBuilder("");
@@ -686,11 +733,16 @@ public class QueryController {
         		this.warnings.append("Could not find an Ensembl identifier for gene '" + name + "'.");
         		continue;
         	}
+        	
+        	HashSet<String> extIdFinalSet = new HashSet<String>();
+        	for (ExternalGene eg: extIdFinal) {
+        		extIdFinalSet.add(eg.getExternalGeneName());
+        	}
         
         	HashMap<String, Gene> geneNameGene = genome.getTranscriptomes()[0].getGeneNameGene();
        
-        	for (ExternalGene eId: extIdFinal) {
-        		String ensemblName = eId.getExternalGeneName();
+        	for (String ensemblName: extIdFinalSet) {
+        		
         		
         		if (geneNameGene.containsKey(ensemblName)) {
         			Gene gene = geneNameGene.get(ensemblName);
@@ -705,6 +757,8 @@ public class QueryController {
         				region = geneByTxEnd(gene);
         			}
         			regions.add(region);
+        			searches.add(name);
+        			mapped.add(ensemblName);
         			
         		} else {
         			this.warnings.append("Could not find gene: '" + ensemblName + "' in Genome Object.\n");
@@ -712,18 +766,13 @@ public class QueryController {
         	}
     	}
     	
-    	for (String r: regions) {
-    		regionString.append("\n" + r);
     	
-    	}
+    	List<List<String>> returnArray = new ArrayList<List<String>>();
+    	returnArray.add(regions);
+    	returnArray.add(searches);
+    	returnArray.add(mapped);
     	
-    	String finalString = regionString.toString();
-    	if (finalString.length() > 0) {
-    		finalString = finalString.substring(1);
-    	}
-    	
-    	
-    	return finalString;
+    	return returnArray;
     	
     }
     
@@ -791,31 +840,55 @@ public class QueryController {
     	return itList;
     }
     
- 
-
+    private List<QueryResult> filterGene(List<QueryResult> results, List<String> mappedGenes) {
+    	HashSet<String> cleanGeneSet = new HashSet<String>();
+    	
+    	for (String cg: mappedGenes) {
+    		cleanGeneSet.add(cg);
+    	}
+    	
+    	List<QueryResult> filteredResults = new ArrayList<QueryResult>();
+    	for (QueryResult qr: results) {
+    		if (qr.getMappedName() == null) {
+    			continue;
+    		}
+    		if (cleanGeneSet.contains(qr.getMappedName())) {
+    			filteredResults.add(qr);
+    		}
+    	}
+    	
+    	return filteredResults;
+    }
+    
+   
     private List<QueryResult> filterFdr(List<QueryResult> results, Float fdr, String fdrCode) throws Exception {
     	List<QueryResult> filteredResults = new ArrayList<QueryResult>();
     	NumberFormat formatter = new DecimalFormat("0.##E0");
     	for (QueryResult qr: results) {
   
     		Double readFdr = null;
-    		try {
-    		  readFdr = formatter.parse(qr.getFDR()).doubleValue();
-    		} catch (Exception ex) {
-    			throw new Exception("Could not parse FDR value: " + qr.getFDR());
-    		}
-    		boolean pass = true;
-    		if (fdrCode.equals("GT")) {
-    			if (readFdr <= fdr) {
-    				pass = false;
-    			}
-    		} else {
-    			if (readFdr >= fdr) {
-    				pass = false;
-    			}
-    		}
-    		if (pass) {
+    		String rawFdr = qr.getFDR();
+    		if (rawFdr == null) {
     			filteredResults.add(qr);
+    		} else {
+    			try {
+	    		  readFdr = formatter.parse(rawFdr).doubleValue();
+	    		} catch (Exception ex) {
+	    			throw new Exception("Could not parse FDR value: " + qr.getFDR());
+	    		}
+	    		boolean pass = true;
+	    		if (fdrCode.equals("GT")) {
+	    			if (readFdr <= fdr) {
+	    				pass = false;
+	    			}
+	    		} else {
+	    			if (readFdr >= fdr) {
+	    				pass = false;
+	    			}
+	    		}
+	    		if (pass) {
+	    			filteredResults.add(qr);
+	    		}
     		}
     	}
     	return filteredResults;
@@ -825,7 +898,10 @@ public class QueryController {
     	List<QueryResult> filteredResults = new ArrayList<QueryResult>();
     	for (QueryResult qr: results) {
     		boolean pass = true;
-    		if (log2ratioCode.equals("GT")) {
+    	
+    		if (qr.getLog2Ratio() == null) {
+    			filteredResults.add(qr);
+    		} else if (log2ratioCode.equals("GT")) {
     			if (qr.getLog2Ratio() < log2ratio) {
     				pass = false;
     			}
@@ -878,6 +954,8 @@ public class QueryController {
         	    		result.setCoordinates(coordinate);
         	    		result.setFDR(c.getTransFDR());
         	    		result.setLog2Ratio(c.getLog2Rto());
+        	    		result.setMappedName(c.getMappedName());
+        	    		result.setSearch(inv.getSearch());
         	    		queryResults.add(result);
         			}
     			}	
@@ -897,7 +975,7 @@ public class QueryController {
     	
     	
     	
-    	public List<Interval> parseIntervals(String region, Integer regionMargin, Genome genome) throws Exception {
+    	public List<Interval> parseIntervals(String region, String search, Integer regionMargin, Genome genome) throws Exception {
     		List<Interval> intervals = new ArrayList<Interval>();
     		
     	
@@ -916,12 +994,22 @@ public class QueryController {
     				if (chrom.startsWith("chr")) {
     					continue;
     				}
-    				Interval inv = new Interval(chrom,0,genome.getNameChromosome().get(chrom).getLength());
+    				Interval inv = new Interval(chrom,0,genome.getNameChromosome().get(chrom).getLength(),"none");
     				intervals.add(inv);
     			}
     		} else {
     			String[] regionList = region.split("\n");
-    			for (String r: regionList) {
+    			String[] searchList = search.split("\n");
+    			
+    			if (regionList.length != searchList.length) {
+    				throw new Exception(String.format("Region and search lists don't match: %d vs %d",regionList.length,searchList.length));
+    			}
+    			
+    			for (int i=0;i<regionList.length;i++) {
+    				
+    				String r = regionList[i];
+    				String s = searchList[i]; 
+    				
     				Matcher m1 = pattern1.matcher(r);
     	    		Matcher m2 = pattern2.matcher(r);
     	    		
@@ -966,7 +1054,7 @@ public class QueryController {
     	    				end = genome.getNameChromosome().get(chrom).getLength();
     	    			}  
     	    			
-    	    			Interval inv = new Interval(chrom,start,end);
+    	    			Interval inv = new Interval(chrom,start,end,s);
     	    			intervals.add(inv);
     	    			
     	    		} else if (m2.matches()) {
@@ -980,7 +1068,7 @@ public class QueryController {
     	    			int start = 0;
     	    			int end = genome.getNameChromosome().get(chrom).getLength();
     	    			
-    	    			Interval inv = new Interval(chrom,start,end);
+    	    			Interval inv = new Interval(chrom,start,end,s);
     	    			intervals.add(inv);
 
     	    			
@@ -1003,12 +1091,14 @@ public class QueryController {
     	private String chrom;
     	private int start;
     	private int end;
+    	private String search; //what was searched to get this interval 
 
 	
-    	public Interval(String chrom, int start, int end) {
+    	public Interval(String chrom, int start, int end, String search) {
     		this.chrom = chrom;
     		this.start = start;
     		this.end = end;
+    		this.search = search;
     	}
     	
     	public String getChrom() {
@@ -1021,6 +1111,10 @@ public class QueryController {
     	
     	public int getEnd() {
     		return this.end;
+    	}
+    	
+    	public String getSearch() {
+    		return this.search;
     	}
     }
     

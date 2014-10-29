@@ -77,4 +77,15 @@ public class IntervalTrees {
 		}
 
 	}
+	
+	public static void removeIntervalTree(Analysis analysis) throws Exception {
+		if (analysis.getFile() != null) {
+			File file = FileController.generateFilePath(analysis.getFile());
+			if (analysisTrees.containsKey(file.getAbsolutePath())) {
+				analysisTrees.remove(file.getAbsolutePath());
+			} 
+		} else {
+			throw new Exception(String.format("There is no file associated with the specified analysis: %s. Can't remove interval tree",analysis.getName()));
+		}
+	}
 }

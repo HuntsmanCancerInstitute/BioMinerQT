@@ -16,6 +16,8 @@ public class QueryResult {
 	private String coordinates;
 	private Float log2Ratio;
 	private String FDR; 
+	private String search;
+	private String mappedName;
 
 	public QueryResult() {
 	}
@@ -92,11 +94,45 @@ public class QueryResult {
 		this.analysisName = analysisName;
 	}
 
-	public String writeRegion() {
-		String outline = String.format("%d\t%s\t%s\t%s\t%s\t%s\t%s\t%f\t%s\n", index, projectName, analysisType, analysisName, sampleConditions, analysisSummary, coordinates, log2Ratio, FDR);
-		return outline;
+	public String getSearch() {
+		return search;
 	}
 
+	public void setSearch(String search) {
+		this.search = search;
+	}
+
+	public String getMappedName() {
+		return mappedName;
+	}
+
+	public void setMappedName(String mappedName) {
+		this.mappedName = mappedName;
+	}
+	
+	public String writeRegionHeader() {
+		String header = "Index\tProjectName\tAnalysisType\tAnalysisName\tSampleConditions\tSearch\tCoordinates\tLog2Ratio\tFDR\n";
+		return header;
+	}
+	
+	
+	
+	public String writeGeneHeader() {
+		String header = "Index\tProjectName\tAnalysisType\tAnalysisName\tSampleConditions\tSearch\tGene\tCoordinates\tLog2Ratio\tFDR\n";
+		return header;
+	}
+
+	public String writeRegion() {
+		String outline = String.format("%d\t%s\t%s\t%s\t%s\t%s\t%f\t%s\n", index, projectName, analysisType, analysisName, sampleConditions, coordinates, log2Ratio, FDR);
+		return outline;
+	}
+	
+	
+
+	public String writeGene() {
+		String outline = String.format("%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%f\t%s\n", index, projectName, analysisType, analysisName, sampleConditions, search, mappedName, coordinates, log2Ratio, FDR);
+		return outline;
+	}
 
 
 }

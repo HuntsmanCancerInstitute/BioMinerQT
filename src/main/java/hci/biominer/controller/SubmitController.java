@@ -17,6 +17,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import hci.biominer.util.Enumerated.ProjectVisibilityEnum;
 
+import hci.biominer.util.IntervalTrees;
 //Services
 import hci.biominer.service.ProjectService;
 //import hci.biominer.service.AnalysisService;
@@ -609,7 +610,12 @@ public class SubmitController {
 	 ****************************************************/
     @RequestMapping(value="deleteAnalysis",method=RequestMethod.DELETE)
     @ResponseBody
-    public void deleteAnalysis(@RequestParam(value="idAnalysis") Long idAnalysis) {
+    public void deleteAnalysis(@RequestParam(value="idAnalysis") Long idAnalysis) throws Exception {
+    	Analysis a = this.analysisService.getAnalysisById(idAnalysis);
+    	if (IntervalTrees.doesChipIntervalTreeExist(a)) {
+    		IntervalTrees.removeIntervalTree(a);
+    	}
+    	
     	this.analysisService.deleteAnalysis(idAnalysis);
     }
     
