@@ -18,9 +18,20 @@ public class QueryResult {
 	private String FDR; 
 	private String search;
 	private String mappedName;
-
+	private Long idAnalysis;
+	
 	public QueryResult() {
 	}
+
+	
+	public Long getIdAnalysis() {
+		return idAnalysis;
+	}
+
+	public void setIdAnalysis(Long idAnalysis) {
+		this.idAnalysis = idAnalysis;
+	}
+
 
 	public int getIndex() {
 		return this.index;

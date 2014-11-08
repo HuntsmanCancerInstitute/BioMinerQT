@@ -79,16 +79,16 @@
 					<div class="form-group">
 					  <div class="col-md-12">
 					    <label ng-repeat="analysisType in analysisTypeCheckedList"  
-					           ng-disabled="!analysisType.show || !analysisType.possible" 
 					           class="radio-inline" 
 					           ng-class="analysisType.class"
 					           for="radio-at-{{ analysisType.idAnalysisType }}">
 					      <input name="analysisRadio" 
-					             ng-required="!someAnalysisTypeChecked()" 
+					             ng-required="true" 
 					             ng-disabled="!analysisType.show || !analysisType.possible"
-					             
 					             id="radio-at-{{ analysisType.idAnalysisType }}" 
-					             ng-model="analysisType.selected" type="radio" >
+					             type="radio"
+					             ng-model="$parent.selectedAnalysisType"
+					             ng-value="analysisType">
 					     {{ analysisType.type }}
 					    </label>
 					  </div>
@@ -315,9 +315,10 @@
 				<div class="panel-heading" >
 				  Results  
 				  <span class="label label-success" ng-show="totalResults>0">{{totalResults}}</span>
-			   	  <button class="btn btn-sm btn-info pull-right" ng-show="hasResults" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-eye-open"></span> Display in IGV</button>
+			   	  <button class="btn btn-sm btn-info pull-right" ng-show="hasResults" ng-click="loadIgvSession()" ng-disabled="totalDatatracks == 0" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-eye-open"></span> Display in IGV</button>
 			   	  <a class="btn btn-sm btn-info pull-right" ng-show="hasResults" style="margin-top: -6px; margin-left: 10px" target="_self" ng-href="query/downloadAnalysis?codeResultType={{returnedResultType}}"><span class="glyphicon glyphicon-download"></span> Download</a>
-			   	  <button class="btn btn-sm btn-danger pull-right" ng-show="warnings != ''" ng-click="displayWarnings()" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-exclamation-sign"></span></button>
+			   	  <button class="btn btn-sm btn-danger pull-right" ng-show="warnings != ''" ng-click="displayWarnings()" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-exclamation-sign"></span>Query</button>
+			   	  <button class="btn btn-sm btn-danger pull-right" ng-show="igvWarnings != ''" ng-click="displayWarnings('igv')" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-exclamation-sign"></span>IGV</button>
 				</div>
 				
 				<div class="panel-body">
@@ -367,7 +368,8 @@
 			                <td class="nowrap">{{row.search}}</span></td>
 			                <td class="nowrap" ng-show="returnedResultType == 'GENE'">{{row.mappedName}}</td>
 			                <td class="nowrap-ellipsis"><span tooltip="{{row.sampleConditions}}">{{row.sampleConditions}}</td>
-			                <td class="nowrap">{{row.coordinates}}</td>
+			                <td class="nowrap" ng-hide="igvLoaded">{{row.coordinates}}</td>
+			                <td class="nowrap" ng-show="igvLoaded"><a ng-click="loadLocus(row)">{{row.coordinates}}</a></td>
 			                <td class="nowrap">{{row.fdr}}</td>
 			                <td class="nowrap">{{row.log2Ratio}}</td>
 			            </tr>

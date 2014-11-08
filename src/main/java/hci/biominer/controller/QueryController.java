@@ -6,6 +6,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.DecimalFormat;
@@ -19,6 +20,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.shiro.SecurityUtils;
@@ -32,8 +34,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import hci.biominer.model.Analysis;
 import hci.biominer.model.AnalysisType;
+import hci.biominer.model.DataTrack;
 import hci.biominer.model.GeneNameModel;
 import hci.biominer.model.GenericResult;
+import hci.biominer.model.IgvSessionResult;
 import hci.biominer.model.OrganismBuild;
 import hci.biominer.model.Project;
 import hci.biominer.model.QueryResult;
@@ -58,11 +62,15 @@ import hci.biominer.util.BiominerProperties;
 import hci.biominer.util.Enumerated.AnalysisTypeEnum;
 import hci.biominer.util.GenomeBuilds;
 import hci.biominer.util.IntervalTrees;
+import hci.biominer.util.igv.IGVResource;
+import hci.biominer.util.igv.IGVSession;
 
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.GZIPInputStream;
 import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.zip.GZIPOutputStream;
 
 
@@ -94,7 +102,7 @@ public class QueryController {
     
     private HashMap<String,QueryResultContainer> resultsDict =  new HashMap<String,QueryResultContainer>();
     private HashMap<String,File> fileDict = new HashMap<String,File>();
-    
+    private HashMap<String,List<Analysis>> analysisDict = new HashMap<String,List<Analysis>>();
     private HashMap<Long,List<GeneNameModel>> searchDict = new HashMap<Long,List<GeneNameModel>>();
     
     @PostConstruct
@@ -398,15 +406,23 @@ public class QueryController {
     	
     	fullRegionResults.addAll(results);
     	
+    	//Determine how many analyses were used
+    	List<Analysis> usedAnalyses = this.getUsedAnalyses(analyses, fullRegionResults);
+    	HashMap<String,String> usedDataTracks = this.getDataTrackList(usedAnalyses);
     	
-    	QueryResultContainer qrc = new QueryResultContainer(fullRegionResults, fullRegionResults.size(),0, sortType, true);
+    	QueryResultContainer qrc = new QueryResultContainer(fullRegionResults, fullRegionResults.size(), usedAnalyses.size(), usedDataTracks.keySet().size(), 0, sortType, true);
     	
-    	
+
     	if (user != null) {
     		this.resultsDict.put(user.getUsername(), qrc);
+    		this.analysisDict.put(user.getUsername(), analyses);
     	} else {
     		this.resultsDict.put("guest", qrc);
+    		this.analysisDict.put("guest", analyses);
     	}
+    	
+    	System.out.println("Used analyses " + usedAnalyses.size());
+    	System.out.println("Used data tracks " + usedDataTracks.keySet().size());
     	
     	QueryResultContainer qrcSub = qrc.getQrcSubset(resultsPerPage, 0, sortType);
     	
@@ -414,8 +430,171 @@ public class QueryController {
     	
     }
     
+    @RequestMapping(value="startIgvSession",method=RequestMethod.GET)
+    @ResponseBody
+    public IgvSessionResult startIgvSession(HttpServletResponse response, HttpServletRequest request) throws Exception {
+    	//Create result 
+    	IgvSessionResult igvSR = new IgvSessionResult();
+    	
+    	//Get current active user
+    	Subject currentUser = SecurityUtils.getSubject();
+    	User user = null;
+    	String key = "guest";
+    	if (currentUser.isAuthenticated()) {
+    		Long userId = (Long) currentUser.getPrincipal();
+    		user = userService.getUser(userId);
+    		key = user.getUsername();
+    	}
+    	
+    	StringBuilder warnings = new StringBuilder("");
+    	StringBuilder errors = new StringBuilder("");
+    	
+    	//Grab the stored analyses
+    	List<Analysis> analyses = null;
+    	QueryResultContainer results = null;
+    	if (this.analysisDict.containsKey(key)) {
+    		analyses = this.analysisDict.get(key);
+    	} else {
+    		errors.append(String.format("The user %s doesn't appear to have any stored analyses, IGV session can't be created.",key));
+    		igvSR.setError(errors.toString());
+    		response.setStatus(405);
+    		return igvSR;
+    	}
+    	
+    	if (this.resultsDict.containsKey(key)) {
+    		results = this.resultsDict.get(key);
+    	} else {
+    		errors.append(String.format("This user %s doesn't appear to have any stored analyses, IGV session can't be created.",key));
+    		igvSR.setError(errors.toString());
+    		response.setStatus(405);
+    		return igvSR;
+    	}
+    	
+    	//Get datatracks list
+    	List<Analysis> usedAnalyses = this.getUsedAnalyses(analyses, results.getResultList());
+    	HashMap<String,String> datatracks = this.getDataTrackList(usedAnalyses);
+    	
+    	String genomeBuild = null;
+    	if (usedAnalyses.size() != 0) {
+    		genomeBuild = usedAnalyses.get(0).getProject().getOrganismBuild().getName();
+    	} else {
+    		errors.append("The stored analysis list is empty, session can't be created.");
+    		igvSR.setError(errors.toString());
+    		response.setStatus(405);
+    		return igvSR;
+    	}
+    	
+    	//Create session object
+    	IGVSession igvSession = new IGVSession(genomeBuild);
+    	List<IGVResource> resources = new ArrayList<IGVResource>();
+    	for (String name: datatracks.keySet()) {
+    		URL datatrackURL = new URL(datatracks.get(name));
+    		if (!urlExists(datatrackURL)) {
+    			warnings.append(String.format("The datatrack %s does not exist or is inaccessable.<br/>", datatracks.get(name)));
+    			continue;
+    		}
+    		
+    		IGVResource igvResource = null;
+    		if (name.endsWith(".vcf.gz")) {
+    			igvResource = new IGVResource(name, datatrackURL, null, false);
+    		} else if (name.endsWith(".bw")) {
+    			igvResource = new IGVResource(name, datatrackURL, null, true);
+    		} else if (name.endsWith(".bed.gz")) {
+    			igvResource = new IGVResource(name, datatrackURL, null, false);
+    		} else {
+    			warnings.append(String.format("The datatrack %s does not have a recognized suffix.<br/>", datatracks.get(name)));
+    		}
+    		
+    		if (igvResource != null) {
+    			resources.add(igvResource);
+    		}
+    	}
+    	igvSR.setWarnings(warnings.toString());
+    	
+    	//Make sure the session has some resources
+    	if (resources.size() == 0) {
+    		errors.append("None of the datatracks can be viewed in IGV.");
+    		igvSR.setError(errors.toString());
+    		response.setStatus(405);
+    		return igvSR;
+    	}
+    	
+    	//Add resources
+    	IGVResource[] resourceArray = new IGVResource[resources.size()];
+    	resourceArray = resources.toArray(new IGVResource[resources.size()]);
+    	igvSession.setIgvResources(resourceArray);
+    	
+    	//Write out file
+    	String rootDirectory = request.getSession().getServletContext().getRealPath("/");
+    	File resourceDirectory = new File(rootDirectory, "resources");
+    	File sessionsDirectory = new File(resourceDirectory,"sessions");
+    	if (!sessionsDirectory.exists()) {
+    		sessionsDirectory.mkdir();
+    	}
+    	String fileName = key + "_igv.xml";
+    	File finalPath = new File(sessionsDirectory,fileName);
+    	igvSession.writeXMLSession(finalPath);
+    	
+    	String serverName = request.getLocalName();
+    	if (serverName.equals("localhost")) {
+    		serverName = "127.0.0.1";
+    	}
+    	
+    	//Construct the url
+    	URL sessionUrl = new URL("http://" + serverName + ":8080/biominer/resources/sessions/" + fileName);
+    	
+    	
+    	igvSR.setUrl(igvSession.fetchIGVLaunchURL(sessionUrl).toString());
+    	igvSR.setUrl2(sessionUrl.toString());
+    	
+    	return igvSR;
+    }
     
+    /* Stolen from http://www.rgagnon.com/javadetails/java-0059.html */
+    public boolean urlExists(URL url){
+        try {
+          HttpURLConnection.setFollowRedirects(false);
+          
+          HttpURLConnection con = (HttpURLConnection) url.openConnection();
+          con.setRequestMethod("HEAD");
+          return (con.getResponseCode() == HttpURLConnection.HTTP_OK);
+        }
+        catch (Exception e) {
+           e.printStackTrace();
+           return false;
+        }
+      }
     
+    private HashMap<String,String> getDataTrackList(List<Analysis> analyses) {
+    	HashMap<String,String> urlDict = new HashMap<String,String>();
+    	for (Analysis a: analyses) {
+    		List<DataTrack> dts = a.getDataTracks();
+			for (DataTrack dt: dts) {
+				String dtName = dt.getName();
+				String dtUrl = dt.getUrl();
+				if (!urlDict.containsKey(dtName)) {
+					urlDict.put(dtName, dtUrl);
+				}
+    		}
+    	}
+    	return urlDict;
+    }
+    
+    private List<Analysis> getUsedAnalyses(List<Analysis> analyses, List<QueryResult> results) {
+    	HashSet<Long> usedIds = new HashSet<Long>();
+    	for (QueryResult qr: results) {
+    		usedIds.add(qr.getIdAnalysis());
+    	}
+    	
+    	List<Analysis> usedAnalyses = new ArrayList<Analysis>();
+    	for (Analysis a: analyses) {
+    		if (usedIds.contains(a.getIdAnalysis())) {
+    			usedAnalyses.add(a);
+    		}
+    	}
+    	
+    	return usedAnalyses;
+    }
     
     
      @RequestMapping(value = "downloadAnalysis", method = RequestMethod.GET)
@@ -937,6 +1116,7 @@ public class QueryController {
         				QueryResult result = new QueryResult();
         				result.setIndex(index++);
         	    		result.setProjectName(a.getProject().getName());
+        	    		result.setIdAnalysis(a.getIdAnalysis());
         	    		result.setAnalysisType(a.getAnalysisType().getType());
         	    		result.setAnalysisName(a.getName());
         	    		result.setAnalysisSummary(a.getDescription());

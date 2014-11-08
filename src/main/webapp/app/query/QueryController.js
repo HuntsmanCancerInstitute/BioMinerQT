@@ -5,16 +5,17 @@
  * QueryController
  * @constructor
  */
-var query     = angular.module('query',     ['angularFileUpload','filters', 'services', 'directives', 'ui.bootstrap', 'chosen','angucomplete-alt']);
+var query     = angular.module('query',     ['btford.socket-io','angularFileUpload','filters', 'services', 'directives', 'ui.bootstrap', 'chosen','angucomplete-alt']);
 
 
 angular.module("query").controller("QueryController", 
-[ '$rootScope','$scope', '$http', '$modal','$anchorScroll','$upload','DynamicDictionary','StaticDictionary',
+['$interval', '$window','$rootScope','$scope', '$http', '$modal','$anchorScroll','$upload','DynamicDictionary','StaticDictionary',
   
-function($rootScope, $scope, $http, $modal, $anchorScroll, $upload, DynamicDictionary, StaticDictionary) {
+function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $upload, DynamicDictionary, StaticDictionary) {
 	
 	$scope.hasResults = false;
 	$scope.warnings = "";
+	$scope.igvWarnings = "";
 	
 	$scope.querySummary = [];
 	$scope.codeResultType = "";
@@ -23,6 +24,7 @@ function($rootScope, $scope, $http, $modal, $anchorScroll, $upload, DynamicDicti
 	$scope.idOrganismBuild = "";
 
 	
+	$scope.selectedAnalysisType = "";
 	$scope.selectedAnalysisTypes = [];
 	$scope.selectedLabs = [];
 	$scope.selectedProjects = [];
@@ -49,6 +51,7 @@ function($rootScope, $scope, $http, $modal, $anchorScroll, $upload, DynamicDicti
 	$scope.codeVariantFilterType = "";
 	$scope.codeVariantFilterType = "";
 	$scope.selectedGenotypes = [];
+	$scope.igvLoaded = false;
 	
 	$scope.hugoList = [];
 	
@@ -57,6 +60,8 @@ function($rootScope, $scope, $http, $modal, $anchorScroll, $upload, DynamicDicti
 	$scope.resultPages = 0;
 	$scope.resultsPerPage = 25;
 	$scope.totalResults = 0;
+	$scope.totalAnalyses = 0;
+	$scope.totalDatatracks = 0;
 	
 	//Sorting
 	$scope.sortType = "FDR";
@@ -95,11 +100,12 @@ function($rootScope, $scope, $http, $modal, $anchorScroll, $upload, DynamicDicti
     	StaticDictionary.getAnalysisTypeList().success(function(data) {
     		$scope.analysisTypeCheckedList = data;
     		for (var idx = 0; idx < $scope.analysisTypeCheckedList.length; idx++) {
-    			$scope.analysisTypeCheckedList[idx].selected  = false;
     			$scope.analysisTypeCheckedList[idx].show      = true;
     			$scope.analysisTypeCheckedList[idx].codeResultTypes = $scope.analysisTypeCheckedList[idx].codeResultTypes.split(",");
     			$scope.analysisTypeCheckedList[idx].possible = true;
+    			$scope.analysisTypeCheckedList[idx].class = '';
     		}
+    		$scope.selectedAnalysisType = "";
     		$scope.loadAnalysisTypes();
     	});
     };
@@ -176,8 +182,134 @@ function($rootScope, $scope, $http, $modal, $anchorScroll, $upload, DynamicDicti
     		console.log("Error running upload");
     	});
 	};
+	
+	$scope.loadIgvSession = function(files) {
+		
+		$http({
+			url: "query/startIgvSession",
+			method: "GET"
+		}).success(function(data) {
+			if (data.warnings == "") {
+				$scope.igvWarnings = "";
+			} else {
+				$scope.igvWarnings = data.warnings;
+			}
+			
+			var urlPass = "http://127.0.0.1:60151/load?file=" + data.url2;
+			var urlFail = data.url;
+			$scope.pingIgvUrl(urlPass, urlFail);
+			
+			$scope.startPing();
+			
+		}).error(function(data) {
+			$modal.open({
+				templateUrl: 'app/common/userError.html',
+				controller: 'userErrorController',
+				resolve: {
+					title: function() {
+						var title = "IGV Session Error";
+						return title;
+					},
+					message: function() {
+						return data.error;
+					}
+				}
+			});
+			if (data.warnings == "") {
+				$scope.igvWarnings = "";
+			} else {
+				$scope.igvWarnings = data.warnings;
+			}
+		});
+	};
     
-    
+	$scope.loadLocus = function(queryResult) {
+		var coord1 = queryResult.coordinates.split(":");
+		var coord2 = coord1[1].split("-");
+		var start = parseInt(coord2[0]);
+		var end = parseInt(coord2[1]);
+		
+		if (queryResult.analysisType == "Variant") {
+			start = start - 50;
+			end = end + 50;
+		} else {
+			start = start - 1000;
+			end = end + 1000;
+		}
+		
+		var finalCoord = coord1[0] + ":" + start.toString() + "-" + end.toString();
+		var url = "http://127.0.0.1:60151/goto?locus=" + finalCoord;
+		
+		$http({
+			method: "GET",
+			url: url
+		}).success(function(data) {
+			$scope.igvLoaded = true;
+		}).error(function(data) {
+			$scope.igvLoaded = false;
+		});
+		
+		
+	};
+	
+	
+	$scope.startPing = function() {
+		$scope.stopPing();
+		$scope.checkIgv = $interval(function() {$scope.pingIGV();}, 10000);
+	};
+	
+	$scope.stopPing = function() {
+		$interval.cancel($scope.checkIgv);
+		$scope.igvLoaded = false;
+	};
+	
+	$scope.pingIgvUrl = function(urlPass,urlFail) {
+		var url = "http://127.0.0.1:60151/execute?command=echo";
+		
+		$http({
+			method: "GET",
+			url: url
+		}).success(function(data) {
+			$scope.igvLoaded = true;
+			$window.open(urlPass,"IGV");
+		}).error(function(data) {
+			$scope.igvLoaded = false;
+			$window.open(urlFail,"IGV");
+		});
+	};
+	
+	$scope.pingIGV = function() {
+		var url = "http://127.0.0.1:60151/execute?command=echo";
+		
+		$http({
+			method: "GET",
+			url: url
+		}).success(function(data) {
+			$scope.igvLoaded = true;
+		}).error(function(data) {
+			$scope.igvLoaded = false;
+			$scope.stopPing();
+		});
+	
+	};
+	
+
+//	$scope.createCORSRequest = function(method, url) {
+//	  var xhr = new XMLHttpRequest();
+//	  if ("withCredentials" in xhr) {
+//	    // XHR for Chrome/Firefox/Opera/Safari.
+//	    xhr.open(method, url, true);
+//	  } else if (typeof XDomainRequest != "undefined") {
+//	    // XDomainRequest for IE.
+//	    xhr = new XDomainRequest();
+//	    xhr.open(method, url);
+//	  } else {
+//	    // CORS not supported.
+//	    xhr = null;
+//	  }
+//	  return xhr;
+//	};
+	
 	
 	$scope.pickResultType = function() {
 		for (var x = 0; x < $scope.analysisTypeCheckedList.length; x++) {
@@ -193,7 +325,9 @@ function($rootScope, $scope, $http, $modal, $anchorScroll, $upload, DynamicDicti
 				$scope.analysisTypeCheckedList[x].class = '';
 			} else {
 				$scope.analysisTypeCheckedList[x].class = 'grey-out';
-				$scope.analysisTypeCheckedList[x].selected = false;
+				if ($scope.analysisTypeCheckedList[x].idAnalysisType == $scope.selectedAnalysisType.idAnalysisType) {
+					$scope.selectedAnalysisType = "";
+				}
 			}
 			
 		}
@@ -220,8 +354,6 @@ function($rootScope, $scope, $http, $modal, $anchorScroll, $upload, DynamicDicti
 		$scope.isGeneBasedQuery = true;
 		$scope.idOrganismBuild = "";
 
-		
-		$scope.selectedAnalysisTypes.length = 0;
 		$scope.selectedLabs.length = 0;
 		$scope.selectedProjects.length = 0;
 		$scope.selectedAnalyses.length = 0;
@@ -248,23 +380,18 @@ function($rootScope, $scope, $http, $modal, $anchorScroll, $upload, DynamicDicti
 		$scope.selectedGenotypes.length = 0;
 		
 		$scope.totalResults = 0;
+		$scope.totalAnalyses = 0;
+		$scope.totalDatatracks = 0;
+		
+		$scope.selectedAnalysisType = "";
+		
+		$scope.stopPing();
 		
 		for (var x =0; x < $scope.analysisTypeCheckedList.length; x++) {
 			$scope.analysisTypeCheckedList[x].show = true;
 			$scope.analysisTypeCheckedList[x].possible = true;
-			$scope.analysisTypeCheckedList[x].selected = false;
+			$scope.analysisTypeCheckedList[x].class = '';
 		}
-	};
-	
-	$scope.someAnalysisTypeChecked = function() {
-		var someSelected = false;
-		for (var i=0; i < $scope.analysisTypeCheckedList.length; i++) {
-			if ($scope.analysisTypeCheckedList[i].selected) {
-				someSelected = true;
-				break;
-			}
-		}
-		return someSelected;
 	};
 	
 	$scope.lookup = function(array, idAttributeName, id) {
@@ -309,12 +436,7 @@ function($rootScope, $scope, $http, $modal, $anchorScroll, $upload, DynamicDicti
 		
 		// Data sets
 		var datasetSummary = "";
-		$scope.selectedAnalysisTypes.length = 0;
-		for (var i=0; i < $scope.analysisTypeCheckedList.length; i++) {
-			if ($scope.analysisTypeCheckedList[i].selected) {
-				$scope.selectedAnalysisTypes.push($scope.analysisTypeCheckedList[i]);
-			}
-		}
+		
 		
 		var atDisplay = $.map($scope.selectedAnalysisTypes, function(analysisType){
 		    return analysisType.type;
@@ -436,17 +558,22 @@ function($rootScope, $scope, $http, $modal, $anchorScroll, $upload, DynamicDicti
 	};
 	
 	
-	$scope.displayWarnings = function(){
+	$scope.displayWarnings = function(type){
+		var warnings = $scope.warnings;
+		var title = "Query Warnings";
+		if (type == "igv") {
+			warnings = $scope.igvWarnings;
+			title = "IGV Session Warnings";
+		} 
 		$modal.open({
 			templateUrl: 'app/common/userError.html',
 			controller: 'userErrorController',
 			resolve: {
 				title: function() {
-					var title = "Query Warnings";
 					return title;
 				},
 				message: function() {
-					return $scope.warnings;
+					return warnings;
 				}
 			}
 		});
@@ -456,6 +583,9 @@ function($rootScope, $scope, $http, $modal, $anchorScroll, $upload, DynamicDicti
 	$scope.runQuery = function() {
 		$scope.hasResults = false;
 		$scope.queryCurrentPage = 0;
+		
+		$scope.stopPing();
+		
 		
 		// Build a summary of the query that is being performed.  This will display
 		// in the results panel
@@ -530,6 +660,8 @@ function($rootScope, $scope, $http, $modal, $anchorScroll, $upload, DynamicDicti
 				$scope.queryResults = data.resultList;
 				$scope.resultPages = data.pages;
 				$scope.totalResults = data.resultNum;
+				$scope.totalAnalyses = data.analysisNum;
+				$scope.totalDatatracks = data.dataTrackNum;
 				$scope.hasResults = true;
 			}
 			
@@ -549,6 +681,10 @@ function($rootScope, $scope, $http, $modal, $anchorScroll, $upload, DynamicDicti
 		}).error(function(data, status, headers, config) {
 			console.log("Could not run query.");
 			$scope.hasResults = false;
+			$scope.resultPages = 0;
+			$scope.totalResults = 0;
+			$scope.totalAnalyses = 0;
+			$scope.totalDatatracks = 0;
 			$scope.returnedResultType = null;
 		});
 		
@@ -736,7 +872,8 @@ function($rootScope, $scope, $http, $modal, $anchorScroll, $upload, DynamicDicti
 		});
 	};
 	
-	$scope.loadSampleSources = function() {		
+	$scope.loadSampleSources = function() {
+		
 		var idAnalysisTypeParams = $.map($scope.selectedAnalysisTypes, function(analysisType){
 		    return analysisType.idAnalysisType;
 		}).join(',');
@@ -809,13 +946,19 @@ function($rootScope, $scope, $http, $modal, $anchorScroll, $upload, DynamicDicti
 						found = true;
 					}
 				}
+				
+				
 				if (!found) {
 					$scope.analysisTypeCheckedList[idx].possible = false;
 					$scope.analysisTypeCheckedList[idx].class = 'grey-out';
-					$scope.analysisTypeCheckedList[idx].selected = false;
+					if ($scope.selectedAnalysisType.idAnalysisType == $scope.analysisTypeCheckedList[idx].idAnalysisType) {
+						$scope.selectedAnalysisType = "";
+					}
 				} else {
 					$scope.analysisTypeCheckedList[idx].possible = true;
-					$scope.analysisTypeCheckedList[idx].class  = '';
+					if ($scope.analysisTypeCheckedList[idx].show) {
+						$scope.analysisTypeCheckedList[idx].class = '';
+					}
 				}
     		}
 		}).error(function(data, status, headers, config) {
@@ -824,8 +967,10 @@ function($rootScope, $scope, $http, $modal, $anchorScroll, $upload, DynamicDicti
 	};
 	
 	//Create watchers
-	$scope.$watch("selectedAnalysisTypes",function(newValue, oldValue) {
+	$scope.$watch("selectedAnalysisType",function(newValue, oldValue) {
 		if (newValue != oldValue) {
+			$scope.selectedAnalysisTypes = [];
+			$scope.selectedAnalysisTypes.push($scope.selectedAnalysisType);
 			$scope.loadOrganismBuildList();
 			$scope.loadLabs();
 			$scope.loadProjects();

@@ -15,8 +15,8 @@ public class IGVSession {
 	//fields
 	private String genomeVersion;
 	private String chromosome;
-	private int start;
-	private int stop;
+	private Integer start;
+	private Integer stop;
 	private IGVResource[] igvResources;
 	
 	//constants
@@ -32,6 +32,13 @@ public class IGVSession {
 		this.start = start;
 		this.stop = stop;
 	}
+	
+	public IGVSession (String igvGenomeVersion) {
+		this.genomeVersion = igvGenomeVersion;
+		this.chromosome = null;
+		this.start = null;
+		this.stop = null;
+	}
 
 	public String getSessionXML(){
 		StringBuilder sb = new StringBuilder();
@@ -40,12 +47,14 @@ public class IGVSession {
 		//global
 		sb.append("<Global genome=\"");
 		sb.append(genomeVersion);
-		sb.append("\" locus=\"");
-		sb.append(chromosome);
-		sb.append(":");
-		sb.append(start);
-		sb.append("-");
-		sb.append(stop);
+		if (this.chromosome != null) {
+			sb.append("\" locus=\"");
+			sb.append(chromosome);
+			sb.append(":");
+			sb.append(start);
+			sb.append("-");
+			sb.append(stop);
+		}
 		sb.append("\" version=\"");
 		sb.append(sessionVersion);
 		sb.append("\" >");
@@ -75,7 +84,7 @@ public class IGVSession {
 
 	/**Returns url to move a running instance of igv to a given chrom and position.*/
 	public static String fetchGoToURL(String igvChrom, int start, int stop){
-		return igvGoToURL+":"+start+"-"+stop;
+		return igvGoToURL+igvChrom+":"+start+"-"+stop;
 	}
 
 	/**Writes the session xml doc to file.*/
@@ -121,6 +130,8 @@ public class IGVSession {
 	public void setIgvResources(IGVResource[] igvResources) {
 		this.igvResources = igvResources;
 	}
+	
+	
 
 	/**For testing....*/
 	public static void main (String[] args){

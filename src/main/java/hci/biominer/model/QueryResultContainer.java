@@ -11,9 +11,11 @@ public class QueryResultContainer {
 	private int resultNum;
 	private int pages;
 	private String sortType;
+	private int analysisNum;
+	private int dataTrackNum;
 	
 	
-	public QueryResultContainer(List<QueryResult> results, int resultsSize, int page, String sortType, boolean sortOnCreate) {
+	public QueryResultContainer(List<QueryResult> results, int resultsSize, int analysisNum, int dataTrackNum, int page, String sortType, boolean sortOnCreate) {
 		this.resultList = results;
 		this.resultNum = resultsSize;
 		this.pages = page;
@@ -21,10 +23,10 @@ public class QueryResultContainer {
 		if (sortOnCreate) {
 			sortResults(sortType);
 		}
-		
+		this.analysisNum = analysisNum;
+		this.dataTrackNum = dataTrackNum;
 	}
 
-	
 	public List<QueryResult> getResultList() {
 		return resultList;
 	}
@@ -37,6 +39,18 @@ public class QueryResultContainer {
 		return this.pages;
 	}
 	
+	public String getSortType() {
+		return sortType;
+	}
+
+	public int getAnalysisNum() {
+		return analysisNum;
+	}
+
+	public int getDataTrackNum() {
+		return dataTrackNum;
+	}
+
 	public void setResultList(List<QueryResult> results) {
 		this.resultList = results;
 	}
@@ -82,7 +96,7 @@ public class QueryResultContainer {
 		
 		List<QueryResult> subset = this.resultList.subList(start, end);
 		
-		QueryResultContainer qrc = new QueryResultContainer(subset,this.resultNum,this.pages, sortType, false);
+		QueryResultContainer qrc = new QueryResultContainer(subset,this.resultNum, this.analysisNum, this.dataTrackNum, this.pages, sortType, false);
 		return qrc;
 		
 	}
