@@ -82,7 +82,7 @@ public class UserController {
     	
     	String salt = this.createSalt();
     	String npass = this.createPassword(password, salt);
-    	User newUser = new User(firstName,lastName,username,npass,salt,email,phone,roleList,labList, instituteList);
+    	User newUser = new User(firstName,lastName,username,npass,salt,email,phone,null,null,roleList,labList, instituteList);
     	userService.addUser(newUser);
     }
     
@@ -135,7 +135,7 @@ public class UserController {
     	}
     	
     	//Create a new user
-    	User user = new User(firstName,lastName,username,npass,salt,email,phone,roleList,labList, instituteList);
+    	User user = new User(firstName,lastName,username,npass,salt,email,phone,null,null,roleList,labList, instituteList);
     	
     	//Update user
     	userService.updateUser(idUser,user);
