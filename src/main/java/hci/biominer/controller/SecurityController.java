@@ -84,8 +84,8 @@ public class SecurityController {
 	public @ResponseBody String resetpassword(@RequestParam(value="username") String username, @RequestParam(value="theUrl") String theUrl, @RequestParam(value="remember") boolean remember)  {
 		String result = null;
 	
-		System.out.println ("[/resetpassword] username is " + username);
-		System.out.println ("[/resetpassword] theUrl is " + theUrl);
+		//System.out.println ("[/resetpassword] username is " + username);
+		//System.out.println ("[/resetpassword] theUrl is " + theUrl);
 		User user = userService.getUserByUsername(username);
 		
 		if (user != null) {
@@ -99,7 +99,7 @@ public class SecurityController {
 			int ipos = theUrl.toLowerCase().indexOf("/biominer");
 			if (ipos != -1) {
 				url = theUrl.substring(0, ipos);
-				System.out.println ("[/resetpassword] url is " + url);
+				//System.out.println ("[/resetpassword] url is " + url);
 			}
 			
 			long GUID_EXPIRATION = 1800000;  //30 minutes
@@ -129,7 +129,7 @@ public class SecurityController {
 			result = "Username does not exist.";
 		}	
 		
-		System.out.println ("[/resetpassword] returning result: " + result);
+		//System.out.println ("[/resetpassword] returning result: " + result);
 		return result;
 	}
 	
@@ -137,8 +137,8 @@ public class SecurityController {
 	public @ResponseBody String changepassword(@RequestParam(value="username") String username, @RequestParam(value="password") String password, @RequestParam(value="passwordconfirm") String passwordconfirm, @RequestParam(value="guid") String guid, @RequestParam(value="remember") boolean remember)  {
 		String result = null;
 	
-		System.out.println ("[/changepassword] username is " + username);
-		System.out.println ("[/changepassword] guid is " + guid);
+		//System.out.println ("[/changepassword] username is " + username);
+		//System.out.println ("[/changepassword] guid is " + guid);
 		
 		// did we get a good guid?
 		if (guid == null || guid.equals("")) {
@@ -208,7 +208,7 @@ public class SecurityController {
 			result = "Username does not exist.";
 		}	
 		
-		System.out.println ("[/changepassword] returning result: " + result);
+		//System.out.println ("[/changepassword] returning result: " + result);
 		return result;
 	}
 	
