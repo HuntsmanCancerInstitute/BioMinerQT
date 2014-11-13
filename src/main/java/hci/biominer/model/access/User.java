@@ -1,5 +1,6 @@
 package hci.biominer.model.access;
 
+import java.sql.Timestamp;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -66,17 +67,26 @@ public class User {
 	@Column(name = "salt")
 	private String salt;
 	
+	@Column(name = "guid")
+	private String guid;
+	
+	@Column(name = "guidExpiration")
+	private Timestamp guidExpiration;
+	
+	
 	public User() {
 		
 	}
 	
-	public User(String firstName, String lastName, String userName, String password, String salt, String email, Long phone, List<Role> roles, List<Lab> labs, List<Institute> institutes) {
+	public User(String firstName, String lastName, String userName, String password, String salt, String email, Long phone, String guid, Timestamp guidExpiration,List<Role> roles, List<Lab> labs, List<Institute> institutes) {
 		this.first = firstName;
 		this.last = lastName;
 		this.username = userName;
 		this.password = password;
 		this.email = email;
 		this.phone = phone;
+		this.guid = guid;
+		this.guidExpiration = guidExpiration;
 		this.roles = roles;
 		this.labs = labs;
 		this.institutes = institutes;
@@ -150,6 +160,26 @@ public class User {
 		this.phone = phone;
 	}
 
+	@JsonIgnore
+	public String getGuid() {
+		return guid;
+	}
+	
+	@JsonIgnore
+	public void setGuid(String guid) {
+		this.guid = guid;
+	}
+	
+	@JsonIgnore
+	public Timestamp getGuidExpiration () {
+		return guidExpiration;		
+	}
+	
+	@JsonIgnore
+	public void setGuidExpiration(Timestamp guidExpiration) {
+		this.guidExpiration = guidExpiration;
+	}
+	
 	public List<Role> getRoles() {
 		return roles;
 	}
