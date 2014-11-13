@@ -3,11 +3,62 @@ var login = angular.module("login",['services'])
 .controller("LoginController", ['$scope','$http','$rootScope','$location','$interval','DynamicDictionary',
                                                       
 	function($scope, $http, $rootScope, $location, $interval, DynamicDictionary) {
-		$scope.user = {username : "", password: ""};
+		$scope.user = {username : "", password: "", passwordconfirm: "", guid: ""};
 		$scope.remember = false;
 		$scope.message = null;
+		$scope.theUrl = "";
 		
 		$rootScope.checkInterval = undefined;
+		
+		$scope.clear = function () {
+            $location.path($rootScope.lastLocation);
+		};
+		
+		$scope.submitChange = function() {
+		$scope.user.guid = $location.search()['guid'];
+
+		//console.log("before calling changepassword, username:, guid: ");
+		//console.log($scope.user.username);
+		//console.log($scope.user.guid);
+
+			$http({
+	    		method: 'POST',
+	    		url: 'security/changepassword',
+	    		params: {username: $scope.user.username, password: $scope.user.password, passwordconfirm: $scope.user.passwordconfirm, guid: $scope.user.guid, remember: $scope.remember}
+	        }).success(function(data,status) {
+	        	$scope.message = data;
+	        	if (angular.isDefined($rootScope.checkInterval)) {
+	        		//console.log("Stopping checking (submit)");
+        			$interval.cancel($rootScope.checkInterval);
+        		}
+
+        		//$location.path($rootScope.lastLocation);
+
+	    	});
+		};		
+		
+
+		$scope.submitReset = function() {
+		$scope.theUrl = $location.absUrl();
+
+		//console.log("before calling resetpassword, username: ");
+		//console.log($scope.user.username);
+		//console.log($scope.theUrl);
+			$http({
+	    		method: 'POST',
+	    		url: 'security/resetpassword',
+	    		params: {username: $scope.user.username, theUrl: $scope.theUrl, remember: $scope.remember}
+	        }).success(function(data,status) {
+	        	$scope.message = data;
+	        	if (angular.isDefined($rootScope.checkInterval)) {
+	        		//console.log("Stopping checking (submit)");
+        			$interval.cancel($rootScope.checkInterval);
+        		}
+
+        		//$location.path($rootScope.lastLocation);
+
+	    	});
+		};		
 
 		$scope.submitCreds = function() {
 			
