@@ -11,6 +11,7 @@ public class QueryResultContainer {
 	private int resultNum;
 	private int pages;
 	private String sortType;
+	private boolean reverse = true;
 	private int analysisNum;
 	private int dataTrackNum;
 	
@@ -72,6 +73,13 @@ public class QueryResultContainer {
 			Collections.sort(this.resultList,new QueryResultComparatorCoordinate());
 		}
 		
+		if (this.reverse) {
+			Collections.reverse(this.resultList);
+			this.reverse = false;
+		} else {
+			this.reverse = true;
+		}
+		
 		for (int i=0;i<this.resultList.size();i++) {
 			this.resultList.get(i).setIndex(i+1);
 		}
@@ -79,11 +87,8 @@ public class QueryResultContainer {
 	
 	@JsonIgnore
 	public QueryResultContainer getQrcSubset(int queriesPerPage, int page, String sortType) {
-		if (!sortType.equals(this.sortType)) {
-			sortResults(sortType);
-			this.sortType = sortType;
-			System.out.println(this.sortType + " " + sortType);
-		}
+		sortResults(sortType);
+		this.sortType = sortType;
 		
 		int start = page * queriesPerPage;
 		int end = start + queriesPerPage;

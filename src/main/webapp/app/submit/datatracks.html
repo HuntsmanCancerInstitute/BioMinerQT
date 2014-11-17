@@ -14,10 +14,15 @@
 					<!-- Text input-->
 					<div class="form-group">
 					  	<label class="control-label" for="data_track_url">Datatrack Path</label>  
-					  	<span class="btn btn-xs btn-primary fileinput-button">
+					  	<span class="btn btn-xs btn-primary fileinput-button" ng-show="datatrack.path==null">
 							<i class="glyphicon glyphicon-plus"></i>
 							<input type="file" ng-file-select="addDataTrackFile($files)"> 
 						</span>
+						<span class="btn btn-xs btn-warning fileinput-button" ng-show="datatrack.path!=null">
+							<i class="glyphicon glyphicon-refresh"></i>
+							<input type="file" ng-file-select="addDataTrackFile($files)"> 
+						</span>
+						
 						<span class="btn btn-xs btn-danger fileinput-button" ng-click="showDataTrackError(datatrack)" ng-show="datatrack.message != null">
 							<i class="glyphicon glyphicon-exclamation-sign"></i>
 						</span>

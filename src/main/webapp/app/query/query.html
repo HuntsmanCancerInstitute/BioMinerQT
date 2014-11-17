@@ -351,11 +351,21 @@
 							<th>Analysis</th>
 							<th>Type</th>
 							<th>Search</th>
-							<th ng-show="returnedResultType == 'GENE'">Gene</th>
+							<th ng-show="returnedResultType == 'GENE'"><button class="btn btn-xs btn-primary" ng-click="copyGenes()"><span class="glyphicon glyphicon-share"></span></button>Gene</th>
 							<th>Conditions</th>
-							<th><span ng-click="sortType='Coordinate';changeTablePosition()">Coordinates</span></th>
-							<th><span ng-click="sortType='FDR';changeTablePosition()">FDR</span></th>
-							<th><span ng-click="sortType='Log2Ratio';changeTablePosition()">Log2Ratio</span></th>
+							<th>
+								<button class="btn btn-xs btn-primary" ng-click="copyCoordinates()"><span class="glyphicon glyphicon-share"></span></button>
+								<span >Coordinates</span>
+								<button class="btn btn-xs btn-primary" ng-click="sortType='Coordinate';changeTablePosition()"><span class="glyphicon glyphicon-sort"></span></button>
+							</th>
+							<th>
+								<span>FDR</span>
+								<button class="btn btn-xs btn-primary" ng-click="sortType='FDR';changeTablePosition()"><span class="glyphicon glyphicon-sort"></span></button>
+							</th>
+							<th>
+								<span >Log2Ratio</span>
+								<button class="btn btn-xs btn-primary" ng-click="sortType='Log2Ratio';changeTablePosition()"><span class="glyphicon glyphicon-sort"></span></button>
+							</th>
 			            </tr>
 			        </thead>
 			        <tbody>

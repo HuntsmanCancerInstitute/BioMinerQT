@@ -5,54 +5,43 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class QueryResultComparatorCoordinate implements Comparator<QueryResult> {
-	private Pattern p1 = Pattern.compile("(chr)*(\\S+):(\\d+)-(\\d+)");
 	
 	@Override
     public int compare(QueryResult o1, QueryResult o2)  {
 		
-		try {
+		Long start1 = o1.getStart();
+		Long start2 = o2.getStart();
+		Long end1 = o1.getEnd();
+		Long end2 = o2.getEnd();
+		
+		if (!o1.isAlpha() && !o2.isAlpha()) {
+			Integer chrom1 = Integer.parseInt(o1.getChrom());
+			Integer chrom2 = Integer.parseInt(o2.getChrom());
 			
 			
-			String coord1 = o1.getCoordinates();
-			String coord2 = o2.getCoordinates();
+			if (chrom1 == chrom2) {
+				if (start1 == start2) {
+					return end1.compareTo(end2);
+				} else {
+					return start1.compareTo(start2);
+				}
+			} else {
+				return chrom1.compareTo(chrom2);
+			}
+ 		} else {
+ 			String chrom1 = o1.getChrom();
+ 			String chrom2 = o2.getChrom();
 			
 			
-//			Matcher m1 = p1.matcher(coord1);
-//			Matcher m2 = p1.matcher(coord2);
-//			
-//			if (!m1.matches() || !m2.matches()) {
-//				ç
-//			} else {
-//				String chrom1 = m1.group(2);
-//				String chrom2 = m2.group(2);
-//				
-//				
-//				
-//				
-//				try {
-//					int chrom1i = Integer.parseInt(chrom1);
-//					int chrom2i = Integer.parseInt(chrom2);
-//					
-//					
-//					if (chrom1i < chrom2i) {
-//						return -1;
-//					} else if (chrom1i > chrom2i) {
-//						return 1;
-//					} else {
-//						try {
-//							int pos1 = Integer
-//						}
-//					}
-//					
-//				} catch (NumberFormatException nfe) {
-//					
-//				}
-				
-				
-			return coord1.compareTo(coord2);
-			
-		} catch (Exception ex) {
-			return 0;
-		}
+			if (chrom1.equals(chrom2)) {
+				if (start1 == start2) {
+					return end1.compareTo(end2);
+				} else {
+					return start1.compareTo(start2);
+				}
+			} else {
+				return chrom1.compareTo(chrom2);
+			}
+ 		}
     }
 }

@@ -130,9 +130,39 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
     
     $scope.$watch("selectAll",function() {
 		for (var i=0;i<$scope.queryResults.length;i++) {
-			$scope.queryResults.selected = $scope.selectAll;
+			$scope.queryResults[i].selected = $scope.selectAll;
 		}
     });
+    
+    $scope.copyCoordinates = function() {
+    	var coordinateList = [];
+    	for (var i=0; i<$scope.queryResults.length; i++) {
+    		if ($scope.queryResults[i].selected) {
+    			var coord = $scope.queryResults[i].coordinates;
+    			if (coordinateList.indexOf(coord) == -1) {
+    				coordinateList.push(coord);
+    			}
+    		}
+    	}
+    	var coordinateEntry = coordinateList.join("\n");
+    	$scope.regions = coordinateEntry;
+    	$scope.intersectionTarget = "REGION";
+    };
+    
+    $scope.copyGenes = function() {
+    	var geneList = [];
+    	for (var i=0; i<$scope.queryResults.length; i++) {
+    		if ($scope.queryResults[i].selected) {
+    			var gene = $scope.queryResults[i].mappedName;
+    			if (geneList.indexOf(gene) == -1) {
+    				geneList.push(gene);
+    			}
+    		}
+    	}
+    	var geneEntry = geneList.join("\n");
+    	$scope.genes = geneEntry;
+    	$scope.intersectionTarget = "GENE";
+    };
     
     $scope.loadRegions = function(files) {
     	$upload.upload({
