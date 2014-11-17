@@ -70,7 +70,7 @@ public class DataTrackDAO {
 		session.beginTransaction();
 		DataTrack DataTrackToUpdate = (DataTrack) session.get(DataTrack.class, idDataTrack);
 		DataTrackToUpdate.setName(dataTrack.getName());
-		DataTrackToUpdate.setUrl(dataTrack.getUrl());
+		DataTrackToUpdate.setPath(dataTrack.getPath());
 		DataTrackToUpdate.setProject(dataTrack.getProject());
 		DataTrackToUpdate.setAnalyses(dataTrack.getAnalyses());
 		session.update(DataTrackToUpdate);

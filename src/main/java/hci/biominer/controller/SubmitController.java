@@ -5,19 +5,33 @@ import org.apache.shiro.subject.Subject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.zip.GZIPOutputStream;
 
+import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import hci.biominer.util.Enumerated.FileStateEnum;
 import hci.biominer.util.Enumerated.ProjectVisibilityEnum;
-
+import hci.biominer.util.BiominerProperties;
+import hci.biominer.util.FileMeta;
+import hci.biominer.util.GenomeBuilds;
 import hci.biominer.util.IntervalTrees;
+import hci.biominer.util.ModelUtil;
+import hci.biominer.util.PreviewMap;
 //Services
 import hci.biominer.service.ProjectService;
 //import hci.biominer.service.AnalysisService;
@@ -50,6 +64,7 @@ import hci.biominer.model.AnalysisType;
 import hci.biominer.model.access.Institute;
 import hci.biominer.model.access.User;
 import hci.biominer.model.access.Lab;
+import hci.biominer.model.genome.Genome;
 
 /**
  * 
@@ -103,7 +118,7 @@ public class SubmitController {
     @Autowired
     private InstituteService instituteService;
     
-    
+   
     /***************************************************
 	 * URL: /project/createProject
 	 * createProject(): creates a new project and returns the id
@@ -354,94 +369,7 @@ public class SubmitController {
     	this.sampleService.addSample(sample);
     }
     
-    /***************************************************
-	 * URL: /project/updateSampleAnalysis
-	 * updateSampleAnalysis(): update sample with new information
-	 * method: post
-	 * @param idSample
-	 * @param idAnalysis
-	 ****************************************************/
-    @RequestMapping(value="updateSampleAnalysis",method=RequestMethod.PUT)
-    @ResponseBody
-    public void updateSampleAnalysis(@RequestParam(value="idSample") Long idSample, @RequestParam(value="idAnalysis") Long idAnalysis) {
-    	
-    }
     
-    /***************************************************
-	 * URL: /project/deleteDataTrack
-	 * deleteDataTrack(): delete dataTrack based on primary index
-	 * method: post
-	 * @param idDataTrack primary index of the sample
-	 ****************************************************/
-    @RequestMapping(value="deleteDataTrack",method=RequestMethod.DELETE)
-    @ResponseBody
-    public void deleteDataTrack(@RequestParam(value="idDataTrack") Long idDataTrack) {
-    	this.dataTrackService.deleteDataTrackById(idDataTrack);
-    }
-    
-    /***************************************************
-	 * URL: /project/updateDataTrack
-	 * updateDataTrack(): update dataTrack with new information
-	 * method: post
-	 * @param idDataTrack
-	 * @param idProject
-	 * @param name
-	 * @param url
-	 ****************************************************/
-    @RequestMapping(value="updateDataTrack",method=RequestMethod.PUT)
-    @ResponseBody
-    public void updateDataTrack(@RequestParam(value="idProject") Long idProject, @RequestParam(value="idDataTrack") Long idDataTrack, 
-    		@RequestParam(value="name") String name, @RequestParam(value="url") String url) {
-    	
-    	//Create secondary objects
-    	Project project = this.projectService.getProjectById(idProject);
-    	
-    	//Create datatrack object
-    	DataTrack updatedDataTrack = this.dataTrackService.getDataTrackById(idDataTrack);
-    	updatedDataTrack.setName(name);
-    	updatedDataTrack.setUrl(url);
-    	updatedDataTrack.setProject(project);
-
-    	//Update sample
-    	this.dataTrackService.updateDataTrack(idDataTrack, updatedDataTrack);
-    }
-    
-    
-    /***************************************************
-	 * URL: /project/createDataTrack
-	 * createDataTrack(): update dataTrack with new information
-	 * method: post
-	 * @param idProject
-	 * @param name
-	 * @param url
-	 ****************************************************/
-    @RequestMapping(value="createDataTrack",method=RequestMethod.PUT)
-    @ResponseBody
-    public void createDataTrack(@RequestParam(value="idProject") Long idProject, @RequestParam(value="name") String name, 
-    		@RequestParam(value="url") String url) {
-    	
-    	//Create secondary objects
-    	Project project = this.projectService.getProjectById(idProject);
-    	
-    	//Create sample object
-    	DataTrack dataTrack = new DataTrack(name, url, project);
-    	
-    	//Update sample
-    	this.dataTrackService.addDataTrack(dataTrack);
-    }
-    
-    /***************************************************
-	 * URL: /project/updateDataTrackAnalysis
-	 * createDataTrack(): update sample with new information
-	 * method: post
-	 * @param idDataTrack
-	 * @param idAnalysis
-	 ****************************************************/
-    @RequestMapping(value="updateDataTrackAnalysis",method=RequestMethod.PUT)
-    @ResponseBody
-    public void updateDataTrackAnalysis(@RequestParam(value="idDataTrack") Long idDataTrack, @RequestParam(value="idAnalysis") Long idAnalysis) {
-    	
-    }
     
     
     /***************************************************
@@ -733,6 +661,156 @@ public class SubmitController {
     	
     	return institutes;
     }
+    
+    
+    /***************************************************
+	 * URL: /genetable/addDatatrackFile
+	 * addTranscriptFile
+	 ****************************************************/
+	@RequestMapping(value="addDataTrackFile",method=RequestMethod.POST)
+	public @ResponseBody
+	FileMeta uploadDataTrack(
+			@RequestParam("file") MultipartFile file,  
+			@RequestParam(value="index") Integer index, 
+			@RequestParam(value="total") Integer total, 
+			@RequestParam(value="name") String filename,
+			@RequestParam(value="idProject") Long idProject,
+			HttpServletResponse response) throws Exception {
+		
+		File subDirectory = new File(FileController.getIgvDirectory(),String.valueOf(idProject));
+		if (!subDirectory.exists()) {
+			subDirectory.mkdir();
+		}
+		File localFile =  new File(subDirectory,filename);
+		FileMeta fm = new FileMeta();
+		
+		//If first file, set append flag to false and delete existing files with the same name.
+		boolean append = true;
+		if (index == 0) {
+			if (localFile.exists()) {
+				localFile.delete();
+			}
+			append = false;
+		}
+		
+		try {
+	
+			//copy file to directory
+			if (filename.endsWith(".bw") || filename.endsWith(".bb") || filename.endsWith(".vcf.gz")) {
+				FileCopyUtils.copy(file.getInputStream(), new FileOutputStream(localFile,append));
+				
+				//If last file, return info
+				if (index+1 == total) {
+					fm.setDirectory(filename);
+					fm.setFinished(true);
+				}
+			
+				fm.setState(FileStateEnum.SUCCESS.toString());
+				response.setStatus(200);
+			} else {
+				fm.setMessage(String.format("The suffix for file %s is not supported.  Only bw, bb and vcf.gz can be loaded into biominer.",filename));
+				fm.setState(FileStateEnum.FAILURE.toString());
+				response.setStatus(405);
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			
+			//If failed, send error response back
+			response.setStatus(405);
+			
+			//delete file
+			if (localFile.exists()) {
+				localFile.delete();
+			}
+			
+			//set error message
+			fm.setMessage(ex.getMessage());
+			fm.setState(FileStateEnum.FAILURE.toString());
+		}
+		return fm;
+	}
+	
+	
+	/***************************************************
+	 * URL: /project/deleteDataTrack
+	 * deleteDataTrack(): delete dataTrack based on primary index
+	 * method: post
+	 * @param idDataTrack primary index of the sample
+	 ****************************************************/
+    @RequestMapping(value="deleteDataTrack",method=RequestMethod.DELETE)
+    @ResponseBody
+    public void deleteDataTrack(@RequestParam(value="idDataTrack") Long idDataTrack) throws Exception{
+    	DataTrack dt = this.dataTrackService.getDataTrackById(idDataTrack);
+    	deleteDataTrackFile(dt);
+    	this.dataTrackService.deleteDataTrackById(idDataTrack);
+    }
+    
+    /***************************************************
+	 * URL: /project/updateDataTrack
+	 * updateDataTrack(): update dataTrack with new information
+	 * method: post
+	 * @param idDataTrack
+	 * @param idProject
+	 * @param name
+	 * @param path
+	 ****************************************************/
+    @RequestMapping(value="updateDataTrack",method=RequestMethod.PUT)
+    @ResponseBody
+    public void updateDataTrack(@RequestParam(value="idProject") Long idProject, @RequestParam(value="idDataTrack") Long idDataTrack, 
+    		@RequestParam(value="name") String name, @RequestParam(value="path") String path) throws Exception {
+    	
+    	//Create secondary objects
+    	Project project = this.projectService.getProjectById(idProject);
+    	
+    
+    	//Load existing datatrack
+    	DataTrack updatedDataTrack = this.dataTrackService.getDataTrackById(idDataTrack);
+    	
+    	//Check to see if path has changed
+    	if (!updatedDataTrack.getPath().equals(path)) {
+    		deleteDataTrackFile(updatedDataTrack);
+    	}
+    	
+    	updatedDataTrack.setName(name);
+    	updatedDataTrack.setPath(path);
+    	updatedDataTrack.setProject(project);
+
+    	//Update sample
+    	this.dataTrackService.updateDataTrack(idDataTrack, updatedDataTrack);
+    }
+    
+    
+    /***************************************************
+	 * URL: /project/createDataTrack
+	 * createDataTrack(): update dataTrack with new information
+	 * method: post
+	 * @param idProject
+	 * @param name
+	 * @param url
+	 ****************************************************/
+    @RequestMapping(value="createDataTrack",method=RequestMethod.PUT)
+    @ResponseBody
+    public void createDataTrack(@RequestParam(value="idProject") Long idProject, @RequestParam(value="name") String name, 
+    		@RequestParam(value="path") String path) {
+    	
+    	//Create secondary objects
+    	Project project = this.projectService.getProjectById(idProject);
+    	
+    	//Create sample object
+    	DataTrack dataTrack = new DataTrack(name, path, project);
+    	
+    	//Update sample
+    	this.dataTrackService.addDataTrack(dataTrack);
+    }
+	
+	private void deleteDataTrackFile(DataTrack dt) throws Exception {
+		File dataTrackFile = new File(FileController.getIgvDirectory(),dt.getProject().getIdProject() + "/" + dt.getPath());
+		if (dataTrackFile.exists()) {
+			dataTrackFile.delete();
+		}
+	}
+	
+	
     
     
 }

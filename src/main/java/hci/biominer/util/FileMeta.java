@@ -11,7 +11,14 @@ public class FileMeta {
 	private String message;
 	private String state;
 	private String directory;
+	private boolean finished = false;
 	
+	public boolean isFinished() {
+		return finished;
+	}
+	public void setFinished(boolean finished) {
+		this.finished = finished;
+	}
 	public String getName() {
 		return name;
 	}

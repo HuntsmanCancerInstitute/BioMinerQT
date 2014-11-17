@@ -10,8 +10,8 @@
 				<div class="form-group">
 				  <label class="col-md-4 control-label" for="project_name">Name</label>  
 				  <div class="col-md-6">
-				  <input ng-show="projectEditMode" id="project_name" ng-model="editedProject.name" name="project_name" placeholder="name" class="form-control input-md" required="" type="text">
-				  <h5 ng-hide="projectEditMode"><label ng-hide="projectEditMode" class="label label-default">{{project.name}}</label></h5> 
+					  <input ng-show="projectEditMode" id="project_name" ng-model="editedProject.name" name="project_name" placeholder="name" class="form-control input-md" required="" type="text">
+					  <input ng-hide="projectEditMode" ng-readonly="true" id="project_name" ng-model="project.name" name="project_name" placeholder="name" class="form-control input-md" type="text">
 				  </div>
 				</div>
 				
@@ -20,7 +20,7 @@
 				  <label class="col-md-4 control-label" for="project_description">Description</label>
 				  <div class="col-md-4">                     
 				    <textarea ng-show="projectEditMode" class="form-control" id="project_description" ng-model="editedProject.description" name="project_description"></textarea>
-				  	<h5 ng-hide="projectEditMode"><label class="label label-default">{{project.description}}</label></h5>
+				  	<textarea ng-hide="projectEditMode" ng-readonly="true" class="form-control" id="project_description" ng-model="project.description" name="project_description"></textarea>
 				  </div>
 				</div>
 				
@@ -28,7 +28,7 @@
 				  <label class="col-md-4 control-label" for="project_urls">Data URLs</label>
 				  <div class="col-md-4">                     
 				    <textarea ng-show="projectEditMode" class="form-control" id="project_urls" ng-model="editedProject.dataUrls" name="project_urls"></textarea>
-				    <h5 ng-hide="projectEditMode"><label class="label label-default">{{project.dataUrls}}</label></h5>
+				    <textarea ng-hide="projectEditMode" ng-readonly="true" class="form-control" id="project_urls" ng-model="project.dataUrls" name="project_urls"></textarea>
 				  </div>
 				</div>
 				
@@ -37,7 +37,7 @@
 				  <label class="col-md-4 control-label" for="species_build">Species and Genome Build</label>
 				  <div class="col-md-6">
 				    <select ng-show="projectEditMode" id="species_build" ng-model="editedProject.organismBuild.idOrganismBuild"  ng-options="gb.idOrganismBuild as gb.name group by gb.organism.common for gb in organismBuildList" class="form-control" required/>
-				    <h5 ng-hide="projectEditMode"><label class="label label-default">{{project.organismBuild.name}}</label></h5>
+				    <select ng-hide="projectEditMode" ng-disabled="true" id="species_build" ng-model="project.organismBuild.idOrganismBuild"  ng-options="gb.idOrganismBuild as gb.name group by gb.organism.common for gb in organismBuildList" class="form-control" />
 				  </div>
 				</div>
 				
@@ -48,7 +48,7 @@
 		  		    	<select  data-placeholder="Choose labs..." ng-model="editedProject.labs" multiple chosen class="col-md-6 chosen-select" ng-options="lab as (lab.first + ' ' + lab.last + ' lab' ) for lab in labList track by lab.idLab" required/>
 				    </div>
 				    <div class="col-md-6" ng-hide="projectEditMode">
-				    	<ul ng-repeat="lab in project.labs"><h5><label class="label label-default" >{{lab.first}}  {{lab.last}} lab</label></h5></ul>
+		  		    	<select ng-disabled="true" data-placeholder="Choose labs..." ng-model="project.labs" multiple chosen class="col-md-6 chosen-select" ng-options="lab as (lab.first + ' ' + lab.last + ' lab' ) for lab in labList track by lab.idLab"/>
 				    </div>
 				</div>
 				
@@ -59,7 +59,7 @@
 		  		    	<select data-placeholder="Choose institutes..." ng-model="editedProject.institutes" multiple chosen class="col-md-6 chosen-select" ng-options="inst as inst.name for inst in instituteList track by inst.idInstitute" required/>
 				    </div>
 				    <div class="col-md-6" ng-hide="projectEditMode">
-				    	<ul ng-repeat="institute in project.institutes"><h5><label class="label label-default" >{{institute.name}}</label></h5></ul>
+		  		    	<select ng-disabled="true" data-placeholder="Choose institutes..." ng-model="project.institutes" multiple chosen class="col-md-6 chosen-select" ng-options="inst as inst.name for inst in instituteList track by inst.idInstitute"/>
 				    </div>
 				</div>
 				
@@ -73,8 +73,12 @@
 				      </input>
 				    </label> 
 				  </div>
-				  <div class="col-md-6" ng-hide="projectEditMode">
-				  	<h5><label class="label label-default" >{{project.visibility}}</label></h5>
+				  <div class="col-md-6" ng-hide="projectEditMode" > 
+				    <label class="radio-inline" ng-repeat="visibility in projectVisibilities">
+				      <input name="visibility"  ng-value="visibility.enum" ng-model="project.visibility" type="radio" ng-disabled="true">
+				         {{ visibility.name }}
+				      </input>
+				    </label> 
 				  </div>		  		  
 				</div>
 			</div>

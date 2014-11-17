@@ -38,16 +38,16 @@ public class DataTrack {
 	@Column(name="name")
 	String name;
 	
-	@Column(name="url")
-	String url;
+	@Column(name="path")
+	String path;
 	
 	public DataTrack() {
 		
 	}
 	
-	public DataTrack(String name, String url, Project project) {
+	public DataTrack(String name, String path, Project project) {
 		this.name = name;
-		this.url = url;
+		this.path = path;
 		this.project = project;
 	}
 
@@ -75,12 +75,12 @@ public class DataTrack {
 		this.project = project;
 	}
 
-	public String getUrl() {
-		return url;
+	public String getPath() {
+		return path;
 	}
 
-	public void setUrl(String url) {
-		this.url = url;
+	public void setPath(String path) {
+		this.path = path;
 	}
 	
 	public List<Analysis> getAnalyses() {

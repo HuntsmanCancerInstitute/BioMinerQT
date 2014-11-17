@@ -5,7 +5,7 @@
  * QueryController
  * @constructor
  */
-var query     = angular.module('query',     ['btford.socket-io','angularFileUpload','filters', 'services', 'directives', 'ui.bootstrap', 'chosen','angucomplete-alt']);
+var query     = angular.module('query',     ['angularFileUpload','filters', 'services', 'directives', 'ui.bootstrap', 'chosen','angucomplete-alt']);
 
 
 angular.module("query").controller("QueryController", 
@@ -66,6 +66,9 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 	//Sorting
 	$scope.sortType = "FDR";
 	
+	//Copy and pase
+	$scope.selectAll = false;
+	
 	$rootScope.helpMessage = "<p>Placeholder for query help</p>";
 
 	
@@ -123,6 +126,12 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
         	});
     	}
     	
+    });
+    
+    $scope.$watch("selectAll",function() {
+		for (var i=0;i<$scope.queryResults.length;i++) {
+			$scope.queryResults.selected = $scope.selectAll;
+		}
     });
     
     $scope.loadRegions = function(files) {

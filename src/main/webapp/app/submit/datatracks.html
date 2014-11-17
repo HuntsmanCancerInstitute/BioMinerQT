@@ -13,8 +13,19 @@
 				<div class="col-lg-8">
 					<!-- Text input-->
 					<div class="form-group">
-					  	<label class="control-label" for="data_track_url">URL</label>  
-					  	<input required id="data_track_url"  ng-model="datatrack.url" name="data_track_url" placeholder="url" class="form-control input-md" required="" type="text">
+					  	<label class="control-label" for="data_track_url">Datatrack Path</label>  
+					  	<span class="btn btn-xs btn-primary fileinput-button">
+							<i class="glyphicon glyphicon-plus"></i>
+							<input type="file" ng-file-select="addDataTrackFile($files)"> 
+						</span>
+						<span class="btn btn-xs btn-danger fileinput-button" ng-click="showDataTrackError(datatrack)" ng-show="datatrack.message != null">
+							<i class="glyphicon glyphicon-exclamation-sign"></i>
+						</span>
+						<div class="col-lg-4 right" >
+				              <div class="progress progress-striped active" ng-show="complete > 0 && complete < 100"><div class="progress-bar progress-bar-info" data-ng-style="{width: complete + '%'}"></div></div>
+				        </div>
+					  	<input ng-model="datatrack.path" class="form-control input-md" type="text" placeholder="datatrack name" ng-readonly="true">
+					  	<input ng-model="datatrack.path" ng-show="false" required type="text">
 					</div>
 				</div> <!-- end col -->
 			</div> <!--  end row -->
@@ -46,7 +57,7 @@
 			    <tbody>
 			        <tr ng-repeat="datatrack in datatracks" ng-mouseenter="hideDatatrackControls(datatrack)" ng-mouseleave="hideDatatrackControls(datatrack)">
 			            <td style="width: 30%;">{{datatrack.name}}</td>
-			            <td style="width: 55%;">{{datatrack.url}}</td>
+			            <td style="width: 55%;">{{datatrack.path}}</td>
 			            <td style="width: 15%;"">
 			                <div ng-show=datatrack.show>
 			                 <button class="btn btn-sm btn-primary" ng-click="editDataTrack(datatrack)" data-toggle="tooltip" data-placement="top" title="edit">

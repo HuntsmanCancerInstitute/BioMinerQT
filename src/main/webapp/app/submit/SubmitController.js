@@ -8,8 +8,8 @@
 var submit    = angular.module('submit', ['ui.bootstrap','filters', 'services', 'directives','chosen','error']);
 
 angular.module("submit").controller("SubmitController", [
-'$scope', '$http', '$modal','DynamicDictionary','StaticDictionary','$rootScope',
-function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) {
+'$scope', '$http', '$modal','DynamicDictionary','StaticDictionary','$rootScope','$upload','$q',
+function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$upload,$q) {
 	/**********************
 	 * Initialization!
 	 *********************/
@@ -46,6 +46,8 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
     $scope.datatrackEditMode = false;
     $scope.resultEditMode = false;
     $scope.projectEditMode = false;
+    
+    $scope.complete = 0;
     
     $rootScope.helpMessage = "<p>Placeholder for data submission help.</p>";
     
@@ -413,19 +415,76 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
     };
 	
 	$scope.saveDataTrack = function(datatrack) {
-		$http({
-			url : "project/updateDataTrack",
-			method: "PUT",
-			params: {idProject: $scope.projectId, name: datatrack.name, url: datatrack.url, idDataTrack: datatrack.idDataTrack},
-		}).success(function(data) {
-			$scope.loadProjects($scope.projectId);
-		}).error(function(data) {
-			console.log("Could not update datatrack");
+		var deferred = $q.defer();
+		var promise = deferred.promise;
+		
+		if ($scope.datatrack.file != null) {
+			promise = $scope.uploadDatatrack($scope.datatrack.file, promise);
+		}
+		
+		promise = promise.then(function(data) {
+			return $http({
+				url : "project/updateDataTrack",
+				method: "PUT",
+				params: {idProject: $scope.projectId, name: datatrack.name, path: datatrack.path, idDataTrack: datatrack.idDataTrack},
+			}).success(function(data) {
+				$scope.loadProjects($scope.projectId);
+				$scope.datatrackEditMode = false;
+				$scope.datatrack = {};
+			}).error(function(data) {
+				console.log("Could not update datatrack");
+			});
 		});
 		
-		$scope.datatrackEditMode = false;
-		$scope.datatrack = {};
+		deferred.resolve();
 	};
+	
+	
+	$scope.addDataTrackFile = function(files) {
+		$scope.datatrack.file = files[0];
+		$scope.datatrack.path = files[0].name;
+	};
+	
+	$scope.uploadDatatrack = function(file, promise) {
+		$scope.complete = 0;
+		var max = 100000000;
+	
+		var fileChunks = [];
+		
+		if (file.size > max) {
+			for (var i=0;i<file.size;i+=max)
+			fileChunks.push(file.slice(i,i+max));
+		}
+		
+		
+		
+		var loaded = 0;
+		for (var i=0; i<fileChunks.length; i++) {
+			(function(i) {
+				promise = promise.then(function() {
+					return $upload.upload({
+						url: "project/addDataTrackFile",
+						file: fileChunks[i],
+						params : {index: i, total: fileChunks.length, name: file.name, idProject: $scope.project.idProject},
+					}).progress(function(evt) {
+						$scope.complete = (loaded + evt.loaded) / file.size * 100;
+					}).success(function(data) {
+						loaded += fileChunks[i].size;
+						if (data.finished) {
+							$scope.datatrack.path = data.directory;
+						}
+						$scope.complete = (loaded) / file.size * 100;
+					}).error(function(data) {
+						$scope.datatrack.message = data.message;
+						$scope.complete = 0;
+						console.log($scope.datatrack.message);
+					});
+				});
+			})(i);
+		}
+		return promise;
+	};
+	
 	
 	$scope.removeDataTrack = function(datatrack) {
 		//Keeping it a list in case we move over to checkboxes
@@ -457,19 +516,30 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope) 
 			console.log("Could not delete datatrack");
 		});
     };
+    
+    $scope.showDataTrackError = function(datatrack) {
+    	$scope.showErrorMessage("Error uploading datatracks", datatrack.message);
+    };
 	
 	$scope.addDataTrack = function(datatrack) {
-		$http({
-			url : "project/createDataTrack",
-			method: "PUT",
-			params: {idProject: $scope.projectId, name: datatrack.name, url: datatrack.url},
-		}).success(function(data) {
-			$scope.loadProjects($scope.projectId);
-		}).error(function(data) {
-			console.log("Could not create datatrack");
-		});
+		var deferred = $q.defer();
+		var promise = deferred.promise;
 		
-		$scope.datatrack = {};
+		promise = $scope.uploadDatatrack(datatrack.file, promise);
+		
+		promise = promise.then(function() {
+			return  $http({
+				url : "project/createDataTrack",
+				method: "PUT",
+				params: {idProject: $scope.projectId, name: datatrack.name, path: datatrack.path},
+			}).success(function(data) {
+				$scope.loadProjects($scope.projectId);
+				$scope.datatrack = {};
+			}).error(function(data) {
+				console.log("Could not create datatrack");
+			});
+		});
+		deferred.resolve();
 	}; 
 	
 	

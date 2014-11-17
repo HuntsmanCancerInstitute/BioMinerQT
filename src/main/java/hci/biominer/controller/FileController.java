@@ -64,17 +64,6 @@ public class FileController {
 	@Autowired
 	private AnalysisTypeService analysisTypeService;
 	
-	private Genome fetchGenome(OrganismBuild ob) throws Exception {
-    	try {
-    		if (!GenomeBuilds.doesGenomeExist(ob)) {
-        		GenomeBuilds.loadGenome(ob);
-        	} 
-        	return GenomeBuilds.getGenome(ob);
-    	} catch (Exception ex) {
-    		throw ex;
-    	}
-    }
-	
 	public static void checkProperties() throws Exception{
 		if (!BiominerProperties.isLoaded()) {
 			BiominerProperties.loadProperties();
@@ -106,6 +95,10 @@ public class FileController {
 		return createDirectory("genome");
 	}
 	
+	public static File getIgvDirectory() throws Exception {
+		return createDirectory("IGV");
+	}
+	
 	public static File getGenesDirectory() throws Exception {
 		return createDirectory("genes");
 	}
@@ -119,6 +112,8 @@ public class FileController {
 		}
 		return subDirectory;
 	}
+	
+	
 	
 	/***************************************************
 	 * URL: /submit/upload  
@@ -370,7 +365,7 @@ public class FileController {
 			Genome genome = null;
 			
 			try {
-				genome = this.fetchGenome(gb);
+				genome = GenomeBuilds.fetchGenome(gb);
 			} catch (Exception ex) {
 				ex.printStackTrace();
 				outputMeta.setName(output);
@@ -486,7 +481,7 @@ public class FileController {
 			Genome genome = null;
 			
 			try {
-				genome = this.fetchGenome(gb);
+				genome = GenomeBuilds.fetchGenome(gb);
 			} catch (Exception ex) {
 				ex.printStackTrace();
 				outputMeta.setName(output);
@@ -613,7 +608,7 @@ public class FileController {
 			Genome genome = null;
 			
 			try {
-				genome = this.fetchGenome(gb);
+				genome = GenomeBuilds.fetchGenome(gb);
 			} catch (Exception ex) {
 				ex.printStackTrace();
 				outputMeta.setName(output);

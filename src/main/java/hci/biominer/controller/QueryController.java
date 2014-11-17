@@ -8,6 +8,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -329,7 +330,7 @@ public class QueryController {
     	OrganismBuild ob = this.organismBuildService.getOrganismBuildById(idOrganismBuild);   	
     	
     	//Get genome
-    	Genome genome = this.fetchGenome(ob);
+    	Genome genome = GenomeBuilds.fetchGenome(ob);
     	
     	//Build AnalysisTypeList
     	HashMap<AnalysisTypeEnum,AnalysisType> atMap = new HashMap<AnalysisTypeEnum,AnalysisType>();
@@ -433,6 +434,11 @@ public class QueryController {
     @RequestMapping(value="startIgvSession",method=RequestMethod.GET)
     @ResponseBody
     public IgvSessionResult startIgvSession(HttpServletResponse response, HttpServletRequest request) throws Exception {
+    	String serverName = request.getLocalName();
+    	if (serverName.equals("localhost")) {
+    		serverName = "127.0.0.1";
+    	}
+    	
     	//Create result 
     	IgvSessionResult igvSR = new IgvSessionResult();
     	
@@ -448,6 +454,23 @@ public class QueryController {
     	
     	StringBuilder warnings = new StringBuilder("");
     	StringBuilder errors = new StringBuilder("");
+    	
+    	//Create file handle to actual file
+    	String fileName = key + "_igv.xml";
+    	File localDirectory = FileController.getIgvDirectory();
+    	File sessionFile = new File(localDirectory,fileName);
+    	
+    	//Link hosted directory to local files
+    	//Create file handle to hosted files
+    	String rootDirectory = request.getSession().getServletContext().getRealPath("/");
+    	File sessionsDirectory = new File(rootDirectory,"../sessions");
+    
+    	
+    	if (!sessionsDirectory.exists()) {
+    		Process process = Runtime.getRuntime().exec( new String[] { "ln", "-s", localDirectory.getAbsolutePath(), sessionsDirectory.getAbsolutePath() } );
+    		process.waitFor();
+    	    process.destroy();
+    	}
     	
     	//Grab the stored analyses
     	List<Analysis> analyses = null;
@@ -488,7 +511,7 @@ public class QueryController {
     	IGVSession igvSession = new IGVSession(genomeBuild);
     	List<IGVResource> resources = new ArrayList<IGVResource>();
     	for (String name: datatracks.keySet()) {
-    		URL datatrackURL = new URL(datatracks.get(name));
+    		URL datatrackURL = new URL("http://" + serverName + ":8080/sessions/" + datatracks.get(name));
     		if (!urlExists(datatrackURL)) {
     			warnings.append(String.format("The datatrack %s does not exist or is inaccessable.<br/>", datatracks.get(name)));
     			continue;
@@ -499,7 +522,7 @@ public class QueryController {
     			igvResource = new IGVResource(name, datatrackURL, null, false);
     		} else if (name.endsWith(".bw")) {
     			igvResource = new IGVResource(name, datatrackURL, null, true);
-    		} else if (name.endsWith(".bed.gz")) {
+    		} else if (name.endsWith(".bb")) {
     			igvResource = new IGVResource(name, datatrackURL, null, false);
     		} else {
     			warnings.append(String.format("The datatrack %s does not have a recognized suffix.<br/>", datatracks.get(name)));
@@ -524,25 +547,16 @@ public class QueryController {
     	resourceArray = resources.toArray(new IGVResource[resources.size()]);
     	igvSession.setIgvResources(resourceArray);
     	
-    	//Write out file
-    	String rootDirectory = request.getSession().getServletContext().getRealPath("/");
-    	File resourceDirectory = new File(rootDirectory, "resources");
-    	File sessionsDirectory = new File(resourceDirectory,"sessions");
-    	if (!sessionsDirectory.exists()) {
-    		sessionsDirectory.mkdir();
-    	}
-    	String fileName = key + "_igv.xml";
-    	File finalPath = new File(sessionsDirectory,fileName);
-    	igvSession.writeXMLSession(finalPath);
     	
-    	String serverName = request.getLocalName();
-    	if (serverName.equals("localhost")) {
-    		serverName = "127.0.0.1";
-    	}
+    	
+    	//Write out session
+    	igvSession.writeXMLSession(sessionFile);
+    	
+    	
+    	
     	
     	//Construct the url
-    	URL sessionUrl = new URL("http://" + serverName + ":8080/biominer/resources/sessions/" + fileName);
-    	
+    	URL sessionUrl = new URL("http://" + serverName + ":8080/sessions/" + fileName);
     	
     	igvSR.setUrl(igvSession.fetchIGVLaunchURL(sessionUrl).toString());
     	igvSR.setUrl2(sessionUrl.toString());
@@ -563,21 +577,21 @@ public class QueryController {
            e.printStackTrace();
            return false;
         }
-      }
+    }
     
     private HashMap<String,String> getDataTrackList(List<Analysis> analyses) {
-    	HashMap<String,String> urlDict = new HashMap<String,String>();
+    	HashMap<String,String> pathDict = new HashMap<String,String>();
     	for (Analysis a: analyses) {
     		List<DataTrack> dts = a.getDataTracks();
 			for (DataTrack dt: dts) {
 				String dtName = dt.getName();
-				String dtUrl = dt.getUrl();
-				if (!urlDict.containsKey(dtName)) {
-					urlDict.put(dtName, dtUrl);
+				String dtPath = a.getProject().getIdProject() + "/" + dt.getPath();
+				if (!pathDict.containsKey(dtName)) {
+					pathDict.put(dtName, dtPath);
 				}
     		}
     	}
-    	return urlDict;
+    	return pathDict;
     }
     
     private List<Analysis> getUsedAnalyses(List<Analysis> analyses, List<QueryResult> results) {
@@ -997,16 +1011,7 @@ public class QueryController {
     
     
     
-    private Genome fetchGenome(OrganismBuild ob) throws Exception {
-    	try {
-    		if (!GenomeBuilds.doesGenomeExist(ob)) {
-        		GenomeBuilds.loadGenome(ob);
-        	} 
-        	return GenomeBuilds.getGenome(ob);
-    	} catch (Exception ex) {
-    		throw ex;
-    	}
-    }
+    
     	
     private ArrayList<HashMap<String,IntervalTree<GenericResult>>> generateIntervalTrees(List<Analysis> analyses, Genome genome) throws Exception{
     	ArrayList<HashMap<String,IntervalTree<GenericResult>>> itList = new ArrayList<HashMap<String,IntervalTree<GenericResult>>>();

@@ -16,8 +16,7 @@ angular.module('navbar').controller("NavbarController",['$modal','$scope','$http
 				url: "security/logout",
 				method: "POST",
 			}).success(function(data) {
-				$rootScope.loggedUser = null;
-				$scope.isAuthenticated();
+				$rootScope.isAuthenticated();
 			});
 		};
 		
@@ -60,7 +59,7 @@ angular.module('navbar').controller("NavbarController",['$modal','$scope','$http
 				url = prev.originalPath;
 			}
 			
-			if (next.restrict == "authorized" && !$scope.admin) {
+			if (next.restrict == "authorized" && !$scope.admin && $rootScope.loggedUser == null) {
 				$scope.isAuthenticated();
 				$rootScope.lastLocation = url;
 				$location.path("/login");
@@ -73,8 +72,6 @@ angular.module('navbar').controller("NavbarController",['$modal','$scope','$http
 			}
 		
 		});  
-		
-		$scope.isAuthenticated();
 		
 		$scope.displayHelp = function() {
 			$modal.open({

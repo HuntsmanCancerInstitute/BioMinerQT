@@ -76,6 +76,17 @@ public class GenomeBuilds {
 			loadedGenomes.remove(ob.getGenomeFile());
 		}
 	}
+	
+	public static Genome fetchGenome(OrganismBuild ob) throws Exception {
+    	try {
+    		if (!GenomeBuilds.doesGenomeExist(ob)) {
+        		GenomeBuilds.loadGenome(ob);
+        	} 
+        	return GenomeBuilds.getGenome(ob);
+    	} catch (Exception ex) {
+    		throw ex;
+    	}
+    }
  
     
     
