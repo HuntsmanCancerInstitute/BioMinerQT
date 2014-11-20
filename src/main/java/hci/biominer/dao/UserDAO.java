@@ -46,11 +46,15 @@ public class UserDAO {
 			userToUpdate.setSalt(user.getSalt());
 		}
 		
-		if (user.getGuid() != null) {
-			userToUpdate.setGuid(user.getGuid());
-			userToUpdate.setGuidExpiration(user.getGuidExpiration());
+
+		userToUpdate.setGuid(user.getGuid());
+		userToUpdate.setGuidExpiration(user.getGuidExpiration());
+
+
+		if (user.getisActive() != null) {
+			userToUpdate.setisActive(user.getisActive());
 		}
-			
+		
 		userToUpdate.setPhone(user.getPhone());
 		userToUpdate.setLabs(user.getLabs());
 		userToUpdate.setInstitutes(user.getInstitutes());
