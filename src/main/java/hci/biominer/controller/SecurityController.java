@@ -70,8 +70,14 @@ public class SecurityController {
 			Long id = (Long)SecurityUtils.getSubject().getPrincipal();
 			SecurityUtils.getSubject().getSession().setTimeout(timeout);
 			User user = userService.getUser(id);
-			lm.setUser(user);
-			lm.setTimeout(timeout);
+			if (user.getisActive() != null && user.getisActive().equalsIgnoreCase("n")) {
+				lm.setMessage("Username is inactivate.");
+				SecurityUtils.getSubject().logout();
+			}
+			else {
+				lm.setUser(user);
+				lm.setTimeout(timeout);
+			}
 		} catch (AuthenticationException e) {
 			e.printStackTrace();
 			lm.setMessage("Invalid username or password. Please try again.");
@@ -89,7 +95,13 @@ public class SecurityController {
 		User user = userService.getUserByUsername(username);
 		
 		if (user != null) {
-			// got the user, send the email
+			// got the user, see if active
+			if (user.getisActive() != null && user.getisActive().equalsIgnoreCase("n")) {
+				result = "Username is inactivate.";
+				return result;
+			}
+					
+			// send the email
 			String email = user.getEmail();
 			result = "Instructions on how to reset your password have been emailed to you. ";
 			
@@ -114,13 +126,17 @@ public class SecurityController {
             // flush to database
             long userId = user.getIdUser();
             userService.updateUser(userId, user);
-            
-			String body = "A change of password has been requested for the BioMiner account associated with this email.\n\n" +
-			              "Please follow this link to change your password: " + url + "/biominer/#/changepassword?guid=" + guid +
-			              "\n\n" + "This link will expire in 30 minutes.\n";
+            		
+            String reset = "<a href=\"" + url + "/biominer/#/changepassword?guid=" + guid +"\">Click here</a>" ;
+			String body = "A change of password has been requested for the BioMiner account associated with this email.<br><br>" +
+		              reset + " to change your password.<br><br>" + 
+		              "This link will expire in 30 minutes.<br>";
+			
 			String subject = "Reset BioMiner Password";
 			
-			String status = MailUtil.sendMail(email,body,subject);
+			String [] emails = new String[1];
+			emails[0] = email;
+			String status = MailUtil.sendMail(emails,body,subject);
 			if (status != null)
 			{
 				result = "Unable to send password reset instructions, error: " + status;
@@ -175,7 +191,7 @@ public class SecurityController {
             }
             
             if (userguid == null || !userguid.equals(guid)) {
-            	result = "Guid don't match. Try reset password again.";
+            	result = "Guid doesn't match. Try reset password again.";
  
                 user.setGuid(null);
                 user.setGuidExpiration(null);
@@ -230,7 +246,4 @@ public class SecurityController {
 		return lm;
 	}
 	
-	
-	
-
 }
