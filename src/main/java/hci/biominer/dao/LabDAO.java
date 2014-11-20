@@ -41,6 +41,8 @@ public class LabDAO  {
 		Lab labToUpdate = (Lab) session.get(Lab.class, idLab);
 		labToUpdate.setFirst(lab.getFirst());
 		labToUpdate.setLast(lab.getLast());
+		labToUpdate.setEmail(lab.getEmail());
+		labToUpdate.setPhone(lab.getPhone());
 		session.update(labToUpdate);
 		session.getTransaction().commit();
 		session.close();
