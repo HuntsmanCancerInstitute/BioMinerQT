@@ -12,7 +12,7 @@ import javax.mail.internet.MimeMessage;
 public final class MailUtil {
 
 
-	public static String sendMail(String recipient, String body, String subject) {
+	public static String sendMail(String [] recipient, String body, String subject) {
 		String status = "";
 		String from = "DoNotReply@hci.utah.edu";
 
@@ -24,9 +24,11 @@ public final class MailUtil {
 		try {
 			MimeMessage message = new MimeMessage(session);
 			message.setFrom(new InternetAddress(from));
-			message.addRecipient(Message.RecipientType.TO,new InternetAddress(recipient));
+			for (int ii = 0; ii < recipient.length; ii++) {
+				message.addRecipient(Message.RecipientType.TO,new InternetAddress(recipient[ii]));
+			}
 			message.setSubject(subject);
-			message.setText(body);
+			message.setContent(body,"text/html");
 			Transport.send(message);
 			status = null;
 		} catch (MessagingException mex) {
