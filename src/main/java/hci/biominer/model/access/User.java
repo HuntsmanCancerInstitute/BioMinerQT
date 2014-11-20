@@ -73,12 +73,15 @@ public class User {
 	@Column(name = "guidExpiration")
 	private Timestamp guidExpiration;
 	
+	@Column(name = "isActive")
+	private String isActive;	
+	
 	
 	public User() {
 		
 	}
 	
-	public User(String firstName, String lastName, String userName, String password, String salt, String email, Long phone, String guid, Timestamp guidExpiration,List<Role> roles, List<Lab> labs, List<Institute> institutes) {
+	public User(String firstName, String lastName, String userName, String password, String salt, String email, Long phone, String guid, Timestamp guidExpiration, String isActive, List<Role> roles, List<Lab> labs, List<Institute> institutes) {
 		this.first = firstName;
 		this.last = lastName;
 		this.username = userName;
@@ -87,6 +90,7 @@ public class User {
 		this.phone = phone;
 		this.guid = guid;
 		this.guidExpiration = guidExpiration;
+		this.isActive = isActive;
 		this.roles = roles;
 		this.labs = labs;
 		this.institutes = institutes;
@@ -184,6 +188,16 @@ public class User {
 		return roles;
 	}
 
+	@JsonIgnore
+	public String getisActive() {
+		return isActive;
+	}
+	
+	@JsonIgnore
+	public void setisActive(String isActive) {
+		this.isActive = isActive;
+	}
+	
 	public void setRoles(List<Role> roles) {
 		this.roles = roles;
 	}
