@@ -1,11 +1,14 @@
-<div class="container" ng-controller="LoginController">
+<div class="container" ng-controller="UserAdminController">
    <div class="row">
-        <div class="col-sm-3 col-sm-offset-3">
-        </div>
         <div class="col-sm-3 col-sm-offset-2">
            <a href="#/passwordreset"><h5>Reset password</h5></a>
         </div>
+        <div class="col-sm-3 col-sm-offset-3">
+           <a href="" ng-click="openNewUserRequestWindow()"><h5>Sign up for account</h5></a>  
+        </div>        
    </div>
+</div>   
+<div class="container" ng-controller="LoginController">
    <div class="row">
 	   	<form class="form-horizontal col-lg-offset-3 col-lg-4" name="loginForm">
 		    <h3>Please enter your credentials</h3>
@@ -28,5 +31,4 @@
 			</fieldset>
 		</form>
    </div>
-
 </div>
