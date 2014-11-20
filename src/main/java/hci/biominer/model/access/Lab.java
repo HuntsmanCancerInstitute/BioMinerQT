@@ -30,15 +30,22 @@ public class Lab {
 	@Column(name="last")
 	private String last;
 	
+	@Column(name="email")
+	private String email;
+	
+	@Column(name="phone")
+	private String phone;
 	
 	
 	public Lab() {
 		
 	}
 	
-	public Lab(String first, String last) {
+	public Lab(String first, String last, String email, String phone) {
 		this.first = first;
 		this.last = last;
+		this.email = email;
+		this.phone = phone;
 	}
 	
 	
@@ -50,12 +57,28 @@ public class Lab {
 		return this.last;
 	}
 	
+	public String getEmail() {
+		return this.email;
+	}	
+
+	public String getPhone() {
+		return this.phone;
+	}
+	
 	public void setFirst(String first) {
 		this.first = first;
 	}
 	
 	public void setLast(String last) {
 		this.last = last;
+	}
+	
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	public void setPhone(String phone) {
+		this.phone = phone;
 	}
 	
 	public Long getIdLab() {
