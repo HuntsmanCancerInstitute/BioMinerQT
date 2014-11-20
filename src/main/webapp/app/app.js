@@ -54,6 +54,20 @@
 			restrict: 'none'
 
 		});
+		
+		$routeProvider.when('/approveuser',{
+			templateUrl: 'app/useradmin/approveuser.html',
+			controller: 'UserAdminController',
+			restrict: 'none'
+
+		});
+
+		$routeProvider.when('/denyuser',{
+			templateUrl: 'app/useradmin/denyuser.html',
+			controller: 'UserAdminController',
+			restrict: 'none'
+
+		});
 
 		$routeProvider.otherwise({redirectTo: '/dashboard'});
 	}]);
