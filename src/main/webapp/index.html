@@ -60,15 +60,15 @@
 	        </button>
 	        <a class="navbar-brand" href="index.html"><img src="resources/images/biominer_blue.png"/> BioMiner</a>
 	      </div>
-	
+
 	      <!-- Collect the nav links, forms, and other content for toggling -->
 	      <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 	          <ul class="nav navbar-nav">
-	          
+
 	    	    <li><a href="#/query" ><span class="glyphicon glyphicon-zoom-in"></span> Query</a></li>
 	    	    <li><a href="#/submit"><span class="glyphicon glyphicon-cloud-upload"></span> Submit Your Data</a></li>
 	        	<li><a href="#/useradmin" ng-hide="!admin"><span class="glyphicon glyphicon-cog"></span> Admin</a></li>
-	            
+
 	          </ul>
 	          <div class="nav navbar-nav navbar-right">
 		        <ul class="nav navbar-nav">
@@ -81,7 +81,7 @@
 	       </div> <!-- /.navbar-collapse -->
 	    </div> <!-- /.container-fluid -->
 	</nav>
-	
+
 	<!-- This is filled in with the appropriate html view based on the AngularJS routing in app.js -->
   	<div class="container-fluid" data-ng-view></div>
 
@@ -114,6 +114,8 @@
 <script src="resources/js/chosen.js"></script>
 <!--  autocomplete  -->
 <script src="resources/js/angucomplete-alt.js"></script>
+<script src="resources/js/socket.js"></script>
+<script src="resources/js/socket.io.js"></script>
 
 <!-- Angular upload (two files, this one is loaded after angular.js -->
 <script src="resources/js/angular-file-upload.min.js"></script>
@@ -143,5 +145,5 @@
 
 
 
-</body> 
+</body>
 </html>
