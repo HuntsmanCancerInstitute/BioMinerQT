@@ -6,9 +6,14 @@
  */
 var useradmin = angular.module('useradmin', ['angularFileUpload','ui.mask','ui.validate','confirmation','filters','directives','services']);
 
-angular.module("useradmin").controller("UserAdminController", ['$rootScope','$scope','$http','$modal','$timeout','$upload','DynamicDictionary','StaticDictionary',
+angular.module("useradmin").controller("UserAdminController", ['$rootScope','$scope','$http','$location','$window','$modal','$timeout','$upload','DynamicDictionary','StaticDictionary',
                                                       
-function($rootScope, $scope, $http, $modal, $timeout, $upload, DynamicDictionary, StaticDictionary) {
+function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $upload, DynamicDictionary, StaticDictionary) {
+	
+	// approve user variables
+	$scope.guid = "";
+	$scope.iduser = "";
+	$scope.deleteuser = "";
 	
 	//user table variables
 	$scope.userLimit = 10;
@@ -38,6 +43,7 @@ function($rootScope, $scope, $http, $modal, $timeout, $upload, DynamicDictionary
 	$scope.selectAllUsers = false;
 	
 	$scope.columnDefs = null;
+	//console.log("In UserAdminController.js at the top");
 	
 	/*************************************
 	 * Watchers
@@ -237,7 +243,7 @@ function($rootScope, $scope, $http, $modal, $timeout, $upload, DynamicDictionary
 	
 	$scope.setMessage = function(message) {
 		$scope.message = message;
-		$timeout(function(){$scope.message = "";},3000); 
+		$timeout(function(){$scope.message = "";},5000); 
 	};
 	
 	$scope.isAdmin = function(selectedUsers) {
@@ -518,6 +524,58 @@ function($rootScope, $scope, $http, $modal, $timeout, $upload, DynamicDictionary
 	    });
     };
     
+    $scope.openNewUserRequestWindow = function () {
+	//console.log("In openNewUserRequestWindow");    
+	    var modalInstance = $modal.open({
+	      templateUrl: 'app/useradmin/userWindow.html',
+	      controller: 'UserController',
+    	  resolve: {
+		        labList: function () {
+		          return $scope.labs;
+		        },
+		        instituteList: function() {
+    		  		return $scope.institutes;
+  				},
+		        userData: function () {
+		        	var emptyUser = {first: '', last: '', username: '', password: '',
+			    			phone: '', email: '', admin: false, lab: []};
+    				return emptyUser;
+    			},
+    			title: function() {
+    				return "Sign Up";
+    			},
+    			bFace: function() {
+    				return "Sign Up";
+    			}
+		  }
+	    });
+
+	    modalInstance.result.then(function (user) {
+	    	//Create a list of lab ids
+	    	var lids = [];
+	    	var iids = [];
+	    	for (var i=0; i<user.labs.length;i++) {
+	    		lids.push(user.labs[i].idLab);
+	    	}
+	    	for (var i=0; i<user.institutes.length;i++) {
+	    		iids.push(user.institutes[i].idInstitute);
+	    	}
+	    	
+			//console.log("about to call user/newuser");	    	
+	    	$http({
+    	    	method: 'POST',
+    	    	url: 'user/newuser',
+    	    	params: {first:user.first,last:user.last,username:user.username,password:user.password,email:user.email,
+    	    		phone:user.phone,admin:user.admin,lab:lids,institutes:iids,theUrl:$location.absUrl()}
+    	    }).success(function(data,status) {
+    	    	$scope.setMessage(data);
+    	    	$scope.loadSelected();
+    	    	$scope.loadLabs();
+    	    });	
+	    });
+    };
+
+
     $scope.openNewLabWindow = function () {
 	    var modalInstance = $modal.open({
 	      templateUrl: 'app/useradmin/labWindow.html',
@@ -548,6 +606,32 @@ function($rootScope, $scope, $http, $modal, $timeout, $upload, DynamicDictionary
 	    	
 	    });
     };
+
+
+		$scope.approveUser = function() {
+			$scope.guid = $location.search()['guid'];
+			$scope.iduser = $location.search()['idUser'];
+			$scope.deleteuser = $location.search()['deleteuser'];
+		
+			//console.log("before calling approveuser, guid: ");
+			//console.log($scope.guid);
+			//console.log($scope.iduser);
+			//console.log($scope.deleteuser);
+
+			$http({
+	    		method: 'POST',
+	    		url: 'user/approveuser',
+	    		params: {guid: $scope.guid, iduser: $scope.iduser, deleteuser: $scope.deleteuser, theUrl:$location.absUrl()}
+	        }).success(function(data,status) {
+	        	$scope.setMessage(data);
+	        	$timeout(function(){$window.close();},5000);
+	        	//$scope.message = data;
+
+        		//$location.path($rootScope.lastLocation);
+
+	    	});
+		};		
+		
     
     $scope.openNewOrganismWindow = function () {
 	    var modalInstance = $modal.open({
