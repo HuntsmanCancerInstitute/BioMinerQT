@@ -10,6 +10,7 @@ import hci.biominer.model.SamplePrep;
 import hci.biominer.model.SampleSource;
 import hci.biominer.model.SampleType;
 import hci.biominer.model.access.Institute;
+import hci.biominer.model.access.User;
 import hci.biominer.service.AnalysisTypeService;
 import hci.biominer.service.GeneAnnotationService;
 import hci.biominer.service.GenotypeService;
@@ -20,9 +21,11 @@ import hci.biominer.service.SampleConditionService;
 import hci.biominer.service.SamplePrepService;
 import hci.biominer.service.SampleSourceService;
 import hci.biominer.service.SampleTypeService;
+import hci.biominer.util.MailUtil;
 
 import java.util.List;
 import java.util.Properties;
+import java.util.Date;
 
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -147,6 +150,42 @@ public class SharedController {
 	@ResponseBody
 	public List<GeneAnnotation> getAllGeneAnnotations() {
 	  return geneAnnotationService.getAllGeneAnnotations();
+	}
+
+	@RequestMapping(value="/reportissue",method=RequestMethod.POST)
+	public @ResponseBody String reportissue(@RequestParam(value="email") String useremail, @RequestParam(value="problem") String problem)  {
+		String result = null;
+	
+		//System.out.println ("[/reportissue] email is " + useremail);
+
+		if (useremail == null || useremail.equals("")) {
+			result = "Invalid email address.  Enter a vaild email address.";
+			return result;
+		}
+		
+		if (problem == null || problem.equals("")) {
+			result = "Request ignored, no issue reported.";
+			return result;
+		}
+		
+		String biominersupport = "Tim.Maness@hci.utah.edu";
+		
+		// send the email
+		result = "Thank you for your feedback.";
+			            		
+		String body = problem; 
+		Date today = new Date();
+		String subject = "BioMiner issue reported " + today;
+			
+		String [] emails = new String[1];
+		emails[0] = biominersupport;
+		String status = MailUtil.sendMail(useremail,emails,body,subject);
+		if (status != null) {
+				result = "Unable to send problem report, error: " + status;
+			}
+		
+		//System.out.println ("[/reportissue] returning result: " + result);
+		return result;
 	}
 
 	
