@@ -192,7 +192,7 @@ public class UserController {
 			String body = "Your BioMiner user account has been created.<br>";
 			String subject = "BioMiner User Account";
 			
-			String status = MailUtil.sendMail(emails,body,subject);
+			String status = MailUtil.sendMail("DoNotReply@hci.utah.edu",emails,body,subject);
 			if (status != null) {
 				result = "Unable to send user email, error: " + status;
 			}
@@ -240,7 +240,7 @@ public class UserController {
     		String body = "Your BioMiner user account request has not been approved.<br>";
     		String subject = "BioMiner User Account";
 		
-    		String status = MailUtil.sendMail(emails,body,subject);
+    		String status = MailUtil.sendMail("DoNotReply@hci.utah.edu",emails,body,subject);
     		if (status != null) {
     			result = "Unable to send user email, error: " + status;
     		}
@@ -345,7 +345,7 @@ public class UserController {
 		int ipos = theUrl.toLowerCase().indexOf("/biominer");
 		if (ipos != -1) {
 			url = theUrl.substring(0, ipos);
-			System.out.println ("[newUserEmail] url is " + url);
+			//System.out.println ("[newUserEmail] url is " + url);
 		}
 		
 		String labEmail = null;
@@ -392,7 +392,7 @@ public class UserController {
 			emails[0] = email;
 		}
 			
-		String status = MailUtil.sendMail(emails,body,subject);
+		String status = MailUtil.sendMail("DoNotReply@hci.utah.edu",emails,body,subject);
 		if (status != null) {
 			result = "Unable to send new user request email, error: " + status;
 		}
@@ -403,7 +403,7 @@ public class UserController {
 		body = "Thank you for signing up for a BioMiner account.  We will send you an email once your user account has been activated.<br><br>";
 		subject = "BioMiner User Account";
 		
-		status = MailUtil.sendMail(emails,body,subject);
+		status = MailUtil.sendMail("DoNotReply@hci.utah.edu",emails,body,subject);
 		if (status != null) {
 			result = "Unable to send new user email, error: " + status;
 		}
