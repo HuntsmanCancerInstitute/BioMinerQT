@@ -7,8 +7,41 @@ var login = angular.module("login",['services'])
 		$scope.remember = false;
 		$scope.message = null;
 		$scope.theUrl = "";
+
+	
+	$scope.issueEmail = "";
+	if ($scope.loggedUser != null) {
+		$scope.issueEmail = $scope.loggedUser.email;
+	}
+	$scope.issueProblem = "";
+	$scope.issueMessage = null;
 		
 		$rootScope.checkInterval = undefined;
+
+		$scope.close = function () {
+            $location.path($rootScope.lastLocation);
+		};
+
+	
+		$scope.submitIssue = function() {
+		//console.log("before calling reportIssue, email: ");
+		//console.log($scope.issueEmail);
+
+			$http({
+	    		method: 'POST',
+	    		url: 'shared/reportissue',
+	    		params: {email: $scope.issueEmail, problem: $scope.issueProblem}
+	        }).success(function(data,status) {
+	        	$scope.issueMessage = data;
+	        	if (angular.isDefined($rootScope.checkInterval)) {
+        			$interval.cancel($rootScope.checkInterval);
+        		}
+
+        		$location.path($rootScope.lastLocation);
+
+	    	});
+		};		
+
 		
 		$scope.clear = function () {
             $location.path($rootScope.lastLocation);
