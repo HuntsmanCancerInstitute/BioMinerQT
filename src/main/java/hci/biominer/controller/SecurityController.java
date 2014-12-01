@@ -136,7 +136,7 @@ public class SecurityController {
 			
 			String [] emails = new String[1];
 			emails[0] = email;
-			String status = MailUtil.sendMail(emails,body,subject);
+			String status = MailUtil.sendMail("DoNotReply@hci.utah.edu",emails,body,subject);
 			if (status != null)
 			{
 				result = "Unable to send password reset instructions, error: " + status;
