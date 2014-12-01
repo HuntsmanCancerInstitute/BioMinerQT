@@ -69,6 +69,13 @@
 
 		});
 
+		$routeProvider.when('/reportIssue',{
+			templateUrl: 'app/common/reportIssue.html',
+			controller: 'LoginController',
+			restrict: 'none'
+
+		});
+
 		$routeProvider.otherwise({redirectTo: '/dashboard'});
 	}]);
 
