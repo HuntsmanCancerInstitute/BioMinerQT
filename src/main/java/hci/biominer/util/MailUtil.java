@@ -12,9 +12,9 @@ import javax.mail.internet.MimeMessage;
 public final class MailUtil {
 
 
-	public static String sendMail(String [] recipient, String body, String subject) {
+	public static String sendMail(String from, String [] recipient, String body, String subject) {
 		String status = "";
-		String from = "DoNotReply@hci.utah.edu";
+//		String from = "DoNotReply@hci.utah.edu";
 
 		Properties properties = System.getProperties();
 
