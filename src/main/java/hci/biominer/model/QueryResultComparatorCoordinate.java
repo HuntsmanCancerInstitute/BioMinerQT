@@ -9,10 +9,10 @@ public class QueryResultComparatorCoordinate implements Comparator<QueryResult> 
 	@Override
     public int compare(QueryResult o1, QueryResult o2)  {
 		
-		Long start1 = o1.getStart();
-		Long start2 = o2.getStart();
-		Long end1 = o1.getEnd();
-		Long end2 = o2.getEnd();
+		Integer start1 = o1.getStart();
+		Integer start2 = o2.getStart();
+		Integer end1 = o1.getEnd();
+		Integer end2 = o2.getEnd();
 		
 		if (!o1.isAlpha() && !o2.isAlpha()) {
 			Integer chrom1 = Integer.parseInt(o1.getChrom());

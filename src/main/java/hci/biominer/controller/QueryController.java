@@ -112,7 +112,6 @@ public class QueryController {
     
     private HashMap<String,QueryResultContainer> resultsDict =  new HashMap<String,QueryResultContainer>();
     private HashMap<String,QuerySettings> settingsDict = new HashMap<String,QuerySettings>();
-    private HashMap<String,HashMap<String,IntervalTree<GenericResult>>> resultTreeDict = new HashMap<String,HashMap<String,IntervalTree<GenericResult>>>();
     private HashMap<String,String> regionDict = new HashMap<String,String>();
     private HashMap<String,String> geneDict = new HashMap<String,String>();
     
@@ -519,13 +518,16 @@ public class QueryController {
         	
     	//Run basic search
     	List<QueryResult> results;
-    	if (searchExisting && this.resultTreeDict.containsKey(username)) {
-    		ArrayList<HashMap<String,IntervalTree<GenericResult>>> localList = new ArrayList<HashMap<String,IntervalTree<GenericResult>>>();
-    		localList.add(this.resultTreeDict.get(username));
-
-    		results = this.getIntersectingRegions(localList, analyses, genome, intervalsToCheck, reverse, username);
+    	if (searchExisting) {
+    		if (resultsDict.containsKey(username)) {
+    			HashMap<String,IntervalTree<QueryResult>> resultTree = this.createQueryResultIntervalTree(resultsDict.get(username).getResultList());
+    			results = this.getIntersectingRegionsExisting(resultTree, intervalsToCheck, reverse);
+        	} else {
+        		results = new ArrayList<QueryResult>();
+        		this.warnings.append("Could not find any existing results, can't query existing results.");
+    		}
     	} else {
-    		results = this.getIntersectingRegions(itList, analyses, genome, intervalsToCheck, reverse, username);
+    		results = this.getIntersectingRegions(itList, analyses, intervalsToCheck, reverse);
     	}
     	
     	
@@ -638,10 +640,6 @@ public class QueryController {
     	
     	String username = user.getUsername();
     	
-    	if (!resultTreeDict.containsKey(username)) {
-    		this.loadResultTree(username);
-    	}
-    	
     	if (!regionDict.containsKey(username)) {
     		this.loadRegionDict(username);
     	}
@@ -671,18 +669,6 @@ public class QueryController {
     	} else {
     		return null;
     	}	
-    }
-    
-    private void loadResultTree(String username) throws Exception {
-    	File resultsPath = new File(FileController.getQueryDirectory(),username + ".tree.ser");
-    	if (resultsPath.exists()) {
-    		FileInputStream fin = new FileInputStream(resultsPath);
-    		ObjectInputStream ois = new ObjectInputStream(fin);
-    		@SuppressWarnings("unchecked")
-			HashMap<String,IntervalTree<GenericResult>> tree = (HashMap<String,IntervalTree<GenericResult>>)ois.readObject();
-    		ois.close();
-    		this.resultTreeDict.put(username, tree);
-    	}
     }
     
     private void loadGeneDict(String username) throws Exception {
@@ -1438,8 +1424,9 @@ public class QueryController {
     
     
     
-    private List<QueryResult> getIntersectingRegions(ArrayList<HashMap<String,IntervalTree<GenericResult>>> treeList, List<Analysis> analyses, Genome genome, 
-    		List<LocalInterval> localIntervals, boolean reverse, String user) throws Exception{
+    
+    private List<QueryResult> getIntersectingRegions(ArrayList<HashMap<String,IntervalTree<GenericResult>>> treeList, List<Analysis> analyses,
+    		List<LocalInterval> localIntervals, boolean reverse) throws Exception{
     	
     	//Container for matches
     	HashMap<GenericResult,Integer[]> grMap = new HashMap<GenericResult,Integer[]>();
@@ -1485,41 +1472,86 @@ public class QueryController {
     			}
     		}
     		
-    		qrList = this.convertGenericToQuery(grMapRev, analyses, null);
-    		if (grMapRev.size() > 0) {
-    			this.resultTreeDict.put(user,this.convertGenericToInterval(grMapRev));
-    		}
-    	} else {
-    		qrList = this.convertGenericToQuery(grMap, analyses, localIntervals);
-    		if (grMap.size() > 0) {
-    			this.resultTreeDict.put(user,this.convertGenericToInterval(grMap));
-    		}
-    	}
+    		grMap = grMapRev;
+    		localIntervals = null;
+    	} 
+    	
+    	qrList = this.convertGenericToQuery(grMap, analyses, localIntervals);
     	
     	return qrList;
     }
     
-    private HashMap<String,IntervalTree<GenericResult>> convertGenericToInterval(HashMap<GenericResult,Integer[]> grHash) {
-    	//New Interval Tree Container
-    	HashMap<String,ArrayList<Interval<GenericResult>>> resultIntervalData = new HashMap<String,ArrayList<Interval<GenericResult>>>();
+    private List<QueryResult> getIntersectingRegionsExisting(HashMap<String,IntervalTree<QueryResult>> tree, 
+    		List<LocalInterval> localIntervals, boolean reverse) throws Exception{
     	
-    	for (GenericResult gr: grHash.keySet()) {
-    		String chrom = gr.getChrom();
-    		Interval<GenericResult> newInv = new Interval<GenericResult>(gr.getStart(),gr.getStop(),gr);
-			if (!resultIntervalData.containsKey(chrom)) {
-				resultIntervalData.put(chrom, new ArrayList<Interval<GenericResult>>());
-			}
-			resultIntervalData.get(chrom).add(newInv);
+    	//Container for matches
+    	HashSet<QueryResult> grMap = new HashSet<QueryResult>();
+    	
+    	for (int j=0;j<localIntervals.size();j++) {
+    		LocalInterval inv = localIntervals.get(j);
+    		String chrom = inv.getChrom();
+    		if (tree.containsKey(chrom)) {
+    			List<QueryResult> hits = tree.get(chrom).search(inv.getStart(),inv.getEnd());
+    			
+    			for (QueryResult hit: hits) {
+    				if (!grMap.contains(hit)) {
+    					hit.setSearch(hit.getSearch() + ";" + inv.getSearch());
+    					grMap.add(hit);
+    				}
+    			}
+    		}
     	}
     	
-    	HashMap<String,IntervalTree<GenericResult>> resultIntervalTree = new HashMap<String,IntervalTree<GenericResult>>();
+    	if (reverse) {
+    		//If reverse, generate does not match list!
+        	HashSet<QueryResult> grMapRev = new HashSet<QueryResult>();
+        	
+        	for (IntervalTree<QueryResult> it: tree.values()) {
+				for (Interval<QueryResult> inv: it.getInterval()) {
+					QueryResult qr = inv.getValue();
+					if (!grMapRev.contains(qr)) {
+						qr.setSearch(qr.getSearch() + ";NA");
+						grMapRev.add(qr);
+					}
+				}
+			}
+    		
+    		for (QueryResult qr: grMap) {
+    			if (grMapRev.contains(qr)) {
+    				grMapRev.remove(qr);
+    			}
+    		}
+    		
+    		grMap = grMapRev;
+    	} 
+    	
+    	List<QueryResult> qrList = new ArrayList<QueryResult>();
+    	qrList.addAll(grMap);
+    	
+    	return qrList;
+    }
+    
+    private HashMap<String,IntervalTree<QueryResult>> createQueryResultIntervalTree(List<QueryResult> results) {
+    	HashMap<String,ArrayList<Interval<QueryResult>>> resultIntervalData = new HashMap<String,ArrayList<Interval<QueryResult>>>();
+    	
+    	for (QueryResult qr: results) {
+    		String chrom = qr.getChrom();
+    		Interval<QueryResult> newInv = new Interval<QueryResult>(qr.getStart(),qr.getEnd(),qr);
+    		if (!resultIntervalData.containsKey(chrom)) {
+    			resultIntervalData.put(chrom, new ArrayList<Interval<QueryResult>>());
+    		} 
+    		resultIntervalData.get(chrom).add(newInv);
+    	}
+    	
+    	HashMap<String,IntervalTree<QueryResult>> resultIntervalTree = new HashMap<String,IntervalTree<QueryResult>>();
     	for (String chrom: resultIntervalData.keySet()) {
-    		IntervalTree<GenericResult> newTree = new IntervalTree<GenericResult>(resultIntervalData.get(chrom),false);
+    		IntervalTree<QueryResult> newTree = new IntervalTree<QueryResult>(resultIntervalData.get(chrom),false);
     		resultIntervalTree.put(chrom,newTree);
     	}
     	
     	return resultIntervalTree;
     }
+ 
     
     private List<QueryResult> convertGenericToQuery(HashMap<GenericResult,Integer[]> grHash, List<Analysis> analyses, List<LocalInterval> intervalList) {
     	List<QueryResult> qrList = new ArrayList<QueryResult>();
@@ -1567,8 +1599,8 @@ public class QueryController {
    
     
     private class IntervalParser {
-    	private Pattern pattern1 = Pattern.compile("^(.+?)(:|\\s+)(\\d+)(-|\\s+)(\\d+)$");
-    	private Pattern pattern2 = Pattern.compile("^(.+)$");
+    	private Pattern pattern1 = Pattern.compile("^(chr)*(.+?)(:|\\s+)(\\d+)(-|\\s+)(\\d+)$");
+    	private Pattern pattern2 = Pattern.compile("^(chr)*(.+)$");
 
   
     	private StringBuilder warnings = new StringBuilder("");
@@ -1591,10 +1623,10 @@ public class QueryController {
     		
     		if (region == "") {
     			for (String chrom: genome.getNameChromosome().keySet()) {
-//    				if (chrom.startsWith("chr")) {
-//    					continue;
-//    				}
-    				LocalInterval inv = new LocalInterval(chrom,0,genome.getNameChromosome().get(chrom).getLength(),"none");
+    				if (chrom.startsWith("chr")) {
+    					continue;
+    				}
+    				LocalInterval inv = new LocalInterval(chrom,0,genome.getNameChromosome().get(chrom).getLength(),"anything");
     				localIntervals.add(inv);
     			}
     		} else {
@@ -1619,22 +1651,21 @@ public class QueryController {
     	    			int end = 0;
     	    			int start = 0;
     	    			try {
-    	    				start = Integer.parseInt(m1.group(3)) - regionMargin;
+    	    				start = Integer.parseInt(m1.group(4)) - regionMargin;
     	    			} catch (NumberFormatException nfe) {
     	    				warnings.append(String.format("Start boundary not an integer %s, skipping.",m1.group(2)));
     	    				continue;
     	    			}
     	    			
     	    			try {
-    	    				end = Integer.parseInt(m1.group(5)) + regionMargin;
+    	    				end = Integer.parseInt(m1.group(6)) + regionMargin;
     	    			} catch (NumberFormatException nfe) {
     	    				warnings.append(String.format("End boundary not an integer %s, skipping.",m1.group(3)));
     	    				continue;
     	    			}
     	    			
-    	    			String chrom = m1.group(1);
-    	    			System.out.println("X" + chrom + "X");
-    	    			System.out.println(region);
+    	    			String chrom = m1.group(2);
+    	    			
     	    			if (!genome.getNameChromosome().containsKey(chrom)) {
     	    				warnings.append(String.format("The chromsome %s could not be found in the genome %s.\n",chrom,genome.getBuildName()));
     	    				continue;
@@ -1658,7 +1689,7 @@ public class QueryController {
     	    			localIntervals.add(inv);
     	    			
     	    		} else if (m2.matches()) {
-    	    			String chrom  = m2.group(1);
+    	    			String chrom  = m2.group(2);
     	    			
     	    			if (!genome.getNameChromosome().containsKey(chrom)) {
     	    				warnings.append(String.format("The chromsome %s could not be found in the genome %s.\n",chrom,genome.getBuildName()));
@@ -1775,23 +1806,7 @@ public class QueryController {
     			//Remove settings from memory
 				resultsDict.remove(key);
 			}
-			
-			if (resultTreeDict.containsKey(key)) {
-				//First write out serialized objects
-				try {
-					File resultsPath = new File(FileController.getQueryDirectory(), key + ".tree.ser");
-        			FileOutputStream fos = new FileOutputStream(resultsPath);
-        			ObjectOutputStream oos = new ObjectOutputStream(fos);
-        			oos.writeObject(resultTreeDict.get(key));
-        			oos.close();
-				} catch (Exception ex) {
-					ex.printStackTrace();
-				}
-    			
-    			//Remove settings from memory
-				resultTreeDict.remove(key);
-			}
-			
+		
 			if (regionDict.containsKey(key)) {
 				try {
 					File resultsPath = new File(FileController.getQueryDirectory(),key + ".regions.ser");

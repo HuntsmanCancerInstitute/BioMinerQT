@@ -8,8 +8,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
-
-
 public class QueryResult implements Serializable {
 	private final static Pattern p1 = Pattern.compile("(chr)*(\\w+?):(\\d+)-(\\d+)");
 	private Integer index;
@@ -25,8 +23,8 @@ public class QueryResult implements Serializable {
 	private String mappedName;
 	private Long idAnalysis;
 	private String chrom;
-	private Long start;
-	private Long end;
+	private Integer start;
+	private Integer end;
 	private boolean isAlpha;
 	
 	public QueryResult() {
@@ -45,11 +43,11 @@ public class QueryResult implements Serializable {
 		return chrom;
 	}
 	
-	public Long getStart() {
+	public Integer getStart() {
 		return start;
 	}
 
-	public Long getEnd() {
+	public Integer getEnd() {
 		return end;
 	}
 
@@ -107,8 +105,8 @@ public class QueryResult implements Serializable {
 		Matcher m1 = p1.matcher(coordinates);
 		if (m1.matches()) {
 			this.chrom = m1.group(2);
-			this.start = Long.parseLong(m1.group(3));
-			this.end = Long.parseLong(m1.group(4));
+			this.start = Integer.parseInt(m1.group(3));
+			this.end = Integer.parseInt(m1.group(4));
 			
 			try {
 				Integer.parseInt(this.chrom);
@@ -119,8 +117,8 @@ public class QueryResult implements Serializable {
 		} else {
 			System.out.println("Could not parse coordinate");
 			this.chrom = "NA";
-			this.start = (long)-1;
-			this.end = (long)-1;
+			this.start = -1;
+			this.end = -1;
 		}
 		
 	}

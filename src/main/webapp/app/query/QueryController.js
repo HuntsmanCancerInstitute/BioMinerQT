@@ -435,6 +435,7 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 		$scope.codeThresholdFDRComparison = "LT";
 		$scope.thresholdLog2Ratio = "";
 		$scope.codeThresholdLog2RatioComparison = "GTABS";
+		$scope.intersectionTarget = "EVERYTHING";
 		
 		$scope.thresholdVariantQual = "";
 		$scope.codeThresholdVariantQualComparison = ">";
