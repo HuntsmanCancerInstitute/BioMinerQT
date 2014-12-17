@@ -11,6 +11,7 @@ import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.SimpleAuthenticationInfo;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.session.Session;
+import org.apache.shiro.session.mgt.SessionManager;
 import org.apache.shiro.util.SimpleByteSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -43,7 +44,7 @@ public class SecurityController {
 	
 	@Autowired
 	private UserController userController;
-	
+
 	private Long timeout = null;
 	
 	@PostConstruct
@@ -243,7 +244,11 @@ public class SecurityController {
 			lm.setUser(user);
 		}
 		
+		
+			
 		return lm;
 	}
+	
+	
 	
 }

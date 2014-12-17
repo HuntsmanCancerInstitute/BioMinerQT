@@ -43,7 +43,7 @@ public class IGVResource {
 	
 	public void addTrackXML(StringBuilder sb) {
 		if (isGraph) {
-			if (height == 0) height = 150;
+			if (height == 0) height = 40;
 			sb.append("\t\t<Track renderer=\"BAR_CHART\" windowFunction=\"none\" ");
 			if (autoscale) sb.append("autoScale=\"true\" ");
 		}

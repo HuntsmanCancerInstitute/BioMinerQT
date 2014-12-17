@@ -1,8 +1,10 @@
 package hci.biominer.model;
 
+import java.io.Serializable;
+
 import hci.biominer.util.Enumerated.*;
 
-public class GenericResult {
+public class GenericResult implements Serializable {
 	private String chrom = null;
 	private Integer start = null;
 	private Integer stop = null;

@@ -5,13 +5,13 @@
  * QueryController
  * @constructor
  */
-var query     = angular.module('query',     ['angularFileUpload','filters', 'services', 'directives', 'ui.bootstrap', 'chosen','angucomplete-alt']);
+var query = angular.module('query', ['angularFileUpload','filters', 'services', 'directives', 'ui.bootstrap', 'chosen','angucomplete-alt','dialogs.main','ngProgress']);
 
 
 angular.module("query").controller("QueryController", 
-['$interval', '$window','$rootScope','$scope', '$http', '$modal','$anchorScroll','$upload','DynamicDictionary','StaticDictionary',
+['$interval', '$window','$rootScope','$scope', '$http', '$modal','$anchorScroll','$upload','$location','$timeout','$q','DynamicDictionary','StaticDictionary','dialogs','ngProgress',
   
-function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $upload, DynamicDictionary, StaticDictionary) {
+function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $upload, $location, $timeout, $q, DynamicDictionary, StaticDictionary, dialogs, ngProgress) {
 	
 	$scope.hasResults = false;
 	$scope.warnings = "";
@@ -22,7 +22,6 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 	$scope.returedResultType = "";
 	$scope.isGeneBasedQuery = false;
 	$scope.idOrganismBuild = "";
-
 	
 	$scope.selectedAnalysisType = "";
 	$scope.selectedAnalysisTypes = [];
@@ -31,14 +30,14 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 	$scope.selectedAnalyses = [];
 	$scope.selectedSampleSources = [];
 	
-	$scope.isIntersect = "true";
-	$scope.intersectionTarget = "";
+	$scope.analysisList = [];
+	
+	$scope.intersectionTarget = "EVERYTHING";
 	$scope.regions = "";
 	$scope.regionMargins = "1000";
 	$scope.genes = "";
 	$scope.searchGenes = null;
 	$scope.geneMargins = "1000";
-	$scope.selectedGeneAnnotations = [];
 	
 	$scope.isThresholdBasedQuery = true;
 	$scope.thresholdFDR = "";
@@ -63,19 +62,27 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 	$scope.totalAnalyses = 0;
 	$scope.totalDatatracks = 0;
 	
+	$scope.navigationOk = false; //When this is true, you can navigate away from the page
+	$scope.queryDeferred = null;
+	
+	$scope.isReverse = false;
+	$scope.searchExisting = false;
+	
 	//Sorting
 	$scope.sortType = "FDR";
 	
 	//Copy and pase
 	$scope.selectAll = false;
 	
+	$scope.showValidation = false;
+	
 	$rootScope.helpMessage = "<p>Placeholder for query help</p>";
 
 	
 	$scope.mapResultType = {
 			'GENE' :     'Genes',
-			'REGION' :   'Genomic Regions',
-			'VARIANT' :  'Variants' };
+			'REGION' :   'Genomic Regions'};
+//			'VARIANT' :  'Variants' };
 	
 	$scope.mapComparison = {
 		'GT':    '>',
@@ -134,6 +141,37 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 		}
     });
     
+    $scope.$on('$locationChangeStart', function( event, next, current ) {
+    	if ($scope.navigationOk == false) {
+    		event.preventDefault();
+    		if ($scope.queryStarted) {
+        		var dialog = dialogs.confirm("Page Navigation","Query isn't complete, are you sure you want to leave this page");
+            	dialog.result.then(function() {
+            		$timeout(function() {
+            			$location.path(next.substring($location.absUrl().length - $location.url().length));
+                        $scope.$apply();
+            		});
+            		$scope.navigationOk = true;
+            	});
+        	} else {
+        		$timeout(function() {
+        			$location.path(next.substring($location.absUrl().length - $location.url().length));
+                    $scope.$apply();
+        		});
+        		$scope.navigationOk = true;
+        	}
+    	} else {
+    		$scope.stopPing();
+    	} 	
+    });
+    
+    $scope.$on('$routeChangeStart', function (event, next, current) {
+    	if (next.originalPath == current.originalPath) {
+    		$scope.stopPing();
+    	}
+    	
+    });
+    
     $scope.copyCoordinates = function() {
     	var coordinateList = [];
     	for (var i=0; i<$scope.queryResults.length; i++) {
@@ -165,6 +203,7 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
     };
     
     $scope.loadRegions = function(files) {
+    	ngProgress.start();
     	$upload.upload({
     		url: "query/upload",
     		file: files,
@@ -188,12 +227,15 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
             		}
             	});
     		}
+    		ngProgress.complete();
     	}).error(function(data) {
     		console.log("Error running upload");
+    		ngProgress.reset();
     	});
 	};
 	
 	$scope.loadGenes = function(files) {
+		ngProgress.start();
     	$upload.upload({
     		url: "query/uploadGene",
     		file: files,
@@ -217,8 +259,10 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
             		}
             	});
     		}
+    		ngProgress.complete();
     	}).error(function(data) {
     		console.log("Error running upload");
+    		ngProgress.reset();
     	});
 	};
 	
@@ -332,24 +376,6 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 	
 	};
 	
-
-//	$scope.createCORSRequest = function(method, url) {
-//	  var xhr = new XMLHttpRequest();
-//	  if ("withCredentials" in xhr) {
-//	    // XHR for Chrome/Firefox/Opera/Safari.
-//	    xhr.open(method, url, true);
-//	  } else if (typeof XDomainRequest != "undefined") {
-//	    // XDomainRequest for IE.
-//	    xhr = new XDomainRequest();
-//	    xhr.open(method, url);
-//	  } else {
-//	    // CORS not supported.
-//	    xhr = null;
-//	  }
-//	  return xhr;
-//	};
-	
-	
 	$scope.pickResultType = function() {
 		for (var x = 0; x < $scope.analysisTypeCheckedList.length; x++) {
 			var allowed = false;
@@ -398,19 +424,17 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 		$scope.selectedAnalyses.length = 0;
 		$scope.selectedSampleSources.length = 0;
 		
-		$scope.isIntersect = "true";
 		$scope.intersectionTarget = "";
 		$scope.regions = "";
 		$scope.regionMargins = "1000";
 		$scope.genes = "";
 		$scope.geneMargins = "1000";
-		$scope.selectedGeneAnnotations.length = 0;
 		
 		$scope.isThresholdBasedQuery = true;
 		$scope.thresholdFDR = "";
-		$scope.codeThresholdFDRComparison = ">";
+		$scope.codeThresholdFDRComparison = "LT";
 		$scope.thresholdLog2Ratio = "";
-		$scope.codeThresholdLog2RatioComparison = "> abs";
+		$scope.codeThresholdLog2RatioComparison = "GTABS";
 		
 		$scope.thresholdVariantQual = "";
 		$scope.codeThresholdVariantQualComparison = ">";
@@ -423,6 +447,8 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 		$scope.totalDatatracks = 0;
 		
 		$scope.selectedAnalysisType = "";
+		$scope.searchExisting = false;
+		$scope.isReverse = false;
 		
 		$scope.stopPing();
 		
@@ -477,43 +503,51 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 		var datasetSummary = "";
 		
 		
-		var atDisplay = $.map($scope.selectedAnalysisTypes, function(analysisType){
-		    return analysisType.type;
-		}).join(', ');
+		var atDisplay = $scope.selectedAnalysisType.type;
+		
 		if (atDisplay.length > 0) {
-			datasetSummary = "ON  " + atDisplay + " data sets";
-			
-			// lab
-			var labDisplay = $.map($scope.selectedLabs, function(lab){
-			    return lab.first + ' ' + lab.last + ' lab';
-			}).join(', ');
-			if (labDisplay.length > 0) {
-				datasetSummary += "  submitted by  " + labDisplay;
-			}
-			
-			// project
-			var projectDisplay = $.map($scope.selectedProjects, function(project){
-			    return project.name;
-			}).join(', ');
-			if (projectDisplay.length > 0) {
-				datasetSummary += "  for projects  " + projectDisplay;
-			}
+			datasetSummary = "ON  " 
+				
+				
+			if ($scope.searchExisting) {
+				datasetSummary += " previous query "
+			} else {
+				datasetSummary += atDisplay + " data sets";
+				
+				// lab
+				var labDisplay = $.map($scope.selectedLabs, function(lab){
+				    return lab.first + ' ' + lab.last + ' lab';
+				}).join(', ');
+				if (labDisplay.length > 0) {
+					datasetSummary += "  submitted by  " + labDisplay;
+				}
+				
+				// project
+				var projectDisplay = $.map($scope.selectedProjects, function(project){
+				    return project.name;
+				}).join(', ');
+				if (projectDisplay.length > 0) {
+					datasetSummary += "  for projects  " + projectDisplay;
+				}
 
-			// analysis
-			var analysisDisplay = $.map($scope.selectedAnalyses, function(analysis){
-			    return analysis.name;
-			}).join(', ');
-			if (analysisDisplay.length > 0) {
-				datasetSummary += "  for analysis  " + analysisDisplay;
-			}
+				// analysis
+				var analysisDisplay = $.map($scope.selectedAnalyses, function(analysis){
+				    return analysis.name;
+				}).join(', ');
+				if (analysisDisplay.length > 0) {
+					datasetSummary += "  for analysis  " + analysisDisplay;
+				}
 
-			// sample source
-			var sampleSourcesDisplay = $.map($scope.selectedSampleSources, function(ss){
-			    return ss.source;
-			}).join(', ');
-			if (sampleSourcesDisplay.length > 0) {
-				datasetSummary += " for samples from " + sampleSourcesDisplay;
+				// sample source
+				var sampleSourcesDisplay = $.map($scope.selectedSampleSources, function(ss){
+				    return ss.source;
+				}).join(', ');
+				if (sampleSourcesDisplay.length > 0) {
+					datasetSummary += " for samples from " + sampleSourcesDisplay;
+				}
 			}
+				
+			
 			$scope.querySummary.push(datasetSummary);
 
 		}
@@ -521,38 +555,34 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 
 		// intersect
 		var intersectSummary = "";
-		if ($scope.isIntersect == "true") {
+		if ($scope.isReverse == false) {
 			intersectSummary = "THAT INTERSECT ";
-		} else if ($scope.isIntersect == "false") {
+		} else if ($scope.isReverse == true) {
 			intersectSummary = "THAT DON'T INTERSECT ";
 		}		
 		if (intersectSummary.length > 0) {
 			if ($scope.intersectionTarget == 'REGION') {
 				// Region based query
-				if ($scope.regions.length > 0) {
+				if ($scope.regions.length > 0 && $scope.regions.length < 100) {
 					$scope.querySummary.push(intersectSummary + "REGIONS   " + $scope.regions + " +/- " + $scope.regionMargins);					
 				}
 				
 			} else if ($scope.intersectionTarget == 'GENE') {
 				// Gene based query
-				var geneSummary = "";
-				if ($scope.genes.length > 0) {
-					geneSummary = $scope.genes;		
+				if ($scope.genes.length > 0 && $scope.regions.length < 100) {
+					$scope.querySummary.push(intersectSummary + "GENES   " + $scope.genes + " +/- " + $scope.geneMargins);	
 				}
-				$scope.display = "";
-				$scope.selectedGeneAnnotations.forEach($scope.concatDisplayName);
-				if ($scope.display.length > 0) {
-					geneSummary = geneSummary + " IDENTIFIED AS " + $scope.display + " +/- " + $scope.geneMargins;	
-				}
-				$scope.querySummary.push(intersectSummary + "GENES   " + geneSummary );
+				
+			} else {
+				$scope.querySummary.push(intersectSummary + " anything ");
 			}
 		}
 		if ($scope.isThresholdBasedQuery) {
 			var thresholdQuery = "";
-			if ($scope.thresholdFDR.length > 0) {
+			if ($scope.thresholdFDR != null && $scope.thresholdFDR.length > 0) {
 				thresholdQuery = "THAT EXCEED THRESHOLD of  " + "FDR " + $scope.mapComparison[$scope.codeThresholdFDRComparison] + ' ' + $scope.thresholdFDR;
 			}
-			if ($scope.thresholdLog2Ratio.length > 0) {
+			if ($scope.thresholdLog2Ratio != null && $scope.thresholdLog2Ratio.length > 0) {
 				thresholdQuery = thresholdQuery + ($scope.thresholdFDR.length > 0 ? " AND ": "THAT EXCEED THRESHOLD   ");
 				$scope.querySummary.push(thresholdQuery + "Log2Ratio " + $scope.mapComparison[$scope.codeThresholdLog2RatioComparison] + ' ' + $scope.thresholdLog2Ratio);
 			}
@@ -619,12 +649,21 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 	};
 
 	
-	$scope.runQuery = function() {
+	$scope.runQuery = function(isInvalid) {
+		if (isInvalid) {
+			$scope.showValidation = true;
+			return;
+		}
+		
+		$scope.showValidation = false;
+		ngProgress.start();
 		$scope.hasResults = false;
 		$scope.queryCurrentPage = 0;
 		
+		//Turn query state to on
 		$scope.stopPing();
-		
+		$scope.queryStarted = true;
+		$scope.queryDeferred = $q.defer();
 		
 		// Build a summary of the query that is being performed.  This will display
 		// in the results panel
@@ -650,24 +689,41 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 		    return ss.idSampleSource;
 		}).join(',');
 		
-	
-		var idGeneAnnotationParams = $.map($scope.selectedGeneAnnotations, function(ga){
-		    return ga.idGeneAnnotation;
-		}).join(',');
-
-		var fdr = null;
-		if ($scope.thresholdFDR != "") {
+		var fdr = "";
+		if ($scope.thresholdFDR != "" && $scope.thresholdFDR != null) {
 			fdr = $scope.thresholdFDR;
 		}
 		
-		var log2ratio = null;
-		if ($scope.thresholdLog2Ratio != "") {
+		var log2ratio = "";
+		if ($scope.thresholdLog2Ratio != "" && $scope.thresholdLog2Ratio != null) {
 			log2ratio = $scope.thresholdLog2Ratio;
 		}
+		
+		var regions = "";
+		if ($scope.regions != null && $scope.regions != "") {
+			regions = $scope.regions;
+		}
+		
+		var regionMargins = "";
+		if ($scope.regionMargins != null && $scope.regionMargins != "") {
+			regionMargins = $scope.regionMargins;
+		}
+		
+		var genes = "";
+		if ($scope.genes != null && $scope.genes != "") {
+			genes = $scope.genes;
+		}
+		
+		var geneMargins = "";
+		if ($scope.geneMargins != null && $scope.geneMargins != "") {
+			geneMargins = $scope.geneMargins;
+		}
+		
 		
 		$scope.returnedResultType = $scope.codeResultType;
 		$scope.totalResults = 0;
 		
+		console.log($scope.isReverse);
 		// Run the query on the server.
 		$http({
 			url: "query/run",
@@ -679,20 +735,21 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 				     idProjects:              idProjectParams,
 				     idAnalyses:              idAnalysisParams,
 				     idSampleSources:         idSampleSourceParams,
-				     isIntersect:             $scope.isIntersect,
-				     regions:                 $scope.regions,
-				     regionMargins:           $scope.regionMargins,
-				     genes:                   $scope.genes,
-				     geneMargins:             $scope.geneMargins,
-				     idGeneAnnotations:       idGeneAnnotationParams,
-				     isThresholdBasedQuery:   $scope.isThresholdBasedQuery,
+				     regions:                 regions,
+				     regionMargins:           regionMargins,
+				     genes:                   genes,
+				     geneMargins:             geneMargins,
 				     FDR:                     fdr,
 				     codeFDRComparison:       $scope.codeThresholdFDRComparison,
 				     log2Ratio:               log2ratio,
 				     codeLog2RatioComparison: $scope.codeThresholdLog2RatioComparison,
 				     resultsPerPage:          $scope.resultsPerPage,
 				     sortType:                $scope.sortType,
-				     intersectionTarget:	  $scope.intersectionTarget},
+				     intersectionTarget:	  $scope.intersectionTarget,
+				     isReverse:               $scope.isReverse,
+				     searchExisting: 		  $scope.searchExisting
+				     },
+		    timeout: $scope.queryDeferred.promise,
 				     
 		}).success(function(data) {
 			if (data != null) {
@@ -705,7 +762,6 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 			}
 			
 			
-			
 			$http({
 				url: "query/warnings",
 				method: "GET",
@@ -716,18 +772,32 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 					$scope.warnings = data;
 				}
 			});
-			
+			$scope.queryStarted = false;
+			$scope.queryDeferred = null;
+			ngProgress.complete();
 		}).error(function(data, status, headers, config) {
-			console.log("Could not run query.");
 			$scope.hasResults = false;
 			$scope.resultPages = 0;
 			$scope.totalResults = 0;
 			$scope.totalAnalyses = 0;
 			$scope.totalDatatracks = 0;
 			$scope.returnedResultType = null;
+			$scope.queryStarted = false;
+			$scope.queryDeferred = null;
+			ngProgress.reset();
 		});
 		
 		$anchorScroll();
+	};
+	
+	$scope.abortQuery = function() {
+		if ($scope.queryDeferred != null) {
+			$scope.queryDeferred.resolve("Query aborted by user");
+			$scope.queryDeferred = null;
+			console.log("Stop");
+		}
+		
+		
 	};
 	
 	$scope.downloadAnalysis = function() {
@@ -809,7 +879,9 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 	};
 	
 	
-	$scope.loadLabs = function() {		
+	$scope.loadLabs = function() {
+		var deferred = $q.defer();
+		
 		var idAnalysisTypeParams = $.map($scope.selectedAnalysisTypes, function(analysisType){
 		    return analysisType.idAnalysisType;
 		}).join(',');
@@ -838,12 +910,17 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 				     idOrganismBuild:         $scope.idOrganismBuild},
 		}).success(function(data) {
 			$scope.labList = data;
+			deferred.resolve();
 		}).error(function(data, status, headers, config) {
 			console.log("Could not get labList");
+			deferred.reject();
 		});
+		
+		return deferred.promise;
 	};
 	
-	$scope.loadProjects = function() {		
+	$scope.loadProjects = function() {
+		var deferred = $q.defer();
 		var idAnalysisTypeParams = $.map($scope.selectedAnalysisTypes, function(analysisType){
 		    return analysisType.idAnalysisType;
 		}).join(',');
@@ -872,12 +949,16 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 				     idOrganismBuild:         $scope.idOrganismBuild},
 		}).success(function(data) {
 			$scope.projectList = data;
+			deferred.resolve();
 		}).error(function(data, status, headers, config) {
 			console.log("Could not get project list");
+			deferred.reject();
 		});
+		return deferred.promise;
 	};
 	
-	$scope.loadAnalyses = function() {		
+	$scope.loadAnalyses = function() {
+		var deferred = $q.defer();
 		var idAnalysisTypeParams = $.map($scope.selectedAnalysisTypes, function(analysisType){
 		    return analysisType.idAnalysisType;
 		}).join(',');
@@ -906,13 +987,16 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 				     idOrganismBuild:         $scope.idOrganismBuild},
 		}).success(function(data) {
 			$scope.analysisList = data;
+			deferred.resolve();
 		}).error(function(data, status, headers, config) {
 			console.log("Could not get analysis list");
+			deferred.reject();
 		});
+		return deferred.promise;
 	};
 	
 	$scope.loadSampleSources = function() {
-		
+		var deferred = $q.defer();
 		var idAnalysisTypeParams = $.map($scope.selectedAnalysisTypes, function(analysisType){
 		    return analysisType.idAnalysisType;
 		}).join(',');
@@ -942,12 +1026,16 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 				     idOrganismBuild:         $scope.idOrganismBuild},
 		}).success(function(data) {
 			$scope.sampleSourceList = data;
+			deferred.resolve();
 		}).error(function(data, status, headers, config) {
 			console.log("Could not get sample source list");
+			deferred.reject();
 		});
+		return deferred.promise;
 	};
 	
 	$scope.loadAnalysisTypes = function() {		
+		var deferred = $q.defer();
 		
 		var idLabParams = $.map($scope.selectedLabs, function(lab){
 		    return lab.idLab;
@@ -1000,9 +1088,12 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 					}
 				}
     		}
+			deferred.resolve();
 		}).error(function(data, status, headers, config) {
 			console.log("Could not get analysis type list");
+			deferred.reject();
 		});
+		return deferred.promise;
 	};
 	
 	//Create watchers
@@ -1069,16 +1160,138 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 			$scope.loadAnalysisTypes();
 		}
 	});
+	
+	$scope.loadExistingResults = function() {
+		$http({
+			method: "GET",
+			url: "query/loadExistingResults"
+		}).success(function(data) {
+			
+			if (data != null && data != "") {
+				$scope.queryResults = data.resultList;
+				$scope.resultPages = data.pages;
+				$scope.totalResults = data.resultNum;
+				$scope.totalAnalyses = data.analysisNum;
+				$scope.totalDatatracks = data.dataTrackNum;
+				$scope.hasResults = true;
+			}
+		}).error(function(data) {
+			$scope.hasResults = false;
+			$scope.resultPages = 0;
+			$scope.totalResults = 0;
+			$scope.totalAnalyses = 0;
+			$scope.totalDatatracks = 0;
+			
+		});
+	};
+	
+	$scope.loadExistingSettings = function() {
+		$http({
+			method: "GET",
+			url: "query/loadExistingSettings"
+		}).success(function(data) {
+			if (data != null && data != "") {
+				$scope.codeResultType = data.codeResultType;
+				$scope.returnedResultType = data.codeResultType;
+				$scope.intersectionTarget = data.target;
+				
+				$scope.idOrganismBuild = data.idOrganismBuild;
 
-	//Load up dynamic dictionaries
-	$scope.loadLabs();
-	$scope.loadSampleSources();
-	$scope.loadOrganismBuildList();
-	$scope.loadAnalysisTypeList();
-	$scope.loadProjects();
-	$scope.loadAnalyses();
+				for (var i=0;i<$scope.analysisTypeCheckedList.length;i++) {
+					for (var j=0;j<data.idAnalysisTypes.length;j++) {
+						if ($scope.analysisTypeCheckedList[i].idAnalysisType == data.idAnalysisTypes[j]) {
+							$scope.selectedAnalysisType = $scope.analysisTypeCheckedList[i];
+						}
+					}
+				}
+				
+				for (var i=0; i<$scope.analysisList.length;i++) {
+					for (var j=0; j < data.idAnalyses; j++) {
+						if ($scope.analysisList[i].idAnalysis == data.idAnalyses[j]) {
+							$scope.selectedAnalyses.push($scope.analysisList[i]);
+						}
+					}
+				}
+				
+				for (var i=0; i<$scope.projectList.length;i++) {
+					for (var j=0; j < data.idProjects.length; j++) {
+						if ($scope.projectList[i].idProject == data.idProjects[j]) {
+							$scope.selectedProjects.push($scope.projectList[i]);
+						}
+					}
+				}
+				
+				for (var i=0; i<$scope.labList.length;i++) {
+					for (var j=0; j < data.idLabs.length; j++) {
+						if ($scope.labList[i].idLab == data.idLabs[j]) {
+							$scope.selectedLabs.push($scope.labList[i]);
+						}
+					}
+				}
+			
+				for (var i=0; i<$scope.sampleSourceList.length;i++) {
+					for (var j=0; j < data.idSampleSources.length; j++) {
+						if ($scope.sampleSourceList[i].idSampleSource == data.idSampleSources[j]) {
+							$scope.selectedSampleSources.push($scope.sampleSourceList[i]);
+						}
+					}
+				}
+				
+				$scope.regions = data.regions;
+				$scope.regionMargins = data.regionMargins;
+				$scope.genes = data.genes;
+				$scope.geneMargins = data.geneMargins;
+				
+				if (data.fdr == null) {
+					$scope.thresholdFDR = "";
+				} else {
+					$scope.thresholdFDR  = data.fdr;
+				}
+				
+				if (data.log2Ratio == null) {
+					$scope.thresholdLog2Ratio = "";
+				} else {
+					$scope.thresholdLog2Ratio = data.log2Ratio;
+				}
+				
+				$scope.codeThresholdFDRComparison = data.codeFDRComparison;
+				$scope.codeThresholdLog2RatioComparison = data.codeLog2RatioComparison;
+				$scope.resultsPerPage = data.resultsPerPage;
+				$scope.sortType = data.sortType;
+				$scope.isReverse = data.reverse;
+				
+				
+				$scope.buildQuerySummary();
+			
+				setTimeout(function () {
+			        $scope.$apply(function() {
+			        	$scope.searchExisting = data.searchExisting;
+			        });
+			    }, 1000);
+				
+			}  
+		}).error(function(data) {
+			$scope.clearQuery();
+		});
+	};
+
+	//Load up dynamic dictionaries, which return promises
+	var prepList = [];
+	prepList.push($scope.loadLabs());
+	prepList.push($scope.loadOrganismBuildList());
+	prepList.push($scope.loadAnalysisTypeList());
+	prepList.push($scope.loadProjects());
+	prepList.push($scope.loadAnalyses());
+	prepList.push($scope.loadSampleSources());
+	
+	//When all dictionaries are loaded, load settings
+	$q.all(prepList).then(function() {
+		$scope.loadExistingSettings();
+		$scope.loadExistingResults();
+	});
+	
+
 	$scope.loadGenotypeList();
 	$scope.loadGeneAnnotationList();
-
-
+	
 }]);

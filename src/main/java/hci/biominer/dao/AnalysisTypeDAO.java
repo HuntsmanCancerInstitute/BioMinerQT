@@ -4,6 +4,7 @@ import java.util.List;
 
 import hci.biominer.model.AnalysisType;
 import hci.biominer.model.Project;
+import hci.biominer.util.Enumerated.AnalysisTypeEnum;
 import hci.biominer.util.Enumerated.ProjectVisibilityEnum;
 
 import org.hibernate.Query;
@@ -69,7 +70,7 @@ public class AnalysisTypeDAO {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public AnalysisType getAnalysisTypeByName(String name) {
+	public AnalysisType getAnalysisTypeByName(AnalysisTypeEnum name) {
 		Session session  = getCurrentSession();
 		session.beginTransaction();
 		

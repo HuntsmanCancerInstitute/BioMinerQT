@@ -10,17 +10,23 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -51,6 +57,7 @@ import hci.biominer.model.access.User;
 import hci.biominer.model.genome.Gene;
 import hci.biominer.model.genome.Genome;
 import hci.biominer.model.genome.Transcript;
+import hci.biominer.model.intervaltree.Interval;
 import hci.biominer.model.intervaltree.IntervalTree;
 import hci.biominer.model.ExternalGene;
 import hci.biominer.service.OrganismBuildService;
@@ -63,12 +70,14 @@ import hci.biominer.util.BiominerProperties;
 import hci.biominer.util.Enumerated.AnalysisTypeEnum;
 import hci.biominer.util.GenomeBuilds;
 import hci.biominer.util.IntervalTrees;
+import hci.biominer.util.QuerySettings;
 import hci.biominer.util.igv.IGVResource;
 import hci.biominer.util.igv.IGVSession;
 
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.ZipOutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -102,36 +111,86 @@ public class QueryController {
     private StringBuilder warnings = new StringBuilder("");
     
     private HashMap<String,QueryResultContainer> resultsDict =  new HashMap<String,QueryResultContainer>();
+    private HashMap<String,QuerySettings> settingsDict = new HashMap<String,QuerySettings>();
+    private HashMap<String,HashMap<String,IntervalTree<GenericResult>>> resultTreeDict = new HashMap<String,HashMap<String,IntervalTree<GenericResult>>>();
+    private HashMap<String,String> regionDict = new HashMap<String,String>();
+    private HashMap<String,String> geneDict = new HashMap<String,String>();
+    
+    
     private HashMap<String,File> fileDict = new HashMap<String,File>();
-    private HashMap<String,List<Analysis>> analysisDict = new HashMap<String,List<Analysis>>();
     private HashMap<Long,List<GeneNameModel>> searchDict = new HashMap<Long,List<GeneNameModel>>();
     
-    @PostConstruct
+    private HashMap<String,Subject> activeUsers = new HashMap<String,Subject>();
+    
+    private SessionCheckerTimer sct;
+    private Date date = new Date();
+    
+    @PreDestroy
+    public void shutdownTimer() {
+    	sct.stop();
+    }
+    
+    @SuppressWarnings("restriction")
+	@PostConstruct
     public void loadAllData() throws Exception {
+    	//Load properties
     	if (!BiominerProperties.isLoaded()) {
     		BiominerProperties.loadProperties();
     	}
     	
+    	//If load on launch, create all interval trees
     	if (BiominerProperties.getProperty("loadDataOnLaunch").equals("true")) {
     		List<OrganismBuild> obList = organismBuildService.getAllOrganismBuilds();
-        	AnalysisType chipType = analysisTypeService.getAnalysisTypeByName("ChIPSeq");
+    		
+        	AnalysisType chipType = analysisTypeService.getAnalysisTypeByName(AnalysisTypeEnum.valueOf("ChIPSeq"));
+        	AnalysisType rnaType = analysisTypeService.getAnalysisTypeByName(AnalysisTypeEnum.valueOf("RNASeq"));
+        	AnalysisType methType = analysisTypeService.getAnalysisTypeByName(AnalysisTypeEnum.valueOf("Methylation"));
+        	AnalysisType varType = analysisTypeService.getAnalysisTypeByName(AnalysisTypeEnum.valueOf("Variant"));
         	
         	for (OrganismBuild ob: obList) {
         		if (ob.getGenomeFile() != null) {
         			GenomeBuilds.loadGenome(ob);
         			Genome g = GenomeBuilds.getGenome(ob);
+        			
+        			List<Analysis> analyses = new ArrayList<Analysis>();
+        			
         			if (chipType == null) {
         	    		System.out.print("Analysis type ChIPSeq is not present in the database!!");
-        	    		continue;
         	    	} else {
-        	    		List<Analysis> analyses = this.analysisService.getAnalysesToPreload(ob, chipType);
+        	    		List<Analysis> chipAnalysis = this.analysisService.getAnalysesToPreload(ob, chipType);
+        	    		analyses.addAll(chipAnalysis);
+        	    	}	
+        			
+        			if (rnaType == null) {
+        				System.out.println("Analysis Type RNASeq is not present in the database");
+        			} else {
+        	    		List<Analysis> rnaAnalysis = this.analysisService.getAnalysesToPreload(ob, rnaType);
+        	    		analyses.addAll(rnaAnalysis);
+        	    	}	
+        			
+        			if (methType == null) {
+        				System.out.println("Analysis Type Methylation is not present in the database");
+        			} else {
+        	    		List<Analysis> methAnalysis = this.analysisService.getAnalysesToPreload(ob, methType);
+        	    		analyses.addAll(methAnalysis);
+        	    	}
+        			
+        			if (varType == null) {
+        				System.out.println("Analysis Type Variation is not present in the database");
+        			} else {
+        	    		List<Analysis> varAnalysis = this.analysisService.getAnalysesToPreload(ob, varType);
+        	    		analyses.addAll(varAnalysis);
+        	    	}
+        			
+        			
+        			if (analyses.size() != 0) {
         	    		for (Analysis a: analyses) {
         	    			if (!IntervalTrees.doesChipIntervalTreeExist(a)) {
         	    				IntervalTrees.loadChipIntervalTree(a, g);
         	    			}
-        	    			
-        	    		}
-        	    	}	
+        	    		}	
+        			}
+        			
         		}
         		
         		if(!searchDict.containsKey(ob.getIdOrganismBuild())) {
@@ -139,6 +198,10 @@ public class QueryController {
         		}
         	}
     	}
+    	
+    	//Start checking for active sessions
+    	sct = new SessionCheckerTimer(date);
+    	sct.start();	
     }
     
     private void loadGeneNames(OrganismBuild ob) {
@@ -177,6 +240,22 @@ public class QueryController {
     @RequestMapping(value="uploadGene",method=RequestMethod.POST)
     @ResponseBody
     public RegionUpload parseGenes(@RequestParam("file") MultipartFile file) {
+    	//Get current active user
+    	Subject currentUser = SecurityUtils.getSubject();
+    	
+    	User user = null;
+    	String username;
+    	if (currentUser.isAuthenticated()) {
+    		Long userId = (Long) currentUser.getPrincipal();
+    		user = userService.getUser(userId);
+    		
+    		this.activeUsers.put(user.getUsername(), currentUser);
+    		username = user.getUsername();
+    	} else {
+    		username = "guest";
+    	}
+    	
+    	
     	RegionUpload regions = new RegionUpload();
     	StringBuilder geneString = new StringBuilder("");
     	if (!file.isEmpty()) {
@@ -206,9 +285,10 @@ public class QueryController {
     				
     			}
     			
-    			regions.setRegions(geneString.toString());
-    			br.close();
+    			regions.setRegions(String.format("<Load genes from file: %s>",name));
     			
+    			this.geneDict.put(username,geneString.toString());
+    			br.close();
     			
     		} catch (IOException ioex) {
     			regions.setMessage("Error reading file: " + ioex.getMessage());
@@ -227,8 +307,24 @@ public class QueryController {
     @RequestMapping(value="upload",method=RequestMethod.POST)
     @ResponseBody
     public RegionUpload parseRegions(@RequestParam("file") MultipartFile file) {
+    	//Get current active user
+    	Subject currentUser = SecurityUtils.getSubject();
+    	
+    	User user = null;
+    	String username;
+    	if (currentUser.isAuthenticated()) {
+    		Long userId = (Long) currentUser.getPrincipal();
+    		user = userService.getUser(userId);
+    		
+    		this.activeUsers.put(user.getUsername(), currentUser);
+    		username = user.getUsername();
+    	} else {
+    		username = "guest";
+    	}
+    	
+    	
     	RegionUpload regions = new RegionUpload();
-    	Pattern pattern1 = Pattern.compile("^(\\w+)(,|:|\\s+)(\\d+)(,|-|\\s+)(\\d+)");
+    	Pattern pattern1 = Pattern.compile("^(\\w+)(,|:|\\s+)(\\d+)(,|-|\\s+)(\\d+)(,|-|\\s+)*.*");
     	
     	if (!file.isEmpty()) {
     		try {
@@ -264,7 +360,8 @@ public class QueryController {
     			}
     			
     			if (ok) {
-    				regions.setRegions(regionString.toString());
+    				regions.setRegions(String.format("<Load regions from file: %s>",name));
+        			this.regionDict.put(username,regionString.toString());
     			}
     			
     			br.close();
@@ -295,20 +392,19 @@ public class QueryController {
         @RequestParam(value="idProjects") List<Long> idProjects,
         @RequestParam(value="idAnalyses") List<Long> idAnalyses,
         @RequestParam(value="idSampleSources") List<Long> idSampleSources,
-        @RequestParam(value="isIntersect") boolean isIntersect,
         @RequestParam(value="regions") String regions,
         @RequestParam(value="regionMargins") Integer regionMargins,
         @RequestParam(value="genes") String genes,
         @RequestParam(value="geneMargins") Integer geneMargins,
-        @RequestParam(value="idGeneAnnotations") List<Long> idGeneAnnotations,
-        @RequestParam(value="isThresholdBasedQuery") boolean isThresholdBasedQuery,
         @RequestParam(value="FDR",required=false) Float FDR,
         @RequestParam(value="codeFDRComparison") String codeFDRComparison,
         @RequestParam(value="log2Ratio",required=false) Float log2Ratio,
         @RequestParam(value="codeLog2RatioComparison") String codeLog2RatioComparison,
         @RequestParam(value="resultsPerPage") Integer resultsPerPage,
         @RequestParam(value="sortType") String sortType,
-        @RequestParam(value="intersectionTarget") String target
+        @RequestParam(value="intersectionTarget") String target,
+        @RequestParam(value="isReverse") boolean reverse,
+        @RequestParam(value="searchExisting") boolean searchExisting
         ) throws Exception {
       
     	//Clear out warnings
@@ -320,11 +416,19 @@ public class QueryController {
     	
     	//Get current active user
     	Subject currentUser = SecurityUtils.getSubject();
+    	
     	User user = null;
+    	String username;
     	if (currentUser.isAuthenticated()) {
     		Long userId = (Long) currentUser.getPrincipal();
     		user = userService.getUser(userId);
+    		
+    		this.activeUsers.put(user.getUsername(), currentUser);
+    		username = user.getUsername();
+    	} else {
+    		username = "guest";
     	}
+    	
     	
     	//Get Organism Build
     	OrganismBuild ob = this.organismBuildService.getOrganismBuildById(idOrganismBuild);   	
@@ -344,14 +448,39 @@ public class QueryController {
     	
     	//Create intervals
     	IntervalParser ip = new IntervalParser();
-    	List<Interval> intervalsToCheck = null;
+    	List<LocalInterval> intervalsToCheck = new ArrayList<LocalInterval>();
         	
-    	if (codeResultType.equals("GENE") || (codeResultType.equals("REGION") && target.equals("GENE"))) {
-    		List<List<String>> parsed = this.getGeneIntervals(genes, genome, "TxBoundary",ob);
-    		mappedNames = parsed.get(2); //This will be used for gene based filtering, if necessary
-    		intervalsToCheck = ip.parseIntervals(this.convertListToString(parsed.get(0)), this.convertListToString(parsed.get(1)), geneMargins, genome);
+    	if (target.equals("EVERYTHING")) {
+    		intervalsToCheck = ip.parseIntervals("", "", 0, genome);
+    	} else if (codeResultType.equals("GENE") || (codeResultType.equals("REGION") && target.equals("GENE"))) {
+    		List<List<String>> parsed = null;
+    		if (genes.startsWith("<Load genes from file: ")) {
+    			if (geneDict.containsKey(username)) {
+    				String loadedGenes = geneDict.get(username);
+        			parsed = this.getGeneIntervals(loadedGenes, genome, "TxBoundary",ob);
+    			} else {
+    				this.warnings.append("Biominer expects genes loaded from file, but none could be found. Please try reloading your gene file.");
+    			}
+
+    		} else {
+    			parsed = this.getGeneIntervals(genes, genome, "TxBoundary",ob);
+    		}
+    	 
+    		if (parsed != null) {
+    			mappedNames = parsed.get(2); //This will be used for gene based filtering, if necessary
+        		intervalsToCheck = ip.parseIntervals(this.convertListToString(parsed.get(0)), this.convertListToString(parsed.get(1)), geneMargins, genome);
+    		} 
     	} else if (codeResultType.equals("REGION"))  {
-    		intervalsToCheck = ip.parseIntervals(regions, regions, regionMargins, genome);
+    		if (regions.startsWith("<Load regions from file: ")) {
+    			if (regionDict.containsKey(username)) {
+    				String loadedRegions = regionDict.get(username);
+        			intervalsToCheck = ip.parseIntervals(loadedRegions, loadedRegions, regionMargins, genome);
+    			} else {
+    				this.warnings.append("Biominer expects regions loaded from file, but none could be found. Please try reloading your gene file.");
+    			}
+    		} else {
+    			intervalsToCheck = ip.parseIntervals(regions, regions, regionMargins, genome);
+    		}
     	}
     	
     	//Add IP warnings
@@ -389,7 +518,18 @@ public class QueryController {
     	System.out.println("Number of interval tree lists " + itList.size());
         	
     	//Run basic search
-    	List<QueryResult> results = this.getIntersectingRegions(itList, analyses, genome, intervalsToCheck);
+    	List<QueryResult> results;
+    	if (searchExisting && this.resultTreeDict.containsKey(username)) {
+    		ArrayList<HashMap<String,IntervalTree<GenericResult>>> localList = new ArrayList<HashMap<String,IntervalTree<GenericResult>>>();
+    		localList.add(this.resultTreeDict.get(username));
+
+    		results = this.getIntersectingRegions(localList, analyses, genome, intervalsToCheck, reverse, username);
+    	} else {
+    		results = this.getIntersectingRegions(itList, analyses, genome, intervalsToCheck, reverse, username);
+    	}
+    	
+    	
+    	
  
     	//Run thresholding if necessary
     	List<QueryResult> fullRegionResults = new ArrayList<QueryResult>();
@@ -413,58 +553,175 @@ public class QueryController {
     	
     	QueryResultContainer qrc = new QueryResultContainer(fullRegionResults, fullRegionResults.size(), usedAnalyses.size(), usedDataTracks.keySet().size(), 0, sortType, true);
     	
+    	//Create settings object
+    	QuerySettings qs = new QuerySettings(codeResultType, target, idOrganismBuild, idAnalysisTypes, idLabs, idProjects,
+    			idAnalyses, idSampleSources, regions, regionMargins, genes, geneMargins, FDR, codeFDRComparison, log2Ratio, 
+    			codeLog2RatioComparison,resultsPerPage, sortType, reverse, searchExisting);
 
     	if (user != null) {
-    		this.resultsDict.put(user.getUsername(), qrc);
-    		this.analysisDict.put(user.getUsername(), analyses);
+    		this.resultsDict.put(username, qrc);
+    		this.settingsDict.put(username, qs);
     	} else {
-    		this.resultsDict.put("guest", qrc);
-    		this.analysisDict.put("guest", analyses);
+    		this.resultsDict.put(username, qrc);
     	}
     	
     	System.out.println("Used analyses " + usedAnalyses.size());
     	System.out.println("Used data tracks " + usedDataTracks.keySet().size());
     	
+    	//Create result object
     	QueryResultContainer qrcSub = qrc.getQrcSubset(resultsPerPage, 0, sortType);
     	
-    	return qrcSub;
-    	
+    	return qrcSub;	
     }
     
-    @RequestMapping(value="startIgvSession",method=RequestMethod.GET)
+    
+    @RequestMapping(value="loadExistingSettings",method=RequestMethod.GET) 
     @ResponseBody
-    public IgvSessionResult startIgvSession(HttpServletResponse response, HttpServletRequest request) throws Exception {
-    	String serverName = request.getLocalName();
-    	if (serverName.equals("localhost")) {
-    		serverName = "127.0.0.1";
-    	}
-    	
-    	//Create result 
-    	IgvSessionResult igvSR = new IgvSessionResult();
-    	
+    public QuerySettings getQuerySettings() throws Exception {
     	//Get current active user
     	Subject currentUser = SecurityUtils.getSubject();
     	User user = null;
-    	String key = "guest";
+    	
+    	
+    	System.out.println("Subject");
+    	
+    	//If user isn't authenticated, return nothing
     	if (currentUser.isAuthenticated()) {
     		Long userId = (Long) currentUser.getPrincipal();
     		user = userService.getUser(userId);
-    		key = user.getUsername();
+    	} else {
+    		return null;
     	}
+    	
+    	System.out.println("Authenicate");
+    	
+    	String username = user.getUsername();
+    	
+    	//If settings are already loaded, simply return them
+    	if (this.settingsDict.containsKey(username)) {
+    		return this.settingsDict.get(username);
+    	}
+    	
+    	System.out.println("No Hash");
+    	
+    	//If settings aren't loaded, check to see if they are serialized.
+    	File settingsPath = new File(FileController.getQueryDirectory(),username + ".settings.ser");
+    	if (settingsPath.exists()) {
+    		FileInputStream fin = new FileInputStream(settingsPath);
+    		ObjectInputStream ois = new ObjectInputStream(fin);
+    		QuerySettings qs = (QuerySettings)ois.readObject();
+    		ois.close();
+    		this.settingsDict.put(username, qs);
+    		System.out.println("Got Result");
+
+    		return qs;
+    	} else {
+    		System.out.println("No Result");
+    		return null;
+    	}	
+    }
+    
+    @RequestMapping(value="loadExistingResults",method=RequestMethod.GET) 
+    @ResponseBody
+    public QueryResultContainer getQueryResults() throws Exception {
+    	//Get current active user
+    	Subject currentUser = SecurityUtils.getSubject();
+    	User user = null;
+    	
+    	//If user isn't authenticated, return nothing
+    	if (currentUser.isAuthenticated()) {
+    		Long userId = (Long) currentUser.getPrincipal();
+    		user = userService.getUser(userId);
+    	} else {
+    		return null;
+    	}
+    	
+    	String username = user.getUsername();
+    	
+    	if (!resultTreeDict.containsKey(username)) {
+    		this.loadResultTree(username);
+    	}
+    	
+    	if (!regionDict.containsKey(username)) {
+    		this.loadRegionDict(username);
+    	}
+    	
+    	if (!geneDict.containsKey(username)) {
+    		this.loadGeneDict(username);
+    	}
+    	
+    	//If settings are already loaded, simply return them
+    	if (this.resultsDict.containsKey(username)) {
+    		QueryResultContainer qrcSub = this.resultsDict.get(username).getQrcSubset(25, 0, "FDR");
+    		return qrcSub;
+    	}
+    	
+    	//If settings aren't loaded, check to see if they are serialized.
+    	File resultsPath = new File(FileController.getQueryDirectory(),username + ".results.ser");
+    	if (resultsPath.exists()) {
+    		FileInputStream fin = new FileInputStream(resultsPath);
+    		ObjectInputStream ois = new ObjectInputStream(fin);
+    		QueryResultContainer qrc = (QueryResultContainer)ois.readObject();
+    		ois.close();
+    		this.resultsDict.put(username, qrc);		
+    		
+    		QueryResultContainer qrcSub = qrc.getQrcSubset(25, 0, "FDR");
+    		
+    		return qrcSub;
+    	} else {
+    		return null;
+    	}	
+    }
+    
+    private void loadResultTree(String username) throws Exception {
+    	File resultsPath = new File(FileController.getQueryDirectory(),username + ".tree.ser");
+    	if (resultsPath.exists()) {
+    		FileInputStream fin = new FileInputStream(resultsPath);
+    		ObjectInputStream ois = new ObjectInputStream(fin);
+    		@SuppressWarnings("unchecked")
+			HashMap<String,IntervalTree<GenericResult>> tree = (HashMap<String,IntervalTree<GenericResult>>)ois.readObject();
+    		ois.close();
+    		this.resultTreeDict.put(username, tree);
+    	}
+    }
+    
+    private void loadGeneDict(String username) throws Exception {
+    	File resultsPath = new File(FileController.getQueryDirectory(),username + ".genes.ser");
+    	if (resultsPath.exists()) {
+    		FileInputStream fin = new FileInputStream(resultsPath);
+    		ObjectInputStream ois = new ObjectInputStream(fin);
+    		String genes = (String)ois.readObject();
+    		ois.close();
+    		this.geneDict.put(username, genes);
+    	}
+    }
+    
+    private void loadRegionDict(String username) throws Exception {
+    	File resultsPath = new File(FileController.getQueryDirectory(),username + ".regions.ser");
+    	if (resultsPath.exists()) {
+    		FileInputStream fin = new FileInputStream(resultsPath);
+    		ObjectInputStream ois = new ObjectInputStream(fin);
+    		String regions = (String)ois.readObject();
+    		ois.close();
+    		this.regionDict.put(username, regions);
+    	}
+    }
+    
+    
+    
+    public IgvSessionResult createIgvSessionFile(String username, File sessionsDirectory, String serverName) throws Exception {
+    	//Create result 
+    	IgvSessionResult igvSR = new IgvSessionResult();
     	
     	StringBuilder warnings = new StringBuilder("");
     	StringBuilder errors = new StringBuilder("");
     	
     	//Create file handle to actual file
-    	String fileName = key + "_igv.xml";
+    	String fileName = username + "_igv.xml";
     	File localDirectory = FileController.getIgvDirectory();
     	File sessionFile = new File(localDirectory,fileName);
+    	igvSR.setSessionFile(sessionFile);
     	
-    	//Link hosted directory to local files
-    	//Create file handle to hosted files
-    	String rootDirectory = request.getSession().getServletContext().getRealPath("/");
-    	File sessionsDirectory = new File(rootDirectory,"../sessions");
-    
     	
     	if (!sessionsDirectory.exists()) {
     		Process process = Runtime.getRuntime().exec( new String[] { "ln", "-s", localDirectory.getAbsolutePath(), sessionsDirectory.getAbsolutePath() } );
@@ -473,23 +730,14 @@ public class QueryController {
     	}
     	
     	//Grab the stored analyses
-    	List<Analysis> analyses = null;
+    	List<Analysis> analyses = this.analysisService.getAllAnalyses();
     	QueryResultContainer results = null;
-    	if (this.analysisDict.containsKey(key)) {
-    		analyses = this.analysisDict.get(key);
-    	} else {
-    		errors.append(String.format("The user %s doesn't appear to have any stored analyses, IGV session can't be created.",key));
-    		igvSR.setError(errors.toString());
-    		response.setStatus(405);
-    		return igvSR;
-    	}
     	
-    	if (this.resultsDict.containsKey(key)) {
-    		results = this.resultsDict.get(key);
+    	if (this.resultsDict.containsKey(username)) {
+    		results = this.resultsDict.get(username);
     	} else {
-    		errors.append(String.format("This user %s doesn't appear to have any stored analyses, IGV session can't be created.",key));
+    		errors.append(String.format("This user %s doesn't appear to have any stored analyses, IGV session can't be created.",username));
     		igvSR.setError(errors.toString());
-    		response.setStatus(405);
     		return igvSR;
     	}
     	
@@ -503,26 +751,25 @@ public class QueryController {
     	} else {
     		errors.append("The stored analysis list is empty, session can't be created.");
     		igvSR.setError(errors.toString());
-    		response.setStatus(405);
     		return igvSR;
     	}
     	
-    	//Create session object
-    	IGVSession igvSession = new IGVSession(genomeBuild);
+    	
     	List<IGVResource> resources = new ArrayList<IGVResource>();
     	for (String name: datatracks.keySet()) {
-    		URL datatrackURL = new URL("http://" + serverName + ":8080/sessions/" + datatracks.get(name));
+    		URL datatrackURL = new URL("http://" + serverName + "/sessions/" + datatracks.get(name));
     		if (!urlExists(datatrackURL)) {
     			warnings.append(String.format("The datatrack %s does not exist or is inaccessable.<br/>", datatracks.get(name)));
     			continue;
     		}
     		
     		IGVResource igvResource = null;
-    		if (name.endsWith(".vcf.gz")) {
+    		String path = datatracks.get(name);
+    		if (path.endsWith(".vcf.gz")) {
     			igvResource = new IGVResource(name, datatrackURL, null, false);
-    		} else if (name.endsWith(".bw")) {
+    		} else if (path.endsWith(".bw")) {
     			igvResource = new IGVResource(name, datatrackURL, null, true);
-    		} else if (name.endsWith(".bb")) {
+    		} else if (path.endsWith(".bb")) {
     			igvResource = new IGVResource(name, datatrackURL, null, false);
     		} else {
     			warnings.append(String.format("The datatrack %s does not have a recognized suffix.<br/>", datatracks.get(name)));
@@ -538,13 +785,16 @@ public class QueryController {
     	if (resources.size() == 0) {
     		errors.append("None of the datatracks can be viewed in IGV.");
     		igvSR.setError(errors.toString());
-    		response.setStatus(405);
     		return igvSR;
     	}
     	
     	//Add resources
     	IGVResource[] resourceArray = new IGVResource[resources.size()];
     	resourceArray = resources.toArray(new IGVResource[resources.size()]);
+    	
+    	//Create IGV session object
+    	//Create session object
+    	IGVSession igvSession = new IGVSession(genomeBuild);
     	igvSession.setIgvResources(resourceArray);
     	
     	
@@ -553,15 +803,48 @@ public class QueryController {
     	igvSession.writeXMLSession(sessionFile);
     	
     	
-    	
-    	
     	//Construct the url
-    	URL sessionUrl = new URL("http://" + serverName + ":8080/sessions/" + fileName);
+    	URL sessionUrl = new URL("http://" + serverName + "/sessions/" + fileName);
     	
     	igvSR.setUrl(igvSession.fetchIGVLaunchURL(sessionUrl).toString());
     	igvSR.setUrl2(sessionUrl.toString());
     	
     	return igvSR;
+    }
+    
+   
+    
+    @RequestMapping(value="startIgvSession",method=RequestMethod.GET)
+    @ResponseBody
+    public IgvSessionResult startIgvSession(HttpServletResponse response, HttpServletRequest request) throws Exception {
+    	String serverName = request.getLocalName();
+    	if (serverName.equals("localhost")) {
+    		serverName = "127.0.0.1:8080";
+    	}
+    	
+    	//Get current active user
+    	Subject currentUser = SecurityUtils.getSubject();
+    	User user = null;
+    	String username = "guest";
+    	if (currentUser.isAuthenticated()) {
+    		Long userId = (Long) currentUser.getPrincipal();
+    		user = userService.getUser(userId);
+    		username = user.getUsername();
+    	}
+    	
+    	//Link hosted directory to local files
+    	//Create file handle to hosted files
+    	String rootDirectory = request.getSession().getServletContext().getRealPath("/");
+    	File sessionsDirectory = new File(rootDirectory,"../sessions");
+    
+    	IgvSessionResult igr = this.createIgvSessionFile(username, sessionsDirectory, serverName);
+    	if (igr.getError() != null) {
+    		response.setStatus(405);
+    	}
+    	
+    	return igr;
+    	
+    	
     }
     
     /* Stolen from http://www.rgagnon.com/javadetails/java-0059.html */
@@ -611,8 +894,11 @@ public class QueryController {
     }
     
     
+    
+    
+    
      @RequestMapping(value = "downloadAnalysis", method = RequestMethod.GET)
-	 public void downloadAnalysis(HttpServletResponse response, @RequestParam(value="codeResultType") String codeResultType) throws Exception{
+	 public void downloadAnalysis(HttpServletRequest request, HttpServletResponse response, @RequestParam(value="codeResultType") String codeResultType) throws Exception{
     	
     	//Get current active user
     	Subject currentUser = SecurityUtils.getSubject();
@@ -632,9 +918,12 @@ public class QueryController {
     	if (this.resultsDict.containsKey(key)) {
     		List<QueryResult> results = this.resultsDict.get(key).getResultList();
     		if (results.size() > 0) {
-    			File localFile = new File(FileController.getDownloadDirectory(),key + ".query.txt.gz");
+    			//Create results file
+    			File localFile = new File(FileController.getDownloadDirectory(),key + ".query.xls.gz");
     			BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(localFile))));
-                        
+                
+    			System.out.println(codeResultType);
+    			
     			if (codeResultType.equals("REGION")) {
     				//Write header
         			if (results.size() > 0) {
@@ -653,20 +942,62 @@ public class QueryController {
         			for (QueryResult qr: results) {
         				bw.write(qr.writeGene());
         			}
-    			}
+    			} 
     			
     			bw.close();
     			
+    			//Create session file
+    			String serverName = request.getLocalName();
+    	    	if (serverName.equals("localhost")) {
+    	    		serverName = "127.0.0.1:8080";
+    	    	}
+    			
+    	    	String rootDirectory = request.getSession().getServletContext().getRealPath("/");
+    	    	File sessionsDirectory = new File(rootDirectory,"../sessions");
+    			IgvSessionResult isr = this.createIgvSessionFile(key, sessionsDirectory, serverName);
+    			boolean sessionOK = true;
+    			if (isr.getError() != null) {
+    				sessionOK = false;
+    			}
+    			
+    			
+    			//Write out as zip
+    			File zipFile = new File(FileController.getDownloadDirectory(),key + ".results.zip");
+    			byte[] b = new byte[1024];
+    			int count;
+    			
+    			GZIPInputStream in1 = new GZIPInputStream(new FileInputStream(localFile));
+    			ZipOutputStream out = new ZipOutputStream(new FileOutputStream(zipFile));
+    			out.putNextEntry(new ZipEntry(key + ".query.xls"));
+    		
+    			while((count = in1.read(b)) > 0) {
+    				out.write(b,0,count);
+    			}
+    			out.closeEntry();
+    			in1.close();
+    			
+    			if (sessionOK) {
+    				FileInputStream in2 = new FileInputStream(isr.getSessionFile());
+    				out.putNextEntry(new ZipEntry(key + ".session.xml"));
+    				
+    				while((count = in2.read(b)) > 0) {
+        				out.write(b,0,count);
+        			}
+        			out.closeEntry();
+        			in2.close();
+    			}
+    			
+    			out.close();
+
     			try {		
     			 	//response.setContentType(getFile.getFileType());
-    			 	response.setHeader("Content-disposition", "attachment; filename=\""+ key + ".query.txt.gz"+"\"");
+    			 	response.setHeader("Content-disposition", "attachment; filename=\""+ key + ".results.zip"+"\"");
     			 	
-    			 	BufferedInputStream bis = new BufferedInputStream(new FileInputStream(localFile));
+    			 	BufferedInputStream bis = new BufferedInputStream(new FileInputStream(zipFile));
     			 	
     		        FileCopyUtils.copy(bis, response.getOutputStream());
     		        
-    		        
-    		        this.fileDict.put(key, localFile);
+    		        this.fileDict.put(key, zipFile);
     		        
     			 }catch (IOException e) {
     				e.printStackTrace();
@@ -1105,49 +1436,133 @@ public class QueryController {
     	return filteredResults;
     }
     
+    
+    
     private List<QueryResult> getIntersectingRegions(ArrayList<HashMap<String,IntervalTree<GenericResult>>> treeList, List<Analysis> analyses, Genome genome, 
-    		List<Interval> intervals) throws Exception{
-    	List<QueryResult> queryResults = new ArrayList<QueryResult>();
-    	int index = 1;
+    		List<LocalInterval> localIntervals, boolean reverse, String user) throws Exception{
     	
+    	//Container for matches
+    	HashMap<GenericResult,Integer[]> grMap = new HashMap<GenericResult,Integer[]>();
+    	
+    	//Generate match of unique matches
     	for (int i=0; i<treeList.size(); i++) {
-    		
     		HashMap<String, IntervalTree<GenericResult>> it = treeList.get(i);
-    		for (Interval inv: intervals) {
-    			if (it.containsKey(inv.getChrom())) {
-    				List<GenericResult> hits = it.get(inv.getChrom()).search(inv.getStart(), inv.getEnd());
-        			Analysis a = analyses.get(i);
-        			for (GenericResult c: hits) {
-        				QueryResult result = new QueryResult();
-        				result.setIndex(index++);
-        	    		result.setProjectName(a.getProject().getName());
-        	    		result.setIdAnalysis(a.getIdAnalysis());
-        	    		result.setAnalysisType(a.getAnalysisType().getType());
-        	    		result.setAnalysisName(a.getName());
-        	    		result.setAnalysisSummary(a.getDescription());
-        	    		HashSet<String> conditions = new HashSet<String>();
-        	    		String conditionString = "";
-        	    		for (Sample sample: a.getSamples()) {
-        	    			String cond = sample.getSampleCondition().getCond();
-        	    			if (!conditions.contains(cond)) {
-        	    				conditions.add(cond);
-        	    				conditionString += cond + ",";
-        	    			}
-        	    		}
-        	    		result.setSampleConditions(conditionString.substring(0,conditionString.length()-1));
-        	    		String coordinate = inv.getChrom() + ":" + String.valueOf(c.getStart()) + "-" + String.valueOf(c.getStop());
-        	    		result.setCoordinates(coordinate);
-        	    		result.setFDR(c.getTransFDR());
-        	    		result.setLog2Ratio(c.getLog2Rto());
-        	    		result.setMappedName(c.getMappedName());
-        	    		result.setSearch(inv.getSearch());
-        	    		queryResults.add(result);
+    		for (int j=0; j<localIntervals.size(); j++) {
+    			LocalInterval inv = localIntervals.get(j); 
+    			String chrom = inv.getChrom();
+    			if (it.containsKey(chrom)) {
+    				List<GenericResult> hits = it.get(chrom).search(inv.getStart(), inv.getEnd());
+    				
+        			for (GenericResult gr: hits) {
+        				if (!grMap.containsKey(gr)) {
+        					Integer[] indexes = new Integer[]{i,j};
+        					grMap.put(gr,indexes);
+        				}	
         			}
     			}	
     		}
     	}
     	
-    	return queryResults;
+    	
+    	List<QueryResult> qrList;
+    	if (reverse) {
+    		//If reverse, generate does not match list!
+        	HashMap<GenericResult,Integer[]> grMapRev = new HashMap<GenericResult,Integer[]>();
+    		for (int i=0; i<treeList.size(); i++) {
+    			for (IntervalTree<GenericResult> it: treeList.get(i).values()) {
+    				for (Interval<GenericResult> inv: it.getInterval()) {
+    					if (!grMapRev.containsKey(inv)) {
+    						Integer[] indexes = new Integer[]{i,-1};
+    						grMapRev.put(inv.getValue(), indexes);
+    					}
+    				}
+    			}
+    		}
+    		
+    		for (GenericResult gr: grMap.keySet()) {
+    			if (grMapRev.containsKey(gr)) {
+    				grMapRev.remove(gr);
+    			}
+    		}
+    		
+    		qrList = this.convertGenericToQuery(grMapRev, analyses, null);
+    		if (grMapRev.size() > 0) {
+    			this.resultTreeDict.put(user,this.convertGenericToInterval(grMapRev));
+    		}
+    	} else {
+    		qrList = this.convertGenericToQuery(grMap, analyses, localIntervals);
+    		if (grMap.size() > 0) {
+    			this.resultTreeDict.put(user,this.convertGenericToInterval(grMap));
+    		}
+    	}
+    	
+    	return qrList;
+    }
+    
+    private HashMap<String,IntervalTree<GenericResult>> convertGenericToInterval(HashMap<GenericResult,Integer[]> grHash) {
+    	//New Interval Tree Container
+    	HashMap<String,ArrayList<Interval<GenericResult>>> resultIntervalData = new HashMap<String,ArrayList<Interval<GenericResult>>>();
+    	
+    	for (GenericResult gr: grHash.keySet()) {
+    		String chrom = gr.getChrom();
+    		Interval<GenericResult> newInv = new Interval<GenericResult>(gr.getStart(),gr.getStop(),gr);
+			if (!resultIntervalData.containsKey(chrom)) {
+				resultIntervalData.put(chrom, new ArrayList<Interval<GenericResult>>());
+			}
+			resultIntervalData.get(chrom).add(newInv);
+    	}
+    	
+    	HashMap<String,IntervalTree<GenericResult>> resultIntervalTree = new HashMap<String,IntervalTree<GenericResult>>();
+    	for (String chrom: resultIntervalData.keySet()) {
+    		IntervalTree<GenericResult> newTree = new IntervalTree<GenericResult>(resultIntervalData.get(chrom),false);
+    		resultIntervalTree.put(chrom,newTree);
+    	}
+    	
+    	return resultIntervalTree;
+    }
+    
+    private List<QueryResult> convertGenericToQuery(HashMap<GenericResult,Integer[]> grHash, List<Analysis> analyses, List<LocalInterval> intervalList) {
+    	List<QueryResult> qrList = new ArrayList<QueryResult>();
+    	
+    	int index = 0;
+    	for (GenericResult gr: grHash.keySet()) {
+    		Integer[] indexes = grHash.get(gr);
+    		Analysis a = analyses.get(indexes[0]);
+    		
+    		QueryResult result = new QueryResult();
+			result.setIndex(index++);
+    		result.setProjectName(a.getProject().getName());
+    		result.setIdAnalysis(a.getIdAnalysis());
+    		result.setAnalysisType(a.getAnalysisType().getType());
+    		result.setAnalysisName(a.getName());
+    		result.setAnalysisSummary(a.getDescription());
+    		HashSet<String> conditions = new HashSet<String>();
+    		String conditionString = "";
+    		for (Sample sample: a.getSamples()) {
+    			String cond = sample.getSampleCondition().getCond();
+    			if (!conditions.contains(cond)) {
+    				conditions.add(cond);
+    				conditionString += cond + ",";
+    			}
+    		}
+    		result.setSampleConditions(conditionString.substring(0,conditionString.length()-1));
+    		String coordinate = gr.getChrom() + ":" + String.valueOf(gr.getStart()) + "-" + String.valueOf(gr.getStop());
+    		result.setCoordinates(coordinate);
+    		result.setFDR(gr.getTransFDR());
+    		result.setLog2Ratio(gr.getLog2Rto());
+    		result.setMappedName(gr.getMappedName());
+    		
+    		//If interval list is set ( shouldn't be for does not match), set search parameter
+    		if (intervalList == null) {
+    			result.setSearch("NA");
+    		} else {
+    			LocalInterval inv = intervalList.get(indexes[1]);
+    			result.setSearch(inv.getSearch());
+    		}
+    		qrList.add(result);
+    	}
+    	
+    	return qrList;
     }
    
     
@@ -1160,8 +1575,8 @@ public class QueryController {
     	
     	
     	
-    	public List<Interval> parseIntervals(String region, String search, Integer regionMargin, Genome genome) throws Exception {
-    		List<Interval> intervals = new ArrayList<Interval>();
+    	public List<LocalInterval> parseIntervals(String region, String search, Integer regionMargin, Genome genome) throws Exception {
+    		List<LocalInterval> localIntervals = new ArrayList<LocalInterval>();
     		
     	
     		
@@ -1176,11 +1591,11 @@ public class QueryController {
     		
     		if (region == "") {
     			for (String chrom: genome.getNameChromosome().keySet()) {
-    				if (chrom.startsWith("chr")) {
-    					continue;
-    				}
-    				Interval inv = new Interval(chrom,0,genome.getNameChromosome().get(chrom).getLength(),"none");
-    				intervals.add(inv);
+//    				if (chrom.startsWith("chr")) {
+//    					continue;
+//    				}
+    				LocalInterval inv = new LocalInterval(chrom,0,genome.getNameChromosome().get(chrom).getLength(),"none");
+    				localIntervals.add(inv);
     			}
     		} else {
     			String[] regionList = region.split("\n");
@@ -1239,8 +1654,8 @@ public class QueryController {
     	    				end = genome.getNameChromosome().get(chrom).getLength();
     	    			}  
     	    			
-    	    			Interval inv = new Interval(chrom,start,end,s);
-    	    			intervals.add(inv);
+    	    			LocalInterval inv = new LocalInterval(chrom,start,end,s);
+    	    			localIntervals.add(inv);
     	    			
     	    		} else if (m2.matches()) {
     	    			String chrom  = m2.group(1);
@@ -1253,8 +1668,8 @@ public class QueryController {
     	    			int start = 0;
     	    			int end = genome.getNameChromosome().get(chrom).getLength();
     	    			
-    	    			Interval inv = new Interval(chrom,start,end,s);
-    	    			intervals.add(inv);
+    	    			LocalInterval inv = new LocalInterval(chrom,start,end,s);
+    	    			localIntervals.add(inv);
 
     	    			
     	    		} else {
@@ -1264,7 +1679,7 @@ public class QueryController {
     			}
     		}
     		
-    		return intervals;
+    		return localIntervals;
     	}
     	
     	public StringBuilder getWarnings() {
@@ -1272,14 +1687,14 @@ public class QueryController {
     	}
     }
     
-    private class Interval {
+    private class LocalInterval {
     	private String chrom;
     	private int start;
     	private int end;
     	private String search; //what was searched to get this interval 
 
 	
-    	public Interval(String chrom, int start, int end, String search) {
+    	public LocalInterval(String chrom, int start, int end, String search) {
     		this.chrom = chrom;
     		this.start = start;
     		this.end = end;
@@ -1302,5 +1717,132 @@ public class QueryController {
     		return this.search;
     	}
     }
+    
+    private class SessionCheckerTimer {
+    	private long delay = 60000;
+    	private Timer timer = new Timer();
+    	private SessionChecker sc = new SessionChecker();
+    	private Date date;
+    	
+    	public SessionCheckerTimer(Date date) {
+    		this.date = date;
+    	}
+    	
+    	public void start() {
+    		timer.cancel();
+    		timer = new Timer();
+    		Date executionDate = new Date();
+    		timer.scheduleAtFixedRate(sc, executionDate, delay);
+    	}
+    	
+    	public void stop() {
+    		timer.cancel();
+    		
+    		for (String key: activeUsers.keySet()) {
+    			writeData(key);
+    		}
+    	}
+    	
+    	public void writeData(String key) {
+    		if (settingsDict.containsKey(key)) {
+				//First write out serialized objects
+				try {
+					File settingsPath = new File(FileController.getQueryDirectory(), key + ".settings.ser");
+        			FileOutputStream fos = new FileOutputStream(settingsPath);
+        			ObjectOutputStream oos = new ObjectOutputStream(fos);
+        			oos.writeObject(settingsDict.get(key));
+        			oos.close();
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
+    			
+    			//Remove settings from memory
+				settingsDict.remove(key);
+			}
+			
+			if (resultsDict.containsKey(key)) {
+				//First write out serialized objects
+				try {
+					File resultsPath = new File(FileController.getQueryDirectory(), key + ".results.ser");
+        			FileOutputStream fos = new FileOutputStream(resultsPath);
+        			ObjectOutputStream oos = new ObjectOutputStream(fos);
+        			oos.writeObject(resultsDict.get(key));
+        			oos.close();
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
+    			
+    			//Remove settings from memory
+				resultsDict.remove(key);
+			}
+			
+			if (resultTreeDict.containsKey(key)) {
+				//First write out serialized objects
+				try {
+					File resultsPath = new File(FileController.getQueryDirectory(), key + ".tree.ser");
+        			FileOutputStream fos = new FileOutputStream(resultsPath);
+        			ObjectOutputStream oos = new ObjectOutputStream(fos);
+        			oos.writeObject(resultTreeDict.get(key));
+        			oos.close();
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
+    			
+    			//Remove settings from memory
+				resultTreeDict.remove(key);
+			}
+			
+			if (regionDict.containsKey(key)) {
+				try {
+					File resultsPath = new File(FileController.getQueryDirectory(),key + ".regions.ser");
+					FileOutputStream fos = new FileOutputStream(resultsPath);
+					ObjectOutputStream oos = new ObjectOutputStream(fos);
+					oos.writeObject(regionDict.get(key));
+					oos.close();
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
+				
+				regionDict.remove(key);
+			}
+			
+			if (geneDict.containsKey(key)) {
+				try {
+					File resultsPath = new File(FileController.getQueryDirectory(),key + ".genes.ser");
+					FileOutputStream fos = new FileOutputStream(resultsPath);
+					ObjectOutputStream oos = new ObjectOutputStream(fos);
+					oos.writeObject(geneDict.get(key));
+					oos.close();
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
+				
+				geneDict.remove(key);
+			}
+    	}
+    	
+    	private class SessionChecker extends TimerTask {
+        	public void run() {
+            	HashMap<String,Subject> updatedUsers = new HashMap<String,Subject>();
+            	System.out.println("CHECKING: " + date.toString());
+            	
+            	for (String key: activeUsers.keySet()) {
+            		Subject s = activeUsers.get(key);
+            		
+            		try {
+            			s.getPrincipal();
+                		System.out.println("Still authenticated");
+            			updatedUsers.put(key, s);
+            		} catch (Exception authEx) {
+            			System.out.println("Writing out data");
+            			writeData(key);	
+            		}
+
+            	}
+            	activeUsers = updatedUsers;
+            }
+        }
+    }
+    
     
 }

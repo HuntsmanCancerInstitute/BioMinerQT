@@ -103,6 +103,10 @@ public class FileController {
 		return createDirectory("genes");
 	}
 	
+	public static File getQueryDirectory() throws Exception {
+		return createDirectory("queries");
+	}
+	
 	private static File createDirectory(String subdir) throws Exception {
 		checkProperties();
 		File localDirectory = new File(BiominerProperties.getProperty("filePath"));

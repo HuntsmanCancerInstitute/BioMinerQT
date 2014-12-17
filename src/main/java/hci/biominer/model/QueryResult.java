@@ -2,6 +2,7 @@ package hci.biominer.model;
 
 import hci.biominer.util.Enumerated.AnalysisTypeEnum;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -9,7 +10,7 @@ import java.util.regex.Pattern;
 
 
 
-public class QueryResult {
+public class QueryResult implements Serializable {
 	private final static Pattern p1 = Pattern.compile("(chr)*(\\w+?):(\\d+)-(\\d+)");
 	private Integer index;
 	private String projectName;
@@ -175,13 +176,16 @@ public class QueryResult {
 	}
 
 	public String writeRegion() {
-		String outline = String.format("%d\t%s\t%s\t%s\t%s\t%s\t%f\t%s\n", index, projectName, analysisType, analysisName, sampleConditions, coordinates, log2Ratio, FDR);
+		String coordinate = "=HYPERLINK(\"http://127.0.0.1:60151/goto?locus=" + this.coordinates + "\",\"" + this.coordinates + "\")";
+		
+		String outline = String.format("%d\t%s\t%s\t%s\t%s\t%s\t%s\t%f\t%s\n", index, projectName, analysisType, analysisName, sampleConditions, search, coordinate, log2Ratio, FDR);
 		return outline;
 	}
 	
 
 	public String writeGene() {
-		String outline = String.format("%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%f\t%s\n", index, projectName, analysisType, analysisName, sampleConditions, search, mappedName, coordinates, log2Ratio, FDR);
+		String coordinate = "=HYPERLINK(\"http://127.0.0.1:60151/goto?locus=" + this.coordinates + "\",\"" + this.coordinates + "\")";
+		String outline = String.format("%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%f\t%s\n", index, projectName, analysisType, analysisName, sampleConditions, search, mappedName, coordinate, log2Ratio, FDR);
 		return outline;
 	}
 

@@ -486,5 +486,9 @@ public class IntervalTree<T> implements java.io.Serializable {
 	public void setSearchForNeighbors(boolean searchForNeighbors) {
 		this.searchForNeighbors = searchForNeighbors;
 	}
+	
+	public List<Interval<T>> getInterval() {
+		return this.intervals;
+	}
 
 }

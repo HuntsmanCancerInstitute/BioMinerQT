@@ -753,8 +753,6 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 				$scope.result.file = null;
 			}
 		}
-		
-		console.log($scope.result.analysisType);
 	});
 	
 	/****************

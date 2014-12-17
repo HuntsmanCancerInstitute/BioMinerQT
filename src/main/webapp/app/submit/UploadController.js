@@ -1,11 +1,11 @@
 'use strict';
 
 
-var upload  = angular.module('upload',  ['ui.bootstrap', 'angularFileUpload','filters', 'services', 'directives','error','fneditor','chosen']);
+var upload  = angular.module('upload',  ['ui.bootstrap', 'angularFileUpload','filters', 'services', 'directives','error','fneditor','chosen','ngProgress']);
 
-angular.module("upload").controller("UploadController", ['$scope','$upload','$http','$modal','$q',
+angular.module("upload").controller("UploadController", ['$scope','$upload','$http','$modal','$q','ngProgress',
                                                       
-	function($scope, $upload, $http, $modal, $q) {
+	function($scope, $upload, $http, $modal, $q, ngProgress) {
 
 		$scope.selectAllParse = false;
 		$scope.selectAllImport = false;
@@ -289,6 +289,8 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 					params[$scope.columnDefs[k].name] = $scope.columnDefs[k].index;
 				}
 				
+				
+				
 				if ($scope.selectedAnalysisType.type == "ChIPSeq" || $scope.selectedAnalysisType.type == "Methylation") {
 					(function(params,index) {
 						promise = promise.then(function() {
@@ -299,11 +301,14 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 							}).success(function(data) {
 								data.selected = false;
 								$scope.files.importedFiles[index] = data;
+								
 							});
 						});
 					}(params,index));
 				} else if ($scope.selectedAnalysisType.type == "RNASeq") {
 					(function(params,index) {
+						ngProgress.start();
+						
 						promise = promise.then(function() {
 							return $http({
 								url: "submit/parse/rnaseq",
@@ -312,11 +317,15 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 							}).success(function(data) {
 								data.selected = false;
 								$scope.files.importedFiles[index] = data;
+								ngProgress.complete();
+							}).error(function(data) {
+								ngProgress.reset();
 							});
 						});
 					}(params,index));
 				} else if ($scope.selectedAnalysisType.type == "Variant") {
 					(function(params,index) {
+						ngProgress.start();
 						promise = promise.then(function() {
 							return $http({
 								url: "submit/parse/variant",
@@ -325,6 +334,9 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 							}).success(function(data) {
 								data.selected = false;
 								$scope.files.importedFiles[index] = data;
+								ngProgress.complete();
+							}).error(function(data) {
+								ngProgress.reset();
 							});
 						});
 					}(params,index));

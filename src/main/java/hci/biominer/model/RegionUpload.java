@@ -3,6 +3,7 @@ package hci.biominer.model;
 public class RegionUpload {
 	private String regions;
 	private String message;
+	
 	public String getRegions() {
 		return regions;
 	}

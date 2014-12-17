@@ -1,6 +1,5 @@
 
-
-<form name="queryForm" class="form-horizontal" >
+<form name="queryForm" class="form-horizontal">
 <fieldset>
 
 	<!--                 -->
@@ -30,10 +29,13 @@
             <div class="panel panel-default">
 				<div class="panel-heading">
 				    Compose Query 				   			
-					<button class="btn btn-sm btn-default pull-right" style="margin-top: -6px;margin-left: 10px" ng-click="clearQuery()">
-	  						<span class="glyphicon glyphicon-remove"></span> Clear
+					<button class="btn btn-sm btn-default pull-right" style="margin-top: -6px;margin-left: 10px" ng-click="clearQuery()" ng-hide="queryStarted">
+	  						<span class="glyphicon glyphicon-refresh"></span> Clear
 		   			</button>
-					<button class="btn btn-sm btn-warning pull-right" style="margin-top: -6px"  ng-disabled="queryForm.$invalid" ng-click="runQuery()">
+		   			<button class="btn btn-sm btn-danger pull-right" style="margin-top: -6px;margin-left: 10px" ng-click="abortQuery()" ng-show="queryStarted">
+		   					<span class="glyphicon glyphicon-stop"></span> Stop Query
+		   			</button>
+					<button class="btn btn-sm btn-warning pull-right" style="margin-top: -6px"  ng-click="runQuery(queryForm.$invalid)" ng-hide="queryStarted">
 	  						<span class="glyphicon glyphicon-play"></span> Run Query
 		   			</button>
 				</div>
@@ -47,7 +49,7 @@
            	 		<div class="form-group" style="padding-top: 0px">
 					  <div class="col-md-12"> 
 					    <label ng-repeat="(key,name) in mapResultType" class="radio-inline" for="radio-rt-{{ key }}">
-					      <input name="result-type"
+					      <input name="resultType"
 					      		 id="radio-rt-{{ key }}"
 					      		 required
 					      	     ng-model="$parent.codeResultType" 
@@ -56,19 +58,26 @@
 					      	     type="radio">{{ name }}
 					    </label> 
 					  </div>
+					  <div class="col-md-12" ng-show="queryForm.resultType.$error.required && showValidation">
+					  	<span class="label label-danger" >Required</span>
+					  </div>
+					  
 					</div>
 
   
            	 		<span class="section-header" >What Genome?</span>
 					<div class="form-group" >
 		  				<div class="col-md-12">
-		    				<select name="gb-select"
+		    				<select name="gbSelect"
 		    				        ng-model="idOrganismBuild" 
 		    				        required
 		    				        ng-options="gb.idOrganismBuild as gb.name group by gb.organism.common for gb in organismBuildList" 
 		    				        class="form-control">
 		    				        <option value="" disabled selected>Select genome build</option>
 		    				</select>
+		  				</div>
+		  				<div class="col-md-12" ng-show="queryForm.gbSelect.$error.required && showValidation">
+		  					<span class="label label-danger" >Required</span>
 		  				</div>
 					</div>
 					
@@ -77,30 +86,38 @@
            	 		
            	 		<!-- What data sets? -->
 					<div class="form-group">
-					  <div class="col-md-12">
+					  <div class="col-md-9">
 					    <label ng-repeat="analysisType in analysisTypeCheckedList"  
 					           class="radio-inline" 
 					           ng-class="analysisType.class"
 					           for="radio-at-{{ analysisType.idAnalysisType }}">
 					      <input name="analysisRadio" 
 					             ng-required="true" 
-					             ng-disabled="!analysisType.show || !analysisType.possible"
+					             ng-disabled="!analysisType.show || !analysisType.possible || searchExisting"
 					             id="radio-at-{{ analysisType.idAnalysisType }}" 
 					             type="radio"
 					             ng-model="$parent.selectedAnalysisType"
 					             ng-value="analysisType">
 					     {{ analysisType.type }}
-					    </label>
+					    </label>    
+					  </div>
+					  <div class="col-md-3">
+					        <label for="searchResults">Search Results</label>
+					  		<input name="searchResults" type="checkbox" ng-model="searchExisting" ng-disabled="!hasResults"/>
+					  </div>
+					  
+					  <div class="col-md-12" ng-show="queryForm.analysisRadio.$error.required && showValidation">
+					  	<span class="label label-danger" >Required</span>
 					  </div>
 					</div>
 					
 					
 					<!--  Lab -->
-					<div class="form-group">
+					<div class="form-group" >
 						
 						<label class="col-md-3 control-label" for=""labEntry">Labs</label> 
 						<div class="col-md-9">
-						    <select data-placeholder="Choose labs..." multiple class="form-control chosen-select" ng-model="selectedLabs" chosen ng-options="lab as (lab.first + ' ' + lab.last + ' lab' ) for lab in labList track by lab.idLab"  ></select>
+						    <select data-placeholder="Choose labs..." multiple class="form-control chosen-select" ng-model="selectedLabs" chosen ng-options="lab as (lab.first + ' ' + lab.last + ' lab' ) for lab in labList track by lab.idLab" ng-disabled="searchExisting" ></select>
 						</div>
 						 
 					</div>
@@ -109,7 +126,7 @@
 					<div class="form-group">
 						<label class="col-md-3 control-label" for=""labEntry">Analysis Projects</label> 
 						<div class="col-md-9"> 
-					    	<select data-placeholder="Choose analysis projects..." multiple class=" form-control chosen-select" ng-model="selectedProjects" chosen="projectList" ng-options="project as project.name for project in projectList track by project.idProject"  ></select>
+					    	<select data-placeholder="Choose analysis projects..." multiple class=" form-control chosen-select" ng-model="selectedProjects" chosen="projectList" ng-options="project as project.name for project in projectList track by project.idProject" ng-disabled="searchExisting"  ></select>
 						</div>
 					</div>
 					
@@ -117,7 +134,7 @@
 					<div class="form-group">
 						<label class="col-md-3 control-label" for=""labEntry">Individual Analysis</label> 
 						<div class="col-md-9"> 
-					    	<select data-placeholder="Choose individual analysis..." multiple class="form-control chosen-select" ng-model="selectedAnalyses" chosen="analysisList" ng-options="a as a.name for a in analysisList track by a.idAnalysis"  ></select>
+					    	<select data-placeholder="Choose individual analysis..." multiple class="form-control chosen-select" ng-model="selectedAnalyses" chosen="analysisList" ng-options="a as a.name for a in analysisList track by a.idAnalysis" ng-disabled="searchExisting"  ></select>
 						</div>
 					</div>
 					
@@ -125,7 +142,7 @@
 					<div class="form-group">
 						<label class="col-md-3 control-label" for=""labEntry">Sample Source</label>  
 						<div class="col-md-9">
-					    	<select data-placeholder="Choose sample source..." multiple class="form-control chosen-select" ng-model="selectedSampleSources" chosen  ng-options="sampleSource as sampleSource.source for sampleSource in sampleSourceList track by sampleSource.idSampleSource"  ></select>
+					    	<select data-placeholder="Choose sample source..." multiple class="form-control chosen-select" ng-model="selectedSampleSources" chosen  ng-options="sampleSource as sampleSource.source for sampleSource in sampleSourceList track by sampleSource.idSampleSource" ng-disabled="searchExisting"  ></select>
 						</div>
 					</div>
 			
@@ -134,46 +151,47 @@
           	 		
           	 		<div class="form-group">
 					  <div class="col-md-12"> 
-						<div class="btn-group">
-   					     	<label class="btn btn-toggle" ng-model="isIntersect" btn-radio="'true'" >Intersect</label>
-        					<label class="btn btn-toggle" ng-model="isIntersect" btn-radio="'false'">Don't Intersect</label>
+					  <div class="btn-group">
+   					     	<label class="btn btn-toggle" ng-model="isReverse" btn-radio="false" >Intersect</label>
+        					<label class="btn btn-toggle" ng-model="isReverse" btn-radio="true">Don't Intersect</label>
     					</div>
-    					<span class="btn btn-primary pull-right fileinput-button" ng-show="isIntersect == 'true' && intersectionTarget == 'REGION'">
+    					<span class="btn btn-primary pull-right fileinput-button col-md-3" ng-show="intersectionTarget == 'REGION'">
 					        <i class="glyphicon glyphicon-upload"></i>
 					        <span>Import Regions</span>
 					        <input type="file" ng-file-select="loadRegions($files)">            
 					    </span>
-					    <span class="btn btn-primary pull-right fileinput-button" ng-show="isIntersect == 'true' && intersectionTarget == 'GENE'">
+					    <span class="btn btn-primary pull-right fileinput-button col-md-3" ng-show="intersectionTarget == 'GENE'">
 					        <i class="glyphicon glyphicon-upload"></i>
 					        <span>Import Genes</span>
 					        <input type="file" ng-file-select="loadGenes($files)">            
 					    </span>
-					    
-					
 					  </div>
 					</div>
-					
-					
+				
           	 		<!-- Regions-->
-					<div class="form-group"  ng-show="isIntersect == 'true' && codeResultType!='GENE' && codeResultType == 'REGION'">
+					<div class="form-group" ng-show="codeResultType!='GENE' && codeResultType == 'REGION'">
 					    <div class="col-md-3" style="padding-right: 0px;">
-					      <div class="radio">
+					      <div class="radio" required>
 						   		<label for="radio-region">
 							    	<input name="radios-region-gene" id="radio-region" ng-model="intersectionTarget" value="REGION" type="radio"> Regions
 						   		</label>
 						  </div>
 					    </div>
-					    <div class="col-md-9"  ng-show="intersectionTarget == 'REGION'" style="padding-left: 1px; padding-right: 0px;">
-				    		<textarea ng-model="regions" style="display: inline; width: 60%" class="form-control" placeholder="chr1:4500-8900"/>
-					    	&nbsp;&nbsp;+/-
-					    	<input type="text" ng-model="regionMargins" style="display: inline; max-width: 60px;" class="form-control" placeholder="1000"/> 
-					    	bp
-				    	</div>
-					    
+					    <div class="col-md-9" ng-show="intersectionTarget == 'REGION'" style="padding-left: 1px; padding-right: 0px;">
+						    <div class="col-md-7"  >
+					    		<textarea name="regionField" ng-model="regions" class="form-control" placeholder="chr1:4500-8900" ng-required="intersectionTarget=='REGION'"/>
+					    		<span class="label label-danger" ng-show="queryForm.regionField.$error.required && showValidation">Required when 'region' intersections are specified</span>
+					    	</div>
+					    	<div class="col-md-4">
+						    	&nbsp;&nbsp;+/-
+						    	<input type="text" ng-model="regionMargins" style="display: inline; max-width: 60px;" class="form-control" placeholder="1000"/> 
+						    	bp
+					    	</div>
+					    </div>
 					</div>
 							 
           	 		<!-- Genes-->
-					<div class="form-group" ng-show="isIntersect == 'true' && (codeResultType=='GENE' || codeResultType=='REGION')">
+					<div class="form-group" ng-show="codeResultType=='GENE' || codeResultType=='REGION'">
 						<div class="col-md-3" style="padding-right: 0px;" >
 					      <div class="radio">
 						   		<label for="radio-gene">
@@ -187,7 +205,8 @@
  							</div>
 					    	<br>
 					    	<div class="col-md-7">
-					    		<textarea ng-model="genes" style="display: inline;" class="form-control" placeholder="ACTB, GAPDH, ..."/>
+					    		<textarea name="geneField" ng-model="genes" class="form-control" placeholder="ACTB, GAPDH, ..." ng-required="intersectionTarget=='GENE'"/>
+					    		<span class="label label-danger" ng-show="queryForm.geneField.$error.required && showValidation">Required when 'gene' intersections are specified</span>
 					    	</div>
 					    	<div class="col-md-4">
 						    	&nbsp;&nbsp;+/-
@@ -197,16 +216,17 @@
 					    	 
 				    	</div>
 					</div>
-
-<!--          	 		Genes annotations -->
-<!-- 					<div class="form-group" ng-show="isGeneBasedQuery"> -->
-<!-- 					 	<div class="col-md-3" style="padding-right: 0px;"> -->
-<!-- 					    </div> -->
-<!-- 					    <div class="col-md-9" ng-show="intersectionTarget == 'GENE'" style="padding-left: 1px; padding-right: 0px;"> -->
-<!-- 						    <select data-placeholder="Choose gene annotations..."   multiple class="col-md-12 chosen-select" ng-model="selectedGeneAnnotations" chosen ng-options="geneAnnotation.name for geneAnnotation in geneAnnotationList"  ></select> -->
-<!-- 					    </div> -->
-<!-- 					</div> -->
 					
+					<!-- Everything -->
+					<div class="form-group" ng-show="codeResultType=='GENE' || codeResultType=='REGION'">
+						<div class="col-md-3" style="padding-right: 0px;">
+					      <div class="radio">
+						   		<label for="radio-everything">
+							    	<input name="radios-region-everything" id="radio-everything" ng-model="intersectionTarget" value="EVERYTHING" type="radio"> Anything
+						   		</label>
+						  </div>
+					    </div>
+					</div>
 					
 					<!--  Thresholds -->
            	 		<span class="section-header" ng-show="isThresholdBasedQuery">That Exceed these Thresholds</span>
@@ -293,10 +313,12 @@
 
 					
 					<div class="btn-toolbar" role="toolbar" >
-						
-							<button class="btn btn-md btn-warning pull-right"  ng-disabled="queryForm.$invalid" ng-click="runQuery()">
-				   				<span class="glyphicon glyphicon-play"></span > Run Query
-				   			</button>
+			   			<button class="btn btn-sm btn-danger pull-right" style="margin-top: -6px; margin-left: 10px" ng-click="abortQuery()" ng-show="queryStarted">
+			   				<span class="glyphicon glyphicon-stop"></span> Stop Query
+			   			</button>
+						<button class="btn btn-sm btn-warning pull-right" style="margin-top: -6px"  ng-disabled="queryForm.$invalid" ng-click="runQuery()" ng-hide="queryStarted">
+		  					<span class="glyphicon glyphicon-play"></span> Run Query
+			   			</button>
 					</div>	
 					
           	 		
@@ -351,7 +373,7 @@
 							<th>Analysis</th>
 							<th>Type</th>
 							<th>Search</th>
-							<th ng-show="returnedResultType == 'GENE'"><button class="btn btn-xs btn-primary" ng-click="copyGenes()"><span class="glyphicon glyphicon-share"></span></button>Gene</th>
+							<th ng-show="selectedAnalysisType.type == 'RNASeq'"><button class="btn btn-xs btn-primary" ng-click="copyGenes()"><span class="glyphicon glyphicon-share"></span></button>Gene</th>
 							<th>Conditions</th>
 							<th>
 								<button class="btn btn-xs btn-primary" ng-click="copyCoordinates()"><span class="glyphicon glyphicon-share"></span></button>
@@ -376,7 +398,7 @@
 			                <td class="nowrap-ellipsis"><span tooltip="{{row.analysisName}}">{{row.analysisName}}</span></td>
 			                <td class="nowrap">{{row.analysisType}}</td>
 			                <td class="nowrap">{{row.search}}</span></td>
-			                <td class="nowrap" ng-show="returnedResultType == 'GENE'">{{row.mappedName}}</td>
+			                <td class="nowrap" ng-show="selectedAnalysisType.type == 'RNASeq'">{{row.mappedName}}</td>
 			                <td class="nowrap-ellipsis"><span tooltip="{{row.sampleConditions}}">{{row.sampleConditions}}</td>
 			                <td class="nowrap" ng-hide="igvLoaded">{{row.coordinates}}</td>
 			                <td class="nowrap" ng-show="igvLoaded"><a ng-click="loadLocus(row)">{{row.coordinates}}</a></td>
@@ -418,4 +440,5 @@
 
 </fieldset>
 </form>
+
 

@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import hci.biominer.dao.AnalysisTypeDAO;
 import hci.biominer.model.AnalysisType;
+import hci.biominer.util.Enumerated.AnalysisTypeEnum;
 
 @Service("AnalysisTypeService")
 @Transactional
@@ -38,7 +39,7 @@ public class AnalysisTypeService {
         analysisTypeDAO.updateAnalysisType(idAnalysisType, analysisType);
 	}
 	
-	public AnalysisType getAnalysisTypeByName(String name) {
+	public AnalysisType getAnalysisTypeByName(AnalysisTypeEnum name) {
 		return analysisTypeDAO.getAnalysisTypeByName(name);
 	}
 }

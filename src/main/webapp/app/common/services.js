@@ -68,7 +68,9 @@ var services = angular.module('services', ['ngResource','ui.bootstrap'])
 		return {
 			'responseError': function(rejection) {
 				
-				if (rejection.data.errorMessage == null) {
+				if (rejection.data == null) {
+					return $q.reject(rejection);
+			    } else if (rejection.data.errorMessage == null) {
 					return $q.reject(rejection);
 				} else {
 					var $modal = $injector.get('$modal');

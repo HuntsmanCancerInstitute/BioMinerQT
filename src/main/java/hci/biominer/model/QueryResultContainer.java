@@ -1,12 +1,15 @@
 package hci.biominer.model;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 
 import org.codehaus.jackson.annotate.JsonIgnore;
 
-public class QueryResultContainer {
+public class QueryResultContainer implements Serializable {
 	
+
+	private static final long serialVersionUID = 1L;
 	private List<QueryResult> resultList;
 	private int resultNum;
 	private int pages;

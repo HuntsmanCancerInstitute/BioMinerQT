@@ -36,7 +36,7 @@ angular.module('navbar').controller("NavbarController",['$modal','$scope','$http
 	        		}
 	    			$rootScope.admin = false;
 	    			if (wasAuth) {
-						//console.log("Reloading");
+						console.log("Reloading");
 						$route.reload();
 					} 
 	    		} else {
