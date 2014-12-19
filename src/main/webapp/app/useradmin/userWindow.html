@@ -18,16 +18,12 @@
 			
 			<div class="form-group">
 				<label class="col-md-4 control-label" for="labEntry">Select Labs</label>
-				<div class="col-md-6">
-					<select data-placeholder="Choose labs..." multiple class="col-md-6 chosen-select" ng-model="user.labs" chosen ng-options="lab.last for lab in availLabs track by lab.idLab" required ></select>
-				</div> 
+				<select width="50" data-placeholder="Choose labs..." multiple class="chosen-select form-control" ng-model="user.labs" chosen ng-options="lab.last for lab in availLabs track by lab.idLab" required></select>
 			</div>
 			
 			<div class="form-group">
 				<label class="col-md-4 control-label" for="instEntry">Institutes</label>
-				<div class="col-md-6">
-					<select data-placeholder="Choose Institutes ..." multiple class="chosen-select" ng-model="user.institutes" chosen ng-options="inst.name for inst in availInst track by inst.idInstitute" required ></select>
-				</div>
+				<select width="50" data-placeholder="Choose Institutes ..." multiple class="chosen-select form-control" ng-model="user.institutes" chosen ng-options="inst.name for inst in availInst track by inst.idInstitute" required ></select>
 			</div>
 			
 			<div class="form-group">

@@ -4,11 +4,12 @@
  * UserAdminController
  * @constructor
  */
-var useradmin = angular.module('useradmin', ['angularFileUpload','ui.mask','ui.validate','confirmation','filters','directives','services']);
+var useradmin = angular.module('useradmin', ['angularFileUpload','ui.mask','ui.validate','confirmation','filters','directives','services','ngProgress','dialogs.main']);
 
-angular.module("useradmin").controller("UserAdminController", ['$rootScope','$scope','$http','$location','$window','$modal','$timeout','$upload','DynamicDictionary','StaticDictionary',
+angular.module("useradmin").controller("UserAdminController", ['$rootScope','$scope','$http','$location','$window','$modal','$timeout','$upload','DynamicDictionary',
+                                                               'StaticDictionary','ngProgress','dialogs',
                                                       
-function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $upload, DynamicDictionary, StaticDictionary) {
+function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $upload, DynamicDictionary, StaticDictionary, ngProgress, dialogs) {
 	
 	// approve user variables
 	$scope.guid = "";
@@ -117,30 +118,38 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
      * Organism file control methods
      **************************************/
 	$scope.addGenomeFile = function(files, ob) {
+		ngProgress.start();
 		$upload.upload({
     		url: "genetable/addGenomeFile",
     		file: files,
     		params: {idOrganismBuild: ob.idOrganismBuild}
     	}).success(function(data) {
     		$scope.refreshOrganisms();
+    		ngProgress.complete();
     	}).error(function(data) {
-    		$scope.showErrorMessage("Error reading in gene annotation file",data);
+    		dialogs.error("Error reading in gene annotation file : " + data);
+    		
+    		ngProgress.reset();
     	});
 	};
 	
 	$scope.addTranscriptFile = function(files,ob) {
+		ngProgress.start();
 		$upload.upload({
 			url: "genetable/addTranscriptFile",
 			file: files,
 			params: {idOrganismBuild: ob.idOrganismBuild}
 		}).success(function(data) {
     		$scope.refreshOrganisms();
+    		ngProgress.complete();
     	}).error(function(data) {
-			$scope.showErrorMessage("Error reading in transcript file", data);
+    		dialogs.error("Error reading in transcript file : " + data);
+			ngProgress.reset();
 		});
 	};
 	
 	$scope.addAnnotationFile = function(file,ob) {
+		ngProgress.start();
 		$upload.upload({
 			url: "genetable/addAnnotationFile",
 			file: file,
@@ -160,8 +169,11 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
 	    		}
 	    	});
 	    	
+	    	ngProgress.complete();
 	    	modalInstance.result.then(function (setColumns) {
 	    		$scope.columnDefs = setColumns;
+	    		
+	    		ngProgress.start();
 	    		
 	    		var params = {};
 	    		for (var i=0; i<setColumns.length; i++) {
@@ -175,71 +187,102 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
 	    			url: 'genetable/parseAnnotations',
 	    			params: params
 	    		}).success(function(data) {
-	    			$scope.showErrorMessage("Successfully parsed annotation file.", data);
+	    			ngProgress.complete();
+	    			$scope.refreshOrganisms();
+	    			
+	    			$http({
+	        			method: 'POST',
+	        			url: 'query/clearNames',
+	        			params: {obId: ob.idOrganismBuild}
+	        		});
 	    		}).error(function(data) {
-	    			$scope.showErrorMessage("Error parsing annotation data", data);
-	    			$scope.removeAnnotationFile(ob);
+	    			dialogs.error("Error parsing annotation data: " + data);
+	    			$scope.deleteAnnotationUpload();
+	    			ngProgress.reset();
 	    		});
 	    		
 		    },function() {
-		    	$scope.removeAnnotationFile(ob);
+		    	$scope.deleteAnnotationUpload();
 		    });
 			   
-	    	$scope.refreshOrganisms();
+	    	
 		}).error(function(data) {
-			$scope.showErrorMessage(data.message);
+			dialogs.error(data.message);
+			ngProgress.reset();
 		});
 	};
 	
-	$scope.removeGenomeFile = function(ob) {
+	$scope.removeGenomeFromBuild = function(ob) {
+		ngProgress.start();
 		$http({
 	    	method: 'DELETE',
-	    	url: 'genetable/removeGenomeFile',
+	    	url: 'genetable/removeGenomeFromBuild',
 	    	params: {idOrganismBuild: ob.idOrganismBuild}
 	    }).success(function(data) {
     		$scope.refreshOrganisms();
+    		ngProgress.complete();
+    	}).error(function(data) {
+    		ngProgress.reset();
     	});
 	};
 	
-	$scope.removeTranscriptFile = function(ob) {
+	$scope.removeTranscriptsFromBuild = function(ob) {
+		ngProgress.start();
 		$http({
 	    	method: 'DELETE',
-	    	url: 'genetable/removeTranscriptFile',
+	    	url: 'genetable/removeTranscriptsFromBuild',
 	    	params: {idOrganismBuild: ob.idOrganismBuild}
+		
 	    }).success(function(data) {
     		$scope.refreshOrganisms();
+    		ngProgress.complete();
+    	}).error(function(data) {
+    		ngProgress.reset();
     	});
 	};
 	
-	$scope.removeAnnotationFile = function(ob) {
+	$scope.deleteAnnotationUpload = function() {
+		ngProgress.start();
 		$http({
     		method: 'DELETE',
-    		url: 'genetable/removeAnnotationFile',
+    		url: 'genetable/deleteAnnotationUpload',
+    	}).success(function(data) {
+    		$scope.refreshOrganisms();
+    		ngProgress.complete();
+    	}).error(function(data) {
+    		ngProgress.reset();
+    	});
+	};
+	
+	$scope.removeAnnotationsFromBuild = function(ob) {
+		ngProgress.start();
+		$http({
+    		method: 'DELETE',
+    		url: 'genetable/removeAnnotationsFromBuild',
     		params: {idOrganismBuild: ob.idOrganismBuild}
     	}).success(function(data) {
     		$scope.refreshOrganisms();
+    		ngProgress.complete();
+    		
+    		$http({
+    			method: 'POST',
+    			url: 'query/clearNames',
+    			params: {obId: ob.idOrganismBuild}
+    		});
+    		
+    	}).error(function(data) {
+    		ngProgress.reset();
     	});
 	};
+	
+	
 	
 	 
 	
 	/**************************************
      * Utilities
      **************************************/
-	$scope.showErrorMessage = function(title,message) {
-		$modal.open({
-    		templateUrl: 'app/common/userError.html',
-    		controller: 'userErrorController',
-    		resolve: {
-    			title: function() {
-    				return title;
-    			},
-    			message: function() {
-    				return message;
-    			}
-    		}
-    	});
-	};
+	
 	
 	$scope.setMessage = function(message) {
 		$scope.message = message;
@@ -771,20 +814,9 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
     	}
     	
     	if (selectedBuilds.length > 0) {
-    		var modalInstance = $modal.open({
-        		templateUrl: 'app/common/confirmation.html',
-        		controller: 'ConfirmationController',
-        		resolve: {
-        			data: function() {
-        				return {
-        					title: 'Delete Builds',
-        					message: "Click OK to delete selected builds, otherwise click cancel."
-        				};
-        			},	
-        		}
-        	});
-        	
-        	modalInstance.result.then(function(result) {
+    		var dialog = dialogs.confirm("Delete Builds","Click 'Yes' to delete selected builds, otherwise click 'No'.");
+    		
+        	dialog.result.then(function(result) {
         		$scope.deleteSelectedBuilds(selectedBuilds);
         	});
     	} else {
@@ -792,6 +824,29 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
     	}
     	
     };
+    
+    $scope.confirmOrganismFileDelete = function(ob, toDelete) {
+    	var dialog = null;
+    	
+    	if (toDelete == "transcripts") {
+    		dialog = dialogs.confirm("Delete Transcripts","Click 'Yes' to delete transcripts from " + ob.name + ", click 'No' to bail.");
+		} else if (toDelete == "genome") {
+			dialog = dialogs.confirm("Delete Genome","Click 'Yes' to delete genomes from " + ob.name + ", click 'No' to bail.");
+		} else if (toDelete == "annotations") {
+			dialog = dialogs.confirm("Delete Gene Aliases","Click 'Yes' to delete gene aliases from " + ob.name + ", click 'No' to bail.");
+		}
+    	
+    	dialog.result.then(function() {
+    		if (toDelete == "transcripts") {
+				$scope.removeTranscriptsFromBuild(ob);
+			} else if (toDelete == "genome") {
+				$scope.removeGenomeFromBuild(ob);
+			} else if (toDelete == "annotations") {
+				$scope.removeAnnotationsFromBuild(ob);
+			}
+    	});
+    };
+    
     
     $scope.confirmUserDelete = function() {
     	//load lab ids
@@ -803,20 +858,9 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
     	}
     	
     	if (selectedIds.length > 0) {
-    		var modalInstance = $modal.open({
-        		templateUrl: 'app/common/confirmation.html',
-        		controller: 'ConfirmationController',
-        		resolve: {
-        			data: function() {
-        				return {
-        					title: 'Delete Users',
-        					message: "Click OK to delete selected users, otherwise click cancel."
-        				};
-        			},	
-        		}
-        	});
-        	
-        	modalInstance.result.then(function(result) {
+    		var dialog = dialogs.confirm("Delete Users","Click 'Yes' to delete selected users, click 'No' to bail.");
+    		
+        	dialog.result.then(function(result) {
         		$scope.deleteSelectedUsers(selectedIds);
         	});
     	} else {
@@ -835,20 +879,10 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
     	}
     	
     	if (selectedIds > 0) {
-    		var modalInstance = $modal.open({
-        		templateUrl: 'app/common/confirmation.html',
-        		controller: 'ConfirmationController',
-        		resolve: {
-        			data: function() {
-        				return {
-        					title: 'Delete Labs',
-        					message: "Click OK to delete selected labs, otherwise click cancel."
-        				};
-        			},	
-        		}
-        	});
+    		
+    		var dialog = dialogs.confirm("Delete Labs","Click 'Yes' to delete selected labs, click 'No' to bail.");
         	
-        	modalInstance.result.then(function(result) {
+        	dialog.result.then(function(result) {
         		$scope.deleteSelectedLabs(selectedIds);
         	});
     	} else {

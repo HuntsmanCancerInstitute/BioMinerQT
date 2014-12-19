@@ -188,7 +188,7 @@
 				            <th></th>
 				            <th>Genome File</th>
 				            <th></th>
-				            <th>Annotation File</th>
+				            <th>Gene Alias File</th>
 				            <th></th>
 				            <th></th>
 				        </tr>
@@ -213,7 +213,7 @@
 								        <i class="glyphicon glyphicon-repeat"></i>
 								        <input type="file" ng-file-select="addTranscriptFile($files, ob)"> 
 							        </span>
-					                <button class="btn btn-xs btn-danger" ng-click="removeTranscriptFile(ob)" ng-show="ob.transcriptFile != null">
+					                <button class="btn btn-xs btn-danger" ng-click="confirmOrganismFileDelete(ob,'transcripts')" ng-show="ob.transcriptFile != null">
 					                 	<span class="glyphicon glyphicon-minus"></span>
 					                </button>
 				                
@@ -231,7 +231,7 @@
 								        <i class="glyphicon glyphicon-repeat"></i>
 								        <input type="file" ng-file-select="addGenomeFile($files, ob)"> 
 							        </span>
-					                <button class="btn btn-xs btn-danger" ng-click="removeGenomeFile(ob)" ng-show="ob.genomeFile != null">
+					                <button class="btn btn-xs btn-danger" ng-click="confirmOrganismFileDelete(ob,'genome')" ng-show="ob.genomeFile != null">
 					                 	<span class="glyphicon glyphicon-minus"></span>
 					                </button>
 				                
@@ -249,7 +249,7 @@
 								        <i class="glyphicon glyphicon-repeat"></i>
 								        <input type="file" ng-file-select="addAnnotationFile($files, ob)"> 
 							        </span>
-					                <button class="btn btn-xs btn-danger" ng-click="removeAnnotationFile(ob)" ng-show="ob.geneIdFile != null">
+					                <button class="btn btn-xs btn-danger" ng-click="confirmOrganismFileDelete(ob,'annotations')" ng-show="ob.geneIdFile != null">
 					                 	<span class="glyphicon glyphicon-minus"></span>
 					                </button>
 

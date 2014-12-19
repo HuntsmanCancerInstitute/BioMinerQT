@@ -15,7 +15,7 @@ function ($scope, $modalInstance, filename, previewData) {
 	$scope.annColumns = [];
 	$scope.annColumns.push({name: "Ignore", index: null, required: false});
 	$scope.annColumns.push({name: "Ensembl", index: -1, required: true});
-	$scope.annColumns.push({name: "Hugo", index: -1, required: true});
+	$scope.annColumns.push({name: "Common", index: -1, required: true});
 	$scope.annColumns.push({name: "RefSeq", index: -1, required: false});
 	$scope.annColumns.push({name: "UCSC", index: -1, required: false});
 	

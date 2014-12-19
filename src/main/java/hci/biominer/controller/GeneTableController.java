@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
@@ -14,6 +15,7 @@ import hci.biominer.service.BiominerGeneService;
 import hci.biominer.service.ExternalGeneService;
 import hci.biominer.service.OrganismBuildService;
 import hci.biominer.service.OrganismService;
+import hci.biominer.service.UserService;
 import hci.biominer.util.GenomeBuilds;
 import hci.biominer.util.ModelUtil;
 import hci.biominer.util.ParsedAnnotation;
@@ -24,7 +26,10 @@ import hci.biominer.model.FileUpload;
 import hci.biominer.model.Organism;
 import hci.biominer.model.OrganismBuild;
 import hci.biominer.model.Project;
+import hci.biominer.model.access.User;
 
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.subject.Subject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.FileCopyUtils;
@@ -47,7 +52,12 @@ public class GeneTableController {
 	private BiominerGeneService bgService;
 	
 	@Autowired
+	private UserService userService;
+	
+	@Autowired
 	private OrganismService organismService;
+	
+	private HashMap<String,String> annotationFileHash = new HashMap<String,String>();
 
 	
 	/***************************************************
@@ -105,12 +115,25 @@ public class GeneTableController {
 	 ****************************************************/
 	@RequestMapping(value="/addAnnotationFile",method=RequestMethod.POST)
 	public @ResponseBody
-	PreviewMap addAnnotationFile(@RequestParam("file") MultipartFile file, @RequestParam("idOrganismBuild") Long idOrganismBuild, 
+	PreviewMap addAnnotationFile(@RequestParam("file") MultipartFile file, 
 			HttpServletResponse response) throws Exception {
 		File localFile = null;
 		PreviewMap pm = new PreviewMap();
-		OrganismBuild ob = obService.getOrganismBuildById(idOrganismBuild);
-		this.removeExistingAnnotation(ob);
+		
+		//Get current active user
+    	Subject currentUser = SecurityUtils.getSubject();
+    	
+    	User user = null;
+    	String username;
+    	if (currentUser.isAuthenticated()) {
+    		Long userId = (Long) currentUser.getPrincipal();
+    		user = userService.getUser(userId);
+    		username = user.getUsername();
+    	} else {
+    		return null;
+    	}
+		
+		
 		try {
 			
 			//Get the name of the file
@@ -118,17 +141,15 @@ public class GeneTableController {
 			
 			//copy file to directory
 			if (name.endsWith(".gz") || name.endsWith(".zip")) {
-				//update the database entry
-				obService.updateGeneIdFile(idOrganismBuild, name);
 				localFile = new File(FileController.getGenomeDirectory(),name);
 				FileCopyUtils.copy(file.getInputStream(), new FileOutputStream(localFile));
 			} else {
-				obService.updateGeneIdFile(idOrganismBuild, name + ".gz");
 				localFile = new File(FileController.getGenomeDirectory(),name + ".gz");
 				FileCopyUtils.copy(file.getInputStream(), new GZIPOutputStream(new FileOutputStream(localFile)));
 			}
-			
-			ob = obService.getOrganismBuildById(ob.getIdOrganismBuild());
+		
+			//Store file name
+			annotationFileHash.put(username, localFile.getName());
 			
 		 	String temp = null;
 		 	int counter = 0;
@@ -157,8 +178,7 @@ public class GeneTableController {
 			response.setStatus(405);
 		
 			ex.printStackTrace();
-			this.removeExistingAnnotation(ob);
-			
+		
 			//set error message
 			pm.setMessage(ex.getMessage());
 		}
@@ -266,7 +286,7 @@ public class GeneTableController {
 	 * URL: /genetable/removeGenomeFile
 	 * removeGenomeFile
 	 ****************************************************/
-	@RequestMapping(value="/removeGenomeFile",method=RequestMethod.DELETE)
+	@RequestMapping(value="/removeGenomeFromBuild",method=RequestMethod.DELETE)
 	public @ResponseBody
 	void removeGenomeFile(@RequestParam("idOrganismBuild") Long idOrganismBuild) throws Exception {
 		OrganismBuild ob = obService.getOrganismBuildById(idOrganismBuild);
@@ -277,7 +297,7 @@ public class GeneTableController {
 	 * URL: /genetable/removeTranscriptFile
 	 * removeGenomeFile
 	 ****************************************************/
-	@RequestMapping(value="/removeTranscriptFile",method=RequestMethod.DELETE)
+	@RequestMapping(value="/removeTranscriptsFromBuild",method=RequestMethod.DELETE)
 	public @ResponseBody
 	void removeTranscriptFile(@RequestParam("idOrganismBuild") Long idOrganismBuild) throws Exception {
 		OrganismBuild ob = obService.getOrganismBuildById(idOrganismBuild);
@@ -288,7 +308,7 @@ public class GeneTableController {
 	 * URL: /genetable/removeAnnotationFile
 	 * removeAnnotationFile
 	 ****************************************************/
-	@RequestMapping(value="/removeAnnotationFile",method=RequestMethod.DELETE)
+	@RequestMapping(value="/removeAnnotationsFromBuild",method=RequestMethod.DELETE)
 	public @ResponseBody
 	void removeAnnotationFile(@RequestParam("idOrganismBuild") Long idOrganismBuild) throws Exception {
 		OrganismBuild ob = obService.getOrganismBuildById(idOrganismBuild);
@@ -368,11 +388,24 @@ public class GeneTableController {
 	public @ResponseBody
 	String parseAnnotations(
 			@RequestParam(value="Ensembl") Integer ensemblIdx, 
-			@RequestParam(value="Hugo") Integer hugoIdx, 
+			@RequestParam(value="Common") Integer hugoIdx, 
 			@RequestParam(value="RefSeq") Integer refseqIdx,
 			@RequestParam(value="UCSC") Integer ucscIdx,
 			@RequestParam(value="idOrganismBuild") Long idOrganismBuild,
 			HttpServletResponse response) throws Exception {
+		
+		//Get current active user
+    	Subject currentUser = SecurityUtils.getSubject();
+    	
+    	User user = null;
+    	String username;
+    	if (currentUser.isAuthenticated()) {
+    		Long userId = (Long) currentUser.getPrincipal();
+    		user = userService.getUser(userId);
+    		username = user.getUsername();
+    	} else {
+    		return null;
+    	}
 		
 		
 		//change -1 to null
@@ -402,22 +435,58 @@ public class GeneTableController {
 		String message = null;
 		try {
 			//Get file
-			File annotationFile = new File(FileController.getGenomeDirectory(),ob.getGeneIdFile());
+			String annotationFileName = annotationFileHash.get(username);
+			File annotationFile = new File(FileController.getGenomeDirectory(),annotationFileName);
 			
 			//Parse annotation file
 			AnnotationFileParser afp = new AnnotationFileParser(ob,annotationFile,ensemblIdx, hugoIdx, refseqIdx, ucscIdx, bmIdx);
 			ParsedAnnotation pa = afp.run();
 			
+			//If parsing worked, update the organism build with new information
+			this.removeExistingAnnotation(ob);
+			obService.updateGeneIdFile(idOrganismBuild, annotationFileName);
+			
 			bgService.addBiominerGenes(pa.getBiominerGenes());
 			egService.addExternalGenes(pa.getExternalGenes());
 		} catch (Exception ex) {
 			ex.printStackTrace();
-			this.removeExistingAnnotation(ob);
 			message = ex.getMessage();
 			response.setStatus(405);
 		}
 		
 		return message;
 	}
+	
+	
+	/***************************************************
+	 * URL: /genetable/deleteAnnotationUpload
+	 * parseAnnotations
+	 * params:
+	 ****************************************************/
+	@RequestMapping(value="/deleteAnnotationUpload",method=RequestMethod.DELETE)
+	public @ResponseBody
+	void deleteAnnotationUpload() throws Exception {
+		
+		//Get current active user
+    	Subject currentUser = SecurityUtils.getSubject();
+    	
+    	User user = null;
+    	String username;
+    	if (currentUser.isAuthenticated()) {
+    		Long userId = (Long) currentUser.getPrincipal();
+    		user = userService.getUser(userId);
+    		username = user.getUsername();
+    	} else {
+    		return;
+    	}
+    	
+    	File annotationFile = new File(FileController.getGenomeDirectory(),annotationFileHash.get(username));
+    	if (annotationFile.exists()) {
+    		annotationFile.delete();
+    	}
+    	
+    	
+	}
+	
 	
 }

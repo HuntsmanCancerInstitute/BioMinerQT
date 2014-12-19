@@ -203,6 +203,8 @@ public class QueryController {
     	sct.start();	
     }
     
+    
+    
     private void loadGeneNames(OrganismBuild ob) {
     	System.out.println("Loading common names for: " + ob.getName());
     	List<ExternalGene> egList = this.externalGeneService.getHugoNamesGenesByOrganismBuild(ob);
@@ -225,6 +227,14 @@ public class QueryController {
 		searchDict.put(ob.getIdOrganismBuild(), uniqueNamesList);
     }
   
+    @RequestMapping(value="/clearNames",method=RequestMethod.POST)
+    @ResponseBody
+    public void clearNames(@RequestParam("obId") Long obId ) {
+    	if (searchDict.containsKey(obId)) {
+    		searchDict.remove(obId);
+    	}
+    }
+    
     @RequestMapping("/layout")
     public String getQueryPartialPage(ModelMap modelMap) {
         return "query/layout";
@@ -1839,17 +1849,14 @@ public class QueryController {
     	private class SessionChecker extends TimerTask {
         	public void run() {
             	HashMap<String,Subject> updatedUsers = new HashMap<String,Subject>();
-            	System.out.println("CHECKING: " + date.toString());
             	
             	for (String key: activeUsers.keySet()) {
             		Subject s = activeUsers.get(key);
             		
             		try {
             			s.getPrincipal();
-                		System.out.println("Still authenticated");
             			updatedUsers.put(key, s);
             		} catch (Exception authEx) {
-            			System.out.println("Writing out data");
             			writeData(key);	
             		}
 

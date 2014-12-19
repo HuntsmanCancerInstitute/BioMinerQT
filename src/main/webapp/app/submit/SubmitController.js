@@ -5,11 +5,11 @@
  * @constructor
  */
  
-var submit    = angular.module('submit', ['ui.bootstrap','filters', 'services', 'directives','chosen','error']);
+var submit    = angular.module('submit', ['ui.bootstrap','filters', 'services', 'directives','chosen','error','ngProgress']);
 
 angular.module("submit").controller("SubmitController", [
-'$scope', '$http', '$modal','DynamicDictionary','StaticDictionary','$rootScope','$upload','$q',
-function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$upload,$q) {
+'$scope', '$http', '$modal','DynamicDictionary','StaticDictionary','$rootScope','$upload','$q','ngProgress',
+function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$upload,$q,ngProgress) {
 	/**********************
 	 * Initialization!
 	 *********************/
@@ -457,6 +457,8 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 		}
 		
 		
+		ngProgress.start();
+		
 		
 		var loaded = 0;
 		for (var i=0; i<fileChunks.length; i++) {
@@ -474,10 +476,11 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 							$scope.datatrack.path = data.directory;
 						}
 						$scope.complete = (loaded) / file.size * 100;
+						ngProgress.complete();
 					}).error(function(data) {
 						$scope.datatrack.message = data.message;
 						$scope.complete = 0;
-						console.log($scope.datatrack.message);
+						ngProgress.reset();
 					});
 				});
 			})(i);

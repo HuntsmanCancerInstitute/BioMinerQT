@@ -234,9 +234,19 @@ public class RnaSeqParser {
 				lineCount++;
 			}
 			
+			if (this.warningMessage.toString().length() > 100000) {
+		    	this.warningMessage = new StringBuilder("Too many failed records to list.<br>");
+		    }
+			
+			if (this.externalGeneToBiominerId.size() == 0) {
+				this.warningMessage.append("There are no gene aliases found for genome: " + genome.getBuildName() + "<br>");
+			} 
+			
 			if (badGene) {
 				this.warningMessage.append(String.format("Failed to process %d RNASeq records of %d.<br>",badGeneCount,allGeneCount));
 			}
+			
+			
 			
 			//Throw failure message or warning messages
 		    if (allTransformedFdrLessThanOne) {
@@ -248,6 +258,8 @@ public class RnaSeqParser {
 				this.warningMessage.append("WARNING: All log2ratios were greater than or equal to zero.  Are you sure the log2Ratios are formatted correctly?<br>");
 			}
 			
+		    
+		    
 		} catch (IOException ioex) {
 			throw new IOException(String.format("Error processing data file: %s.",ioex.getMessage()));
 		} finally {
