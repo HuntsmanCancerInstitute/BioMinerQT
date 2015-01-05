@@ -142,7 +142,7 @@ public class UserDAO {
 	
 	@SuppressWarnings("unchecked")
 	public User getUserByUsername(String username) {
-		System.out.println("starting method");
+		//System.out.println("starting method");
 		Session session = this.getCurrentSession();
 		
 		Query query = session.createQuery("from User where username = :username");
@@ -158,7 +158,7 @@ public class UserDAO {
 			}
 		}
 		
-		System.out.println("Size of users " + users.size());
+		//System.out.println("Size of users " + users.size());
 		
 		session.close();
 		if (users.size() == 0) {
