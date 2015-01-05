@@ -50,10 +50,6 @@ var login = angular.module("login",['services'])
 		$scope.submitChange = function() {
 		$scope.user.guid = $location.search()['guid'];
 
-		//console.log("before calling changepassword, username:, guid: ");
-		//console.log($scope.user.username);
-		//console.log($scope.user.guid);
-
 			$http({
 	    		method: 'POST',
 	    		url: 'security/changepassword',
@@ -65,7 +61,7 @@ var login = angular.module("login",['services'])
         			$interval.cancel($rootScope.checkInterval);
         		}
 
-        		//$location.path($rootScope.lastLocation);
+        		$location.path("/dashboard");
 
 	    	});
 		};		
