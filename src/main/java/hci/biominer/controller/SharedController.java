@@ -168,7 +168,7 @@ public class SharedController {
 			return result;
 		}
 		
-		String biominersupport = "Tim.Maness@hci.utah.edu";
+		String biominersupport = "BioMiner Support";
 		
 		// send the email
 		result = "Thank you for your feedback.";
@@ -192,7 +192,7 @@ public class SharedController {
 	@RequestMapping(value="sendMail",method=RequestMethod.POST) 
 	@ResponseBody
 	public void sendMail(@RequestParam(value="body") String body, @RequestParam(value="subject") String subject) throws MessagingException {
-		String recipient = "tim.mosbruger@hci.utah.edu";
+		String recipient = "BioMiner Support";
 		String from = "biominer@hci.utah.edu";
 		
 		Properties properties = System.getProperties();
