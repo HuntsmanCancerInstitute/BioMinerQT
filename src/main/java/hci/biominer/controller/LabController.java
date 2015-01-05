@@ -42,12 +42,12 @@ public class LabController {
 		Subject currentUser = SecurityUtils.getSubject();
     	List<Lab> labs;
     	if (currentUser.isAuthenticated()) {
-    		System.out.println("LAB: User is authenticated");
+    		//System.out.println("LAB: User is authenticated");
     		Long userId = (Long) currentUser.getPrincipal();
             User user = userService.getUser(userId);
             labs = this.labService.getQueryLabsByVisibility(user);
     	} else {
-    		System.out.println("LAB: User is anonymous");
+    		//System.out.println("LAB: User is anonymous");
     		labs = this.labService.getQueryLabsPublic();
     	}
     	
