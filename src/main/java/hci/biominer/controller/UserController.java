@@ -378,7 +378,7 @@ public class UserController {
 		String subject = "BioMiner user account pending approval for " + user.getFirst() + " " + user.getLast();
 		
 		int numEmails = 1;
-		String email = "Tim.Maness@hci.utah.edu";
+		String email = "BioMiner Support";
 		if (labEmail != null && !email.toLowerCase().equals(labEmail.toLowerCase())) {
 			numEmails++;
 		}
