@@ -774,6 +774,12 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 		datatrack.show = !datatrack.show;
 	};
 	
+	$scope.datepicker = {opened: false};
+	$scope.open = function($event) {
+		$event.preventDefault();
+	    $event.stopPropagation();
+	    $scope.datepicker.opened = true;
+	};
 
 	
 }]);

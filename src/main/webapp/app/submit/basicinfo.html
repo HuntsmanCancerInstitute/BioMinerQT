@@ -85,7 +85,7 @@
 				  <label class="col-md-4 control-label"></label>
 				  <div class="col-md-5" >
 				    <button id="save_analysis_project_button" name="save_analysis_project_button" class="btn btn-primary" ng-click="save()" ng-hide="!projectEditMode" ng-disabled="editProjectForm.$invalid">Save</button>
-				    <button id="edit_analysis_project_button" name="edit_analysis_project_button" class="btn btn-primary" ng-click="edit()" ng-hide="projectEditMode">Edit</button>
+				    <button id="edit_analysis_project_button" name="edit_analysis_project_button" class="btn btn-primary" ng-click="edit()" ng-hide="projectEditMode" ng-disabled="editProjectForm.$invalid">Edit</button>
 				    <button id="cancel_analysis_project_button" name="cancel_analysis_project_button" class="btn btn-danger" ng-click="cancel()" ng-hide="!projectEditMode">Cancel</button>
 				  </div>
 				</div>

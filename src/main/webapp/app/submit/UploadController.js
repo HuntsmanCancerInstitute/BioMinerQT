@@ -293,6 +293,7 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 				
 				if ($scope.selectedAnalysisType.type == "ChIPSeq" || $scope.selectedAnalysisType.type == "Methylation") {
 					(function(params,index) {
+						ngProgress.start();
 						promise = promise.then(function() {
 							return $http({
 								url: "submit/parse/chip",
@@ -301,7 +302,9 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 							}).success(function(data) {
 								data.selected = false;
 								$scope.files.importedFiles[index] = data;
-								
+								ngProgress.complete();
+							}).error(function(data) {
+								ngProgress.reset();
 							});
 						});
 					}(params,index));
