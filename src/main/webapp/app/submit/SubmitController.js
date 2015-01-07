@@ -612,6 +612,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 			dataTrackList.push(result.dataTracks[x].idDataTrack);
 		}
 		
+		
 		$http({
 			url: "project/createAnalysis",
 			method: "PUT",

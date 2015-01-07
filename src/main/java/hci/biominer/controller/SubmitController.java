@@ -388,7 +388,7 @@ public class SubmitController {
 	 ****************************************************/
     @RequestMapping(value="createAnalysis",method=RequestMethod.PUT)
     @ResponseBody
-    public Long createAnalysis(@RequestParam(value="name") String name, @RequestParam(value="description") String description, @RequestParam(value="idProject") Long idProject,
+    public Long createAnalysis(@RequestParam(value="name") String name, @RequestParam(value="description",required=false) String description, @RequestParam(value="idProject") Long idProject,
     		@RequestParam(value="date") Long date, @RequestParam(value="idAnalysisType") Long idAnalysisType, @RequestParam(value="idSampleList",required=false) List<Long> idSampleList,
     		@RequestParam(value="idDataTrackList",required=false) List<Long> idDataTrackList, @RequestParam(value="idFileUpload") Long idFileUpload,
     		HttpServletResponse response) {
@@ -447,7 +447,7 @@ public class SubmitController {
 	 ****************************************************/
     @RequestMapping(value="updateAnalysis",method=RequestMethod.PUT)
     @ResponseBody
-    public void updateAnalysis(@RequestParam(value="idAnalysis") Long idAnalysis, @RequestParam(value="name") String name, @RequestParam(value="description") String description, @RequestParam(value="idProject") Long idProject,
+    public void updateAnalysis(@RequestParam(value="idAnalysis") Long idAnalysis, @RequestParam(value="name") String name, @RequestParam(value="description",required=false) String description, @RequestParam(value="idProject") Long idProject,
     		@RequestParam(value="date") Long date, @RequestParam(value="idAnalysisType") Long idAnalysisType, @RequestParam(value="idSampleList",required=false) List<Long> idSampleList,
     		@RequestParam(value="idDataTrackList",required=false) List<Long> idDataTrackList, @RequestParam(value="idFileUpload") Long idFileUpload,
     		HttpServletResponse response) {

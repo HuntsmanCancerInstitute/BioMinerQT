@@ -10,7 +10,7 @@
 			<div class="form-group">
 				<label class="col-md-4 control-label" for="analysis_result_name">Name</label>  
 				<div class="col-md-5">
-			  		<input id="analysis_result_name" ng-model="result.name" placeholder="name" class="form-control input-md" type="text">
+			  		<input id="analysis_result_name" ng-model="result.name" placeholder="name" class="form-control input-md" type="text" required>
 				</div>
 			</div> 
 			
@@ -27,7 +27,7 @@
 				<label class="col-md-4 control-label" for="">Date</label>
 				<div class="col-md-5">
 					 <p class="input-group">
-		              <input type="text" class="form-control" datepicker-popup="MM/dd/yyyy" ng-model="result.date" is-open="datepicker.opened" close-text="Close" />
+		              <input type="text" class="form-control" datepicker-popup="MM/dd/yyyy" ng-model="result.date" is-open="datepicker.opened" close-text="Close" required />
 		              <span class="input-group-btn">
 		                <button class="btn btn-default" ng-click="open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
 		              </span>
@@ -40,8 +40,8 @@
 			<div class="form-group">
 				<label class="col-md-4 control-label" for="analysis_type">Analysis type</label>
 				<div class="col-md-5">  
-					<select id="analysis_type" ng-model="result.analysisType" ng-options="at as at.type for at in analysisTypeList track by at.idAnalysisType" placeholder="Analysis type" class="form-control">
-						<option value="" disabled selected>Choose Analysis Type...</option>
+					<select id="analysis_type" ng-model="result.analysisType" ng-options="at as at.type for at in analysisTypeList track by at.idAnalysisType" placeholder="Choose analysis type" class="form-control" required>
+					
 					</select>			
 				</div>
 			</div>
@@ -50,8 +50,8 @@
 			<div class="form-group">
 				<label class="col-md-4 control-label" for="applicable_files">Files</label>
 				<div class="col-md-5">  
-				  <select id="applicable_files" class="form-control" ng-model="result.file"  ng-options="file as file.name for file in files.importedFiles track by file.idFileUpload" options-disabled="(file.isAnalysisSet || !file.doesAnalysisMatch) for file in files.importedFiles">
-				  	<option value="" disabled selected>Select File...</option>
+				  <select placeholder="Choose file" id="applicable_files" class="form-control" ng-model="result.file"  ng-options="file as file.name for file in files.importedFiles track by file.idFileUpload" options-disabled="(file.isAnalysisSet || !file.doesAnalysisMatch) for file in files.importedFiles" required>
+				
 				  </select> 
 				</div>	
 			</div> 
@@ -60,7 +60,7 @@
 			<div class="form-group">
 				<label class="col-md-4 control-label" for="applicable_samples">Samples</label>
 				<div class="col-md-5">
-				  	<select width="100" id="applicable_samples" data-placeholder="Select Samples..." ng-model="result.samples" chosen multiple class="form-control chosen-select" ng-options="sample as sample.name for sample in samples track by sample.idSample"> 
+				  	<select width="100" id="applicable_samples" data-placeholder="Select Samples..." ng-model="result.samples" chosen multiple class="form-control chosen-select" ng-options="sample as sample.name for sample in samples track by sample.idSample" required> 
 				    </select>
 				</div>	
 			</div> 
@@ -69,7 +69,7 @@
 			<div class="form-group">
 				<label class="col-md-4 control-label" for="applicable_datatracks">Data tracks</label>
 				<div class="col-md-5">
-				  <select width="100" id="applicable_datatracks" data-placeholder="Select DataTracks..." ng-model="result.dataTracks" chosen multiple class="form-control chosen-select"  ng-options="dt as dt.name for dt in datatracks track by dt.idDataTrack">
+				  <select width="100" id="applicable_datatracks" data-placeholder="Select DataTracks..." ng-model="result.dataTracks" chosen multiple class="form-control chosen-select"  ng-options="dt as dt.name for dt in datatracks track by dt.idDataTrack" required>
 				  </select> 
 				</div>	
 			</div> 
