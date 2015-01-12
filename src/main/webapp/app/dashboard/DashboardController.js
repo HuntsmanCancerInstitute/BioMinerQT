@@ -4,7 +4,7 @@
  * DashboardController
  * @constructor
  */
-var dashboard = angular.module('dashboard', ['services']);
+var dashboard = angular.module('dashboard', ['services','error']);
 
 angular.module('dashboard')
 
@@ -22,9 +22,35 @@ function($rootScope, $scope, dashboardService) {
     $scope.bisseq = {};
     $scope.bisseq.data = [];
     
-    $scope.chipseq.data = dashboardService.getChipSeqData();
-	$scope.bisseq.data =  dashboardService.getBisSeqData();
-    $scope.rnaseq.data =  dashboardService.getRNASeqData();
+    $scope.getChipSeq = function() {
+    	dashboardService.getChipSeqData().success(function(data) {
+    		$scope.chipseq.data = data;
+    	});
+    };
+    
+    $scope.getRnaSeq = function() {
+    	dashboardService.getRNASeqData().success(function(data) {
+    		$scope.rnaseq.data = data;
+    	});
+    };
+    
+    $scope.getBisSeq = function() {
+    	dashboardService.getBisSeqData().success(function(data) {
+    		$scope.bisseq.data = data;
+    	});
+    };
+    
+    
+    $scope.refresh = function() {
+    	$scope.getChipSeq();
+    	$scope.getRnaSeq();
+    	$scope.getBisSeq();
+    };
+    
+    $scope.getChipSeq();
+    $scope.getRnaSeq();
+    $scope.getBisSeq();
+    
 
     $rootScope.helpMessage = "<p>Placeholder for dashboard help.</p>";
     

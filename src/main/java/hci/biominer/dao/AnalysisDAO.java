@@ -10,6 +10,7 @@ import org.hibernate.SessionFactory;
 
 import hci.biominer.model.Analysis;
 import hci.biominer.model.AnalysisType;
+import hci.biominer.model.DashboardModel;
 import hci.biominer.model.DataTrack;
 import hci.biominer.model.OrganismBuild;
 import hci.biominer.model.Project;
@@ -18,6 +19,7 @@ import hci.biominer.model.SampleSource;
 import hci.biominer.model.access.Institute;
 import hci.biominer.model.access.Lab;
 import hci.biominer.model.access.User;
+import hci.biominer.util.Enumerated.AnalysisTypeEnum;
 import hci.biominer.util.Enumerated.ProjectVisibilityEnum;
 
 import org.hibernate.Hibernate;
@@ -463,6 +465,32 @@ public class AnalysisDAO {
 	   
 	    session.close();
 	    return obList;
+	}
+	
+	
+	@SuppressWarnings("unchecked")
+	public ArrayList<DashboardModel> getDashboard(AnalysisTypeEnum type) {
+		ArrayList<DashboardModel> dmList = new ArrayList<DashboardModel>();
+		Session session = this.getCurrentSession();
+		Query query = session.createQuery("select ob.name from OrganismBuild ob");
+		List<String> obNames = query.list();
+		
+		for (String name: obNames) {
+			Query q2 = session.createQuery("select a from Analysis as a "
+					+ "left join a.project as p "
+					+ "left join p.organismBuild as ob "
+					+ "left join a.analysisType as at "
+					+ "where ob.name = :name and at.type = :type");
+			q2.setParameter("name", name);
+			q2.setParameter("type",type);
+			
+			int size = q2.list().size();
+			if (size > 0) {
+				DashboardModel dm = new DashboardModel(size,name);
+				dmList.add(dm);
+			}
+		}
+		return dmList;
 	}
 	
 	@SuppressWarnings("unchecked")

@@ -4,7 +4,7 @@
  * UserAdminController
  * @constructor
  */
-var useradmin = angular.module('useradmin', ['angularFileUpload','ui.mask','ui.validate','confirmation','filters','directives','services','ngProgress','dialogs.main']);
+var useradmin = angular.module('useradmin', ['angularFileUpload','ui.mask','ui.validate','filters','directives','services','ngProgress','dialogs.main','error']);
 
 angular.module("useradmin").controller("UserAdminController", ['$rootScope','$scope','$http','$location','$window','$modal','$timeout','$upload','DynamicDictionary',
                                                                'StaticDictionary','ngProgress','dialogs',
@@ -127,7 +127,7 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
     		$scope.refreshOrganisms();
     		ngProgress.complete();
     	}).error(function(data) {
-    		dialogs.error("Error reading in gene annotation file : " + data);
+    		dialogs.error("Error reading in gene annotation file", data, null);
     		
     		ngProgress.reset();
     	});
@@ -143,7 +143,7 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
     		$scope.refreshOrganisms();
     		ngProgress.complete();
     	}).error(function(data) {
-    		dialogs.error("Error reading in transcript file : " + data);
+    		dialogs.error("Error reading in transcript file", data, null);
 			ngProgress.reset();
 		});
 	};
@@ -196,7 +196,7 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
 	        			params: {obId: ob.idOrganismBuild}
 	        		});
 	    		}).error(function(data) {
-	    			dialogs.error("Error parsing annotation data: " + data);
+	    			dialogs.error("Error parsing annotation data",data,null);
 	    			$scope.deleteAnnotationUpload();
 	    			ngProgress.reset();
 	    		});
@@ -207,7 +207,7 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
 			   
 	    	
 		}).error(function(data) {
-			dialogs.error(data.message);
+			dialogs.error("Error generating annotation preview", data.message, null);
 			ngProgress.reset();
 		});
 	};

@@ -5,39 +5,33 @@
 
 var services = angular.module('services', ['ngResource','ui.bootstrap'])
 
-.service('dashboardService', function() {
+.service('dashboardService',['$http', function($http) {
 	
     this.getChipSeqData = function() {
-    	var  chipseq_data = 
-    	 [
-			{ label: "Mouse",    data: [33]},
-			{ label: "Zebrafish",data: [23]},
-			{ label: "Chicken",  data: [9]},
-			{ label: "Human  ",  data: [18]}
-		];
-    	return chipseq_data;
+    	  	 
+    	return $http({
+    		url: "dashboard/getCount",
+    		method: "POST",
+    		params: {type: "ChIPSeq"}
+    	});
     }; 
-    
+        
     this.getRNASeqData = function() {
-    	var  rnaseq_data = 
-    	  [
-		    { label: "Mouse",    data: [[1,30]]},
-			{ label: "Zebrafish",data: [[1,40]]},
-			{ label: "Chicken",  data: [[1,9]]},
-			{ label: "Human  ",  data: [[1,8]]}
-          ];
-    	return rnaseq_data;
+    	return $http({
+    		url: "dashboard/getCount",
+    		method: "POST",
+    		params: {type: "RNASeq"}
+    	});
     };  
+    
     this.getBisSeqData = function( ){
-    	var  bisseq_data = 
-    	  [
-  			{ label: "Mouse",    data: [[1,3]]},
-  			{ label: "Zebrafish",data: [[1,4]]},
-  			{ label: "Chicken",  data: [[1,2]]}
-     	 ];
-    	return bisseq_data;
+    	return $http({
+    		url: "dashboard/getCount",
+    		method: "POST",
+    		params: {type: "Methylation"}
+    	});
     };  
-})
+}])
 
 .value('version', '1.0')
 

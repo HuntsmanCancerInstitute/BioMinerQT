@@ -5,11 +5,11 @@
  * @constructor
  */
  
-var submit    = angular.module('submit', ['ui.bootstrap','filters', 'services', 'directives','chosen','error','ngProgress']);
+var submit    = angular.module('submit', ['ui.bootstrap','filters', 'services', 'directives','chosen','ngProgress','dialogs.main','error']);
 
 angular.module("submit").controller("SubmitController", [
-'$scope', '$http', '$modal','DynamicDictionary','StaticDictionary','$rootScope','$upload','$q','ngProgress',
-function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$upload,$q,ngProgress) {
+'$scope', '$http', '$modal','DynamicDictionary','StaticDictionary','$rootScope','$upload','$q','ngProgress','dialogs',
+function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$upload,$q,ngProgress, dialogs) {
 	/**********************
 	 * Initialization!
 	 *********************/
@@ -266,7 +266,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
     $scope.deleteProject = function() {
     	if ($scope.results.length > 0 || $scope.samples.length > 0 || $scope.datatracks.length > 0 || $scope.files.uploadedFiles.length > 0 || 
     			$scope.files.importedFiles.length > 0) {
-    		$scope.showErrorMessage("Can't Delete Selected Project","You must delete any samples, datatracks or analyses before deleting project");
+    		dialogs.error("Can't Delete Selected Project","All samples, datatracks, files and analyses associated with project must be deleted first.",null);
     	} else if ($scope.idProject != -1) {
     		$http({
     			url: "project/deleteProject",
@@ -366,8 +366,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 				message += "<li>" + sample.name + "</li>";
 			}
 			message += "</ul>";
-		
-			$scope.showErrorMessage("Can't Delete Selected Samples",message);
+			dialogs.error("Can't delete selected samples.",message,null);
 			return;
 		}
 		
@@ -505,7 +504,8 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 			}
 			message += "</ul>";
 		
-			$scope.showErrorMessage("Can't Delete Selected Datatracks",message);
+			dialogs.error("Can't delete selected datatracks", message, null);
+			
 			return;
 		}
 		
@@ -558,8 +558,13 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 
 	$scope.editResult = function(result) {
 		$scope.result = angular.copy(result);
+		$scope.result.date = new Date(result.date);
 		$scope.resultEditMode = true;
     };
+    
+    $scope.$watch("result.date",function() {
+    	console.log($scope.result.date);
+    });
 	
 	$scope.saveResult = function(result) {
 		$scope.resultEditMode = false;
@@ -577,7 +582,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 		$http({
 			url: "project/updateAnalysis",
 			method: "PUT",
-			params: {idAnalysis: result.idAnalysis, name: result.name, description: result.description, date: result.date, idProject: $scope.projectId, 
+			params: {idAnalysis: result.idAnalysis, name: result.name, description: result.description, date: result.date.getTime(), idProject: $scope.projectId, 
 				idSampleList: sampleList, idDataTrackList: dataTrackList, idFileUpload: result.file.idFileUpload, idAnalysisType: result.analysisType.idAnalysisType}
 		}).success(function(data) {
 			$scope.loadProjects($scope.projectId);
@@ -628,29 +633,13 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 	
 	
 	$scope.showErrorMessage = function(title,message) {
-		$modal.open({
-    		templateUrl: 'app/common/userError.html',
-    		controller: 'userErrorController',
-    		resolve: {
-    			title: function() {
-    				return title;
-    			},
-    			message: function() {
-    				return message;
-    			}
-    		}
-    	});
+		dialogs.error(title, message, null);
 	};
 	
-	
-	$scope.testError = function() {
-		$http({
-			url : "project/testError",
-			method : "POST",
-		}).success(function(data) {
-			
-		});
+	$scope.showWarningMessage = function(title,message) {
+		dialogs.notify(title,message,null);
 	};
+	
 	
 	$scope.addNewPrep = function() {
 		if ($scope.newSamplePrep.description == null || $scope.newSamplePrep.description == "") {

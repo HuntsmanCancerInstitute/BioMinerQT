@@ -1,12 +1,14 @@
 package hci.biominer.controller;
 
-import hci.biominer.service.DashboardService;
+import hci.biominer.model.DashboardModel;
+import hci.biominer.service.AnalysisService;
+import hci.biominer.util.Enumerated.AnalysisTypeEnum;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.ModelMap;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.List;
@@ -22,10 +24,16 @@ import java.util.List;
 public class DashboardController {
 
     @Autowired
-    private DashboardService dashboardService;
+    private AnalysisService analysisService;
 
     @RequestMapping("/layout")
     public String getDashboardPartialPage() {
         return "resources/dashboard/layout";
     }
+    
+    @RequestMapping(value="/getCount", method=RequestMethod.POST)
+    public @ResponseBody List<DashboardModel> getCount(@RequestParam(value="type") AnalysisTypeEnum type) {
+    	return this.analysisService.getDashboard(type);
+    }
+    
 }

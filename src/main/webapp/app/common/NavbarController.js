@@ -2,7 +2,7 @@
  * 
  */
 
-var useradmin = angular.module('navbar', ['login','services']);
+var useradmin = angular.module('navbar', ['login','services','error']);
 
 angular.module('navbar').controller("NavbarController",['$modal','$scope','$http','$rootScope','$location','$interval','$route','DynamicDictionary',
 	function($modal,$scope,$http,$rootScope,$location,$interval,$route,DynamicDictionary) {

@@ -1281,7 +1281,7 @@ public class QueryController {
         			mapped.add(ensemblName);
         			
         		} else {
-        			this.warnings.append("Could not find gene: '" + ensemblName + "' in Genome Object.\n");
+        			//this.warnings.append("Could not find gene: '" + ensemblName + "' in Genome Object.\n");
         		}
         	}
     	}

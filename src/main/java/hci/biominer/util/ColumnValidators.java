@@ -41,15 +41,21 @@ public class ColumnValidators {
 		try {
 			BufferedReader br = ModelUtil.fetchBufferedReader(inputFile);
 			
+			boolean headerFound = false;
 			if (vcfHeader) {
-				while(true) {
-					String line = br.readLine();
-					if (line.startsWith("#CHROM")) {
+				String temp = "";
+				while((temp = br.readLine()) != null) {
+					if (temp.startsWith("#CHROM")) {
+						headerFound = true;
 						break;
 					}
 				}
 			} else {
 				br.readLine(); //Skip header
+			}
+			
+			if (headerFound == false && vcfHeader == true) {
+				throw new Exception("[ColumnValidator] Could not find a VCF header for this file.  Are you sure it's in VCF format?");
 			}
 			
 			String line = br.readLine();

@@ -31,7 +31,7 @@ public class Analysis {
 	@Column(name="name")
 	String name;
 	
-	@Column(name="description")
+	@Column(name="description",nullable = true)
 	String description;
 	
 	@Column(name="date")

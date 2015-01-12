@@ -1,11 +1,11 @@
 'use strict';
 
 
-var upload  = angular.module('upload',  ['ui.bootstrap', 'angularFileUpload','filters', 'services', 'directives','error','fneditor','chosen','ngProgress']);
+var upload  = angular.module('upload',  ['ui.bootstrap', 'angularFileUpload','filters', 'services', 'directives','fneditor','chosen','ngProgress','dialogs.main','error']);
 
-angular.module("upload").controller("UploadController", ['$scope','$upload','$http','$modal','$q','ngProgress',
+angular.module("upload").controller("UploadController", ['$scope','$upload','$http','$modal','$q','ngProgress','dialogs',
                                                       
-	function($scope, $upload, $http, $modal, $q, ngProgress) {
+	function($scope, $upload, $http, $modal, $q, ngProgress, dialogs) {
 
 		$scope.selectAllParse = false;
 		$scope.selectAllImport = false;
@@ -131,7 +131,7 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 				}
 				message += "</ul>";
 			
-				$scope.showErrorMessage("Can't Delete Selected Files",message);
+				dialogs.error("Can't Delete Selected Files",message,null);
 				return;
 			}
 			
@@ -422,20 +422,11 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
     	 * Display error message in modal
     	 ********************/
     	$scope.showFileError = function(file) {
-    		$modal.open({
-        		templateUrl: 'app/common/userError.html',
-        		controller: 'userErrorController',
-        		resolve: {
-        			title: function() {
-        				var title = "Error processing " + file.name;
-        				return title;
-        			},
-        			message: function() {
-        				var message = file.message;
-        				return message;
-        			}
-        		}
-        	});
+    		dialogs.notify("File Warning",file.message,null);
+    	};
+    	
+    	$scope.showFileWarning = function(file) {
+    		dialogs.error("File Error",file.message, null);
     	};
         
   

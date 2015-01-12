@@ -41,7 +41,7 @@
 				<label class="col-md-4 control-label" for="analysis_type">Analysis type</label>
 				<div class="col-md-5">  
 					<select id="analysis_type" ng-model="result.analysisType" ng-options="at as at.type for at in analysisTypeList track by at.idAnalysisType" placeholder="Choose analysis type" class="form-control" required>
-					
+					<option value=""></option>
 					</select>			
 				</div>
 			</div>
@@ -50,8 +50,8 @@
 			<div class="form-group">
 				<label class="col-md-4 control-label" for="applicable_files">Files</label>
 				<div class="col-md-5">  
-				  <select placeholder="Choose file" id="applicable_files" class="form-control" ng-model="result.file"  ng-options="file as file.name for file in files.importedFiles track by file.idFileUpload" options-disabled="(file.isAnalysisSet || !file.doesAnalysisMatch) for file in files.importedFiles" required>
-				
+				  <select placeholder="Choose file" id="applicable_files" class="form-control" ng-model="result.file"  ng-options="file as file.name for file in files.importedFiles track by file.idFileUpload" options-disabled="((file.isAnalysisSet || !file.doesAnalysisMatch) && file.idFileUpload != result.file.idFileUpload) for file in files.importedFiles" required>
+					<option value=""></option>
 				  </select> 
 				</div>	
 			</div> 

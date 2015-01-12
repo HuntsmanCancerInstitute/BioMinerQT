@@ -5,7 +5,7 @@
  * QueryController
  * @constructor
  */
-var query = angular.module('query', ['angularFileUpload','filters', 'services', 'directives', 'ui.bootstrap', 'chosen','angucomplete-alt','dialogs.main','ngProgress']);
+var query = angular.module('query', ['angularFileUpload','filters', 'services', 'directives', 'ui.bootstrap', 'chosen','angucomplete-alt','dialogs.main','ngProgress','error']);
 
 
 angular.module("query").controller("QueryController", 
@@ -214,18 +214,9 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
     		} else {
     			var message = data.message;
     			var title = "Error Processing Region File";
-        		$modal.open({
-            		templateUrl: 'app/common/userError.html',
-            		controller: 'userErrorController',
-            		resolve: {
-            			title: function() {
-            				return title;
-            			},
-            			message: function() {
-            				return message;
-            			}
-            		}
-            	});
+    			
+    			dialogs.error(title,message,null);
+        		
     		}
     		ngProgress.complete();
     	}).error(function(data) {
@@ -246,18 +237,9 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
     		} else {
     			var message = data.message;
     			var title = "Error Processing Gene File";
-        		$modal.open({
-            		templateUrl: 'app/common/userError.html',
-            		controller: 'userErrorController',
-            		resolve: {
-            			title: function() {
-            				return title;
-            			},
-            			message: function() {
-            				return message;
-            			}
-            		}
-            	});
+    			
+    			dialogs.error(title,message,null);
+        		
     		}
     		ngProgress.complete();
     	}).error(function(data) {
@@ -285,19 +267,8 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 			$scope.startPing();
 			
 		}).error(function(data) {
-			$modal.open({
-				templateUrl: 'app/common/userError.html',
-				controller: 'userErrorController',
-				resolve: {
-					title: function() {
-						var title = "IGV Session Error";
-						return title;
-					},
-					message: function() {
-						return data.error;
-					}
-				}
-			});
+			dialogs.error("IGV Session Error",data.error,null);
+			
 			if (data.warnings == "") {
 				$scope.igvWarnings = "";
 			} else {
@@ -635,18 +606,9 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 			warnings = $scope.igvWarnings;
 			title = "IGV Session Warnings";
 		} 
-		$modal.open({
-			templateUrl: 'app/common/userError.html',
-			controller: 'userErrorController',
-			resolve: {
-				title: function() {
-					return title;
-				},
-				message: function() {
-					return warnings;
-				}
-			}
-		});
+		
+		dialogs.error(title,warnings,null);
+		
 	};
 
 	

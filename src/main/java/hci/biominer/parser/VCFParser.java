@@ -205,14 +205,14 @@ public class VCFParser {
 						try {
 							tempVarType = VarTypeEnum.valueOf(typeMatcher.group(1));
 						} catch (Exception ex) {
-							this.warningMessage.append(String.format("Variant %s %d has unrecognized variant type: %s.<br>",tempChrom,tempPosition,typeMatcher.group(1)));
+							//this.warningMessage.append(String.format("Variant %s %d has unrecognized variant type: %s.<br>",tempChrom,tempPosition,typeMatcher.group(1)));
 						}
 						
 					} else if (locMatcher.matches()) {
 						try {
 							tempVarLocation = VarLocationEnum.valueOf(locMatcher.group(1));
 						} catch (Exception ex) {
-							this.warningMessage.append(String.format("Variant %s %d has unrecognized variant location: %s.<br>",tempChrom, tempPosition, locMatcher.group(1)));
+							//this.warningMessage.append(String.format("Variant %s %d has unrecognized variant location: %s.<br>",tempChrom, tempPosition, locMatcher.group(1)));
 						}
 					} else if (dbsnpMatcher.matches()) {
 						tempDbsnp = dbsnpMatcher.group(1);
@@ -275,7 +275,7 @@ public class VCFParser {
 		if (this.externalGeneToBiominerId.containsKey(gene)) {
 			exIdList = this.externalGeneToBiominerId.get(gene);
 		} else {
-			this.warningMessage.append(String.format("Could not find a BiominerID for gene: %s in the BiominerDB.<br>", gene));
+			//this.warningMessage.append(String.format("Could not find a BiominerID for gene: %s in the BiominerDB.<br>", gene));
 			alreadyObserved.put(gene, null);
 			return null;
 		}
@@ -299,7 +299,7 @@ public class VCFParser {
 		
 	
 		if (extIdFinal.size() == 0) {
-    		this.warningMessage.append(String.format("Could not find an EnsemblID for gene: %s in the BiominerDB.<br>",gene));
+    		//this.warningMessage.append(String.format("Could not find an EnsemblID for gene: %s in the BiominerDB.<br>",gene));
     		alreadyObserved.put(gene, null);
     		return null;
     	} else if (extIdFinal.size() > 1) {
@@ -310,7 +310,7 @@ public class VCFParser {
     		String ensemblName = null;
     		if (names.size() > 1) {
     			ensemblName = extIdFinal.get(0);
-        		this.warningMessage.append(String.format("Found multiple EnsemblIDs for gene: %s, using %s.<br>",gene,ensemblName));
+        		//this.warningMessage.append(String.format("Found multiple EnsemblIDs for gene: %s, using %s.<br>",gene,ensemblName));
     		} else {
     			ensemblName = extIdFinal.get(0);
 
@@ -326,7 +326,7 @@ public class VCFParser {
     		alreadyObserved.put(gene,geneNameGene.get(ensemblName));
     		return geneNameGene.get(ensemblName);
     	} else {
-    		this.warningMessage.append(String.format("Found EnsemblID %s for gene %s in BiominerDB, but could not find EnsemblID in transcript file.<br>",ensemblName,gene));
+    		//this.warningMessage.append(String.format("Found EnsemblID %s for gene %s in BiominerDB, but could not find EnsemblID in transcript file.<br>",ensemblName,gene));
     		alreadyObserved.put(gene, null);
     		return null;
     	}

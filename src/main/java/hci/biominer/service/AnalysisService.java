@@ -1,5 +1,6 @@
 package hci.biominer.service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,11 +10,13 @@ import org.springframework.transaction.annotation.Transactional;
 import hci.biominer.dao.AnalysisDAO;
 import hci.biominer.model.Analysis;
 import hci.biominer.model.AnalysisType;
+import hci.biominer.model.DashboardModel;
 import hci.biominer.model.OrganismBuild;
 import hci.biominer.model.Project;
 import hci.biominer.model.SampleSource;
 import hci.biominer.model.access.Lab;
 import hci.biominer.model.access.User;
+import hci.biominer.util.Enumerated.AnalysisTypeEnum;
 
 @Service("AnalysisService")
 @Transactional
@@ -90,6 +93,10 @@ public class AnalysisService {
 	public List<SampleSource> getSampleSourceByQuery(List<Long> labs, List<Long> analyses, 
 			List<Long> projects, List<Long> analysisTypes, Long idOrganismBuild, User user) {
 		return analysisDAO.getSampleSourceByQuery(labs, analyses, projects, analysisTypes, idOrganismBuild, user);
+	}
+	
+	public ArrayList<DashboardModel> getDashboard(AnalysisTypeEnum type) {
+		return analysisDAO.getDashboard(type);
 	}
 	
 	
