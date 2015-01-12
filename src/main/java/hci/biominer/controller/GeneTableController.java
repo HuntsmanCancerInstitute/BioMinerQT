@@ -130,7 +130,8 @@ public class GeneTableController {
     		user = userService.getUser(userId);
     		username = user.getUsername();
     	} else {
-    		return null;
+    		pm.setMessage("User is not authenticated, can't add annotations");
+    		return pm;
     	}
 		
 		

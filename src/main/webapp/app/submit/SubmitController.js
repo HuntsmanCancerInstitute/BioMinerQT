@@ -40,6 +40,8 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
     $scope.datatrack = {};
     $scope.result = {};
     $scope.project = {};
+    $scope.lastSample = null;
+    
     
     //flags
     $scope.sampleEditMode = false;
@@ -331,6 +333,10 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 		console.log($scope.samplePrepList);
 		console.log($scope.samplePrepListAll);
     };
+    
+    $scope.duplicateSample = function() {
+    	$scope.sample = angular.copy($scope.lastSample);
+    };
 	
 	$scope.saveSample = function(sample) {
 		$scope.sampleEditMode = false;
@@ -392,6 +398,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 				idSampleCondition: sample.sampleCondition.idSampleCondition},
 		}).success(function(data) {
 			$scope.loadProjects($scope.projectId);
+			$scope.lastSample = sample;
 		}).error(function(data, status, headers, config) {
 			console.log("Could not create sample.");
 		});
@@ -417,9 +424,13 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 		var deferred = $q.defer();
 		var promise = deferred.promise;
 		
+		ngProgress.start();
+		
 		if ($scope.datatrack.file != null) {
 			promise = $scope.uploadDatatrack($scope.datatrack.file, promise);
 		}
+		
+		
 		
 		promise = promise.then(function(data) {
 			return $http({
@@ -430,8 +441,10 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 				$scope.loadProjects($scope.projectId);
 				$scope.datatrackEditMode = false;
 				$scope.datatrack = {};
+				ngProgress.complete();
 			}).error(function(data) {
 				console.log("Could not update datatrack");
+				ngProgress.reset();
 			});
 		});
 		
@@ -442,7 +455,16 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 	$scope.addDataTrackFile = function(files) {
 		$scope.datatrack.file = files[0];
 		$scope.datatrack.path = files[0].name;
+		$scope.datatrack.name = baseName(files[0].name);
 	};
+	
+	function baseName(str)
+	{
+	   var base = new String(str).substring(str.lastIndexOf('/') + 1); 
+	    if(base.lastIndexOf(".") != -1)       
+	        base = base.substring(0, base.lastIndexOf("."));
+	   return base;
+	}
 	
 	$scope.uploadDatatrack = function(file, promise) {
 		$scope.complete = 0;
@@ -451,14 +473,15 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 		var fileChunks = [];
 		
 		if (file.size > max) {
-			for (var i=0;i<file.size;i+=max)
-			fileChunks.push(file.slice(i,i+max));
+			for (var i=0;i<file.size;i+=max) {
+				fileChunks.push(file.slice(i,i+max));
+			}
+			
+		} else {
+			fileChunks.push(file);
 		}
 		
-		
-		ngProgress.start();
-		
-		
+
 		var loaded = 0;
 		for (var i=0; i<fileChunks.length; i++) {
 			(function(i) {
@@ -475,11 +498,10 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 							$scope.datatrack.path = data.directory;
 						}
 						$scope.complete = (loaded) / file.size * 100;
-						ngProgress.complete();
+						
 					}).error(function(data) {
 						$scope.datatrack.message = data.message;
 						$scope.complete = 0;
-						ngProgress.reset();
 					});
 				});
 			})(i);

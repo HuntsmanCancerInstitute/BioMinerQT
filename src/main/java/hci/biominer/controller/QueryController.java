@@ -538,6 +538,7 @@ public class QueryController {
     		}
     	} else {
     		results = this.getIntersectingRegions(itList, analyses, intervalsToCheck, reverse);
+    		System.out.println(results.size());
     	}
     	
     	
@@ -558,6 +559,9 @@ public class QueryController {
     	}
     	
     	fullRegionResults.addAll(results);
+    	System.out.println(fullRegionResults.size());
+    	
+    	
     	
     	//Determine how many analyses were used
     	List<Analysis> usedAnalyses = this.getUsedAnalyses(analyses, fullRegionResults);
@@ -1412,6 +1416,7 @@ public class QueryController {
     	
     		if (qr.getLog2Ratio() == null) {
     			filteredResults.add(qr);
+    			pass = false;
     		} else if (log2ratioCode.equals("GT")) {
     			if (qr.getLog2Ratio() < log2ratio) {
     				pass = false;
@@ -1487,7 +1492,6 @@ public class QueryController {
     	} 
     	
     	qrList = this.convertGenericToQuery(grMap, analyses, localIntervals);
-    	
     	return qrList;
     }
     

@@ -65,6 +65,7 @@
 					<button id="add_sample_button"  class="animate-switch btn btn-primary" ng-switch-when="false" ng-click="addSample(sample)" ng-disabled="sample_form.$invalid">Add</button>
 					<button id="save_sample_button" class="animate-switch btn btn-primary" ng-switch-when="true" ng-click="saveSample(sample)" ng-disabled="sample_form.$invalid">Save</button>
 					<button id="save_sample_button" class="animate-switch btn btn-warning" ng-click="clearSample()">Clear</button>
+					<button id="duplicate_sample_button" class="animate-switch btn btn-success" ng-hide="lastSample==null" ng-click="duplicateSample()">Duplicate</button>
 				</div>
 			</div> <!-- end col -->
 		</div> <!--  end row -->
