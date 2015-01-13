@@ -9,9 +9,9 @@ var dashboard = angular.module('dashboard', ['services','error']);
 angular.module('dashboard')
 
 .controller('DashboardController', 
-[ '$rootScope','$scope', 'dashboardService',
+[ '$rootScope','$scope','$http',
               
-function($rootScope, $scope, dashboardService) {
+function($rootScope, $scope, $http) {
 
     $scope.rnaseq = {};
     $scope.rnaseq.data = [];
@@ -23,24 +23,36 @@ function($rootScope, $scope, dashboardService) {
     $scope.bisseq.data = [];
     
     $scope.getChipSeq = function() {
-    	dashboardService.getChipSeqData().success(function(data) {
+    	$http({
+    		url: "dashboard/getCount",
+    		method: "POST",
+    		params: {type: "ChIPSeq"}
+    	}).success(function(data) {
     		$scope.chipseq.data = data;
     	});
     };
-    
+
     $scope.getRnaSeq = function() {
-    	dashboardService.getRNASeqData().success(function(data) {
+    	$http({
+    		url: "dashboard/getCount",
+    		method: "POST",
+    		params: {type: "RNASeq"}
+    	}).success(function(data) {
     		$scope.rnaseq.data = data;
     	});
     };
     
     $scope.getBisSeq = function() {
-    	dashboardService.getBisSeqData().success(function(data) {
+    	$http({
+    		url: "dashboard/getCount",
+    		method: "POST",
+    		params: {type: "Methylation"}
+    	}).success(function(data) {
     		$scope.bisseq.data = data;
     	});
     };
     
-    
+  
     $scope.refresh = function() {
     	$scope.getChipSeq();
     	$scope.getRnaSeq();

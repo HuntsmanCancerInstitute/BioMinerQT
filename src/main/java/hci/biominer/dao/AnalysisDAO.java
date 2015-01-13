@@ -484,12 +484,18 @@ public class AnalysisDAO {
 			q2.setParameter("name", name);
 			q2.setParameter("type",type);
 			
-			int size = q2.list().size();
+			List<Analysis> qList = new ArrayList<Analysis>();
+			qList = q2.list();
+			
+			int size = qList.size();
+			
 			if (size > 0) {
 				DashboardModel dm = new DashboardModel(size,name);
 				dmList.add(dm);
 			}
 		}
+		session.close();
+		
 		return dmList;
 	}
 	

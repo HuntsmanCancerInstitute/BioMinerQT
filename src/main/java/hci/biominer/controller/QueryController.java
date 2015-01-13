@@ -710,6 +710,9 @@ public class QueryController {
     
     
     public IgvSessionResult createIgvSessionFile(String username, File sessionsDirectory, String serverName) throws Exception {
+    	//Make sure genome is loaded
+    	
+    	
     	//Create result 
     	IgvSessionResult igvSR = new IgvSessionResult();
     	
@@ -745,14 +748,20 @@ public class QueryController {
     	List<Analysis> usedAnalyses = this.getUsedAnalyses(analyses, results.getResultList());
     	HashMap<String,String> datatracks = this.getDataTrackList(usedAnalyses);
     	
-    	String genomeBuild = null;
+    	String igvBuildName = null;
     	if (usedAnalyses.size() != 0) {
-    		genomeBuild = usedAnalyses.get(0).getProject().getOrganismBuild().getName();
+    		OrganismBuild ob = usedAnalyses.get(0).getProject().getOrganismBuild();
+    		if (!GenomeBuilds.doesGenomeExist(ob)) {
+    			GenomeBuilds.loadGenome(ob);
+    		}
+    		igvBuildName = GenomeBuilds.getGenome(ob).getBuildName();
+    		
     	} else {
     		errors.append("The stored analysis list is empty, session can't be created.");
     		igvSR.setError(errors.toString());
     		return igvSR;
     	}
+    	
     	
     	
     	List<IGVResource> resources = new ArrayList<IGVResource>();
@@ -794,7 +803,9 @@ public class QueryController {
     	
     	//Create IGV session object
     	//Create session object
-    	IGVSession igvSession = new IGVSession(genomeBuild);
+    	
+    	
+    	IGVSession igvSession = new IGVSession(igvBuildName);
     	igvSession.setIgvResources(resourceArray);
     	
     	

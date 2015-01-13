@@ -5,33 +5,6 @@
 
 var services = angular.module('services', ['ngResource','ui.bootstrap'])
 
-.service('dashboardService',['$http', function($http) {
-	
-    this.getChipSeqData = function() {
-    	  	 
-    	return $http({
-    		url: "dashboard/getCount",
-    		method: "POST",
-    		params: {type: "ChIPSeq"}
-    	});
-    }; 
-        
-    this.getRNASeqData = function() {
-    	return $http({
-    		url: "dashboard/getCount",
-    		method: "POST",
-    		params: {type: "RNASeq"}
-    	});
-    };  
-    
-    this.getBisSeqData = function( ){
-    	return $http({
-    		url: "dashboard/getCount",
-    		method: "POST",
-    		params: {type: "Methylation"}
-    	});
-    };  
-}])
 
 .value('version', '1.0')
 

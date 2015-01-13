@@ -114,36 +114,26 @@
 					
 					<!--  Lab -->
 					<div class="form-group" >
-						
 						<label class="col-md-3 control-label" for=""labEntry">Labs</label> 
-						<div class="col-md-9">
-						    <select data-placeholder="Choose labs..." multiple class="form-control chosen-select" ng-model="selectedLabs" chosen ng-options="lab as (lab.first + ' ' + lab.last + ' lab' ) for lab in labList track by lab.idLab" ng-disabled="searchExisting" ></select>
-						</div>
-						 
+						<select width="70" data-placeholder="Choose labs..." multiple class="form-control chosen-select" ng-model="selectedLabs" chosen ng-options="lab as (lab.first + ' ' + lab.last + ' lab' ) for lab in labList track by lab.idLab" ng-disabled="searchExisting" ></select> 
 					</div>
 					
 					<!--  Analysis Project -->
 					<div class="form-group">
 						<label class="col-md-3 control-label" for=""labEntry">Analysis Projects</label> 
-						<div class="col-md-9"> 
-					    	<select data-placeholder="Choose analysis projects..." multiple class=" form-control chosen-select" ng-model="selectedProjects" chosen="projectList" ng-options="project as project.name for project in projectList track by project.idProject" ng-disabled="searchExisting"  ></select>
-						</div>
+					    <select width="70" data-placeholder="Choose analysis projects..." multiple class=" form-control chosen-select" ng-model="selectedProjects" chosen="projectList" ng-options="project as project.name for project in projectList track by project.idProject" ng-disabled="searchExisting"  ></select>
 					</div>
 					
 					<!--  Analysis  -->
 					<div class="form-group">
 						<label class="col-md-3 control-label" for=""labEntry">Individual Analysis</label> 
-						<div class="col-md-9"> 
-					    	<select data-placeholder="Choose individual analysis..." multiple class="form-control chosen-select" ng-model="selectedAnalyses" chosen="analysisList" ng-options="a as a.name for a in analysisList track by a.idAnalysis" ng-disabled="searchExisting"  ></select>
-						</div>
+					    <select width="70" data-placeholder="Choose individual analysis..." multiple class="form-control chosen-select" ng-model="selectedAnalyses" chosen="analysisList" ng-options="a as a.name for a in analysisList track by a.idAnalysis" ng-disabled="searchExisting"  ></select>
 					</div>
 					
 					<!--  Sample Source  -->
 					<div class="form-group">
 						<label class="col-md-3 control-label" for=""labEntry">Sample Source</label>  
-						<div class="col-md-9">
-					    	<select data-placeholder="Choose sample source..." multiple class="form-control chosen-select" ng-model="selectedSampleSources" chosen  ng-options="sampleSource as sampleSource.source for sampleSource in sampleSourceList track by sampleSource.idSampleSource" ng-disabled="searchExisting"  ></select>
-						</div>
+					    <select width="70" data-placeholder="Choose sample source..." multiple class="form-control chosen-select" ng-model="selectedSampleSources" chosen  ng-options="sampleSource as sampleSource.source for sampleSource in sampleSourceList track by sampleSource.idSampleSource" ng-disabled="searchExisting"  ></select>
 					</div>
 			
           	 		<!-- Interest or Don't Intersect -->
