@@ -128,7 +128,7 @@ public class FileController {
 	 ****************************************************/
 	@RequestMapping(value="/uploadchunk", method = RequestMethod.POST)
 	public @ResponseBody 
-	FileMeta uploadchunk(@RequestParam("file") MultipartFile file,
+	FileUpload uploadchunk(@RequestParam("file") MultipartFile file,
 			@RequestParam(value="index") Integer index, 
 			@RequestParam(value="total") Integer total, 
 			@RequestParam(value="name") String filename,		
@@ -136,8 +136,7 @@ public class FileController {
 			HttpServletResponse response) throws Exception {
  
 		FileUpload fileUpload = new FileUpload();
-		FileMeta fm = new FileMeta();
-
+		
 		String name = filename;      
 		
 		if (!file.isEmpty()) {
@@ -169,72 +168,58 @@ public class FileController {
 					append = false;
 				}
 				
-			
-					//copy file to directory
-					if (name.endsWith(".bam") || name.endsWith(".bai") || name.endsWith(".useq") || name.endsWith(".bw") || name.endsWith(".gz") || name.endsWith(".zip")) {
-						FileCopyUtils.copy(file.getInputStream(), new FileOutputStream(localFile,append));
-					} 
-					else {
-						FileCopyUtils.copy(file.getInputStream(), new GZIPOutputStream(new FileOutputStream(localFile),append));
+				//copy file to directory
+				if (name.endsWith(".bam") || name.endsWith(".bai") || name.endsWith(".useq") || name.endsWith(".bw") || name.endsWith(".gz") || name.endsWith(".zip")) {
+					FileCopyUtils.copy(file.getInputStream(), new FileOutputStream(localFile,append));
+				} 
+				else {
+					FileCopyUtils.copy(file.getInputStream(), new GZIPOutputStream(new FileOutputStream(localFile,append)));
+				}
+					
+				//If last file, return info
+				if (index+1 == total) {
+					fileUpload.setName(name);
+					
+					if (ftype == 1) {
+						fileUpload.setName(name + ".gz");
 					}
-						
-					//If last file, return info
-					if (index+1 == total) {
-						fm.setDirectory(directoryStub.getPath());
-						fm.setFinished(true);
-						fm.setSize("" + localFile.length());
-						fileUpload.setName(name);
-						fm.setName(name);
-						if (ftype == 1) {
-							fileUpload.setName(name + ".gz");
-							fm.setName(name + ".gz");
-						}
-					
-						//Grab project object
-						Project project = this.projectService.getProjectById(idProject);
-					
-						//Setup fileUpload object.
-						fileUpload.setDirectory(directoryStub.getPath());
-						fileUpload.setState(FileStateEnum.SUCCESS);
-						fileUpload.setMessage("");
-						fileUpload.setType(FileTypeEnum.UPLOADED);
-						fileUpload.setProject(project);
-						fileUpload.setSize(localFile.length());
-										
-						//Create/update fileUpload object
-						FileUpload existing = this.fileUploadService.getFileUploadByName(fileUpload.getName(), fileUpload.getType(), project);
-						if (existing == null) {
-							this.fileUploadService.addFileUpload(fileUpload);
-						} else {
-							this.fileUploadService.updateFileUpload(existing.getIdFileUpload(),fileUpload);
-						}
-					}					
-					
-					fm.setState(FileStateEnum.SUCCESS.toString());
-					response.setStatus(200);
-				} catch (Exception ex) {
-					ex.printStackTrace();
-					
-					//If failed, send error response back
-					response.setStatus(405);
-					
-//					//delete file
-//					if (localFile.exists()) {
-//						localFile.delete();
-//					}
-					
-					//set error message
-					fm.setMessage(ex.getMessage());
-					fm.setState(FileStateEnum.FAILURE.toString());
-				}			
+				
+					//Grab project object
+					Project project = this.projectService.getProjectById(idProject);
+				
+					//Setup fileUpload object.
+					fileUpload.setDirectory(directoryStub.getPath());
+					fileUpload.setState(FileStateEnum.SUCCESS);
+					fileUpload.setMessage("");
+					fileUpload.setType(FileTypeEnum.UPLOADED);
+					fileUpload.setProject(project);
+					fileUpload.setSize(localFile.length());
+									
+					//Create/update fileUpload object
+					FileUpload existing = this.fileUploadService.getFileUploadByName(fileUpload.getName(), fileUpload.getType(), project);
+					if (existing == null) {
+						this.fileUploadService.addFileUpload(fileUpload);
+					} else {
+						this.fileUploadService.updateFileUpload(existing.getIdFileUpload(),fileUpload);
+					}
+				}					
+				
+				response.setStatus(200);
+			} catch (Exception ex) {
+				ex.printStackTrace();
+				
+				//If failed, send error response back
+				response.setStatus(405);
+				fileUpload.setMessage(ex.getMessage());
+
+			}			
 				
 		} else {
-			fm.setState(FileStateEnum.FAILURE.toString());
-			fm.setMessage("File is empty");
+			fileUpload.setMessage("File is empty");
 			response.setStatus(405);
 		}
 
-		return fm;
+		return fileUpload;
 	}
 	
 	

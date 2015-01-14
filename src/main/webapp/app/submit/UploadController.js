@@ -30,12 +30,14 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 			$scope.complete = 0;
 			$scope.totalGlobalSize = 0;
 			$scope.currGlobalSize = 0;
-			$scope.localTotals = [];
+			$scope.currIndSize = [];
+			$scope.totalIndSize = [];
 			
 			//Calculate global size and initialize local sizes
 			for (var i=0; i<$files.length; i++) {
 				$scope.totalGlobalSize += $files[i].size;
-				$scope.localTotals.push(0);
+				$scope.totalIndSize.push($files[i].size);
+				$scope.currIndSize.push(0);
 			}
 
 			var promise = $q.all(null);
@@ -60,14 +62,13 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 					$scope.files.uploadedFiles.push(f);
 				}
 					
-				promise = $scope.uploadFile(i,index, file,promise);
+				promise = $scope.uploadFile(i,index, file, promise);
 			}
 		};
 
 
-	$scope.uploadFile = function(i,index,file,promise) {
-		$scope.complete = 0;
-		var max = 100000000;
+	$scope.uploadFile = function(fileIdx,index,file,promise) {
+		var max = 10000000;
 	
 		var fileChunks = [];
 		
@@ -76,26 +77,30 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 			fileChunks.push(file.slice(i,i+max));
 		}
 		else {
-		fileChunks.push(file.slice(0,file.size));
+			fileChunks.push(file.slice(0,file.size));
 		}
 		
-		
-		ngProgress.start();
-		
-		
-		var loaded = 0;
 		for (var i=0; i<fileChunks.length; i++) {
-			(function(i) {
+			(function(i,fileIdx) {
 				promise = promise.then(function() {
 					return $upload.upload({
 						url: "submit/uploadchunk",
 						file: fileChunks[i],
 						params : {index: i, total: fileChunks.length, name: file.name, idProject: $scope.project.idProject},
 					}).progress(function(evt) {
-						$scope.complete = (loaded + evt.loaded) / file.size * 100;
+						//$scope.complete = (loaded + evt.loaded) / file.size * 100;
+			
+						$scope.files.uploadedFiles[index].complete = 100 * (evt.loaded + $scope.currIndSize[fileIdx]) / $scope.totalIndSize[fileIdx];
+										        
+						$scope.currGlobalSize = 0;
+						for (var j = 0; j < $scope.currIndSize.length; j++) {
+							$scope.currGlobalSize += $scope.currIndSize[j];
+						}
+						$scope.complete = 100.0 * (evt.loaded + $scope.currGlobalSize) / $scope.totalGlobalSize;
+					
+						
 					}).success(function(data) {
-						loaded += fileChunks[i].size;
-						if (data.finished) {
+						if (i==fileChunks.length-1) {
 							if (data.state != "SUCCESS") {
 								//Only set message on failure
 								$scope.files.uploadedFiles[index].message = data.message;
@@ -103,19 +108,20 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 							} else {
 								//Set everything on success
 								$scope.files.uploadedFiles[index] = data;
+								
 							}
 							$scope.files.uploadedFiles[index].selected = false;
+							
+							
 						}
-						$scope.complete = (loaded) / file.size * 100;
-						ngProgress.complete();
+						$scope.currIndSize[fileIdx] += fileChunks[i].size;
 					}).error(function(data) {
 					    $scope.files.uploadedFiles[index].status = "FAILURE";
 						$scope.uploadedFiles[index].message = data.message;
 						$scope.complete = 0;
-						ngProgress.reset();
 					});
 				});
-			})(i);
+			})(i,fileIdx);
 		}
 		return promise;
 	};

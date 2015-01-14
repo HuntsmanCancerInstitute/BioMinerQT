@@ -24,6 +24,7 @@ import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import hci.biominer.util.BooleanModel;
 import hci.biominer.util.Enumerated.FileStateEnum;
 import hci.biominer.util.Enumerated.ProjectVisibilityEnum;
 import hci.biominer.util.BiominerProperties;
@@ -605,11 +606,6 @@ public class SubmitController {
     	return sampleSource;
     }
 
-    @RequestMapping(value="testError",method=RequestMethod.POST)
-    @ResponseBody
-    public void testError(HttpServletResponse response) throws IOException{
-    	throw new IOException("This is a test to see if I can get errors");
-    }
    
     
     /***************************************************
@@ -810,7 +806,50 @@ public class SubmitController {
 		}
 	}
 	
+	@RequestMapping(value="isSampleSourceUsed",method=RequestMethod.GET)
+	@ResponseBody
+	public BooleanModel isSampleSourceUsed(@RequestParam(value="source") String source) {
+		BooleanModel bm = new BooleanModel();
+		boolean response = this.sampleService.isSampleSourceUsed(source);
+		bm.setFound(response);
+		return bm;
+	}
 	
+	@RequestMapping(value="isSampleConditionUsed",method=RequestMethod.GET)
+	@ResponseBody
+	public BooleanModel isSampleConditionUsed(@RequestParam(value="cond") String cond) {
+		BooleanModel bm = new BooleanModel();
+		boolean response = this.sampleService.isSampleConditionUsed(cond);
+		bm.setFound(response);
+		return bm;
+	}
+	
+	@RequestMapping(value="isSamplePrepUsed",method=RequestMethod.GET)
+	@ResponseBody
+	public BooleanModel isSamplePrepUsed(@RequestParam(value="description") String description) {
+		BooleanModel bm = new BooleanModel();
+		boolean response = this.sampleService.isSamplePrepUsed(description);
+		bm.setFound(response);
+		return bm;
+	}
+	
+	@RequestMapping(value="deleteSamplePrep",method=RequestMethod.DELETE)
+	@ResponseBody
+	public void deleteSamplePrep(@RequestParam(value="idSamplePrep") Long idSamplePrep) {
+		this.samplePrepService.deleteSamplePrepById(idSamplePrep);
+	}
+	
+	@RequestMapping(value="deleteSampleCondition",method=RequestMethod.DELETE)
+	@ResponseBody
+	public void deleteSampleCondition(@RequestParam(value="idSampleCondition") Long idSampleCondition) {
+		this.sampleConditionService.deleteSampleConditionById(idSampleCondition);
+	}
+	
+	@RequestMapping(value="deleteSampleSource",method=RequestMethod.DELETE)
+	@ResponseBody
+	public void deleteSampleSource(@RequestParam(value="idSampleSource") Long idSampleSource) {
+		this.sampleSourceService.deleteSampleSourceById(idSampleSource);
+	}
     
     
 }

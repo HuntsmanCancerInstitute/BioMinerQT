@@ -45,4 +45,16 @@ public class SampleService {
         sampleDAO.updateSample(idSample, sample);
 	}
 	
+	public boolean isSampleConditionUsed(String cond) { 
+		return sampleDAO.isSampleConditionUsed(cond);
+	}
+	
+	public boolean isSampleSourceUsed(String source) {
+		return sampleDAO.isSampleSource(source);
+	}
+	
+	public boolean isSamplePrepUsed(String description) {
+		return sampleDAO.isSamplePrepUsed(description);
+	}
+	
 }

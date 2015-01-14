@@ -2,9 +2,11 @@ package hci.biominer.dao;
 
 import java.util.List;
 
+import hci.biominer.model.AnalysisType;
 import hci.biominer.model.Sample;
 import hci.biominer.model.Project;
 import hci.biominer.model.Analysis;
+import hci.biominer.model.SampleType;
 
 import org.hibernate.Query;
 import org.hibernate.Session;
@@ -89,6 +91,54 @@ public class SampleDAO {
 		session.getTransaction().commit();
 		session.close();
 	}
+	
+	@SuppressWarnings("unchecked")
+	public boolean isSampleConditionUsed(String cond) {
+		Session session = getCurrentSession();
+		session.beginTransaction();
+		Query query = session.createQuery("from Sample as s left join s.sampleCondition as sc where sc.cond = :cond");
+		query.setParameter("cond", cond);
+		List<SampleType> stList = query.list();
+		session.close();
+		if (stList.size() > 0) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	public boolean isSamplePrepUsed(String description) {
+		Session session = getCurrentSession();
+		session.beginTransaction();
+		Query query = session.createQuery("select s from Sample as s left join s.samplePrep as sp where sp.description = :description");
+		query.setParameter("description", description);
+		List<AnalysisType> spList = query.list();
+		session.close();
+		if (spList.size() > 0) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	public boolean isSampleSource(String source) {
+		Session session = getCurrentSession();
+		session.beginTransaction();
+		Query query = session.createQuery("from Sample as s left join s.sampleSource as ss where ss.source = :source");
+		query.setParameter("source", source);
+		List<AnalysisType> ssList = query.list();
+		session.close();
+		if (ssList.size() > 0) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	
+	
 	
 	
 }

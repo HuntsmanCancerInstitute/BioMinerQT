@@ -21,10 +21,12 @@
 				<div class="col-lg-3">
 					<div class="form-group">
 						<label class="control-label" for="sample_prep">Prep Method  </label>
-						<a ng-click="addNewPrep()" ng-show="sample.samplePrep.description == 'Add New'"><span class="glyphicon glyphicon-plus"></span>  </a>
-						<a ng-click="sample.samplePrep = null; newSamplePrep.description = ''" ng-show="sample.samplePrep.description == 'Add New'"><span class="glyphicon glyphicon-remove"></span>  </a>
+						<a ng-click="addNewPrep()" ng-show="sample.samplePrep.description == 'Add New'"><span class="glyphicon glyphicon-plus" tooltip="add sample prep"></span>  </a>
+						<a ng-click="sample.samplePrep = null; newSamplePrep.description = ''" ng-show="sample.samplePrep.description == 'Add New'" tooltip="cancel"><span class="glyphicon glyphicon-remove"></span>  </a>
+						<a ng-click="deleteSamplePrep(sample.samplePrep.idSamplePrep)" ng-show="!samplePrepUsed && sample.samplePrep.description != 'Add New'" tooltip="remove unused sample prep"><span class="glyphicon glyphicon-minus"></span></a>
 						<input style="background-color: LightYellow;" type="text" placeholder="Type in new sample prep description" ng-show="sample.samplePrep.description == 'Add New'" class="form-control" ng-model="newSamplePrep.description"/>
-						<select ng-hide="sample.samplePrep.description == 'Add New'" required id="sample_prep" placeholder="Choose prep method..." ng-model="sample.samplePrep" ng-disabled="!sample.sampleType.idSampleType" ng-options="sp as sp.description for sp in samplePrepList track by sp.idSamplePrep" class="form-control">
+						<select ng-hide="sample.samplePrep.description == 'Add New'" required id="sample_prep" placeholder="Choose prep method..." ng-model="sample.samplePrep" ng-disabled="!sample.sampleType.idSampleType" 
+						ng-options="sp as sp.description for sp in samplePrepList track by sp.idSamplePrep" class="form-control" ng-change="checkSamplePrep(sample.samplePrep)">
 							<option value=""></option>
 						</select>			
 					</div>
@@ -33,10 +35,12 @@
 				<div class="col-lg-2">
 					<div class="form-group">
 						<label class="control-label" for="site">Source</label>
-						<a ng-click="addNewSource()" ng-show="sample.sampleSource.source == 'Add New'"><span class="glyphicon glyphicon-plus"></span>  </a>
-						<a ng-click="sample.sampleSource = null; newSampleSource.source = ''" ng-show="sample.sampleSource.source == 'Add New'"><span class="glyphicon glyphicon-remove"></span>  </a>
+						<a ng-click="addNewSource()" ng-show="sample.sampleSource.source == 'Add New'"><span class="glyphicon glyphicon-plus" tooltip="add sample source"></span>  </a>
+						<a ng-click="sample.sampleSource = null; newSampleSource.source = ''" ng-show="sample.sampleSource.source == 'Add New'" tooltip="cancel"><span class="glyphicon glyphicon-remove"></span>  </a>
+						<a ng-click="deleteSampleSource(sample.sampleSource.idSampleSource)" ng-show="!sampleSourceUsed && sample.sampleSource.source != 'Add New'" tooltip="remove unused sample source"><span class="glyphicon glyphicon-minus"></span></a>
 						<input style="background-color: LightYellow;" type="text" placeholder="Type in new sample source" ng-show="sample.sampleSource.source == 'Add New'" class="form-control" ng-model="newSampleSource.source"/>
-						 <select ng-hide="sample.sampleSource.source == 'Add New'" required id="site" placeholder="Choose sample source..." ng-model="sample.sampleSource" ng-options="source as source.source for source in sampleSourceList track by source.idSampleSource" class="form-control">
+						 <select ng-hide="sample.sampleSource.source == 'Add New'" required id="site" placeholder="Choose sample source..." ng-model="sample.sampleSource" 
+						 ng-options="source as source.source for source in sampleSourceList track by source.idSampleSource" class="form-control" ng-change="checkSampleSource(sample.sampleSource)">
 						      <option value=""></option>
 						 </select>
 					</div>
@@ -46,10 +50,12 @@
 				<div class="col-lg-2">
 					<div class="form-group">
 						<label class="control-label" for="sample_group">Condition</label> 
-						<a ng-click="addNewCondition()" ng-show="sample.sampleCondition.cond == 'Add New'"><span class="glyphicon glyphicon-plus"></span>  </a>
-						<a ng-click="sample.sampleCondition = null; newSampleCond.cond = ''" ng-show="sample.sampleCondition.cond == 'Add New'"><span class="glyphicon glyphicon-remove"></span>  </a>
+						<a ng-click="addNewCondition()" ng-show="sample.sampleCondition.cond == 'Add New'"><span class="glyphicon glyphicon-plus" tooltip="add sample condition"></span>  </a>
+						<a ng-click="sample.sampleCondition = null; newSampleCond.cond = ''" ng-show="sample.sampleCondition.cond == 'Add New'" tooltip="cancel"><span class="glyphicon glyphicon-remove"></span>  </a>
+						<a ng-click="deleteSampleCondition(sample.sampleCondition.idSampleCondition)" ng-show="!sampleConditionUsed && sample.sampleCondition.cond != 'Add New'" tooltip="remove unused sample condition"><span class="glyphicon glyphicon-minus"></span></a>
 						<input style="background-color: LightYellow;" type="text" placeholder="Type in new sample condition" ng-show="sample.sampleCondition.cond == 'Add New'" class="form-control" ng-model="newSampleCond.cond"/> 
-						<select ng-hide="sample.sampleCondition.cond == 'Add New'" required id="sample_group" placeholder="Choose sample condition..." ng-model="sample.sampleCondition" ng-options="cond as cond.cond for cond in sampleConditionList track by cond.idSampleCondition" class="form-control">
+						<select ng-hide="sample.sampleCondition.cond == 'Add New'" required id="sample_group" placeholder="Choose sample condition..." ng-model="sample.sampleCondition" 
+						ng-options="cond as cond.cond for cond in sampleConditionList track by cond.idSampleCondition" class="form-control" ng-change="checkSampleCondition(sample.sampleCondition)">
 					      <option value=""></option>
 					    </select>	
 					</div>	
@@ -62,10 +68,10 @@
 			<div class="form-group">
 			  	<label class="control-label" for=""></label>  
 				<div class="animate-switch-container" ng-switch on="sampleEditMode">
-					<button id="add_sample_button"  class="animate-switch btn btn-primary" ng-switch-when="false" ng-click="addSample(sample)" ng-disabled="sample_form.$invalid">Add</button>
-					<button id="save_sample_button" class="animate-switch btn btn-primary" ng-switch-when="true" ng-click="saveSample(sample)" ng-disabled="sample_form.$invalid">Save</button>
+					<button id="add_sample_button"  class="animate-switch btn btn-primary" ng-switch-when="false" ng-click="addSample(sample)" ng-disabled="sample_form.$invalid || sample.sampleSource.source == 'Add New' || sample.sampleCondition.cond == 'Add New' || sample.samplePrep.description == 'Add New'">Add</button>
+					<button id="save_sample_button" class="animate-switch btn btn-primary" ng-switch-when="true" ng-click="saveSample(sample)" ng-disabled="sample_form.$invalid || sample.sampleSource.source == 'Add New' || sample.sampleCondition.cond == 'Add New' || sample.samplePrep.description == 'Add New'">Save</button>
 					<button id="save_sample_button" class="animate-switch btn btn-warning" ng-click="clearSample()">Clear</button>
-					<button id="duplicate_sample_button" class="animate-switch btn btn-success" ng-hide="lastSample==null" ng-click="duplicateSample()">Duplicate</button>
+					<button id="duplicate_sample_button" class="animate-switch btn btn-success" ng-hide="lastSample==null || sampleEditMode" ng-click="duplicateSample()">Duplicate</button>
 				</div>
 			</div> <!-- end col -->
 		</div> <!--  end row -->

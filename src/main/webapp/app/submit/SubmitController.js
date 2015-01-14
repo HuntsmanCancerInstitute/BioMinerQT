@@ -41,13 +41,17 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
     $scope.result = {};
     $scope.project = {};
     $scope.lastSample = null;
-    
-    
+       
     //flags
     $scope.sampleEditMode = false;
     $scope.datatrackEditMode = false;
     $scope.resultEditMode = false;
     $scope.projectEditMode = false;
+    
+ 
+    $scope.samplePrepUsed = true;
+    $scope.sampleConditionUsed = true;
+    $scope.sampleSourceUsed = true;
     
     $scope.complete = 0;
     
@@ -399,12 +403,101 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 		}).success(function(data) {
 			$scope.loadProjects($scope.projectId);
 			$scope.lastSample = sample;
+			$scope.samplePrepUsed = true;
+			$scope.sampleConditionUsed = true;
+			$scope.sampleSourceUsed = true;
 		}).error(function(data, status, headers, config) {
 			console.log("Could not create sample.");
 		});
 		$scope.sample = {};
 		
 	};
+	
+	
+	$scope.checkSamplePrep = function(samplePrep) {
+		if (samplePrep != null) {
+			$http({
+				url: "project/isSamplePrepUsed",
+				method: "GET",
+				params: {"description": samplePrep.description },
+			}).success(function(data) {
+				$scope.samplePrepUsed = data.found;
+				
+			});
+		} else {
+			$scope.samplePrepUsed = true;
+		}
+	};
+	
+	$scope.checkSampleSource = function(sampleSource) {
+		if (sampleSource != null) {
+			$http({
+				url: "project/isSampleSourceUsed",
+				method: "GET",
+				params: {"source": sampleSource.source },
+			}).success(function(data) {
+				$scope.sampleSourceUsed = data.found;
+				
+			});
+		} else {
+			$scope.sampleSourceUsed = true;
+		}
+	};
+	
+	$scope.checkSampleCondition = function(sampleCondition) {
+		if (sampleCondition != null) {
+			$http({
+				url: "project/isSampleConditionUsed",
+				method: "GET",
+				params: {"cond": sampleCondition.cond },
+			}).success(function(data) {
+				$scope.sampleConditionUsed = data.found;
+				
+			});
+		} else {
+			$scope.sampleConditionUsed = true;
+		}
+	};
+	
+	$scope.deleteSampleCondition = function(idSampleCondition) {
+		$http({
+			url: "project/deleteSampleCondition",
+			method: "DELETE",
+			params: {"idSampleCondition" : idSampleCondition},
+		}).success(function(data) {
+			$scope.loadSampleConditions();
+			$scope.sample.sampleCondition = null;
+			$scope.sampleConditionUsed = true;
+		});
+	};
+	
+	$scope.deleteSampleSource = function(idSampleSource) {
+		$http({
+			url: "project/deleteSampleSource",
+			method: "DELETE",
+			params: {"idSampleSource" : idSampleSource},
+		}).success(function(data) {
+			$scope.loadSampleSources();
+			$scope.sample.sampleSource = null;
+			$scope.sampleSourceUsed = true;
+			
+		});
+	};
+	
+	$scope.deleteSamplePrep = function(idSamplePrep) {
+		$http({
+			url: "project/deleteSamplePrep",
+			method: "DELETE",
+			params: {"idSamplePrep": idSamplePrep},
+		}).success(function(data) {
+			$scope.loadSamplePreps();
+			$scope.loadSamplePrepsBySampleType();
+			$scope.sample.samplePrep = null;
+			$scope.samplePrepUsed = true;
+		});
+	};
+	
+
 	
 	
 	/**********************
@@ -468,7 +561,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 	
 	$scope.uploadDatatrack = function(file, promise) {
 		$scope.complete = 0;
-		var max = 100000000;
+		var max = 10000000;
 	
 		var fileChunks = [];
 		
@@ -534,7 +627,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 		$http({
 			url : "project/deleteDataTrack",
 			method: "DELETE",
-			params: {idDataTrack: datatrack.idDataTrack},
+			params: {idDataTrack: datatrack.idDataTrack}
 		}).success(function(data) {
 			$scope.loadProjects($scope.projectId);
 		}).error(function(data) {
@@ -690,6 +783,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 			$scope.loadSamplePreps();
 			$scope.loadSamplePrepsBySampleType();
 			$scope.sample.samplePrep = data;
+			$scope.checkSamplePrep($scope.sample.samplePrep);
 		});
 	};
 	
@@ -720,6 +814,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 			$scope.newSampleSource.source = "";
 			$scope.loadSampleSources();
 			$scope.sample.sampleSource = data;
+			$scope.checkSampleSource($scope.sample.sampleSource);
 		});
 	};
 	
@@ -749,6 +844,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 			$scope.newSampleCond.cond = "";
 			$scope.loadSampleConditions();
 			$scope.sample.sampleCondition = data;
+			$scope.checkSampleCondition($scope.sample.sampleCondition);
 		});
 	};
 	
