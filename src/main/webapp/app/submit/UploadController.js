@@ -37,13 +37,12 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 				$scope.totalGlobalSize += $files[i].size;
 				$scope.localTotals.push(0);
 			}
-		
+
 			var promise = $q.all(null);
 			for (var i=0; i<$files.length; i++) {
 				//initialize variables
 				var file = $files[i];
 				var index = -1;
-				
 				
 				//Check to see if there are any matching files in list (match on name only)
 				for (var j=0; j<$scope.files.uploadedFiles.length; j++) {
@@ -60,16 +59,43 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 					index = $scope.files.uploadedFiles.length;
 					$scope.files.uploadedFiles.push(f);
 				}
-				
-				//upload the file
-				(function (i,index,file) {
-					 promise = promise.then(function() {
-						 
-						return $scope.upload = $upload.upload({
-							url: "submit/upload",
-							file: file,
-							data: {idProject: $scope.$parent.projectId},
-						}).success(function(data) {
+					
+				promise = $scope.uploadFile(i,index, file,promise);
+			}
+		};
+
+
+	$scope.uploadFile = function(i,index,file,promise) {
+		$scope.complete = 0;
+		var max = 100000000;
+	
+		var fileChunks = [];
+		
+		if (file.size > max) {
+			for (var i=0;i<file.size;i+=max)
+			fileChunks.push(file.slice(i,i+max));
+		}
+		else {
+		fileChunks.push(file.slice(0,file.size));
+		}
+		
+		
+		ngProgress.start();
+		
+		
+		var loaded = 0;
+		for (var i=0; i<fileChunks.length; i++) {
+			(function(i) {
+				promise = promise.then(function() {
+					return $upload.upload({
+						url: "submit/uploadchunk",
+						file: fileChunks[i],
+						params : {index: i, total: fileChunks.length, name: file.name, idProject: $scope.project.idProject},
+					}).progress(function(evt) {
+						$scope.complete = (loaded + evt.loaded) / file.size * 100;
+					}).success(function(data) {
+						loaded += fileChunks[i].size;
+						if (data.finished) {
 							if (data.state != "SUCCESS") {
 								//Only set message on failure
 								$scope.files.uploadedFiles[index].message = data.message;
@@ -79,24 +105,21 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 								$scope.files.uploadedFiles[index] = data;
 							}
 							$scope.files.uploadedFiles[index].selected = false;
-							
-						}).error(function(data) {
-							$scope.files.uploadedFiles[index].status = "FAILURE";
-						}).progress(function(evt) {
-							$scope.files.uploadedFiles[index].complete = 100 * evt.loaded / evt.total;
-					        
-							$scope.localTotals[i] = evt.loaded;
-							$scope.currGlobalSize = 0;
-							for (var j = 0; j < $scope.localTotals.length; j++) {
-								$scope.currGlobalSize += $scope.localTotals[j];
-							}
-							$scope.complete = 100.0 * $scope.currGlobalSize / $scope.totalGlobalSize;
-						});
-					 });
-				})(i,index,file);
-			}
-		};
-		
+						}
+						$scope.complete = (loaded) / file.size * 100;
+						ngProgress.complete();
+					}).error(function(data) {
+					    $scope.files.uploadedFiles[index].status = "FAILURE";
+						$scope.uploadedFiles[index].message = data.message;
+						$scope.complete = 0;
+						ngProgress.reset();
+					});
+				});
+			})(i);
+		}
+		return promise;
+	};
+			
 		/********************
 		 * Select/Deselect all
 		 ********************/
@@ -168,7 +191,7 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 		};
 		
 		/********************
-		 * When parse button is pushed, generate a file preview and selection modal
+		 * When import button is pushed, generate a file preview and selection modal
 		 ********************/
 		$scope.parse = function() {
 			$scope.selectedFiles = [];	
@@ -203,6 +226,7 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 				    		windowClass: 'preview-dialog',
 				    		resolve: {
 				    			filename: function() {
+									//return $scope.selectedFiles[0].file.name;				    			
 				    				return config.params.filename;
 				    			},
 				    			previewData: function() {
@@ -227,7 +251,7 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 		};
 		
 		/********************
-		 * When columnDefs is modified (presumabaly from parse), fire this code
+		 * When columnDefs is modified (presumably from import), fire this code
 		 ********************/
 		$scope.setFilenames = function() {
 			var modalInstance = $modal.open({
@@ -250,7 +274,7 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 		
 		
 		/********************
-		 * When selectedFiles is modified (presumabaly from FilenameEditor), fire this code
+		 * When selectedFiles is modified (presumably from FilenameEditor), fire this code
 		 ********************/
 		$scope.callParser = function() {
 			var promise = $q.when(null);
@@ -290,10 +314,9 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 				}
 				
 				
-				
 				if ($scope.selectedAnalysisType.type == "ChIPSeq" || $scope.selectedAnalysisType.type == "Methylation") {
 					(function(params,index) {
-						ngProgress.start();
+						ngProgress.start();					
 						promise = promise.then(function() {
 							return $http({
 								url: "submit/parse/chip",
@@ -304,7 +327,7 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 								$scope.files.importedFiles[index] = data;
 								ngProgress.complete();
 							}).error(function(data) {
-								ngProgress.reset();
+								ngProgress.reset();								
 							});
 						});
 					}(params,index));
