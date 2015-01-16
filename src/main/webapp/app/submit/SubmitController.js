@@ -54,6 +54,9 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
     $scope.sampleSourceUsed = true;
     
     $scope.complete = 0;
+    $scope.totalGlobalSize = 0;
+	$scope.currGlobalSize = 0;		
+    
     
     $rootScope.helpMessage = "<p>Placeholder for data submission help.</p>";
     
@@ -550,6 +553,41 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 		$scope.datatrack.path = files[0].name;
 		$scope.datatrack.name = baseName(files[0].name);
 	};
+
+	$scope.addDataTrackFiles = function(files) {
+		$scope.complete = 0;
+		$scope.totalGlobalSize = 0;
+		$scope.currGlobalSize = 0;	
+		$scope.currIndSize = [];
+		$scope.totalIndSize = [];
+			
+
+		//Calculate global size
+		for (var i=0; i<files.length; i++) {
+			$scope.totalGlobalSize += files[i].size;
+			$scope.totalIndSize.push(files[i].size);
+			$scope.currIndSize.push(0);			
+		}
+		 
+		var promise = $q.all(null);
+		
+		var myfiles = [];
+		var mydatatracks = [];
+		for (var i=0; i<files.length; i++) {
+			myfiles.push(files[i]);
+			}
+
+		
+		for (var i=0; i<myfiles.length; i++) {
+			var adatatrack = {file: myfiles[i], path: myfiles[i].name, name: baseName(myfiles[i].name), completed: 0}; 
+			mydatatracks.push(adatatrack);
+			}
+			
+		for (var i=0; i<mydatatracks.length; i++) {				
+			var index = i;			
+			promise = $scope.uploadAddDataTrack(i,index,mydatatracks[i].file,mydatatracks[i],promise);		
+		}
+	};
 	
 	function baseName(str)
 	{
@@ -602,7 +640,56 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 		return promise;
 	};
 	
+	$scope.uploadAddDataTrack = function(fileIdx,index,file, datatrack, promise) {
+
+		var max = 10000000;
 	
+		var fileChunks = [];
+		
+		if (file.size > max) {
+			for (var i=0;i<file.size;i+=max) {
+				fileChunks.push(file.slice(i,i+max));
+			}
+			
+		} else {
+			fileChunks.push(file);
+		}
+		
+
+		var loaded = 0;
+		for (var i=0; i<fileChunks.length; i++) {
+			(function(i,fileIdx) {
+				promise = promise.then(function() {
+					return $upload.upload({
+						url: "project/addDataTrack",
+						file: fileChunks[i],
+						params : {index: i, total: fileChunks.length, name: file.name, idProject: $scope.project.idProject, dtname: datatrack.name},
+					}).progress(function(evt) {
+						datatrack.complete = 100 * (evt.loaded + $scope.currIndSize[fileIdx]) / $scope.totalIndSize[fileIdx];
+										        
+						$scope.currGlobalSize = 0;
+						for (var j = 0; j < $scope.currIndSize.length; j++) {
+							$scope.currGlobalSize += $scope.currIndSize[j];
+						}
+						$scope.complete = 100.0 * (evt.loaded + $scope.currGlobalSize) / $scope.totalGlobalSize;
+												
+					}).success(function(data) {
+						$scope.currIndSize[fileIdx] += fileChunks[i].size;
+						if (data.finished) {
+							$scope.datatrack.path = data.directory;
+							$scope.loadProjects($scope.projectId);
+							$scope.datatrack = {};							
+						}
+						
+					}).error(function(data) {
+						$scope.datatrack.message = data.message;
+					});
+				});
+			})(i,fileIdx);
+		}
+		return promise;
+	};
+		
 	$scope.removeDataTrack = function(datatrack) {
 		//Keeping it a list in case we move over to checkboxes
 		var fileList = [];
@@ -639,9 +726,10 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
     	$scope.showErrorMessage("Error uploading datatracks", datatrack.message);
     };
 	
-	$scope.addDataTrack = function(datatrack) {
-		var deferred = $q.defer();
-		var promise = deferred.promise;
+	$scope.addDataTrack = function(datatrack,promise) {
+		//var deferred = $q.defer();
+		//var promise = deferred.promise;
+		//	var promise = $q.all(null);		
 		
 		promise = $scope.uploadDatatrack(datatrack.file, promise);
 		
@@ -657,7 +745,8 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 				console.log("Could not create datatrack");
 			});
 		});
-		deferred.resolve();
+		//deferred.resolve();
+		return promise;
 	}; 
 	
 	
