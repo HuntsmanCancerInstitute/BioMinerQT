@@ -658,9 +658,86 @@ public class SubmitController {
     	return institutes;
     }
     
-    
     /***************************************************
-	 * URL: /genetable/addDatatrackFile
+	 * URL: /project/addDatatrack
+	 * addTranscriptFile
+	 ****************************************************/
+	@RequestMapping(value="addDataTrack",method=RequestMethod.POST)
+	public @ResponseBody
+	FileMeta uploadAddDataTrack(
+			@RequestParam("file") MultipartFile file,  
+			@RequestParam(value="index") Integer index, 
+			@RequestParam(value="total") Integer total, 
+			@RequestParam(value="name") String filename,
+			@RequestParam(value="idProject") Long idProject,
+			@RequestParam(value="dtname") String dtname, 		
+			HttpServletResponse response) throws Exception {
+		
+		File subDirectory = new File(FileController.getIgvDirectory(),String.valueOf(idProject));
+		if (!subDirectory.exists()) {
+			subDirectory.mkdir();
+		}
+		File localFile =  new File(subDirectory,filename);
+		FileMeta fm = new FileMeta();
+		
+		//If first file, set append flag to false and delete existing files with the same name.
+		boolean append = true;
+		if (index == 0) {
+			if (localFile.exists()) {
+				localFile.delete();
+			}
+			append = false;
+		}
+		
+		try {
+	
+			//copy file to directory
+			if (filename.endsWith(".bw") || filename.endsWith(".bb") || filename.endsWith(".vcf.gz")) {
+				FileCopyUtils.copy(file.getInputStream(), new FileOutputStream(localFile,append));
+				
+				//If last file, return info
+				if (index+1 == total) {
+					fm.setDirectory(filename);
+					fm.setFinished(true);
+					
+			    	//Create secondary objects
+			    	Project project = this.projectService.getProjectById(idProject);
+			    	
+			    	//Create sample object
+			    	DataTrack dataTrack = new DataTrack(dtname, filename, project);
+			    	
+			    	//Update sample
+			    	this.dataTrackService.addDataTrack(dataTrack);					
+				}
+			
+				fm.setState(FileStateEnum.SUCCESS.toString());
+				response.setStatus(200);
+			} else {
+				fm.setMessage(String.format("The suffix for file %s is not supported.  Only bw, bb and vcf.gz can be loaded into biominer.",filename));
+				fm.setState(FileStateEnum.FAILURE.toString());
+				response.setStatus(405);
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			
+			//If failed, send error response back
+			response.setStatus(405);
+			
+			//delete file
+			if (localFile.exists()) {
+				localFile.delete();
+			}
+			
+			//set error message
+			fm.setMessage(ex.getMessage());
+			fm.setState(FileStateEnum.FAILURE.toString());
+		}
+		return fm;
+	}
+
+	
+    /***************************************************
+	 * URL: /project/addDatatrackFile
 	 * addTranscriptFile
 	 ****************************************************/
 	@RequestMapping(value="addDataTrackFile",method=RequestMethod.POST)
