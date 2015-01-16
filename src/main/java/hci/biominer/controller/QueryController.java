@@ -868,6 +868,7 @@ public class QueryController {
           return (con.getResponseCode() == HttpURLConnection.HTTP_OK);
         }
         catch (Exception e) {
+        	System.out.println ("[QueryController] the failing URL: " + url);
            e.printStackTrace();
            return false;
         }
