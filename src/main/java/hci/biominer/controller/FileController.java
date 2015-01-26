@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
@@ -39,6 +40,7 @@ import hci.biominer.parser.GenomeParser;
 import hci.biominer.parser.RnaSeqParser;
 import hci.biominer.parser.VCFParser;
 import hci.biominer.util.BiominerProperties;
+import hci.biominer.util.BooleanModel;
 import hci.biominer.util.Enumerated.FileStateEnum;
 import hci.biominer.util.Enumerated.FileTypeEnum;
 import hci.biominer.util.FileMeta;
@@ -406,10 +408,11 @@ public class FileController {
 			 			lastHeader  = temp.split("\t");
 			 			continue;
 			 		}
+			 		
 			 		if (lastHeader != null) {
 			 			pm.addPreviewData(lastHeader);
+			 			lastHeader = null;
 			 		}
-			 		
 			 		
 			 		if (counter == 10) {
 			 			break;
@@ -766,5 +769,64 @@ public class FileController {
 		
 		return outputMeta;
 	}
+	
+	private BooleanModel checkFile(File[] filePaths) {
+		BooleanModel bm = new BooleanModel();
+		bm.setFound(false);
+		for (File fp: filePaths) {
+			if (fp.exists()) {
+				bm.setFound(true);
+				System.out.println("Yup " + fp);
+			} else {
+				System.out.println("Nope " + fp);
+			}
+		}
+		return bm;
+	}
+	
+	@RequestMapping(value="doesRawUploadExist", method = RequestMethod.GET)
+	public @ResponseBody 
+	BooleanModel doesRawUploadExist(@RequestParam("idProject") Long idProject, @RequestParam("fileName") String fileName) throws Exception {
+		File projectDirectory = new File(FileController.getRawDirectory(),idProject.toString());
+		File[] filePaths = new File[2];
+		filePaths[0] = new File(projectDirectory,fileName);
+		filePaths[1]= new File(projectDirectory,fileName + ".gz");
+		return checkFile(filePaths);
+	}
+	
+	@RequestMapping(value="doesParsedUploadExist", method = RequestMethod.GET)
+	public @ResponseBody 
+	BooleanModel doesParsedUploadExist(@RequestParam("idProject") Long idProject, @RequestParam("fileName") String fileName) throws Exception {
+		File projectDirectory = new File(FileController.getParsedDirectory(),idProject.toString());
+		File[] filePaths = new File[2];
+		filePaths[0] = new File(projectDirectory,fileName);
+		filePaths[1] = new File(projectDirectory,fileName + ".gz");
+		return checkFile(filePaths);
+	}
+	
+	@RequestMapping(value="doesDatatrackExist", method = RequestMethod.GET)
+	public @ResponseBody 
+	BooleanModel doesDatatrackExist(@RequestParam("idProject") Long idProject, @RequestParam("fileName") String fileName) throws Exception {
+		File projectDirectory = new File(FileController.getIgvDirectory(),idProject.toString());
+		File[] filePaths = new File[2];
+		filePaths[0] = new File(projectDirectory,fileName);
+		filePaths[1] = new File(projectDirectory,fileName + ".gz");
+		return checkFile(filePaths);
+	}
+	
+	@RequestMapping(value="getParsedUploadNames", method=RequestMethod.GET)
+	public @ResponseBody
+	List<String> getParsedUploadNames(@RequestParam("idProject") Long idProject) throws Exception {
+		Project project = this.projectService.getProjectById(idProject);
+		List<FileUpload> files = this.fileUploadService.getFileUploadByType(FileTypeEnum.IMPORTED, project);
+		
+		List<String> fileNames = new ArrayList<String>();
+		for (FileUpload f: files) {
+			fileNames.add(f.getName());
+		}
+		return fileNames;
+	}
+	
+	
 	
 }

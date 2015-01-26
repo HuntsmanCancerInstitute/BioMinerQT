@@ -553,8 +553,45 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 		$scope.datatrack.path = files[0].name;
 		$scope.datatrack.name = baseName(files[0].name);
 	};
-
+	
+	
 	$scope.addDataTrackFiles = function(files) {
+		var validFiles = [];
+		var badFiles = [];
+		var promises = [];
+		
+		for (var i=0;i<files.length;i++) {
+			var promise = $http({
+				url: "submit/doesDatatrackExist",
+				method: "GET",
+				params: {idProject : $scope.projectId, fileName: files[i].name, index: i}
+			}).success(function(data, status, headers, config) {
+				if (data.found) {
+					badFiles.push(files[config.params["index"]]);
+				} else {
+					validFiles.push(files[config.params["index"]]);
+				}
+			});
+			promises.push(promise);
+		}
+		
+		$q.all(promises).then(function(data) {
+			if (badFiles.length > 0) {
+				var warningMessage = "<p>The following files have already been uploaded and won't be overwritten.</p>";
+				warningMessage += "<ul>";
+				for (var idx in badFiles) {
+					warningMessage += "<li>" + files[idx].name + "</li>";
+				}
+				warningMessage += "</ul>";
+				 
+				dialogs.error("Duplicate file names",warningMessage);
+			}
+			$scope.processDataTrackFiles(validFiles);
+		});
+	};
+	
+
+	$scope.processDataTrackFiles = function(files) {
 		$scope.complete = 0;
 		$scope.totalGlobalSize = 0;
 		$scope.currGlobalSize = 0;	

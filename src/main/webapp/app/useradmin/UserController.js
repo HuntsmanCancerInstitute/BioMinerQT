@@ -1,4 +1,4 @@
-'use strict';
+ 'use strict';
 
 angular.module("useradmin").controller("UserController", [
  '$scope','$http', '$modalInstance','labList','instituteList','userData','title','bFace',

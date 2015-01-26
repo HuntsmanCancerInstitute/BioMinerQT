@@ -382,6 +382,7 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 	};
 		
 	$scope.clearQuery = function() {
+		console.log("Clearing");
 		$scope.hasResults = false;
 		$scope.queryForm.$setPristine();
 		
@@ -1114,8 +1115,7 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 	});
 	
 	$scope.$watch("idOrganismBuild",function(newValue, oldValue) {
-		
-		if (newValue != oldValue) {
+		if (newValue != undefined && newValue != oldValue) {
 			$scope.loadLabs();
 			$scope.loadProjects();
 			$scope.loadAnalyses();
@@ -1234,6 +1234,7 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 				
 			}  
 		}).error(function(data) {
+			console.log("calling clearQuery from error");
 			$scope.clearQuery();
 		});
 	};

@@ -24,7 +24,45 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 		/********************
 		 * Upload files!
 		 ********************/
-		$scope.onFileSelect = function($files) {
+		$scope.onFileSelect = function(files) {
+			var validFiles = [];
+			var badFiles = [];
+			var promises = [];
+			
+			for (var i=0;i<files.length;i++) {
+				var promise = $http({
+					url: "submit/doesRawUploadExist",
+					method: "GET",
+					params: {idProject : $scope.projectId, fileName: files[i].name, index: i}
+				}).success(function(data, status, headers, config) {
+					if (data.found) {
+						console.log("BAD");
+						badFiles.push(files[config.params["index"]]);
+					} else {
+						console.log("Good");
+						validFiles.push(files[config.params["index"]]);
+					}
+				});
+				promises.push(promise);
+			}
+			
+			$q.all(promises).then(function(data) {
+				if (badFiles.length > 0) {
+					var warningMessage = "<p>The following files have already been uploaded and won't be overwritten.</p>";
+					warningMessage += "<ul>";
+					for (var idx in badFiles) {
+						warningMessage += "<li>" + files[idx].name + "</li>";
+					}
+					warningMessage += "</ul>";
+					 
+					dialogs.error("Duplicate file names",warningMessage);
+				}
+				$scope.processValidFiles(validFiles);
+			});
+		};
+		
+		
+		$scope.processValidFiles = function($files) {
 			
 			//Initialize upload status variables.
 			$scope.complete = 0;
@@ -267,6 +305,9 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 	    		resolve: {
 	    			selected: function() {
 	    				return $scope.selectedFiles;
+	    			},
+	    			idProject: function() {
+	    				return $scope.project.idProject;
 	    			}
 	    		}
 	    	});

@@ -29,13 +29,13 @@
             <div class="panel panel-default">
 				<div class="panel-heading">
 				    Compose Query 				   			
-					<button class="btn btn-sm btn-default pull-right" style="margin-top: -6px;margin-left: 10px" ng-click="clearQuery()" ng-hide="queryStarted">
+					<button type="button" class="btn btn-sm btn-default pull-right" style="margin-top: -6px;margin-left: 10px" ng-click="clearQuery()" ng-hide="queryStarted">
 	  						<span class="glyphicon glyphicon-refresh"></span> Clear
 		   			</button>
-		   			<button class="btn btn-sm btn-danger pull-right" style="margin-top: -6px;margin-left: 10px" ng-click="abortQuery()" ng-show="queryStarted">
+		   			<button type="button" class="btn btn-sm btn-danger pull-right" style="margin-top: -6px;margin-left: 10px" ng-click="abortQuery()" ng-show="queryStarted">
 		   					<span class="glyphicon glyphicon-stop"></span> Stop Query
 		   			</button>
-					<button class="btn btn-sm btn-warning pull-right" style="margin-top: -6px"  ng-click="runQuery(queryForm.$invalid)" ng-hide="queryStarted">
+					<button type="button" class="btn btn-sm btn-warning pull-right" style="margin-top: -6px"  ng-click="runQuery(queryForm.$invalid)" ng-hide="queryStarted">
 	  						<span class="glyphicon glyphicon-play"></span> Run Query
 		   			</button>
 				</div>
@@ -73,7 +73,7 @@
 		    				        required
 		    				        ng-options="gb.idOrganismBuild as gb.name group by gb.organism.common for gb in organismBuildList" 
 		    				        class="form-control">
-		    				        <option value="" disabled selected>Select genome build</option>
+		    				        <option value="">Select Organism Build</option>
 		    				</select>
 		  				</div>
 		  				<div class="col-md-12" ng-show="queryForm.gbSelect.$error.required && showValidation">
@@ -303,11 +303,14 @@
 
 					
 					<div class="btn-toolbar" role="toolbar" >
-			   			<button class="btn btn-sm btn-danger pull-right" style="margin-top: -6px; margin-left: 10px" ng-click="abortQuery()" ng-show="queryStarted">
-			   				<span class="glyphicon glyphicon-stop"></span> Stop Query
+			   			<button type="button" class="btn btn-sm btn-default pull-right" style="margin-top: -6px;margin-left: 10px" ng-click="clearQuery()" ng-hide="queryStarted">
+	  						<span class="glyphicon glyphicon-refresh"></span> Clear
+		   				</button>
+			   			<button type="button" class="btn btn-sm btn-danger pull-right" style="margin-top: -6px;margin-left: 10px" ng-click="abortQuery()" ng-show="queryStarted">
+			   					<span class="glyphicon glyphicon-stop"></span> Stop Query
 			   			</button>
-						<button class="btn btn-sm btn-warning pull-right" style="margin-top: -6px"  ng-disabled="queryForm.$invalid" ng-click="runQuery()" ng-hide="queryStarted">
-		  					<span class="glyphicon glyphicon-play"></span> Run Query
+						<button type="button" class="btn btn-sm btn-warning pull-right" style="margin-top: -6px"  ng-click="runQuery(queryForm.$invalid)" ng-hide="queryStarted">
+		  						<span class="glyphicon glyphicon-play"></span> Run Query
 			   			</button>
 					</div>	
 					
@@ -327,10 +330,10 @@
 				<div class="panel-heading" >
 				  Results  
 				  <span class="label label-success" ng-show="totalResults>0">{{totalResults}}</span>
-			   	  <button class="btn btn-sm btn-info pull-right" ng-show="hasResults" ng-click="loadIgvSession()" ng-disabled="totalDatatracks == 0" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-eye-open"></span> Display in IGV</button>
+			   	  <button type="button" class="btn btn-sm btn-info pull-right" ng-show="hasResults" ng-click="loadIgvSession()" ng-disabled="totalDatatracks == 0" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-eye-open"></span> Display in IGV</button>
 			   	  <a class="btn btn-sm btn-info pull-right" ng-show="hasResults" style="margin-top: -6px; margin-left: 10px" target="_self" ng-href="query/downloadAnalysis?codeResultType={{returnedResultType}}"><span class="glyphicon glyphicon-download"></span> Download</a>
-			   	  <button class="btn btn-sm btn-danger pull-right" ng-show="warnings != ''" ng-click="displayWarnings()" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-exclamation-sign"></span>Query</button>
-			   	  <button class="btn btn-sm btn-danger pull-right" ng-show="igvWarnings != ''" ng-click="displayWarnings('igv')" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-exclamation-sign"></span>IGV</button>
+			   	  <button type="button" class="btn btn-sm btn-danger pull-right" ng-show="warnings != ''" ng-click="displayWarnings()" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-exclamation-sign"></span> Query</button>
+			   	  <button type="button" class="btn btn-sm btn-danger pull-right" ng-show="igvWarnings != ''" ng-click="displayWarnings('igv')" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-exclamation-sign"></span> IGV</button>
 				</div>
 				
 				<div class="panel-body">
@@ -363,20 +366,20 @@
 							<th>Analysis</th>
 							<th>Type</th>
 							<th>Search</th>
-							<th ng-show="selectedAnalysisType.type == 'RNASeq'"><button class="btn btn-xs btn-primary" ng-click="copyGenes()"><span class="glyphicon glyphicon-share"></span></button>Gene</th>
+							<th ng-show="selectedAnalysisType.type == 'RNASeq'"><button type="button" class="btn btn-xs btn-primary" ng-click="copyGenes()"><span class="glyphicon glyphicon-share"></span></button>Gene</th>
 							<th>Conditions</th>
 							<th>
-								<button class="btn btn-xs btn-primary" ng-click="copyCoordinates()"><span class="glyphicon glyphicon-share"></span></button>
+								<button type="button" class="btn btn-xs btn-primary" ng-click="copyCoordinates()"><span class="glyphicon glyphicon-share"></span></button>
 								<span >Coordinates</span>
-								<button class="btn btn-xs btn-primary" ng-click="sortType='Coordinate';changeTablePosition()"><span class="glyphicon glyphicon-sort"></span></button>
+								<button type="button" class="btn btn-xs btn-primary" ng-click="sortType='Coordinate';changeTablePosition()"><span class="glyphicon glyphicon-sort"></span></button>
 							</th>
 							<th>
 								<span>FDR</span>
-								<button class="btn btn-xs btn-primary" ng-click="sortType='FDR';changeTablePosition()"><span class="glyphicon glyphicon-sort"></span></button>
+								<button type="button" class="btn btn-xs btn-primary" ng-click="sortType='FDR';changeTablePosition()"><span class="glyphicon glyphicon-sort"></span></button>
 							</th>
 							<th>
 								<span >Log2Ratio</span>
-								<button class="btn btn-xs btn-primary" ng-click="sortType='Log2Ratio';changeTablePosition()"><span class="glyphicon glyphicon-sort"></span></button>
+								<button type="button" class="btn btn-xs btn-primary" ng-click="sortType='Log2Ratio';changeTablePosition()"><span class="glyphicon glyphicon-sort"></span></button>
 							</th>
 			            </tr>
 			        </thead>
@@ -401,7 +404,7 @@
 			    </table>
 
 				<div class="row show-grid" ng-show="totalResults > 0">
-		    			<button ng-disabled="queryCurrentPage == 0" ng-click="queryCurrentPage=queryCurrentPage-1;changeTablePosition()" class="btn btn-mini col-lg-1"><span class="glyphicon glyphicon-chevron-left"></span> </button>
+		    			<button type="button" ng-disabled="queryCurrentPage == 0" ng-click="queryCurrentPage=queryCurrentPage-1;changeTablePosition()" class="btn btn-mini col-lg-1"><span class="glyphicon glyphicon-chevron-left"></span> </button>
 		    			<div class="center col-lg-10">
 		    			    <div class="row">
 			    			    <select ng-model="resultsPerPage" class="center" ng-change="changeTablePosition()">
@@ -417,7 +420,7 @@
 		    			    </div>
 		    			</div>
 		    			
-			    		<button ng-disabled="queryCurrentPage >= resultPages" ng-click="queryCurrentPage=queryCurrentPage+1;changeTablePosition()" class="btn btn-mini col-lg-1">
+			    		<button type="button" ng-disabled="queryCurrentPage >= resultPages" ng-click="queryCurrentPage=queryCurrentPage+1;changeTablePosition()" class="btn btn-mini col-lg-1">
 			    			<span class="glyphicon glyphicon-chevron-right"></span>
 			    		</button>
 	     	   	</div>

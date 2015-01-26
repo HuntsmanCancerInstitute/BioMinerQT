@@ -6,7 +6,7 @@ function ($scope, $modalInstance, filename, previewData, analysisType) {
 	$scope.previewData = previewData;
 	$scope.showList = []; //Indexes of selected columns.  Used for styling
 	$scope.allSet = false; //True if all expected columns are set
-	
+
 	//Hide/show instructions
 	$scope.alertHover = false;
 	 
