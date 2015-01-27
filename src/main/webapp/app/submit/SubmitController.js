@@ -526,8 +526,6 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 			promise = $scope.uploadDatatrack($scope.datatrack.file, promise);
 		}
 		
-		
-		
 		promise = promise.then(function(data) {
 			return $http({
 				url : "project/updateDataTrack",
@@ -719,6 +717,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 						}
 						
 					}).error(function(data) {
+						dialogs.error("Error Adding Datatrack",data.message);
 						$scope.datatrack.message = data.message;
 					});
 				});

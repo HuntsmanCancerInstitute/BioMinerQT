@@ -33,6 +33,7 @@ import hci.biominer.util.GenomeBuilds;
 import hci.biominer.util.IntervalTrees;
 import hci.biominer.util.ModelUtil;
 import hci.biominer.util.PreviewMap;
+import hci.biominer.util.VCFUtilities;
 //Services
 import hci.biominer.service.ProjectService;
 //import hci.biominer.service.AnalysisService;
@@ -678,6 +679,10 @@ public class SubmitController {
 			subDirectory.mkdir();
 		}
 		File localFile =  new File(subDirectory,filename);
+		File tabixFile = new File(subDirectory,filename.substring(0,filename.length()-3));
+		File tabixIndex = new File(subDirectory,filename + ".tbi");
+		String tabixPath = BiominerProperties.getProperty("tabixPath");
+		
 		FileMeta fm = new FileMeta();
 		
 		//If first file, set append flag to false and delete existing files with the same name.
@@ -700,6 +705,16 @@ public class SubmitController {
 					fm.setDirectory(filename);
 					fm.setFinished(true);
 					
+					if (filename.endsWith(".vcf.gz")) {
+						try {
+							VCFUtilities.unzipTabix(localFile, tabixFile, tabixPath);
+							VCFUtilities.createTabix(tabixFile, localFile, tabixPath);
+						} catch (Exception ex) {
+							throw new Exception("Tabix creation or indexing failed: " + ex.getMessage());
+						}
+						
+					}
+					
 			    	//Create secondary objects
 			    	Project project = this.projectService.getProjectById(idProject);
 			    	
@@ -707,7 +722,9 @@ public class SubmitController {
 			    	DataTrack dataTrack = new DataTrack(dtname, filename, project);
 			    	
 			    	//Update sample
-			    	this.dataTrackService.addDataTrack(dataTrack);					
+			    	this.dataTrackService.addDataTrack(dataTrack);	
+			    	
+			    	
 				}
 			
 				fm.setState(FileStateEnum.SUCCESS.toString());
@@ -726,6 +743,14 @@ public class SubmitController {
 			//delete file
 			if (localFile.exists()) {
 				localFile.delete();
+			}
+			
+			if (tabixFile.exists()) {
+				tabixFile.delete();
+			}
+			
+			if (tabixIndex.exists()) {
+				tabixIndex.delete();
 			}
 			
 			//set error message
@@ -755,6 +780,10 @@ public class SubmitController {
 			subDirectory.mkdir();
 		}
 		File localFile =  new File(subDirectory,filename);
+		File tabixFile = new File(subDirectory,filename.substring(0,filename.length()-3));
+		File tabixIndex = new File(subDirectory,filename + ".tbi");
+		String tabixPath = BiominerProperties.getProperty("tabixPath");
+		
 		FileMeta fm = new FileMeta();
 		
 		//If first file, set append flag to false and delete existing files with the same name.
@@ -778,6 +807,15 @@ public class SubmitController {
 					fm.setFinished(true);
 				}
 			
+				if (filename.endsWith(".vcf.gz")) {
+					try {
+						VCFUtilities.unzipTabix(localFile, tabixFile, tabixPath);
+						VCFUtilities.createTabix(tabixFile, localFile, tabixPath);
+					} catch (Exception ex) {
+						throw new Exception("Tabix creation or indexing failed: " + ex.getMessage());
+					}
+					
+				}
 				fm.setState(FileStateEnum.SUCCESS.toString());
 				response.setStatus(200);
 			} else {
@@ -796,6 +834,15 @@ public class SubmitController {
 				localFile.delete();
 			}
 			
+			if (tabixFile.exists()) {
+				tabixFile.delete();
+			}
+			
+			if (tabixIndex.exists()) {
+				tabixIndex.delete();
+			}
+			
+
 			//set error message
 			fm.setMessage(ex.getMessage());
 			fm.setState(FileStateEnum.FAILURE.toString());
