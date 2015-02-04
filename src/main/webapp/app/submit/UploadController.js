@@ -299,7 +299,7 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 		 ********************/
 		$scope.setFilenames = function() {
 			var modalInstance = $modal.open({
-	    		templateUrl: 'app/submit/FilenameEditor.html',
+	    		templateUrl: 'app/submit/filenameEditor.html',
 	    		controller: 'FilenameEditorController',
 	    		windowClass: 'filename-dialog',
 	    		resolve: {
