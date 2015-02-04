@@ -429,7 +429,7 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
 	    	$http({
     	    	method: 'PUT',
     	    	url: 'lab/modifylab',
-    	    	params: {first:lab.first, last:lab.last, idLab:lab.idLab}
+    	    	params: {first:lab.first, last:lab.last, email:lab.email, phone:lab.phone, idLab:lab.idLab}
     	    }).success(function(data,status) {
     	    	$scope.loadLabs();
     	    });
@@ -642,7 +642,7 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
 	    	$http({
     	    	method: 'PUT',
     	    	url: 'lab/addlab',
-    	    	params: {first:lab.first,last:lab.last}
+    	    	params: {first:lab.first,last:lab.last,email:lab.email, phone:lab.phone}
     	    }).success(function(data,status) {
     	    	$scope.loadLabs();
     	    });
