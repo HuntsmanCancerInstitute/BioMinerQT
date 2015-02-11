@@ -145,12 +145,12 @@
    					     	<label class="btn btn-toggle" ng-model="isReverse" btn-radio="false" >Intersect</label>
         					<label class="btn btn-toggle" ng-model="isReverse" btn-radio="true">Don't Intersect</label>
     					</div>
-    					<span class="btn btn-primary pull-right fileinput-button col-md-3" ng-show="intersectionTarget == 'REGION'">
+    					<span class="btn btn-primary pull-right fileinput-button col-md-4" ng-show="intersectionTarget == 'REGION'">
 					        <i class="glyphicon glyphicon-upload"></i>
 					        <span>Import Regions</span>
 					        <input type="file" ng-file-select="loadRegions($files)">            
 					    </span>
-					    <span class="btn btn-primary pull-right fileinput-button col-md-3" ng-show="intersectionTarget == 'GENE'">
+					    <span class="btn btn-primary pull-right fileinput-button col-md-4" ng-show="intersectionTarget == 'GENE'">
 					        <i class="glyphicon glyphicon-upload"></i>
 					        <span>Import Genes</span>
 					        <input type="file" ng-file-select="loadGenes($files)">            
@@ -160,36 +160,35 @@
 				
           	 		<!-- Regions-->
 					<div class="form-group" ng-show="codeResultType!='GENE' && codeResultType == 'REGION'">
-					    <div class="col-md-3" style="padding-right: 0px;">
+					    <div class="col-md-2" style="padding-right: 0px;">
 					      <div class="radio" required>
 						   		<label for="radio-region">
 							    	<input name="radios-region-gene" id="radio-region" ng-model="intersectionTarget" value="REGION" type="radio"> Regions
 						   		</label>
 						  </div>
 					    </div>
-					    <div class="col-md-9" ng-show="intersectionTarget == 'REGION'" style="padding-left: 1px; padding-right: 0px;">
+					    <div class="col-md-10" ng-show="intersectionTarget == 'REGION'" style="padding-left: 1px; padding-right: 0px;">
 						    <div class="col-md-7"  >
 					    		<textarea name="regionField" ng-model="regions" class="form-control" placeholder="chr1:4500-8900" ng-required="intersectionTarget=='REGION'"/>
 					    		<span class="label label-danger" ng-show="queryForm.regionField.$error.required && showValidation">Required when 'region' intersections are specified</span>
 					    	</div>
-					    	<div class="col-md-4">
-						    	&nbsp;&nbsp;+/-
-						    	<input type="text" ng-model="regionMargins" style="display: inline; max-width: 60px;" class="form-control" placeholder="1000"/> 
-						    	bp
+					    	<div class="col-md-5">
+						    	&nbsp;&nbsp;Padding +/- bp
+						    	<input type="text" ng-model="regionMargins" style="display: inline;" class="form-control" placeholder="1000"/> 
 					    	</div>
 					    </div>
 					</div>
 							 
           	 		<!-- Genes-->
 					<div class="form-group" ng-show="codeResultType=='GENE' || codeResultType=='REGION'">
-						<div class="col-md-3" style="padding-right: 0px;" >
+						<div class="col-md-2" style="padding-right: 0px;" >
 					      <div class="radio">
 						   		<label for="radio-gene">
 							    	<input name="radios-region-gene" id="radio-gene"  ng-model="intersectionTarget" value="GENE" type="radio"> Genes
 						   		</label>
 						  </div>
 						</div>
-					 	<div class="col-md-9" ng-show="intersectionTarget == 'GENE'" style="padding-left: 1px; padding-right: 0px;">
+					 	<div class="col-md-10" ng-show="intersectionTarget == 'GENE'" style="padding-left: 1px; padding-right: 0px;">
  							<div class="col-md-7">
  								<angucomplete-alt id="test" minlength="2" placeholder="Search for gene.." pause="400" selected-object="searchGenes" local-data="hugoList" title-field="geneName" search-fields="geneName" input-class="form-control" match-class="highlight" clear-selected="true"/>
  							</div>
@@ -198,9 +197,9 @@
 					    		<textarea name="geneField" ng-model="genes" class="form-control" placeholder="ACTB, GAPDH, ..." ng-required="intersectionTarget=='GENE'"/>
 					    		<span class="label label-danger" ng-show="queryForm.geneField.$error.required && showValidation">Required when 'gene' intersections are specified</span>
 					    	</div>
-					    	<div class="col-md-4">
-						    	&nbsp;&nbsp;+/-
-						    	<input type="text" ng-model="geneMargins" style="display: inline; max-width: 60px;"class="form-control" placeholder="1000"/>
+					    	<div class="col-md-5">
+						    	&nbsp;&nbsp;Padding +/- bp
+						    	<input type="text" ng-model="geneMargins" style="display: inline;"class="form-control" placeholder="1000"/>
 					    	</div>
 					    	
 					    	 
@@ -229,7 +228,7 @@
 				  	  		<label class="btn btn-toggle" ng-model="codeThresholdFDRComparison" btn-radio="'LT'" >&lt;</label>
   					     	
    					  </div>
-					  <input id="textinput" class="col-md-3 form-control" style="display: inline; max-width: 120px" ng-model="thresholdFDR" name="textinput" placeholder=".05"  type="number" step="any">
+					  <input id="textinput" class="col-md-3 form-control" style="display: inline; max-width: 120px" ng-model="thresholdFDR" name="textinput" placeholder=".05"  type="number" step="0.1">
 					</div>        
 					
            	 		
@@ -242,7 +241,7 @@
         					<label class="btn btn-toggle" ng-model="codeThresholdLog2RatioComparison" btn-radio="'LT'"     >&lt;</label>
     					</div>
 					    
-						<input id="textinput" class="col-md-3 form-control"   style="display: inline; max-width: 120px" ng-model="thresholdLog2Ratio" name="textinput" placeholder="1.0"  type="number", step="any">
+						<input id="textinput" class="col-md-3 form-control"   style="display: inline; max-width: 120px" ng-model="thresholdLog2Ratio" name="textinput" placeholder="1.0"  type="number" step="0.1">
 					</div>        
 
 					
@@ -345,7 +344,7 @@
 					</div>
 				</div>	
 
-			    <table class="table table-striped table-hover" style="width: 100%;" ng-show="hasResults">
+			    <table class="table table-striped table-hover col-md-12"  ng-show="hasResults">
 <!-- 			    	<colgroup> -->
 <!-- 			    	    <col width="0%" /> -->
 <!-- 				        <col width="0%" /> -->

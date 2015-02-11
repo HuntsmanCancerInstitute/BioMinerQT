@@ -24,7 +24,7 @@
 		$routeProvider.when('/submit', {
 		      templateUrl: 'app/submit/submit.html',
 		      controller: 'SubmitController',
-		      restrict: 'authenticated'
+		      restrict: 'authorized'
 		});
 
 

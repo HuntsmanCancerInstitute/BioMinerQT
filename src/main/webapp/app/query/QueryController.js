@@ -384,6 +384,7 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 	$scope.clearQuery = function() {
 		console.log("Clearing");
 		$scope.hasResults = false;
+		$scope.showValidation = false;
 		$scope.queryForm.$setPristine();
 		
 		$scope.querySummary = [];
@@ -525,6 +526,8 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 
 		}
 		
+		console.log($scope.isThresholdBasedQuery);
+		
 
 		// intersect
 		var intersectSummary = "";
@@ -542,7 +545,7 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 				
 			} else if ($scope.intersectionTarget == 'GENE') {
 				// Gene based query
-				if ($scope.genes.length > 0 && $scope.regions.length < 100) {
+				if ($scope.genes.length > 0 && $scope.genes.length < 100) {
 					$scope.querySummary.push(intersectSummary + "GENES   " + $scope.genes + " +/- " + $scope.geneMargins);	
 				}
 				
@@ -551,13 +554,20 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 			}
 		}
 		if ($scope.isThresholdBasedQuery) {
+			
 			var thresholdQuery = "";
-			if ($scope.thresholdFDR != null && $scope.thresholdFDR.length > 0) {
+			
+			if ($scope.thresholdFDR != null && $scope.thresholdFDR != undefined && $scope.thresholdFDR != "") {
 				thresholdQuery = "THAT EXCEED THRESHOLD of  " + "FDR " + $scope.mapComparison[$scope.codeThresholdFDRComparison] + ' ' + $scope.thresholdFDR;
 			}
-			if ($scope.thresholdLog2Ratio != null && $scope.thresholdLog2Ratio.length > 0) {
-				thresholdQuery = thresholdQuery + ($scope.thresholdFDR.length > 0 ? " AND ": "THAT EXCEED THRESHOLD   ");
-				$scope.querySummary.push(thresholdQuery + "Log2Ratio " + $scope.mapComparison[$scope.codeThresholdLog2RatioComparison] + ' ' + $scope.thresholdLog2Ratio);
+			if ($scope.thresholdLog2Ratio != null && $scope.thresholdLog2Ratio != undefined && $scope.thresholdLog2Ratio != "") {
+				thresholdQuery = thresholdQuery + (thresholdQuery.length > 0 ? " AND ": " THAT EXCEED THRESHOLD   ");
+				thresholdQuery = thresholdQuery + "Log2Ratio " + $scope.mapComparison[$scope.codeThresholdLog2RatioComparison] + ' ' + $scope.thresholdLog2Ratio;
+				
+			}
+			
+			if (thresholdQuery.length > 0) {
+				$scope.querySummary.push(thresholdQuery);
 			}
 		} else {
 			var variantQuery = "";
@@ -619,6 +629,7 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 			return;
 		}
 		
+		$scope.warnings = "";
 		$scope.showValidation = false;
 		ngProgress.start();
 		$scope.hasResults = false;
@@ -687,7 +698,7 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 		$scope.returnedResultType = $scope.codeResultType;
 		$scope.totalResults = 0;
 		
-		console.log($scope.isReverse);
+		
 		// Run the query on the server.
 		$http({
 			url: "query/run",

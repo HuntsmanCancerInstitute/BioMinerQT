@@ -1,3 +1,12 @@
+input[type='number'] {
+    -moz-appearance:textfield;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+}
+
 .table-container
 {
 	width: 100%;
@@ -58,26 +67,26 @@
 }
 
 
-@media (min-width: 768px) {
-  .navbar-form {
-    line-height: 40px;
-  }
-}
+/* @media (min-width: 768px) { */
+/*   .navbar-form { */
+/*     line-height: 40px; */
+/*   } */
+/* } */
 
-@media (max-width: 767px) {
-.navbar-nav > li > a {
-    line-height: 20px;
-    padding-top: 10px;
-    padding-bottom: 10px;
+/* @media (max-width: 767px) { */
+/* .navbar-nav > li > a { */
+/*     line-height: 20px; */
+/*     padding-top: 10px; */
+/*     padding-bottom: 10px; */
     
-}
-}
-@media (min-width: 768px) {
-.navbar-nav {
-      float: left;
-	  margin: 0;
-    }
-}
+/* } */
+/* } */
+/* @media (min-width: 768px) { */
+/* .navbar-nav { */
+/*       float: left; */
+/* 	  margin: 0; */
+/*     } */
+/* } */
 
 .navbar-brand {
 padding-top: 13px;
@@ -260,7 +269,8 @@ label {
 body {
      font-family:  'Muli', Helvetica, Arial, sans-serif!important;	
      font-weight: 400 !important;
-      padding-top: 75px;   
+     padding-top: 75px;
+
      
 }
 

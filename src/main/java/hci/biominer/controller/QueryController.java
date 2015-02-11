@@ -463,7 +463,7 @@ public class QueryController {
     		intervalsToCheck = ip.parseIntervals("", "", 0, genome);
     	} else if (codeResultType.equals("GENE") || (codeResultType.equals("REGION") && target.equals("GENE"))) {
     		List<List<String>> parsed = null;
-    		if (genes.startsWith("<Load genes from file: ")) {
+    		if (genes.startsWith("<LOAD GENES FROM FILE: ")) {
     			if (geneDict.containsKey(username)) {
     				String loadedGenes = geneDict.get(username);
         			parsed = this.getGeneIntervals(loadedGenes, genome, "TxBoundary",ob);
@@ -480,7 +480,7 @@ public class QueryController {
         		intervalsToCheck = ip.parseIntervals(this.convertListToString(parsed.get(0)), this.convertListToString(parsed.get(1)), geneMargins, genome);
     		} 
     	} else if (codeResultType.equals("REGION"))  {
-    		if (regions.startsWith("<Load regions from file: ")) {
+    		if (regions.startsWith("<LOAD REGIONS FROM FILE: ")) {
     			if (regionDict.containsKey(username)) {
     				String loadedRegions = regionDict.get(username);
         			intervalsToCheck = ip.parseIntervals(loadedRegions, loadedRegions, regionMargins, genome);
