@@ -104,7 +104,7 @@ public class SecurityController {
 					
 			// send the email
 			String email = user.getEmail();
-			result = "Instructions on how to reset your password have been emailed to you. ";
+			result = "Instructions on how to reset your password have been emailed to you. (Check junk email if not received.)";
 			
 			String url = "http://localhost:8080";
 			
