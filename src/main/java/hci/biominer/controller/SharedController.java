@@ -184,6 +184,12 @@ public class SharedController {
 				result = "Unable to send problem report, error: " + status;
 			}
 		
+		// send an email to the user, so they know we got the problem notice
+		subject = "BioMiner issue reported " + today + ". Thank you for your feedback.";
+		emails[0] = useremail;
+		status = MailUtil.sendMail(biominersupport,emails,body,subject);
+		
+		
 		//System.out.println ("[/reportissue] returning result: " + result);
 		return result;
 	}
