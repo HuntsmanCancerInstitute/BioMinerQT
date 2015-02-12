@@ -1,8 +1,8 @@
 var login = angular.module("login",['services'])
 
-.controller("LoginController", ['$scope','$http','$rootScope','$location','$interval','DynamicDictionary',
+.controller("LoginController", ['$scope','$http','$rootScope','$location','$interval','$route','DynamicDictionary',
                                                       
-	function($scope, $http, $rootScope, $location, $interval, DynamicDictionary) {
+	function($scope, $http, $rootScope, $location, $interval, $route, DynamicDictionary) {
 		$scope.user = {username : "", password: "", passwordconfirm: "", guid: ""};
 		$scope.remember = false;
 		$scope.message = null;
@@ -24,8 +24,6 @@ var login = angular.module("login",['services'])
 
 	
 		$scope.submitIssue = function() {
-		//console.log("before calling reportIssue, email: ");
-		//console.log($scope.issueEmail);
 
 			$http({
 	    		method: 'POST',
@@ -45,6 +43,8 @@ var login = angular.module("login",['services'])
 		
 		$scope.clear = function () {
             $location.path($rootScope.lastLocation);
+			$route.reload();
+
 		};
 		
 		$scope.submitChange = function() {
@@ -70,9 +70,6 @@ var login = angular.module("login",['services'])
 		$scope.submitReset = function() {
 		$scope.theUrl = $location.absUrl();
 
-		//console.log("before calling resetpassword, username: ");
-		//console.log($scope.user.username);
-		//console.log($scope.theUrl);
 			$http({
 	    		method: 'POST',
 	    		url: 'security/resetpassword',
@@ -84,7 +81,8 @@ var login = angular.module("login",['services'])
         			$interval.cancel($rootScope.checkInterval);
         		}
 
-        		//$location.path($rootScope.lastLocation);
+        		$location.path("/dashboard");
+        		$route.reload();
 
 	    	});
 		};		
@@ -114,6 +112,10 @@ var login = angular.module("login",['services'])
 					}
 					$rootScope.admin = admin;
 		        	$location.path($rootScope.lastLocation);
+		        	if (angular.equals($rootScope.lastLocation,"/login")) {
+		        		$location.path("/dashboard");
+		        		}
+		        	$route.reload();
 	        	} else {
 	        		//console.log("no user, no checking");
 	        	}
