@@ -17,6 +17,8 @@ angular.module('navbar').controller("NavbarController",['$modal','$scope','$http
 				method: "POST",
 			}).success(function(data) {
 				$rootScope.isAuthenticated();
+				$location.path("/dashboard");
+				$route.reload();
 			});
 		};
 		
@@ -87,5 +89,53 @@ angular.module('navbar').controller("NavbarController",['$modal','$scope','$http
 	    		}
 	    	});
 		};
+		
+$scope.openEditUserWindow = function(e) {
+    	var modalInstance = $modal.open({
+    		templateUrl: 'app/useradmin/userWindow.html',
+    		controller: 'UserController',
+    		resolve: {
+    			labList: function() {
+    				return $scope.labs;
+    			},
+    			instituteList: function() {
+    				return $scope.institutes;
+    			},
+    			userData: function () {
+    				e["password"] = "placeholder"; 
+    				return e;
+    			},
+    			title: function() {
+    				return "Edit";
+    			},
+    			bFace: function() {
+    				return "Update";
+    			}
+    		}
+    	});
+    	
+    	modalInstance.result.then(function (user) {
+    		//Create a list of lab ids
+	    	var lids = [];
+	    	var iids = [];
+	    	
+	    	for (var i=0; i<user.labs.length;i++) {
+	    		lids.push(user.labs[i].idLab);
+	    	}
+	    	
+	    	for (var i=0;i<user.institutes.length;i++) {
+	    		iids.push(user.institutes[i].idInstitute);
+	    	}
+	    	$http({
+    	    	method: 'POST',
+    	    	url: 'user/modifyuser',
+    	    	params: {first:user.first,last:user.last,username:user.username,password:user.password,email:user.email,
+    	    		phone:user.phone,admin:$rootScope.admin,lab:lids,institutes:iids,idUser:user.idUser}
+    	    }).success(function(data,status) {
+    	    });
+	    	
+	    });
+    };
+		
 		                          	
 }]);
