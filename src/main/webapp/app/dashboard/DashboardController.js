@@ -22,6 +22,9 @@ function($rootScope, $scope, $http) {
     $scope.bisseq = {};
     $scope.bisseq.data = [];
     
+    $scope.variant = {};
+    $scope.variant.data = [];
+    
     $scope.getChipSeq = function() {
     	$http({
     		url: "dashboard/getCount",
@@ -52,16 +55,28 @@ function($rootScope, $scope, $http) {
     	});
     };
     
+    $scope.getVariant = function() {
+    	$http({
+    		url: "dashboard/getCount",
+    		method: "POST",
+    		params: {type: "Variant"}
+    	}).success(function(data) {
+    		$scope.variant.data = data;
+    	});
+    }
+    
   
     $scope.refresh = function() {
     	$scope.getChipSeq();
     	$scope.getRnaSeq();
     	$scope.getBisSeq();
+    	$scope.getVariant();
     };
     
     $scope.getChipSeq();
     $scope.getRnaSeq();
     $scope.getBisSeq();
+    $scope.getVariant();
     
 
     $rootScope.helpMessage = "<p>Placeholder for dashboard help.</p>";
@@ -102,6 +117,23 @@ function($rootScope, $scope, $http) {
             }
         };
     $scope.bisseq.options = {
+            series: {
+                pie: {
+                    show: true,
+                    radius: 1,
+                    label: {
+                        radius: 2 / 3,
+                        formatter: function(label, series) {
+                            return '<div class="pie">' + label + ': ' + series.data[0][1] + '<br>(' + Math.round(series.percent) + '%)</div>';
+                        }
+                    }
+                }
+            },
+            legend: {
+                show: false
+            }
+        };
+    $scope.variant.options = {
             series: {
                 pie: {
                     show: true,

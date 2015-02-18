@@ -7,7 +7,7 @@
 </div>
 
 <div class="row">
-	<div class="col-lg-4">
+	<div class="col-lg-3">
 		<div class="panel panel-primary">
 		  <div class="panel-heading">
 		    <h3 class="panel-title">RNA Seq Experiments {{getCount.data[0]}}</h3>
@@ -21,7 +21,7 @@
 		  </div>
 		</div> 
 	</div>
-	<div class="col-lg-4">
+	<div class="col-lg-3">
 		<div class="panel panel-primary">
 		  <div class="panel-heading">
 		    <h3 class="panel-title">Chip Seq Experiments {{getCount.data[0]}}</h3>
@@ -35,7 +35,7 @@
 		  </div>
 		</div> 
 	</div>
-	<div class="col-lg-4">
+	<div class="col-lg-3">
 		<div class="panel panel-primary">
 		  <div class="panel-heading">
 		    <h3 class="panel-title">Bisulfite Seq Experiments {{getCount.data[0]}}</h3>
@@ -49,7 +49,20 @@
 		  </div>
 		 </div>
 	</div> 
-	
+	<div class="col-lg-3">
+		<div class="panel panel-primary">
+		  <div class="panel-heading">
+		    <h3 class="panel-title">Variant Experiments {{getCount.data[0]}}</h3>
+		  </div>
+		  <div id="content">
+		     <div class="chart-container"> 
+		        <div class="chart-placeholder" id="variant_chart" data-chart="pie" data-flot-chart data-my-model="variant">
+		            <p>Pie chart should display here.</p>
+		        </div>
+			</div> 
+		  </div>
+		 </div>
+	</div>
 </div> 
 
 

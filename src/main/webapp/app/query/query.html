@@ -28,15 +28,18 @@
      	
             <div class="panel panel-default">
 				<div class="panel-heading">
-				    Compose Query 				   			
+				    Compose Query
+				    <button type="button" class="btn btn-sm btn-primary pull-right" style="margin-top: -6px;margin-left: 10px" ng-click="loadExistingData()" ng-hide="queryStarted || loggedUser == null">	
+				    	<span class="glyphicon glyphicon-cloud"></span> Load Last
+				    </button> 	   			
 					<button type="button" class="btn btn-sm btn-default pull-right" style="margin-top: -6px;margin-left: 10px" ng-click="clearQuery()" ng-hide="queryStarted">
-	  						<span class="glyphicon glyphicon-refresh"></span> Clear
+	  					<span class="glyphicon glyphicon-refresh"></span> Clear
 		   			</button>
 		   			<button type="button" class="btn btn-sm btn-danger pull-right" style="margin-top: -6px;margin-left: 10px" ng-click="abortQuery()" ng-show="queryStarted">
-		   					<span class="glyphicon glyphicon-stop"></span> Stop Query
+		   				<span class="glyphicon glyphicon-stop"></span> Stop Query
 		   			</button>
 					<button type="button" class="btn btn-sm btn-warning pull-right" style="margin-top: -6px"  ng-click="runQuery(queryForm.$invalid)" ng-hide="queryStarted">
-	  						<span class="glyphicon glyphicon-play"></span> Run Query
+	  					<span class="glyphicon glyphicon-play"></span> Run Query
 		   			</button>
 				</div>
 	  	   
@@ -302,6 +305,9 @@
 
 					
 					<div class="btn-toolbar" role="toolbar" >
+						<button type="button" class="btn btn-sm btn-primary pull-right" style="margin-top: -6px;margin-left: 10px" ng-click="loadExistingData()" ng-hide="queryStarted || loggedUser == null">	
+				    		<span class="glyphicon glyphicon-cloud"></span> Load Last
+				    	</button> 
 			   			<button type="button" class="btn btn-sm btn-default pull-right" style="margin-top: -6px;margin-left: 10px" ng-click="clearQuery()" ng-hide="queryStarted">
 	  						<span class="glyphicon glyphicon-refresh"></span> Clear
 		   				</button>

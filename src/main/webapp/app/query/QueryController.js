@@ -1136,11 +1136,12 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 	});
 	
 	$scope.loadExistingResults = function() {
+		ngProgress.start();
 		$http({
 			method: "GET",
 			url: "query/loadExistingResults"
 		}).success(function(data) {
-			
+			ngProgress.complete();
 			if (data != null && data != "") {
 				$scope.queryResults = data.resultList;
 				$scope.resultPages = data.pages;
@@ -1150,6 +1151,7 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 				$scope.hasResults = true;
 			}
 		}).error(function(data) {
+			ngProgress.reset();
 			$scope.hasResults = false;
 			$scope.resultPages = 0;
 			$scope.totalResults = 0;
@@ -1259,11 +1261,10 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 	prepList.push($scope.loadAnalyses());
 	prepList.push($scope.loadSampleSources());
 	
-	//When all dictionaries are loaded, load settings
-	$q.all(prepList).then(function() {
+	$scope.loadExistingData = function() {
 		$scope.loadExistingSettings();
 		$scope.loadExistingResults();
-	});
+	}
 	
 
 	$scope.loadGenotypeList();
