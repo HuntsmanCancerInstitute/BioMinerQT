@@ -29,9 +29,7 @@
             <div class="panel panel-default">
 				<div class="panel-heading">
 				    Compose Query
-				    <button type="button" class="btn btn-sm btn-primary pull-right" style="margin-top: -6px;margin-left: 10px" ng-click="loadExistingData()" ng-hide="queryStarted || loggedUser == null">	
-				    	<span class="glyphicon glyphicon-cloud"></span> Load Last
-				    </button> 	   			
+				     			
 					<button type="button" class="btn btn-sm btn-default pull-right" style="margin-top: -6px;margin-left: 10px" ng-click="clearQuery()" ng-hide="queryStarted">
 	  					<span class="glyphicon glyphicon-refresh"></span> Clear
 		   			</button>
@@ -305,9 +303,6 @@
 
 					
 					<div class="btn-toolbar" role="toolbar" >
-						<button type="button" class="btn btn-sm btn-primary pull-right" style="margin-top: -6px;margin-left: 10px" ng-click="loadExistingData()" ng-hide="queryStarted || loggedUser == null">	
-				    		<span class="glyphicon glyphicon-cloud"></span> Load Last
-				    	</button> 
 			   			<button type="button" class="btn btn-sm btn-default pull-right" style="margin-top: -6px;margin-left: 10px" ng-click="clearQuery()" ng-hide="queryStarted">
 	  						<span class="glyphicon glyphicon-refresh"></span> Clear
 		   				</button>
@@ -339,6 +334,9 @@
 			   	  <a class="btn btn-sm btn-info pull-right" ng-show="hasResults" style="margin-top: -6px; margin-left: 10px" target="_self" ng-href="query/downloadAnalysis?codeResultType={{returnedResultType}}"><span class="glyphicon glyphicon-download"></span> Download</a>
 			   	  <button type="button" class="btn btn-sm btn-danger pull-right" ng-show="warnings != ''" ng-click="displayWarnings()" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-exclamation-sign"></span> Query</button>
 			   	  <button type="button" class="btn btn-sm btn-danger pull-right" ng-show="igvWarnings != ''" ng-click="displayWarnings('igv')" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-exclamation-sign"></span> IGV</button>
+			   	  <button type="button" class="btn btn-sm btn-primary pull-right" style="margin-top: -6px;margin-left: 10px" ng-click="loadExistingData()" ng-hide="loggedUser == null || hasResults">	
+				   	<span class="glyphicon glyphicon-cloud"></span> Load Last
+				  </button> 	 
 				</div>
 				
 				<div class="panel-body">

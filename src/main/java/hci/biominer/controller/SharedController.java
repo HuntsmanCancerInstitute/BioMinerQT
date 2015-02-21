@@ -12,6 +12,7 @@ import hci.biominer.model.SampleType;
 import hci.biominer.model.access.Institute;
 import hci.biominer.model.access.User;
 import hci.biominer.service.AnalysisTypeService;
+import hci.biominer.service.DashboardService;
 import hci.biominer.service.GeneAnnotationService;
 import hci.biominer.service.GenotypeService;
 import hci.biominer.service.InstituteService;
@@ -74,6 +75,9 @@ public class SharedController {
   
     @Autowired
     private GeneAnnotationService geneAnnotationService;
+    
+    @Autowired
+	private DashboardService dashboardService;
 
 
 	@RequestMapping(value="getAllInstitutes",method=RequestMethod.GET)
@@ -189,6 +193,9 @@ public class SharedController {
 		emails[0] = useremail;
 		status = MailUtil.sendMail(biominersupport,emails,body,subject);
 		
+		//update database
+		this.dashboardService.increaseReports();
+		this.dashboardService.updateLastReportDate(today.getTime());
 		
 		//System.out.println ("[/reportissue] returning result: " + result);
 		return result;

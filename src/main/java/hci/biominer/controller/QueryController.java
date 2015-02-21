@@ -60,6 +60,7 @@ import hci.biominer.model.genome.Transcript;
 import hci.biominer.model.intervaltree.Interval;
 import hci.biominer.model.intervaltree.IntervalTree;
 import hci.biominer.model.ExternalGene;
+import hci.biominer.service.DashboardService;
 import hci.biominer.service.OrganismBuildService;
 import hci.biominer.service.LabService;
 import hci.biominer.service.UserService;
@@ -107,6 +108,9 @@ public class QueryController {
     
     @Autowired
     private ExternalGeneService externalGeneService;
+    
+    @Autowired
+    private DashboardService dashboardService;
     
     private StringBuilder warnings = new StringBuilder("");
     
@@ -584,9 +588,13 @@ public class QueryController {
     	System.out.println("Used analyses " + usedAnalyses.size());
     	System.out.println("Used data tracks " + usedDataTracks.keySet().size());
     	
+    	//update database
+    	Date queryDate = new Date();
+    	this.dashboardService.updateQueryDate(queryDate.getTime());
+    	this.dashboardService.increaseQuery();
+    	
     	//Create result object
     	QueryResultContainer qrcSub = qrc.getQrcSubset(resultsPerPage, 0, sortType);
-    	
     	return qrcSub;	
     }
     
@@ -852,6 +860,8 @@ public class QueryController {
     	if (igr.getError() != null) {
     		response.setStatus(405);
     	}
+    	
+    	this.dashboardService.increaseIgv();
     	
     	return igr;
     	

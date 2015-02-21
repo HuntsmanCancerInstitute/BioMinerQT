@@ -11,8 +11,10 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 
+import hci.biominer.service.DashboardService;
 import hci.biominer.util.ErrorModel;
 
 import org.apache.shiro.authz.UnauthorizedException;
@@ -20,6 +22,8 @@ import org.apache.shiro.authz.UnauthenticatedException;
 
 @ControllerAdvice
 public class ExceptionController {
+	@Autowired
+	private DashboardService dashboardService;
 	
 	@ExceptionHandler(UnauthorizedException.class)
 	@ResponseStatus(HttpStatus.UNAUTHORIZED)
@@ -54,6 +58,11 @@ public class ExceptionController {
 		Date today = Calendar.getInstance().getTime();        
 		String errorTime = df.format(today);
 		em.setErrorTime(errorTime);
+		
+		//update database
+		dashboardService.increaseCrashes();
+		dashboardService.updateLastCrashDate(today.getTime());
+		
 		
 		return em;
 	}

@@ -26,5 +26,6 @@
         <mapping class="hci.biominer.model.access.Permission"/>
         <mapping class="hci.biominer.model.BiominerGene"/>
         <mapping class="hci.biominer.model.ExternalGene"/>
+        <mapping class="hci.biominer.model.Dashboard"/>
     </session-factory>
 </hibernate-configuration>

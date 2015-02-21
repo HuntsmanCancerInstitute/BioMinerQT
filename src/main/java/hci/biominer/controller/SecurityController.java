@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import hci.biominer.dao.UserDAO;
 import hci.biominer.model.access.User;
+import hci.biominer.service.DashboardService;
 import hci.biominer.service.UserService;
 import hci.biominer.util.BiominerProperties;
 import hci.biominer.util.LoginModel;
@@ -44,6 +45,9 @@ public class SecurityController {
 	
 	@Autowired
 	private UserController userController;
+	
+	@Autowired
+	private DashboardService dashboardService;
 
 	private Long timeout = null;
 	
@@ -78,6 +82,7 @@ public class SecurityController {
 			else {
 				lm.setUser(user);
 				lm.setTimeout(timeout);
+				dashboardService.increaseLogins();
 			}
 		} catch (AuthenticationException e) {
 			e.printStackTrace();

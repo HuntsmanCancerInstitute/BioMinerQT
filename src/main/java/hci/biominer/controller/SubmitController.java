@@ -34,6 +34,7 @@ import hci.biominer.util.IntervalTrees;
 import hci.biominer.util.ModelUtil;
 import hci.biominer.util.PreviewMap;
 import hci.biominer.util.VCFUtilities;
+import hci.biominer.service.DashboardService;
 //Services
 import hci.biominer.service.ProjectService;
 //import hci.biominer.service.AnalysisService;
@@ -120,6 +121,8 @@ public class SubmitController {
     @Autowired
     private InstituteService instituteService;
     
+    @Autowired
+    private DashboardService dashboardService;
    
     /***************************************************
 	 * URL: /project/createProject
@@ -429,6 +432,10 @@ public class SubmitController {
     	//Assign files
     	FileUpload fileUpload = this.fileUploadService.getFileUploadById(idFileUpload);
     	analysis.setFile(fileUpload);
+    	
+    	//Update database
+    	Date submitDate = new Date();
+    	this.dashboardService.updateSubmissionDate(submitDate.getTime());
     
     	return this.analysisService.addAnalysis(analysis);
     }
