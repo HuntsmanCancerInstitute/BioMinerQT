@@ -1,4 +1,6 @@
-<div class="row toolbar" >
+
+<div>
+<div class="row toolbar">
  	       <h3>
  	         <span class="glyphicon glyphicon-dashboard"></span>
  	         Dashboard
@@ -6,32 +8,30 @@
 	   <a ng-click="refreshAll()"><span class="glyphicon glyphicon-refresh"></span> Refresh</a>
 </div>
 
+
+
+
 <div class="row">
 	<div class="col-lg-3">
 		<div class="panel panel-primary">
 		  <div class="panel-heading">
 		    <h3 class="panel-title">RNA Seq Experiments {{getCount.data[0]}}</h3>
 		  </div>
-		  <div id="content">
-		     <div class="chart-container"> 
-		        <div class="chart-placeholder" id="rnaseq_chart" data-chart="pie" data-flot-chart data-my-model="rnaseq">
-		            <p>Pie chart should display here.</p>
-		        </div>
-			</div> 
+		  <div class="panel-body" >
+			 <nvd3 options="rnaOptions" data="rnaseq" ></nvd3>
+<!-- 		      <canvas id="rnaPieChart" class="chart chart-pie" data="rnaseq.data" labels="rnaseq.labels" options="pieOpt"></canvas>  -->
 		  </div>
 		</div> 
 	</div>
+	
 	<div class="col-lg-3">
 		<div class="panel panel-primary">
 		  <div class="panel-heading">
 		    <h3 class="panel-title">Chip Seq Experiments {{getCount.data[0]}}</h3>
 		  </div>
-		  <div id="content">
-		     <div class="chart-container"> 
-		        <div class="chart-placeholder" id="chipseq_chart" data-chart="pie" data-flot-chart data-my-model="chipseq">
-		            <p>Pie chart should display here.</p>
-		        </div>
-			</div> 
+		  <div class="panel-body">
+		  	<nvd3 options="chipOptions" data="chipseq"></nvd3>
+<!-- 		      <canvas id="chipPieChart" class="chart chart-pie" data="chipseq.data" labels="chipseq.labels"></canvas>  -->
 		  </div>
 		</div> 
 	</div>
@@ -39,13 +39,10 @@
 		<div class="panel panel-primary">
 		  <div class="panel-heading">
 		    <h3 class="panel-title">Bisulfite Seq Experiments {{getCount.data[0]}}</h3>
-		  </div>
-		  <div id="content">
-		     <div class="chart-container"> 
-		        <div class="chart-placeholder" id="bisseq_chart" data-chart="pie" data-flot-chart data-my-model="bisseq">
-		            <p>Pie chart should display here.</p>
-		        </div>
-			</div> 
+		  </div >
+		  <div class="panel-body">
+		  	<nvd3 options="bisOptions" data="bisseq"></nvd3>
+<!-- 		      <canvas id="bisPieChart" class="chart chart-pie" data="bisseq.data" labels="bisseq.labels"></canvas>  -->
 		  </div>
 		 </div>
 	</div> 
@@ -54,12 +51,9 @@
 		  <div class="panel-heading">
 		    <h3 class="panel-title">Variant Experiments {{getCount.data[0]}}</h3>
 		  </div>
-		  <div id="content">
-		     <div class="chart-container"> 
-		        <div class="chart-placeholder" id="variant_chart" data-chart="pie" data-flot-chart data-my-model="variant">
-		            <p>Pie chart should display here.</p>
-		        </div>
-			</div> 
+		  <div class="panel-body">
+		    <nvd3 options="varOptions" data="variant"></nvd3>
+<!-- 		      <canvas id="varPieChart" class="chart chart-pie" data="variant.data" labels="variant.labels"></canvas>  -->
 		  </div>
 		 </div>
 	</div>
@@ -193,5 +187,5 @@
 	</div>
 	<div class="panel col-lg-4 col-sm-12">
 </div>
-
+</div>
 

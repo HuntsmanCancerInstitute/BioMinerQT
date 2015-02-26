@@ -4,26 +4,96 @@
  * DashboardController
  * @constructor
  */
-var dashboard = angular.module('dashboard', ['services','error']);
+var dashboard = angular.module('dashboard', ['services','error','nvd3']);
 
 angular.module('dashboard')
 
 .controller('DashboardController', 
-[ '$rootScope','$scope','$http',
+[ '$rootScope','$scope','$http','$window',
               
-function($rootScope, $scope, $http) {
+function($rootScope, $scope, $http,$window) {
 
-    $scope.rnaseq = {};
-    $scope.rnaseq.data = [];
+    $scope.rnaseq = [];
+    $scope.chipseq = [];
+    $scope.bisseq = [];
+    $scope.variant = [];
     
-    $scope.chipseq = {};
-    $scope.chipseq.data = [];
-
-    $scope.bisseq = {};
-    $scope.bisseq.data = [];
+   
+      
+    $scope.options = {
+        chart: {
+            type: 'pieChart',
+            height: 400,
+            donut: true,
+            x: function(d){return d.key;},
+            y: function(d){return d.y;},
+            showLabels: false,
+            donutLabelsOutside: false,
+            tooltips: true,
+            
+            transitionDuration: 500,
+            labelThreshold: 0.01,
+            legend: {
+            	rightAlign: false,
+                margin: {
+                    top: 5,
+                    right: 35,
+                    bottom: 5,
+                    left: 0
+                }
+            }
+        }
+    }
     
-    $scope.variant = {};
-    $scope.variant.data = [];
+    //Setup rnaSeq options
+    $scope.rnaOptions = angular.copy($scope.options);
+    $scope.rnaOptions.chart.tooltipContent = function(key, y, e, graph) {
+    	var total = 0;
+    	$scope.rnaseq.forEach(function (d) {
+    	    total = total + d.y;
+    	});
+       	return '<h3 style="background-color: '
+            + e.color + '">' + key + '</h3>'
+            + '<p>' +  Math.trunc(y) + ' ( ' + Math.round(y/total*100,2) + '% )</p>';
+   	};
+   	
+   	//Setup chip options
+    $scope.chipOptions = angular.copy($scope.options);
+   	$scope.chipOptions.chart.tooltipContent = function(key, y, e, graph) {
+    	var total = 0;
+    	$scope.chipseq.forEach(function (d) {
+    	    total = total + d.y;
+    	});
+       	return '<h3 style="background-color: '
+            + e.color + '">' + key + '</h3>'
+            + '<p>' +  Math.trunc(y) + ' ( ' + Math.round(y/total*100,2) + '% )</p>';
+   	};
+   	
+   	//setup bisseq options
+    $scope.bisOptions = angular.copy($scope.options);
+    $scope.bisOptions.chart.tooltipContent = function(key, y, e, graph) {
+    	var total = 0;
+    	$scope.bisseq.forEach(function (d) {
+    	    total = total + d.y;
+    	});
+       	return '<h3 style="background-color: '
+            + e.color + '">' + key + '</h3>'
+            + '<p>' +  Math.trunc(y) + ' ( ' + Math.round(y/total*100,2) + '% )</p>';
+   	};
+   	
+   	//setup var options
+    $scope.varOptions = angular.copy($scope.options);
+    $scope.varOptions.chart.tooltipContent = function(key, y, e, graph) {
+    	var total = 0;
+    	$scope.variant.forEach(function (d) {
+    	    total = total + d.y;
+    	});
+       	return '<h3 style="background-color: '
+            + e.color + '">' + key + '</h3>'
+            + '<p>' +  Math.trunc(y) + ' ( ' + Math.round(y/total*100,2) + '% )</p>';
+   	};
+    
+   
     
     $scope.uploadSize = null;
     $scope.parsedSize = null;
@@ -183,7 +253,7 @@ function($rootScope, $scope, $http) {
     		method: "POST",
     		params: {type: "ChIPSeq"}
     	}).success(function(data) {
-    		$scope.chipseq.data = data;
+    		$scope.chipseq = data;
     	});
     };
 
@@ -193,7 +263,7 @@ function($rootScope, $scope, $http) {
     		method: "POST",
     		params: {type: "RNASeq"}
     	}).success(function(data) {
-    		$scope.rnaseq.data = data;
+    		$scope.rnaseq = data;
     	});
     };
     
@@ -203,7 +273,7 @@ function($rootScope, $scope, $http) {
     		method: "POST",
     		params: {type: "Methylation"}
     	}).success(function(data) {
-    		$scope.bisseq.data = data;
+    		$scope.bisseq = data;
     	});
     };
     
@@ -213,15 +283,10 @@ function($rootScope, $scope, $http) {
     		method: "POST",
     		params: {type: "Variant"}
     	}).success(function(data) {
-    		$scope.variant.data = data;
+    		$scope.variant = data;
     	});
     }
     
-    $scope.getQueryDate = function() {
-    	
-    }
-    
-  
     $scope.refreshStandard = function() {
     	$scope.getChipSeq();
     	$scope.getRnaSeq();
@@ -253,79 +318,89 @@ function($rootScope, $scope, $http) {
     	$scope.refreshStandard();
     }
     
+    
+    
     $scope.refreshAll();
 
-    $rootScope.helpMessage = "<p>Placeholder for dashboard help.</p>";
+    $rootScope.helpMessage = "<h1>Welcome to the Biominer beta!</h1>" 
+    	+ "<p>BioMinerQT is a web-based tool that internalizes ChIPseq, RNAseq, "
+    	+ "bisulfite, and variant analysis into a searchable database. The goal "
+    	+ "of the BioMinerQT is to allow researchers to mine all the data that " 
+    	+ "has been uploaded without the help of a bioinformatician. </p>"
+    	+ "<p>If you encounter any errors, please submit a <a href='#/reportIssue' style='color: red'>bug report.</a> "
+    	+ "If you need a login or have any questions about Biominer, please " 
+    	+ "<a href='mailto:BioMinerSupport@hci.utah.edu' style='color: red'>contact</a> the developers "
+    	+ "The source code and war can be downloaded from <a href='https://sourceforge.net/projects/biominerqt/'>sourceforge.</a>";
     
 
-    $scope.rnaseq.options = {
-        series: {
-            pie: {
-                show: true,
-                radius: 1,
-                label: {
-                    radius: 2 / 3,
-                    formatter: function(label, series) {
-                        return '<div class="pie">' + label + ': ' + series.data[0][1] + '<br>(' + Math.round(series.percent) + '%)</div>';
-                    }
-                }
-            }
-        },
-        legend: {
-            show: false
-        }
-    };
-    $scope.chipseq.options = {
-            series: {
-                pie: {
-                    show: true,
-                    radius: 1,
-                    label: {
-                        radius: 2 / 3,
-                        formatter: function(label, series) {
-                            return '<div class="pie">' + label + ': ' + series.data[0][1] + '<br>(' + Math.round(series.percent) + '%)</div>';
-                        }
-                    }
-                }
-            },
-            legend: {
-                show: false
-            }
-        };
-    $scope.bisseq.options = {
-            series: {
-                pie: {
-                    show: true,
-                    radius: 1,
-                    label: {
-                        radius: 2 / 3,
-                        formatter: function(label, series) {
-                            return '<div class="pie">' + label + ': ' + series.data[0][1] + '<br>(' + Math.round(series.percent) + '%)</div>';
-                        }
-                    }
-                }
-            },
-            legend: {
-                show: false
-            }
-        };
-    $scope.variant.options = {
-            series: {
-                pie: {
-                    show: true,
-                    radius: 1,
-                    label: {
-                        radius: 2 / 3,
-                        formatter: function(label, series) {
-                            return '<div class="pie">' + label + ': ' + series.data[0][1] + '<br>(' + Math.round(series.percent) + '%)</div>';
-                        }
-                    }
-                }
-            },
-            legend: {
-                show: false
-            }
-        };
-}
+//    $scope.rnaseq.options = {
+//        series: {
+//            pie: {
+//                show: true,
+//                radius: 1,
+//                label: {
+//                    radius: 2 / 3,
+//                    formatter: function(label, series) {
+//                        return '<div class="pie">' + label + ': ' + series.data[0][1] + '<br>(' + Math.round(series.percent) + '%)</div>';
+//                    }
+//                }
+//            }
+//        },
+//        legend: {
+//            show: false
+//        }
+//    };
+//    $scope.chipseq.options = {
+//            series: {
+//                pie: {
+//                    show: true,
+//                    radius: 1,
+//                    label: {
+//                        radius: 2 / 3,
+//                        formatter: function(label, series) {
+//                            return '<div class="pie">' + label + ': ' + series.data[0][1] + '<br>(' + Math.round(series.percent) + '%)</div>';
+//                        }
+//                    }
+//                }
+//            },
+//            legend: {
+//                show: false
+//            }
+//        };
+//    $scope.bisseq.options = {
+//            series: {
+//                pie: {
+//                    show: true,
+//                    radius: 1,
+//                    label: {
+//                        radius: 2 / 3,
+//                        formatter: function(label, series) {
+//                            return '<div class="pie">' + label + ': ' + series.data[0][1] + '<br>(' + Math.round(series.percent) + '%)</div>';
+//                        }
+//                    }
+//                }
+//            },
+//            legend: {
+//                show: false
+//            }
+//        };
+//    $scope.variant.options = {
+//            series: {
+//                pie: {
+//                    show: true,
+//                    radius: 1,
+//                    label: {
+//                        radius: 2 / 3,
+//                        formatter: function(label, series) {
+//                            return '<div class="pie">' + label + ': ' + series.data[0][1] + '<br>(' + Math.round(series.percent) + '%)</div>';
+//                        }
+//                    }
+//                }
+//            },
+//            legend: {
+//                show: false
+//            }
+//        };
+ }
 ]);
 

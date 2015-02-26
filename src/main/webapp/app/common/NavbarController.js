@@ -2,10 +2,10 @@
  * 
  */
 
-var useradmin = angular.module('navbar', ['login','services','error']);
+var useradmin = angular.module('navbar', ['login','services','error','dialogs.main']);
 
-angular.module('navbar').controller("NavbarController",['$modal','$scope','$http','$rootScope','$location','$interval','$route','DynamicDictionary',
-	function($modal,$scope,$http,$rootScope,$location,$interval,$route,DynamicDictionary) {
+angular.module('navbar').controller("NavbarController",['$modal','$scope','$http','$rootScope','$location','$interval','$route','DynamicDictionary','dialogs',
+	function($modal,$scope,$http,$rootScope,$location,$interval,$route,DynamicDictionary,dialogs) {
 	    $rootScope.loggedUser = null;
 	    $rootScope.lastLocation = "dashboard";
 		$rootScope.admin = false;
@@ -76,18 +76,7 @@ angular.module('navbar').controller("NavbarController",['$modal','$scope','$http
 		});  
 		
 		$scope.displayHelp = function() {
-			$modal.open({
-	    		templateUrl: 'app/common/userError.html',
-	    		controller: 'userErrorController',
-	    		resolve: {
-	    			title: function() {
-	    				return "Help";
-	    			},
-	    			message: function() {
-	    				return $rootScope.helpMessage;
-	    			}
-	    		}
-	    	});
+			dialogs.notify("Help",$rootScope.helpMessage);
 		};
 		
 $scope.openEditUserWindow = function(e) {

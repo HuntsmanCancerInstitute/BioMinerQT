@@ -11,21 +11,6 @@ var directives = angular.module('directives', [])
 	    };
 	}
 ])
-.directive('flotChart', [ 
-	function() {
-	    return {
-	        restrict: 'EA',
-	        link: function(scope, element, attr) {
-	            scope.$watch(attr.myModel, function(x) {
-	                if ((!x) || (!x.data) || x.data.length<2) {
-	                    return;
-	                }
-	                $.plot(element, x.data, x.options);
-	            }, true);
-	        }
-	    };
-	}
-])
 .directive('resize', function ($window) {
     return function (scope, element, attrs) {
         var w = angular.element($window);

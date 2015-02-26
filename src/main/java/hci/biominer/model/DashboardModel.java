@@ -1,29 +1,29 @@
 package hci.biominer.model;
 
 public class DashboardModel {
-	private int[] data;
-	private String label;
+	private int y;
+	private String key;
 	
 	public DashboardModel(int count, String label) {
-		this.data = new int[]{1};
-		this.data[0] = count;
-		this.label = label;
+		this.y = count;
+		this.key = label;
+		
 	}
 
-	public int[] getData() {
-		return data;
+	public int getY() {
+		return y;
 	}
 
-	public void setData(int[] data) {
-		this.data = data;
+	public void setY(int data) {
+		this.y = data;
 	}
 
-	public String getLabel() {
-		return label;
+	public String getKey() {
+		return key;
 	}
 
-	public void setLabel(String label) {
-		this.label = label;
+	public void setKey(String label) {
+		this.key = label;
 	}
 	
 	

@@ -7,6 +7,8 @@ input::-webkit-inner-spin-button {
     -webkit-appearance: none;
 }
 
+
+
 .table-container
 {
 	width: 100%;
@@ -66,27 +68,27 @@ input::-webkit-inner-spin-button {
     padding-left: 10px;
 }
 
+@media (min-width: 768px) { 
+   .navbar-form { 
+     line-height: 40px; 
+   }
+ }
 
-/* @media (min-width: 768px) { */
-/*   .navbar-form { */
-/*     line-height: 40px; */
-/*   } */
-/* } */
-
-/* @media (max-width: 767px) { */
-/* .navbar-nav > li > a { */
-/*     line-height: 20px; */
-/*     padding-top: 10px; */
-/*     padding-bottom: 10px; */
+@media (max-width: 767px) {
+  .navbar-nav > li > a {
+     line-height: 20px;
+     padding-top: 10px;
+     padding-bottom: 10px;
     
-/* } */
-/* } */
-/* @media (min-width: 768px) { */
-/* .navbar-nav { */
-/*       float: left; */
-/* 	  margin: 0; */
-/*     } */
-/* } */
+  }
+}
+
+@media (min-width: 768px) {
+ .navbar-nav {
+      float: left;
+ 	  margin: 0;
+  }
+}
 
 .navbar-brand {
 padding-top: 13px;
@@ -180,31 +182,6 @@ li a.current-project {
 	color: #000000;
 }
 
-
-<!-- flot chart styling -->
-
-[data-chart] {
-  height: 300px;
-  width: 300px;
-}
-
-.chart-container {
-	padding: 2px 2px 2px 2px;
-	margin: 2px auto 2px auto;
-	font: 18px/1.5em "proxima-nova", Helvetica, Arial, sans-serif;
-	box-sizing: border-box;
-	width: 280px;
-	height: 330px;
-
-}
-
-.chart-placeholder {
-	width: 100%;
-	height: 100%;
-	font-size: 14px;
-	line-height: 1.2em;
-}
-
 .fixed-label {
 	width: 120px;
 }
@@ -270,8 +247,6 @@ body {
      font-family:  'Muli', Helvetica, Arial, sans-serif!important;	
      font-weight: 400 !important;
      padding-top: 75px;
-
-     
 }
 
 .panel-heading {
@@ -465,3 +440,20 @@ body {
 .nowrap {
 	white-space: nowrap; 
 }
+
+#test {
+	
+/* 	General */
+ 	transform: translate(-10%, -10%) scale(0.8, 0.8);
+/* 	Firefox */
+ 	-moz-transform: translate(-10%, -10%) scale(0.8, 0.8);
+/* 	Microsoft Internet Explorer */ */
+ 	-ms-transform: translate(-10%, -10%) scale(0.8, 0.8);
+/* 	Chrome, Safari */
+ 	-webkit-transform: translate(-10%, -10%) scale(0.8, 0.8);
+/* 	Opera */
+ 	-o-transform: translate(-10%, -10%) scale(0.8, 0.8);
+ 	width: 125%;
+ 	height: 125%;
+}
+
