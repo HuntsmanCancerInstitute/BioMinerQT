@@ -1,7 +1,7 @@
 <div class="container-fluid">
 	<div class="row" style="padding-top: 10px; padding-bottom: 10px">
 			<div class="col-lg-7">
-				<span class="btn btn-success fileinput-button"  ng-class="{disabled: disabled}">
+				<span class="btn btn-success fileinput-button btn-sm"  ng-class="{disabled: disabled}">
 			        <i class="glyphicon glyphicon-upload"></i>
 			        <input type="file" ng-file-select="addDataTrackFiles($files)" multiple> Upload           
 			    </span>
@@ -20,7 +20,7 @@
 					<!-- Text input-->
 					<div class="form-group">
 					  	<label class="control-label" for="data_track_name">Name</label>  
-					  	<input required id="data_track_name"  ng-model="datatrack.name" name="data_track_name" placeholder="name" class="form-control input-md" required="" type="text">
+					  	<input required id="data_track_name"  ng-model="datatrack.name" name="data_track_name" placeholder="name" class="form-control input-sm" required="" type="text">
 					</div>
 				</div> <!-- end col -->
 				
@@ -36,8 +36,8 @@
 						<span class="btn btn-xs btn-danger fileinput-button" ng-click="showDataTrackError(datatrack)" ng-show="datatrack.message != null">
 							<i class="glyphicon glyphicon-exclamation-sign"></i>
 						</span>
-					  	<input ng-model="datatrack.path" class="form-control input-md" type="text" placeholder="datatrack name" ng-readonly="true">
-					  	<input ng-model="datatrack.path" ng-show="false" required type="text">
+					  	<input ng-model="datatrack.path" class="form-control input-sm" type="text" placeholder="datatrack name" ng-readonly="true">
+					  	<input ng-model="datatrack.path" class="form-control input-sm" ng-show="false" required type="text">
 					</div>
 				</div> <!-- end col -->
 			</div> <!--  end row -->
@@ -46,8 +46,8 @@
 					<div class="form-group">
 					  	<label class="control-label" for=""></label>  
 						<div class="animate-switch-container">
-						<button id="save_datatrack_button" class="animate-switch btn btn-primary" ng-click="saveDataTrack(datatrack)" ng-disabled="datatrack_form.$invalid">Save</button>
-						<button id="save_sample_button" class="animate-switch btn btn-warning" ng-click="clearDataTrack()">Clear</button>
+						<button id="save_datatrack_button" class="animate-switch btn btn-primary btn-sm" ng-click="saveDataTrack(datatrack)" ng-disabled="datatrack_form.$invalid">Save</button>
+						<button id="save_sample_button" class="animate-switch btn btn-warning btn-sm" ng-click="clearDataTrack()">Clear</button>
 					</div>
 				</div> <!-- end col -->
 			</div>
@@ -66,14 +66,14 @@
 			    </thead>
 			    <tbody>
 			        <tr ng-repeat="datatrack in datatracks" ng-mouseenter="hideDatatrackControls(datatrack)" ng-mouseleave="hideDatatrackControls(datatrack)">
-			            <td style="width: 30%;">{{datatrack.name}}</td>
-			            <td style="width: 55%;">{{datatrack.path}}</td>
+			            <td style="width: 40%;">{{datatrack.name}}</td>
+			            <td style="width: 45%;">{{datatrack.path}}</td>
 			            <td style="width: 15%;"">
 			                <div ng-show=datatrack.show>
-			                 <button class="btn btn-sm btn-primary" ng-click="editDataTrack(datatrack)" data-toggle="tooltip" data-placement="top" title="edit">
+			                 <button class="btn btn-xs btn-primary table-button" ng-click="editDataTrack(datatrack)" data-toggle="tooltip" data-placement="top" title="edit">
 								<span class="glyphicon glyphicon-pencil"></span>
 							 </button>
-			                 <button class="btn btn-sm btn-danger" ng-click="removeDataTrack(datatrack)" data-toggle="tooltip" data-placement="top" title="remove">
+			                 <button class="btn btn-xs btn-danger table-button" ng-click="removeDataTrack(datatrack)" data-toggle="tooltip" data-placement="top" title="remove">
 			                 	<span class="glyphicon glyphicon-trash"></span>
 			                 </button>
 			                </div>

@@ -13,6 +13,7 @@ nv.models = nv.models || {}; //stores all the possible models/components
 nv.charts = {}; //stores all the ready to use charts
 nv.graphs = []; //stores all the graphs currently on the page
 nv.logs = {}; //stores some statistics and potential error messages
+nv.resizeHandlers = [];
 
 nv.dispatch = d3.dispatch('render_start', 'render_end');
 
@@ -939,7 +940,15 @@ Binds callback function to run when window is resized
  */
 nv.utils.windowResize = function(handler) {
     if (window.addEventListener) {
-        window.addEventListener('resize', handler);
+    	
+    	var resizeId;
+    	var resizeFunction = function() {
+    		clearTimeout(resizeId);
+            resizeId = setTimeout(handler, 50);
+    	}
+    	
+        window.addEventListener('resize', resizeFunction);
+        nv.resizeHandlers.push(resizeFunction);
     } else {
         nv.log("ERROR: Failed to bind to window.resize with: ", handler);
     }
@@ -952,6 +961,13 @@ nv.utils.windowResize = function(handler) {
     }
 };
 
+
+nv.utils.clearAllListeners = function() {
+	for (var i=0; i<nv.resizeHandlers.length;i++) {
+		window.removeEventListener('resize',nv.resizeHandlers[i]);
+	}
+	nv.resizeHandlers = [];
+}
 
 /*
 Backwards compatible way to implement more d3-like coloring of graphs.

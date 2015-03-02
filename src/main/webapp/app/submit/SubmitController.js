@@ -802,10 +802,6 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 		$scope.resultEditMode = true;
     };
     
-    $scope.$watch("result.date",function() {
-    	console.log($scope.result.date);
-    });
-	
 	$scope.saveResult = function(result) {
 		$scope.resultEditMode = false;
 		
@@ -876,7 +872,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 		dialogs.error(title, message, null);
 	};
 	
-	$scope.showWarningMessage = function(title,message) {
+	$scope.showWarningMessage = function(title,message) { 
 		dialogs.notify(title,message,null);
 	};
 	

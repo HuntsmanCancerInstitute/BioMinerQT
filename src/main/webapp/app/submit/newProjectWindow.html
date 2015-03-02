@@ -26,6 +26,7 @@
 						  <label class="col-md-2 control-label" for="species_build">Genome Build</label>
 						  <div class="col-md-10">
 						    <select id="species_build" ng-model="project.organismBuild.idOrganismBuild"  ng-options="gb.idOrganismBuild as gb.name group by gb.organism.common for gb in organismBuildList" class="form-control" required>
+						    <option value="">Select build</option>
 						    </select>
 						  </div>
 						</div>
@@ -34,7 +35,7 @@
 						<div class="form-group">
 						  <label class="col-md-2 control-label" for="lab">Lab</label>
 						  	<div class="col-md-10">
-				  		    	<select width="100" data-placeholder="Choose labs..." ng-model="project.labs" multiple chosen class="form-control chosen-select " ng-options="lab as (lab.first + ' ' + lab.last + ' lab' ) for lab in labList track by lab.idLab" required></select> 
+				  		    	<select width="100" data-placeholder="Select labs..." ng-model="project.labs" multiple chosen class="form-control chosen-select " ng-options="lab as (lab.first + ' ' + lab.last + ' lab' ) for lab in labList track by lab.idLab" required></select> 
 						    </div>
 						</div>
 						
@@ -42,7 +43,7 @@
 						<div class="form-group">
 						  <label class="col-md-2 control-label" for="lab">Institute</label>
 						  	<div class="col-md-10">
-				  		    	<select width="100" data-placeholder="Choose institutes..." ng-model="project.institutes" multiple chosen class="form-control chosen-select" ng-options="inst as inst.name for inst in instituteList track by inst.idInstitute" required></select> 
+				  		    	<select width="100" data-placeholder="Select institutes..." ng-model="project.institutes" multiple chosen class="form-control chosen-select" ng-options="inst as inst.name for inst in instituteList track by inst.idInstitute" required></select> 
 						    </div>
 						</div>
 

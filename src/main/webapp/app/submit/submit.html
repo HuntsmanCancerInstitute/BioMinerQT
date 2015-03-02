@@ -1,14 +1,13 @@
 <div>
    	<div class="row toolbar">
-  	       <h3>
-  	         <span class="glyphicon glyphicon-cloud-upload"></span>
-  	         Submit Your Data
-  	       </h3>
+   			<span class="page-header-bm">
+	 	       <span class="glyphicon glyphicon-cloud-upload"></span>
+	 	       Submit Your Data
+ 	       </span>
+  	       
 	       <a ng-disabled="$root.loggedUser == null" ng-click="openNewProjectWindow()"><span class="glyphicon glyphicon-plus"></span> New Submission</a>
 		   <a ng-click="refresh()"><span class="glyphicon glyphicon-refresh"></span> Refresh</a>
-		   <a ng-click="deleteProject()"><span class="glyphicon glyphicon-trash"></span>Delete</a>
-		   
-		   
+		   <a ng-click="deleteProject()"><span class="glyphicon glyphicon-trash"></span> Delete</a>
 	</div>
 		
 
@@ -18,13 +17,16 @@
      	<div class="col-lg-2">  
      	
             <div class="panel panel-default">
-				<div class="panel-heading">Submissions</div>
+				<div class="panel-heading">
+					<div class="panel-title">Submissions</div>
+				</div>
 	  	   
 				
            	 	<div class="panel-body">
 					<ul>
-				 		<li ng-repeat="project in projects">
-				 			<a ng-class="project.cssClass" href="#/submit" ng-click="select(project.idProject)">{{project.name}}</a>
+				 		<li class="list-group" ng-repeat="project in projects">
+				 			<a ng-class="project.cssClass" href="#/submit" ng-click="select(project.idProject)">
+				 			   <span class="glyphicon glyphicon-triangle-right"></span>{{project.name}}</a>
 					    </li>
 				
 					</ul>
@@ -38,7 +40,10 @@
 			
 			<div class=" panel panel-default">
 			
-				<div class="panel-heading">{{project.name}}</div>
+				<div class="panel-heading">
+					<div class="panel-title">{{project.name}}</div>
+				</div>
+				
 				
 				<div class="panel-body" style="padding-top: 10px;">
 				

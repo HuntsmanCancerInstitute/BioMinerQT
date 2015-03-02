@@ -32,6 +32,7 @@ import java.security.SecureRandom;
 
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
+import javax.servlet.http.HttpServletRequest;
 
 import java.math.BigInteger;
 
@@ -93,7 +94,7 @@ public class SecurityController {
 	}
 	
 	@RequestMapping(value="/resetpassword",method=RequestMethod.POST)
-	public @ResponseBody String resetpassword(@RequestParam(value="username") String username, @RequestParam(value="theUrl") String theUrl, @RequestParam(value="remember") boolean remember)  {
+	public @ResponseBody String resetpassword(@RequestParam(value="username") String username, @RequestParam(value="theUrl") String theUrl, @RequestParam(value="remember") boolean remember, HttpServletRequest request)  {
 		String result = null;
 	
 		//System.out.println ("[/resetpassword] username is " + username);
@@ -111,7 +112,12 @@ public class SecurityController {
 			String email = user.getEmail();
 			result = "Instructions on how to reset your password have been emailed to you. (Check junk email if not received.)";
 			
-			String url = "http://localhost:8080";
+			String url = request.getLocalName();
+	    	if (url.equals("127.0.0.1")) {
+	    		url += ":8080";
+	    	}
+			
+			//String url = "http://localhost:8080";
 			
 			// get the first part of the url
 			int ipos = theUrl.toLowerCase().indexOf("/biominer");

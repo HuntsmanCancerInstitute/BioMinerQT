@@ -23,14 +23,14 @@ function($rootScope, $scope, $http,$window) {
     $scope.options = {
         chart: {
             type: 'pieChart',
-            height: 400,
-            donut: true,
+            height: 300,
+            donut: false,
             x: function(d){return d.key;},
             y: function(d){return d.y;},
             showLabels: false,
             donutLabelsOutside: false,
             tooltips: true,
-            
+            donutRatio: 0.5,
             transitionDuration: 500,
             labelThreshold: 0.01,
             legend: {
@@ -46,8 +46,8 @@ function($rootScope, $scope, $http,$window) {
     }
     
     //Setup rnaSeq options
-    $scope.rnaOptions = angular.copy($scope.options);
-    $scope.rnaOptions.chart.tooltipContent = function(key, y, e, graph) {
+    $scope.rnaOptionsTemp = angular.copy($scope.options);
+    $scope.rnaOptionsTemp.chart.tooltipContent = function(key, y, e, graph) {
     	var total = 0;
     	$scope.rnaseq.forEach(function (d) {
     	    total = total + d.y;
@@ -56,6 +56,8 @@ function($rootScope, $scope, $http,$window) {
             + e.color + '">' + key + '</h3>'
             + '<p>' +  Math.trunc(y) + ' ( ' + Math.round(y/total*100,2) + '% )</p>';
    	};
+    $scope.rnaOptions = angular.copy($scope.rnaOptionsTemp);
+   
    	
    	//Setup chip options
     $scope.chipOptions = angular.copy($scope.options);
@@ -92,9 +94,7 @@ function($rootScope, $scope, $http,$window) {
             + e.color + '">' + key + '</h3>'
             + '<p>' +  Math.trunc(y) + ' ( ' + Math.round(y/total*100,2) + '% )</p>';
    	};
-    
-   
-    
+     
     $scope.uploadSize = null;
     $scope.parsedSize = null;
     $scope.totalUsers = null;
@@ -110,6 +110,12 @@ function($rootScope, $scope, $http,$window) {
     $scope.loginCount = null;
     $scope.crashCount = null;
     $scope.reportCount = null;
+    
+    $scope.$on('$locationChangeStart', function(event, next, current) {
+    	nv.render.queue = [];
+    	nv.utils.clearAllListeners();
+    	console.log("DESTROY");
+    });
     
     $scope.getCrashCount = function() {
     	$http({
@@ -316,6 +322,8 @@ function($rootScope, $scope, $http,$window) {
     		$scope.refreshAmin();
     	}
     	$scope.refreshStandard();
+    	nv.render.queue = [];
+    	nv.utils.clearAllListeners();
     }
     
     
@@ -333,74 +341,7 @@ function($rootScope, $scope, $http,$window) {
     	+ "The source code and war can be downloaded from <a href='https://sourceforge.net/projects/biominerqt/'>sourceforge.</a>";
     
 
-//    $scope.rnaseq.options = {
-//        series: {
-//            pie: {
-//                show: true,
-//                radius: 1,
-//                label: {
-//                    radius: 2 / 3,
-//                    formatter: function(label, series) {
-//                        return '<div class="pie">' + label + ': ' + series.data[0][1] + '<br>(' + Math.round(series.percent) + '%)</div>';
-//                    }
-//                }
-//            }
-//        },
-//        legend: {
-//            show: false
-//        }
-//    };
-//    $scope.chipseq.options = {
-//            series: {
-//                pie: {
-//                    show: true,
-//                    radius: 1,
-//                    label: {
-//                        radius: 2 / 3,
-//                        formatter: function(label, series) {
-//                            return '<div class="pie">' + label + ': ' + series.data[0][1] + '<br>(' + Math.round(series.percent) + '%)</div>';
-//                        }
-//                    }
-//                }
-//            },
-//            legend: {
-//                show: false
-//            }
-//        };
-//    $scope.bisseq.options = {
-//            series: {
-//                pie: {
-//                    show: true,
-//                    radius: 1,
-//                    label: {
-//                        radius: 2 / 3,
-//                        formatter: function(label, series) {
-//                            return '<div class="pie">' + label + ': ' + series.data[0][1] + '<br>(' + Math.round(series.percent) + '%)</div>';
-//                        }
-//                    }
-//                }
-//            },
-//            legend: {
-//                show: false
-//            }
-//        };
-//    $scope.variant.options = {
-//            series: {
-//                pie: {
-//                    show: true,
-//                    radius: 1,
-//                    label: {
-//                        radius: 2 / 3,
-//                        formatter: function(label, series) {
-//                            return '<div class="pie">' + label + ': ' + series.data[0][1] + '<br>(' + Math.round(series.percent) + '%)</div>';
-//                        }
-//                    }
-//                }
-//            },
-//            legend: {
-//                show: false
-//            }
-//        };
+
  }
 ]);
 

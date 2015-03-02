@@ -1,5 +1,5 @@
 /**************************************************************************
-* AngularJS-nvD3, v1.0.0-beta; MIT License; 25/02/2015 19:17
+* AngularJS-nvD3, v1.0.0-beta; MIT License; 25/02/2015 22:27
 * http://krispo.github.io/angular-nvd3
 **************************************************************************/
 (function(){
@@ -26,7 +26,7 @@
                         autorefresh: true,
                         refreshDataOnly: false,
                         deepWatchData: true,
-                        debounce: 10 // default 10ms, time silence to prevent refresh while multiple options changes at a time
+                        debounce: 1000 // default 10ms, time silence to prevent refresh while multiple options changes at a time
                     };
 
                     //basic directive configuration
@@ -57,7 +57,7 @@
 
                             // Initialize chart with specific type
                             scope.chart = nv.models[options.chart.type]();
-
+                  
                             // Generate random chart ID
                             scope.chart.id = Math.random().toString(36).substr(2, 15);
 
@@ -88,6 +88,7 @@
                                     'bars2',
                                     'stack1',
                                     'stack2',
+                                    'stacked',
                                     'multibar',
                                     'discretebar',
                                     'pie',
@@ -132,16 +133,16 @@
                             if (options['title'] || scope._config.extended) configureWrapper('title');
                             if (options['subtitle'] || scope._config.extended) configureWrapper('subtitle');
                             if (options['caption'] || scope._config.extended) configureWrapper('caption');
-
-
+                            
+                            
                             // Configure styles
                             if (options['styles'] || scope._config.extended) configureStyles();
-
+                            
                             nv.addGraph(function() {
                                 // Update the chart when window resizes
                                 scope.chart.resizeHandler = nv.utils.windowResize(function() { scope.chart.update(); });
                                 return scope.chart;
-                            }, options.chart['callback']);
+                            }, options.chart['callback'], scope.chart);
                         },
 
                         // Update chart with new data
@@ -169,7 +170,9 @@
                             element.empty();
                             if (scope.chart) {
                                 // clear window resize event handler
-                                if (scope.chart.resizeHandler) scope.chart.resizeHandler.clear();
+                                if (scope.chart.resizeHandler) {
+                                	scope.chart.resizeHandler.clear();
+                                }
 
                                 // remove chart from nv.graph list
                                 for (var i = 0; i < nv.graphs.length; i++)
@@ -309,7 +312,9 @@
                     /* Event Handling */
                     // Watching on options changing
                     scope.$watch('options', utils.debounce(function(newOptions){
-                        if (!scope._config.disabled && scope._config.autorefresh) scope.api.refresh();
+                        if (!scope._config.disabled && scope._config.autorefresh) {
+                        	scope.api.refresh();
+                        }
                     }, scope._config.debounce, true), true);
 
                     // Watching on data changing

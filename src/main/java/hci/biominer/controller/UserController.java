@@ -22,6 +22,7 @@ import java.security.SecureRandom;
 
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
+import javax.servlet.http.HttpServletRequest;
 
 import java.math.BigInteger;
 
@@ -93,7 +94,7 @@ public class UserController {
     public String newUser(@RequestParam(value="first") String firstName, @RequestParam(value="last") String lastName, @RequestParam(value="username") String username,
     		@RequestParam(value="password") String password, @RequestParam(value="email") String email, @RequestParam(value="phone") Long phone, 
     		@RequestParam(value="admin") boolean admin, @RequestParam(value="lab") List<Long> labIds, @RequestParam(value="institutes") List<Long> instituteIds,
-    		@RequestParam(value="theUrl") String theUrl) {
+    		@RequestParam(value="theUrl") String theUrl, HttpServletRequest request) {
  
     	//System.out.println ("[newUser] username: " + username);
     	
@@ -130,7 +131,7 @@ public class UserController {
     	
     	String result = "You will receive and email when your account has been activated.";
     	
-    	String status = newUserEmail (user,aLab,anInstitute,theUrl);
+    	String status = newUserEmail (user,aLab,anInstitute,theUrl,request);
     	if (status != null) {
     		result = status;
     	}
@@ -336,10 +337,15 @@ public class UserController {
    
     }
         
-    public String newUserEmail (User user, Lab lab, Institute institute, String theUrl) {
+    public String newUserEmail (User user, Lab lab, Institute institute, String theUrl, HttpServletRequest request) {
     	String result = null;
+    	
+    	String url = request.getLocalName();
+    	if (url.equals("127.0.0.1")) {
+    		url += ":8080";
+    	}
     	   	
-		String url = "http://localhost:8080";
+		//String url = "http://localhost:8080";
 		
 		// get the first part of the url
 		int ipos = theUrl.toLowerCase().indexOf("/biominer");
@@ -356,7 +362,7 @@ public class UserController {
 			theLab = lab.getFirst() + " " + lab.getLast();
 		
 		}
-				    
+		
 		String theInstitute = "";
 
 		if (institute != null) {
@@ -378,7 +384,8 @@ public class UserController {
 		String subject = "BioMiner user account pending approval for " + user.getFirst() + " " + user.getLast();
 		
 		int numEmails = 1;
-		String email = "BioMiner Support";
+		String email = "BioMinerSupport@hci.utah.edu";
+		//String email = "tim.mosbruger@hci.utah.edu";
 		if (labEmail != null && !email.toLowerCase().equals(labEmail.toLowerCase())) {
 			numEmails++;
 		}
@@ -386,6 +393,7 @@ public class UserController {
 		String [] emails = new String[numEmails];
 		if (numEmails == 2) {
 			emails[0] = labEmail;
+		
 			emails[1] = email;
 		}
 		else {

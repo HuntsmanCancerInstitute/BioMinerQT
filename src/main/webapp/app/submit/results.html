@@ -1,6 +1,7 @@
 <div class="container-fluid">
-
-	<div class="row" style="padding-top: 10px;">
+	
+	<div class="row">
+	    <span class="section-header">Create Analysis</span>
 		<form class="form-horizontal" name="resultForm">
 			<fieldset>
 		
@@ -10,7 +11,7 @@
 			<div class="form-group">
 				<label class="col-md-4 control-label" for="analysis_result_name">Name</label>  
 				<div class="col-md-5">
-			  		<input id="analysis_result_name" ng-model="result.name" placeholder="name" class="form-control input-md" type="text" required>
+			  		<input id="analysis_result_name" ng-model="result.name" placeholder="name" class="form-control input-sm" type="text" required>
 				</div>
 			</div> 
 			
@@ -18,7 +19,7 @@
 			<div class="form-group">
 				<label class="col-md-4 control-label" for="analysis_description">Description</label>
 				<div class="col-md-5">
-			  		<textarea class="form-control" placeholder="method / description" ng-model="result.description" id="analysis_description"></textarea>
+			  		<textarea class="form-control input-sm" placeholder="method / description" ng-model="result.description" id="analysis_description"></textarea>
 				</div>
 			</div> 
 			
@@ -27,9 +28,9 @@
 				<label class="col-md-4 control-label" for="">Date</label>
 				<div class="col-md-5">
 					 <p class="input-group">
-		              <input type="text" class="form-control" datepicker-popup="MM/dd/yyyy" ng-model="result.date" is-open="datepicker.opened" close-text="Close" required />
+		              <input type="text" class="form-control input-sm" datepicker-popup="MM/dd/yyyy" ng-model="result.date" is-open="datepicker.opened" close-text="Close" required />
 		              <span class="input-group-btn">
-		                <button class="btn btn-default" ng-click="open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
+		                <button class="btn btn-default btn-sm" ng-click="open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
 		              </span>
 		        	</p>
 	        	</div>
@@ -40,8 +41,8 @@
 			<div class="form-group">
 				<label class="col-md-4 control-label" for="analysis_type">Analysis type</label>
 				<div class="col-md-5">  
-					<select id="analysis_type" ng-model="result.analysisType" ng-options="at as at.type for at in analysisTypeList track by at.idAnalysisType" placeholder="Choose analysis type" class="form-control" required>
-					<option value=""></option>
+					<select id="analysis_type" ng-model="result.analysisType" ng-options="at as at.type for at in analysisTypeList track by at.idAnalysisType" class="form-control input-sm" required>
+					<option value="">Select analysis type...</option>
 					</select>			
 				</div>
 			</div>
@@ -50,8 +51,8 @@
 			<div class="form-group">
 				<label class="col-md-4 control-label" for="applicable_files">Files</label>
 				<div class="col-md-5">  
-				  <select placeholder="Choose file" id="applicable_files" class="form-control" ng-model="result.file"  ng-options="file as file.name for file in files.importedFiles track by file.idFileUpload" options-disabled="((file.isAnalysisSet || !file.doesAnalysisMatch) && file.idFileUpload != result.file.idFileUpload) for file in files.importedFiles" required>
-					<option value=""></option>
+				  <select id="applicable_files" class="form-control input-sm" ng-model="result.file"  ng-options="file as file.name for file in files.importedFiles track by file.idFileUpload" options-disabled="((file.isAnalysisSet || !file.doesAnalysisMatch) && file.idFileUpload != result.file.idFileUpload) for file in files.importedFiles" required>
+					<option value="">Select analysis file...</option>
 				  </select> 
 				</div>	
 			</div> 
@@ -60,7 +61,7 @@
 			<div class="form-group">
 				<label class="col-md-4 control-label" for="applicable_samples">Samples</label>
 				<div class="col-md-5">
-				  	<select width="100" id="applicable_samples" data-placeholder="Select Samples..." ng-model="result.samples" chosen multiple class="form-control chosen-select" ng-options="sample as sample.name for sample in samples track by sample.idSample" required> 
+				  	<select width="100" id="applicable_samples" data-placeholder="Select samples..." ng-model="result.samples" chosen multiple class="form-control chosen-select" ng-options="sample as sample.name for sample in samples track by sample.idSample" required> 
 				    </select>
 				</div>	
 			</div> 
@@ -69,7 +70,7 @@
 			<div class="form-group">
 				<label class="col-md-4 control-label" for="applicable_datatracks">Data tracks</label>
 				<div class="col-md-5">
-				  <select width="100" id="applicable_datatracks" data-placeholder="Select DataTracks..." ng-model="result.dataTracks" chosen multiple class="form-control chosen-select"  ng-options="dt as dt.name for dt in datatracks track by dt.idDataTrack" required>
+				  <select width="100" id="applicable_datatracks" data-placeholder="Select dataTracks..." ng-model="result.dataTracks" chosen multiple class="form-control chosen-select"  ng-options="dt as dt.name for dt in datatracks track by dt.idDataTrack" required>
 				  </select> 
 				</div>	
 			</div> 
@@ -79,9 +80,9 @@
 			<div class="form-group">
 			  	<label class="col-md-4 control-label" for=""></label>  
 				<div class="col-md-5 animate-switch-container" ng-switch on="resultEditMode">
-					<button id="add_result_button"  class="animate-switch btn btn-primary" ng-switch-when="false" ng-click="addResult(result)" ng-disabled="resultForm.$invalid">Add</button>
-					<button id="save_result_button" class="animate-switch btn btn-primary" ng-switch-when="true" ng-click="saveResult(result)" ng-disabled="resultForm.$invalid">Save</button>
-					<button id="save_sample_button" class="animate-switch btn btn-warning" ng-click="clearResult()">Clear</button>
+					<button id="add_result_button"  class="animate-switch btn btn-primary btn-sm" ng-switch-when="false" ng-click="addResult(result)" ng-disabled="resultForm.$invalid">Add</button>
+					<button id="save_result_button" class="animate-switch btn btn-primary btn-sm" ng-switch-when="true" ng-click="saveResult(result)" ng-disabled="resultForm.$invalid">Save</button>
+					<button id="save_sample_button" class="animate-switch btn btn-warning btn-sm" ng-click="clearResult()">Clear</button>
 				</div>
 			</div>
 			
@@ -119,10 +120,10 @@
 			            <td><div ng-repeat="dt in result.dataTracks">{{dt.name}}<br></div></td>
 			            <td>
 				            <div ng-show="result.show">
-				            	<button class="btn btn-sm btn-primary" ng-click="editResult(result)" data-toggle="tooltip" data-placement="top" title="edit">
+				            	<button class="btn btn-xs btn-primary" ng-click="editResult(result)" data-toggle="tooltip" data-placement="top" title="edit">
 					        		<span class="glyphicon glyphicon-pencil"></span>
 				                </button>
-				                <button class="btn btn-sm btn-danger" ng-click="removeResult(result)" data-toggle="tooltip" data-placement="top" title="remove">
+				                <button class="btn btn-xs btn-danger" ng-click="removeResult(result)" data-toggle="tooltip" data-placement="top" title="remove">
 				                 	<span class="glyphicon glyphicon-trash"></span>
 				                </button>
 				            </div>
