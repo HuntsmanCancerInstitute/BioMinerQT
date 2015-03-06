@@ -67,7 +67,7 @@
 	          <ul class="nav navbar-nav">
 
 	    	    <li><a href="#/query" ><span class="glyphicon glyphicon-zoom-in"></span> Query</a></li>
-	    	    <li><a href="#/submit" ng-hide="!admin"><span class="glyphicon glyphicon-cloud-upload"></span> Submit Your Data</a></li>
+	    	    <li><a href="#/submit" ng-hide="$root.loggedUser == null"><span class="glyphicon glyphicon-cloud-upload"></span> Submit Your Data</a></li>
 	        	<li><a href="#/useradmin" ng-hide="!admin"><span class="glyphicon glyphicon-cog"></span> Admin</a></li>
 	        	<li><a href="#/reportIssue"><span class="glyphicon glyphicon-thumbs-down"></span> Report Problem</a></li>
 

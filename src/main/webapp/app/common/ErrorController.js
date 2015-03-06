@@ -25,11 +25,11 @@ function($scope, $modal, $sce, $rootScope, $http, title, message, stackTrace, er
 		}
 		
 		var body = "User " + user + " reported an error at " + errorTime + "\n\n" + $scope.userComments + 
-			"\n\n" + $scope.message + "\n\n" + $scope.stackTrace + "\n\n Peace,\nBiominer\n\n" ;
+			"\n\n" + $scope.message + "\n\n" + $scope.stackTrace + "\n\n" ;
 		$http({
 			url : "shared/sendMail",
 			method : "POST",
-			params : {subject: subject, body: body, stackTrace: stackTrace}
+			params : {subject: subject, body: body}
 		});
 		$modal.dismiss();
 	};

@@ -56,7 +56,7 @@ public class DashboardService {
 	}
 	
 	public void updateSubmissionDate(Long date) {
-		dashboardDAO.updateQueryDate(date);
+		dashboardDAO.updateSubmissionDate(date);
 	}
 	
 	public void updateLastReportDate(Long date) {
