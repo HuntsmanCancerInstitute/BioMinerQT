@@ -1,11 +1,12 @@
  'use strict';
 
 angular.module("useradmin").controller("UserController", [
- '$scope','$http', '$modalInstance','labList','instituteList','userData','title','bFace',
-function ($scope, $http, $modalInstance, labList, instituteList, userData, title,bFace) {
+ '$scope','$http', '$modalInstance','labList','instituteList','userData','title','bFace','showAll',
+function ($scope, $http, $modalInstance, labList, instituteList, userData, title, bFace, showAll) {
  
 	$scope.title = title;
 	$scope.bFace = bFace;
+	$scope.showAll = showAll;
 	$scope.availLabs = labList;
 	$scope.availInst = instituteList;
 	$scope.user = angular.copy(userData);

@@ -44,21 +44,10 @@ var directives = angular.module('directives', [])
             if(elem.val()!=""){
                 var locals = {};
                 locals[attr] = data[index];
-                
-//                elem.attr("disabled",fnDisableIfTrue(scope, locals))
-                
-                if (fnDisableIfTrue(scope, locals)) {
-                	elem.attr("class","disable-result");
-                	console.log("disabled");
-                } else {
-                	elem.attr("class","active-result");
-                	console.log("active");
-                }
-                
+                elem.attr("disabled", fnDisableIfTrue(scope, locals));
                 index++;
             }
         }
-        
     };
     return {
         priority: 0,

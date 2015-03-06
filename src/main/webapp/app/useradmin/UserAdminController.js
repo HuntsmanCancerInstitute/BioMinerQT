@@ -378,6 +378,9 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
     			},
     			bFace: function() {
     				return "Update";
+    			},
+    			showAll: function() {
+    				return true;
     			}
     		}
     	});
@@ -540,6 +543,9 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
     			},
     			bFace: function() {
     				return "Add";
+    			},
+    			showAll: function() {
+    				return true;
     			}
 		  }
 	    });

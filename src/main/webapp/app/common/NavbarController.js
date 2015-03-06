@@ -99,27 +99,21 @@ $scope.openEditUserWindow = function(e) {
     			},
     			bFace: function() {
     				return "Update";
+    			},
+    			showAll: function() {
+    				return false;
     			}
     		}
     	});
     	
     	modalInstance.result.then(function (user) {
     		//Create a list of lab ids
-	    	var lids = [];
-	    	var iids = [];
 	    	
-	    	for (var i=0; i<user.labs.length;i++) {
-	    		lids.push(user.labs[i].idLab);
-	    	}
-	    	
-	    	for (var i=0;i<user.institutes.length;i++) {
-	    		iids.push(user.institutes[i].idInstitute);
-	    	}
 	    	$http({
     	    	method: 'POST',
-    	    	url: 'user/modifyuser',
+    	    	url: 'user/selfmodify',
     	    	params: {first:user.first,last:user.last,username:user.username,password:user.password,email:user.email,
-    	    		phone:user.phone,admin:$rootScope.admin,lab:lids,institutes:iids,idUser:user.idUser}
+    	    		phone:user.phone,idUser:user.idUser}
     	    }).success(function(data,status) {
     	    });
 	    	

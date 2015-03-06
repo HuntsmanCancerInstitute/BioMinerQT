@@ -268,6 +268,33 @@ public class UserController {
     	userService.deleteUser(idUser);
     }
     
+    
+    @RequestMapping(value = "selfmodify", method=RequestMethod.POST)
+    @ResponseBody
+    public void selfModify(@RequestParam(value="first") String firstName, @RequestParam(value="last") String lastName, @RequestParam(value="username") String username,
+    		@RequestParam(value="password") String password, @RequestParam(value="email") String email, @RequestParam(value="phone") Long phone, 
+    		@RequestParam(value="idUser") Long idUser) {
+    	
+    	//Create new password if updated
+    	String salt = null;
+    	String npass = null;
+    	if (!password.equals("placeholder")) {
+    		salt = this.createSalt();
+        	npass = this.createPassword(password, salt);
+    	}
+    	
+    	User user = this.userService.getUser(idUser);
+    	user.setEmail(email);
+    	user.setFirst(firstName);
+    	user.setLast(lastName);
+    	user.setUsername(username);
+    	user.setSalt(salt);
+    	user.setPassword(npass);
+    	
+    	//Update user
+    	userService.updateUser(idUser,user);
+    }
+    
     @RequestMapping(value = "modifyuser", method=RequestMethod.POST)
     @ResponseBody
     @RequiresPermissions("user:modify")
