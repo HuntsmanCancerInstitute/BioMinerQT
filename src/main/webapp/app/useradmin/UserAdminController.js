@@ -595,6 +595,9 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
     			},
     			bFace: function() {
     				return "Sign Up";
+    			},
+    			showAll: function() {
+    				return true;
     			}
 		  }
 	    });
