@@ -61,17 +61,17 @@
 			        <tr>
 			            <th >Display Name</th>
 			            <th >File Name</th>
-			            <th ></th>
+			            <th >Controls</th>
 			        </tr>
 			    </thead>
 			    <tbody>
-			        <tr ng-repeat="datatrack in datatracks" ng-mouseenter="hideDatatrackControls(datatrack)" ng-mouseleave="hideDatatrackControls(datatrack)">
+			        <tr ng-repeat="datatrack in datatracks" ng-mouseenter="showDatatrackControls(datatrack)" ng-mouseleave="hideDatatrackControls(datatrack)">
 			            <td style="width: 40%;">{{datatrack.name}}</td>
 			            <td style="width: 45%;">{{datatrack.path}}</td>
-			            <td style="width: 15%;"">
+			            <td style="width: 100px;"">
 			                <div ng-show=datatrack.show>
 			                 <button class="btn btn-xs btn-primary table-button" ng-click="editDataTrack(datatrack)" data-toggle="tooltip" data-placement="top" title="edit">
-								<span class="glyphicon glyphicon-pencil"></span>
+								<span class="glyphicon glyphicon-edit"></span>
 							 </button>
 			                 <button class="btn btn-xs btn-danger table-button" ng-click="removeDataTrack(datatrack)" data-toggle="tooltip" data-placement="top" title="remove">
 			                 	<span class="glyphicon glyphicon-trash"></span>

@@ -73,6 +73,9 @@ select.form-control + .chosen-container .chosen-results li.active-result {
     white-space: nowrap;
     background-image:none;
 }
+select.form-control + .chosen-container .chosen-results li.disabled-result {
+    color: #ccc;
+}
 select.form-control + .chosen-container .chosen-results li:hover, 
 select.form-control + .chosen-container .chosen-results li.active-result:hover,
 select.form-control + .chosen-container .chosen-results li.highlighted
@@ -105,6 +108,7 @@ select.form-control + .chosen-container-multi .chosen-choices {
 select.form-control + .chosen-container-multi .chosen-choices li.search-field input[type="text"] {
     height:auto;
     padding:5px 0;
+    margin: 1px 5px;
 }
 
 select.form-control + .chosen-container-multi .chosen-choices li.search-choice {

@@ -1,7 +1,7 @@
 
 <div class="container-fluid">
-   <div class="row">
-   <span class="section-header">Project</span>
+   <div class="row" ng-style="projectPanelStyle">
+   <span class="section-header" >Project</span>
 	 <form class="form-horizontal" name="editProjectForm">
 		<fieldset>
 		   <div class="row">
@@ -34,11 +34,13 @@
 				<!-- Select Basic -->
 				<div class="form-group">
 				  <label class="col-md-4 control-label" for="species_build">Species and Genome Build</label>
-				  <div class="col-md-5">
-				    <select ng-show="projectEditMode" id="species_build" ng-model="editedProject.organismBuild.idOrganismBuild"  ng-options="gb.idOrganismBuild as gb.name group by gb.organism.common for gb in organismBuildList" class="form-control input-sm" required>
-				    <option value="">Select build...</option>
+				  <div class="col-md-5" ng-show="projectEditMode">
+				  	<select width="100" chosen data-placeholder="Select build..."  id="species_build" ng-model="editedProject.organismBuild.idOrganismBuild"  ng-options="gb.idOrganismBuild as gb.name for gb in organismBuildList" class="form-control chosen-select" required>
+				    <option value=""></option>
 				    </select>
-				    <select ng-hide="projectEditMode" ng-disabled="true" id="species_build" ng-model="project.organismBuild.idOrganismBuild"  ng-options="gb.idOrganismBuild as gb.name group by gb.organism.common for gb in organismBuildList" class="form-control input-sm" />
+				  </div>
+				  <div class="col-md-5" ng-hide="projectEditMode">
+				    <select width="100" chosen ng-disabled="true" id="species_build" ng-model="project.organismBuild.idOrganismBuild"  ng-options="gb.idOrganismBuild as gb.name group by gb.organism.common for gb in organismBuildList" class="form-control chosen-control"/>
 				  </div>
 				</div>
 				
@@ -68,15 +70,15 @@
 				<div class="form-group">
 				  <label class="col-md-4 control-label" for="visibility">Visibility</label>
 				  <div class="col-md-5" ng-show="projectEditMode"> 
-				    <label class="radio-inline" ng-repeat="visibility in projectVisibilities" for="radio-rt-{{visibility.name}}-1">
-				      <input id="radio-rt-{{visibility.name}}-1" name="visibility"  ng-value="visibility.enum" ng-model="editedProject.visibility" type="radio">
+				    <label class="radio-inline" ng-repeat="visibility in projectVisibilities">
+				      <input name="visibility"  ng-value="visibility.enum" ng-model="editedProject.visibility" type="radio">
 				         {{ visibility.name }}
 				      </input>
 				    </label> 
 				  </div>
 				  <div class="col-md-5" ng-hide="projectEditMode" > 
-				    <label class="radio-inline" ng-repeat="visibility in projectVisibilities" for="radio-rt-{{visibility.name}}-2">
-				      <input id="radio-rt-{{visibility.name}}-2" name="visibility"  ng-value="visibility.enum" ng-model="project.visibility" type="radio" ng-disabled="true">
+				    <label class="radio-inline" ng-repeat="visibility in projectVisibilities">
+				      <input name="visibility"  ng-value="visibility.enum" ng-model="project.visibility" type="radio" ng-disabled="true">
 				         {{ visibility.name }}
 				      </input>
 				    </label> 
@@ -96,11 +98,11 @@
 		</fieldset>
 	</form>
 	</div>
-<div class="row">
+<div class="row" id="sampleRow" ng-style="samplePanelStyle">
 	<span class="section-header">Samples</span>
 	<ng:include src="'app/submit/samples.html'"></ng:include>
 </div>
-<div class="row">
+<div class="row" id="datatrackRow" ng-style="datatrackPanelStyle">
 	<span class="section-header">Data Tracks</span>
 	<ng:include src="'app/submit/datatracks.html'"></ng:include>
 </div>

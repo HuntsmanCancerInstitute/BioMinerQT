@@ -1,7 +1,7 @@
 <div class="container-fluid">
 	
-	<div class="row">
-	    <span class="section-header">Create Analysis</span>
+	<div class="row" ng-style="resultPanelStyle">
+	    <span class="section-header">Analysis</span>
 		<form class="form-horizontal" name="resultForm">
 			<fieldset>
 		
@@ -11,8 +11,13 @@
 			<div class="form-group">
 				<label class="col-md-4 control-label" for="analysis_result_name">Name</label>  
 				<div class="col-md-5">
-			  		<input id="analysis_result_name" ng-model="result.name" placeholder="name" class="form-control input-sm" type="text" required>
+			  		<input name="analysis_name" id="analysis_result_name" ng-model="result.name" placeholder="name" class="form-control input-sm" type="text" ui-validate="{result_name_used: 'checkResultName($value)'}" required>
 				</div>
+				
+				<div class="col-md-5 col-md-offset-4">
+					<span ng-show="resultForm.analysis_name.$error.result_name_used" class="label label-danger">analysis name already in use</span>
+				</div>
+				
 			</div> 
 			
 			<!-- Description -->
@@ -41,8 +46,8 @@
 			<div class="form-group">
 				<label class="col-md-4 control-label" for="analysis_type">Analysis type</label>
 				<div class="col-md-5">  
-					<select id="analysis_type" ng-model="result.analysisType" ng-options="at as at.type for at in analysisTypeList track by at.idAnalysisType" class="form-control input-sm" required>
-					<option value="">Select analysis type...</option>
+					<select width="100" chosen data-placeholder="Select analysis type..." id="analysis_type" ng-model="result.analysisType" ng-options="at as at.type for at in analysisTypeList track by at.idAnalysisType" class="form-control chosen-select" required>
+					<option value=""></option>
 					</select>			
 				</div>
 			</div>
@@ -51,8 +56,8 @@
 			<div class="form-group">
 				<label class="col-md-4 control-label" for="applicable_files">Files</label>
 				<div class="col-md-5">  
-				  <select id="applicable_files" class="form-control input-sm" ng-model="result.file"  ng-options="file as file.name for file in files.importedFiles track by file.idFileUpload" options-disabled="((file.isAnalysisSet || !file.doesAnalysisMatch) && file.idFileUpload != result.file.idFileUpload) for file in files.importedFiles" required>
-					<option value="">Select analysis file...</option>
+				  <select width="100" ng-disabled="validFiles.length == 0" id="applicable_files" data-placeholder="Select analysis file..." chosen class="form-control chosen-select" ng-model="result.file" foo="result.analysisType" ng-options="file as file.name for file in validFiles track by file.idFileUpload" required>
+					<option value=""></option>
 				  </select> 
 				</div>	
 			</div> 
@@ -83,11 +88,9 @@
 					<button id="add_result_button"  class="animate-switch btn btn-primary btn-sm" ng-switch-when="false" ng-click="addResult(result)" ng-disabled="resultForm.$invalid">Add</button>
 					<button id="save_result_button" class="animate-switch btn btn-primary btn-sm" ng-switch-when="true" ng-click="saveResult(result)" ng-disabled="resultForm.$invalid">Save</button>
 					<button id="save_sample_button" class="animate-switch btn btn-warning btn-sm" ng-click="clearResult()">Clear</button>
+					<button id="duplicate_result_button" class="animate-switch btn btn-success btn-sm" tooltip="Duplicate last entered result to a new entry" ng-hide="lastResult==null || resultEditMode" ng-click="duplicateResult()">Duplicate</button>					
 				</div>
 			</div>
-			
-			
-			
 		</div> <!--  end row -->
 
 		</fieldset>
@@ -106,11 +109,11 @@
 			            <th >Files</th>
 			            <th >Samples</th>
 			            <th >Data Tracks</th>
-			            <th ></th>
+			            <th style="width: 100px">Controls</th>
 			        </tr>
 			    </thead>
 			    <tbody>
-			        <tr ng-repeat="result in results" ng-mouseenter="hideResultControls(result)" ng-mouseleave="hideResultControls(result)">
+			        <tr ng-repeat="result in results | orderBy:'-idAnalysis'" ng-mouseenter="showResultControls(result)" ng-mouseleave="hideResultControls(result)">
 			            <td>{{result.name}}</td>
 			            <td>{{result.description}}</td>
 			            <td>{{result.date | date:'MM/dd/yyyy'}}</td>
@@ -120,10 +123,13 @@
 			            <td><div ng-repeat="dt in result.dataTracks">{{dt.name}}<br></div></td>
 			            <td>
 				            <div ng-show="result.show">
-				            	<button class="btn btn-xs btn-primary" ng-click="editResult(result)" data-toggle="tooltip" data-placement="top" title="edit">
-					        		<span class="glyphicon glyphicon-pencil"></span>
+				            	<button class="btn btn-xs btn-primary" ng-click="editResult(result)"  data-toggle="tooltip" tooltip="edit analysis" title="edit">
+					        		<span class="glyphicon glyphicon-edit"></span>
 				                </button>
-				                <button class="btn btn-xs btn-danger" ng-click="removeResult(result)" data-toggle="tooltip" data-placement="top" title="remove">
+				                <button class="btn btn-xs btn-success" ng-click="copyResult(result)"  data-toggle="tooltip" tooltip="copy to entry form" title="copy">
+					        		<span class="glyphicon glyphicon-share"></span>
+				                </button>
+				                <button class="btn btn-xs btn-danger" ng-click="removeResult(result)" data-toggle="tooltip" tooltip="delete analysis" title="remove">
 				                 	<span class="glyphicon glyphicon-trash"></span>
 				                </button>
 				            </div>

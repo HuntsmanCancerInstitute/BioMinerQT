@@ -21,6 +21,10 @@ input::-webkit-inner-spin-button {
     
 }
 
+.editBackground{
+	color: "LightYellow";
+}
+
 .td-container-unselected {
 	overflow: hidden;
     text-overflow: ellipsis;

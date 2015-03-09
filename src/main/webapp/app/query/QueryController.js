@@ -526,7 +526,6 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 
 		}
 		
-		console.log($scope.isThresholdBasedQuery);
 		
 
 		// intersect

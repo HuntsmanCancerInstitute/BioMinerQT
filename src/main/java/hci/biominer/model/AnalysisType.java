@@ -61,8 +61,5 @@ public class AnalysisType {
     this.codeResultTypes = codeResultTypes;
   }
 	
-	
-	
-	
 
 }

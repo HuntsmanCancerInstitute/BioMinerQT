@@ -5,11 +5,11 @@
  * @constructor
  */
  
-var submit    = angular.module('submit', ['ui.bootstrap','filters', 'services', 'directives','chosen','ngProgress','dialogs.main','error']);
+var submit    = angular.module('submit', ['ui.bootstrap','ui.validate','filters', 'services', 'directives','chosen','ngProgress','dialogs.main','error']);
 
 angular.module("submit").controller("SubmitController", [
-'$scope', '$http', '$modal','DynamicDictionary','StaticDictionary','$rootScope','$upload','$q','ngProgress','dialogs',
-function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$upload,$q,ngProgress, dialogs) {
+'$scope', '$http', '$modal','DynamicDictionary','StaticDictionary','$rootScope','$upload','$q','ngProgress','dialogs','$anchorScroll','$location',
+function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$upload,$q,ngProgress, dialogs, $anchorScroll, $location) {
 	/**********************
 	 * Initialization!
 	 *********************/
@@ -39,8 +39,15 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
     $scope.sample = {sampleType: null};
     $scope.datatrack = {};
     $scope.result = {};
+    $scope.result.analysisType = null;
+    $scope.result.date = new Date();
     $scope.project = {};
     $scope.lastSample = null;
+    $scope.lastResult = null;
+    
+    //name checks
+    $scope.originalResultName;
+    $scope.originalSampleName;
        
     //flags
     $scope.sampleEditMode = false;
@@ -48,14 +55,16 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
     $scope.resultEditMode = false;
     $scope.projectEditMode = false;
     
- 
     $scope.samplePrepUsed = true;
     $scope.sampleConditionUsed = true;
     $scope.sampleSourceUsed = true;
     
     $scope.complete = 0;
     $scope.totalGlobalSize = 0;
-	$scope.currGlobalSize = 0;		
+	$scope.currGlobalSize = 0;
+	
+	//holds valid analyses
+	$scope.validFiles = [];
     
     
     $rootScope.helpMessage = "<p>Placeholder for data submission help.</p>";
@@ -143,6 +152,47 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
     	}
     	
     });
+    
+    $scope.$watch("files.importedFiles",function() {
+    	$scope.checkFileStatus();
+    });
+    
+    $scope.$watch("result.analysisType",function() {
+		if ($scope.result.analysisType != null) {
+			for (var i=0; i<$scope.files.importedFiles.length; i++) {
+				if ($scope.files.importedFiles[i].analysisType.idAnalysisType == $scope.result.analysisType.idAnalysisType) {
+					$scope.files.importedFiles[i].doesAnalysisMatch = true;
+				} else {
+					$scope.files.importedFiles[i].doesAnalysisMatch = false;
+				}
+			}
+		}
+		
+		if ($scope.result.file != null &&  $scope.result.analysisType != null) {
+			if ($scope.result.file.analysisType.idAnalysisType != $scope.result.analysisType.idAnalysisType) {
+				$scope.result.file = null;
+			}
+		}
+		
+		$scope.checkFileStatus();
+	});
+    
+
+    $scope.checkFileStatus = function() {
+    	$scope.validFiles = [];
+    	for (var i=0; i<$scope.files.importedFiles.length;i++) {
+    		var file = $scope.files.importedFiles[i];
+    		if (file.isAnalysisSet || !file.doesAnalysisMatch) {
+    			if ($scope.result.file != undefined && file.idFileUpload == $scope.result.file.idFileUpload) {
+    				$scope.validFiles.push(file);
+    			} else {
+    				
+    			}
+    		} else {
+    			$scope.validFiles.push(file);
+    		}
+    	}
+    };
     
     /**********************
 	 * Project management
@@ -331,19 +381,25 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 	$scope.clearSample = function() {
 		$scope.sample = {};
 		$scope.sampleEditMode = false;
+		$scope.originalSampleName = null;
 	};
 
 	$scope.editSample = function(sample) {
 		$scope.sample = angular.copy(sample);
+		$scope.originalSampleName = angular.copy(sample.name);
 		$scope.sampleEditMode = true;
-		
-		console.log($scope.samplePrepList);
-		console.log($scope.samplePrepListAll);
     };
     
     $scope.duplicateSample = function() {
     	$scope.sample = angular.copy($scope.lastSample);
+    	$scope.originalSampleName = null;
     };
+    
+    $scope.copySample = function(sample) {
+    	$scope.sample = angular.copy(sample);
+		$scope.sampleEditMode = false;
+		$scope.originalSampleName = null;
+	}
 	
 	$scope.saveSample = function(sample) {
 		$scope.sampleEditMode = false;
@@ -357,6 +413,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 		}).success(function(data) {
 			$scope.loadProjects($scope.projectId);
 			$scope.sample = {};
+			$scope.originalSampleName = null;
 		}).error(function(data, status, headers, config) {
 			console.log("Could not update sample.");
 		});
@@ -390,6 +447,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 			params: {idSample: sample.idSample},
 		}).success(function(data) {
 			$scope.loadProjects($scope.projectId);
+			$scope.originalSampleName = null;
 		}).error(function(data, status, headers, config) {
 			console.log("Could not delete sample.");
 		});
@@ -409,11 +467,26 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 			$scope.samplePrepUsed = true;
 			$scope.sampleConditionUsed = true;
 			$scope.sampleSourceUsed = true;
+			$scope.originalSampleName = null;
 		}).error(function(data, status, headers, config) {
 			console.log("Could not create sample.");
 		});
 		$scope.sample = {};
 		
+	};
+	
+	$scope.checkSampleName = function(name) {
+		if ($scope.sampleEditMode && $scope.originalSampleName == name) {
+			return true;
+		}
+		var retVal = true;
+		for (var i=0; i<$scope.samples.length;i++) {
+			console.log(name + " " + $scope.samples[i].name);
+			if (name == $scope.samples[i].name) {
+				retVal = false;
+			}
+		}
+		return retVal;
 	};
 	
 	
@@ -793,13 +866,17 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 	
 	$scope.clearResult = function() {
 		$scope.result = {};
+		$scope.result.date = new Date();
 		$scope.resultEditMode = false;
+		$scope.originalResultName = null;
 	};
 
 	$scope.editResult = function(result) {
 		$scope.result = angular.copy(result);
 		$scope.result.date = new Date(result.date);
 		$scope.resultEditMode = true;
+		$scope.originalResultName = $scope.result.name;
+		$anchorScroll();
     };
     
 	$scope.saveResult = function(result) {
@@ -822,7 +899,8 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 				idSampleList: sampleList, idDataTrackList: dataTrackList, idFileUpload: result.file.idFileUpload, idAnalysisType: result.analysisType.idAnalysisType}
 		}).success(function(data) {
 			$scope.loadProjects($scope.projectId);
-			$scope.result = {};
+			$scope.resetResult();
+			$scope.originalResultName = null;
 		}).error(function(data) {
 			console.log("Could not update analysis.");
 		});
@@ -839,7 +917,6 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 		}).error(function(data) {
 			console.log("Error deleting analysis");
 		});
-		$scope.result = {};
     };
 	
 	$scope.addResult = function(result) {
@@ -861,11 +938,53 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 				idSampleList: sampleList, idDataTrackList: dataTrackList, idFileUpload: result.file.idFileUpload, idAnalysisType: result.analysisType.idAnalysisType}
 		}).success(function(data) {
 			$scope.loadProjects($scope.projectId);
-			$scope.result = {};
+			$scope.lastResult = $scope.result;
+			$scope.lastResult.file = null;
+			$scope.originalResultName = null;
+			$scope.resetResult();
 		}).error(function(data) {
 			console.log("Could not create analysis.");
 		});
 	};
+	
+	$scope.duplicateResult = function() {
+		$scope.originalResultName = null;
+		$scope.result = $scope.lastResult;
+		$scope.result.date = new Date($scope.lastResult.date);
+		$anchorScroll();
+	};
+	
+	$scope.copyResult = function(result) {
+		$scope.resultEditMode = false;
+		$scope.originalResultName = null;
+		$scope.result = angular.copy(result);
+		$scope.result.file = null;
+		$scope.result.date = new Date(result.date);
+		$anchorScroll();
+	};
+	
+	$scope.checkResultName = function(name) {
+		if ($scope.resultEditMode && $scope.originalResultName == name) {
+			return true;
+		}
+		var retVal = true;
+		for (var i=0; i<$scope.results.length;i++) {
+			console.log(name + " " + $scope.results[i].name);
+			if (name == $scope.results[i].name) {
+				retVal = false;
+			}
+		}
+		return retVal;
+	};
+	
+	$scope.resetResult = function() {
+		$scope.result = {};
+		$scope.result.date = new Date();
+	}
+	
+	
+	//Messaging
+	
 	
 	
 	$scope.showErrorMessage = function(title,message) {
@@ -969,38 +1088,34 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 		});
 	};
 	
-	$scope.$watch("result.analysisType",function() {
-		if ($scope.result.analysisType != null) {
-			for (var i=0; i<$scope.files.importedFiles.length; i++) {
-				if ($scope.files.importedFiles[i].analysisType.idAnalysisType == $scope.result.analysisType.idAnalysisType) {
-					$scope.files.importedFiles[i].doesAnalysisMatch = true;
-				} else {
-					$scope.files.importedFiles[i].doesAnalysisMatch = false;
-				}
-			}
-		}
-		
-		if ($scope.result.file != null &&  $scope.result.analysisType != null) {
-			if ($scope.result.file.analysisType.idAnalysisType != $scope.result.analysisType.idAnalysisType) {
-				$scope.result.file = null;
-			}
-		}
-	});
+	
 	
 	/****************
 	 * Hide/Show controls
 	 */
 	
 	$scope.hideSampleControls = function(sample) {
-		sample.show = !sample.show;
+		sample.show = false;
+	};
+	
+	$scope.showSampleControls = function(sample) {
+		sample.show = true;
 	};
 	
 	$scope.hideResultControls = function(result) {
-		result.show = !result.show;
+		result.show = false;
 	};
 	
+	$scope.showResultControls = function(result) {
+		result.show = true;
+	}
+	
 	$scope.hideDatatrackControls = function(datatrack) {
-		datatrack.show = !datatrack.show;
+		datatrack.show = false;
+	};
+	
+	$scope.showDatatrackControls = function(datatrack) {
+		datatrack.show = true;
 	};
 	
 	$scope.datepicker = {opened: false};
@@ -1009,6 +1124,47 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 	    $event.stopPropagation();
 	    $scope.datepicker.opened = true;
 	};
+	
+	/***********
+	 * styling
+	 */
+	
+	$scope.resultPanelStyle = {};
+	$scope.$watch("resultEditMode", function() {
+		if ($scope.resultEditMode) {
+			$scope.resultPanelStyle = {'background-color':'LightYellow'};
+		} else {
+			$scope.resultPanelStyle = {'background-color':'white'};
+		}
+		
+	});
+	
+	$scope.projectPanelStyle = {}
+	$scope.$watch("projectEditMode", function() {
+		if ($scope.projectEditMode) {
+			$scope.projectPanelStyle = {'background-color':'LightYellow'};
+		} else {
+			$scope.projectPanelStyle = {'background-color':'white'};
+		}
+	})
+	
+	$scope.samplePanelStyle = {}
+	$scope.$watch("sampleEditMode", function() {
+		if ($scope.sampleEditMode) {
+			$scope.samplePanelStyle = {'background-color':'LightYellow'};
+		} else {
+			$scope.samplePanelStyle = {'background-color':'white'};
+		}
+	})
+	
+	$scope.datatrackPanelStyle = {}
+	$scope.$watch("datatrackEditMode", function() {
+		if ($scope.datatrackEditMode) {
+			$scope.datatrackPanelStyle = {'background-color':'LightYellow'};
+		} else {
+			$scope.datatrackPanelStyle = {'background-color':'white'};
+		}
+	})
 
 	
 }]);
