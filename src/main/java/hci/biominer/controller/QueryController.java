@@ -112,9 +112,10 @@ public class QueryController {
     @Autowired
     private DashboardService dashboardService;
     
-    private StringBuilder warnings = new StringBuilder("");
+    //private StringBuilder warnings = new StringBuilder("");
     
     private HashMap<String,QueryResultContainer> resultsDict =  new HashMap<String,QueryResultContainer>();
+    private HashMap<String,StringBuilder> queryWarningsDict = new HashMap<String,StringBuilder>();
     private HashMap<String,QuerySettings> settingsDict = new HashMap<String,QuerySettings>();
     private HashMap<String,String> regionDict = new HashMap<String,String>();
     private HashMap<String,String> geneDict = new HashMap<String,String>();
@@ -247,7 +248,21 @@ public class QueryController {
     @RequestMapping(value="warnings",method=RequestMethod.GET)
     @ResponseBody
     public String getWarnings() {
-    	return this.warnings.toString();
+    	//Get current active user
+    	Subject currentUser = SecurityUtils.getSubject();
+    	
+    	User user = null;
+    	String username;
+    	if (currentUser.isAuthenticated()) {
+    		Long userId = (Long) currentUser.getPrincipal();
+    		user = userService.getUser(userId);
+    		
+    		this.activeUsers.put(user.getUsername(), currentUser);
+    		username = user.getUsername();
+    	} else {
+    		username = "guest";
+    	}
+    	return queryWarningsDict.get(username).toString();
     }
     
     @RequestMapping(value="uploadGene",method=RequestMethod.POST)
@@ -293,6 +308,7 @@ public class QueryController {
     			while ((temp = br.readLine()) != null) {
     				String[] parts = temp.split("(,|\\s+)");
     				for (String p: parts) {
+    					
     					geneString.append(p + "\n");
     				}
     				
@@ -420,8 +436,7 @@ public class QueryController {
         @RequestParam(value="searchExisting") boolean searchExisting
         ) throws Exception {
       
-    	//Clear out warnings
-    	this.warnings = new StringBuilder("");
+    	
     	
     	if (genes != null) {
     		genes = genes.toUpperCase();
@@ -442,6 +457,9 @@ public class QueryController {
     		username = "guest";
     	}
     	
+    	//Clear out warnings
+    	StringBuilder warnings = new StringBuilder("");
+    	queryWarningsDict.put(username, warnings);
     	
     	//Get Organism Build
     	OrganismBuild ob = this.organismBuildService.getOrganismBuildById(idOrganismBuild);   	
@@ -472,7 +490,7 @@ public class QueryController {
     				String loadedGenes = geneDict.get(username);
         			parsed = this.getGeneIntervals(loadedGenes, genome, "TxBoundary",ob);
     			} else {
-    				this.warnings.append("Biominer expects genes loaded from file, but none could be found. Please try reloading your gene file.");
+    				queryWarningsDict.get(username).append("Biominer expects genes loaded from file, but none could be found. Please try reloading your gene file.<br/>");
     			}
 
     		} else {
@@ -489,7 +507,7 @@ public class QueryController {
     				String loadedRegions = regionDict.get(username);
         			intervalsToCheck = ip.parseIntervals(loadedRegions, loadedRegions, regionMargins, genome);
     			} else {
-    				this.warnings.append("Biominer expects regions loaded from file, but none could be found. Please try reloading your gene file.");
+    				queryWarningsDict.get(username).append("Biominer expects regions loaded from file, but none could be found. Please try reloading your gene file.<br/>");
     			}
     		} else {
     			intervalsToCheck = ip.parseIntervals(regions, regions, regionMargins, genome);
@@ -497,7 +515,7 @@ public class QueryController {
     	}
     	
     	//Add IP warnings
-    	this.warnings.append(ip.getWarnings());
+    	queryWarningsDict.get(username).append(ip.getWarnings());
     	
     	//Get analysis entries for the query
     	List<Analysis> analyses = new ArrayList<Analysis>();
@@ -538,7 +556,7 @@ public class QueryController {
     			results = this.getIntersectingRegionsExisting(resultTree, intervalsToCheck, reverse);
         	} else {
         		results = new ArrayList<QueryResult>();
-        		this.warnings.append("Could not find any existing results, can't query existing results.");
+        		queryWarningsDict.get(username).append("Could not find any existing results, can't query existing results.<br/>");
     		}
     	} else {
     		results = this.getIntersectingRegions(itList, analyses, intervalsToCheck, reverse);
@@ -1048,17 +1066,19 @@ public class QueryController {
     		key = user.getUsername();
     	}
     	
+    	System.out.println(key);
 
     	QueryResultContainer qrc = null;
     	if (this.resultsDict.containsKey(key)) {
     		
     		
+
     		QueryResultContainer full = this.resultsDict.get(key);
     		
     		qrc = full.getQrcSubset(resultsPerPage, pageNum, sortType);
     	} else {
-    		this.warnings = new StringBuilder("");
-    		this.warnings.append("There aren't any available results stored for this user");
+    		queryWarningsDict.put(key, new StringBuilder(""));
+    		queryWarningsDict.get(key).append("There aren't any available results stored for this user<br/>");
     	}
     	
     	return qrc;
@@ -1242,10 +1262,24 @@ public class QueryController {
     	List<String> mapped = new ArrayList<String>();
     	
     	
+    	//Get current active user
+    	Subject currentUser = SecurityUtils.getSubject();
+    	String username;
+    	User user = null;
+    	if (currentUser.isAuthenticated()) {
+    		Long userId = (Long) currentUser.getPrincipal();
+    		user = userService.getUser(userId);
+    		
+    		this.activeUsers.put(user.getUsername(), currentUser);
+    		username = user.getUsername();
+    	} else {
+    		username = "guest";
+    	}
+    	
     	String[] genes = names.split("\n");
     	List<String> cleanedGenes = new ArrayList<String>();
     	if (genes.length == 0) {
-    		this.warnings = new StringBuilder("The gene list is empty!");
+    		this.queryWarningsDict.put(username, new StringBuilder("The gene list is empty!<br/>"));
     		return null;
     	}
     	
@@ -1256,12 +1290,13 @@ public class QueryController {
     		}	
     	}
     	
-    	this.warnings = new StringBuilder("");
+    	this.queryWarningsDict.put(username, new StringBuilder(""));
+    	
     	for (String name: cleanedGenes) {
     		//Grab external ids matching names
         	List<ExternalGene> extIds = this.externalGeneService.getBiominerIdByExternalName(name,ob.getIdOrganismBuild() );
         	if (extIds.size() == 0) {
-        		this.warnings.append("The genes '" + name + "' could not be found in our database");
+        		this.queryWarningsDict.get(username).append("The genes '" + name + "' could not be found in our database<br/>");
         		continue;
         	}
         	
@@ -1276,7 +1311,7 @@ public class QueryController {
         	bIdList.addAll(bIdSet);
         	List<ExternalGene> extIdFinal = this.externalGeneService.getExternalGeneByBiominerId(bIdList,"ensembl", ob.getIdOrganismBuild());
         	if (extIdFinal.size() == 0) {
-        		this.warnings.append("Could not find an Ensembl identifier for gene '" + name + "'.");
+        		this.queryWarningsDict.get(username).append("Could not find an Ensembl identifier for gene '" + name + "'<br/>");
         		continue;
         	}
         	
