@@ -78,7 +78,7 @@
 				  </div>
 				  <div class="col-md-5" ng-hide="projectEditMode" > 
 				    <label class="radio-inline" ng-repeat="visibility in projectVisibilities">
-				      <input name="visibility"  ng-value="visibility.enum" ng-model="project.visibility" type="radio" ng-disabled="true">
+				      <input name="visibility2"  ng-value="visibility.enum" ng-model="project.visibility" type="radio" ng-disabled="!projectEditMode">
 				         {{ visibility.name }}
 				      </input>
 				    </label> 

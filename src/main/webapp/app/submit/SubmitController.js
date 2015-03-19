@@ -276,6 +276,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 	$scope.cancel = function() {
 		$scope.editedProject = {};
     	$scope.projectEditMode = false;
+    	$scope.loadProjects($scope.projectId);
     };
 	
 	//Update project

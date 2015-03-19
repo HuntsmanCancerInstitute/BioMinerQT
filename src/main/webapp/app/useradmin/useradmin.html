@@ -207,11 +207,11 @@
 				                <div ng-show="ob.show">
 					                <span class="btn btn-xs btn-primary fileinput-button" ng-show="ob.transcriptFile == null">
 								        <i class="glyphicon glyphicon-plus"></i>
-								        <input type="file" ng-file-select="addTranscriptFile($files, ob)"> 
+								        <input type="file" ng-file-select ng-file-change="addTranscriptFile($files, ob)"> 
 							        </span>
 							        <span class="btn btn-xs btn-warning fileinput-button" ng-show="ob.transcriptFile != null">
 								        <i class="glyphicon glyphicon-repeat"></i>
-								        <input type="file" ng-file-select="addTranscriptFile($files, ob)"> 
+								        <input type="file" ng-file-select ng-file-change="addTranscriptFile($files, ob)"> 
 							        </span>
 					                <button class="btn btn-xs btn-danger" ng-click="confirmOrganismFileDelete(ob,'transcripts')" ng-show="ob.transcriptFile != null">
 					                 	<span class="glyphicon glyphicon-minus"></span>
@@ -225,11 +225,11 @@
 				                <div ng-show="ob.show">
 					                <span class="btn btn-xs btn-primary fileinput-button" ng-show="ob.genomeFile == null">
 								        <i class="glyphicon glyphicon-plus"></i>
-								        <input type="file" ng-file-select="addGenomeFile($files, ob)"> 
+								        <input type="file" ng-file-select ng-file-change="addGenomeFile($files, ob)"> 
 							        </span>
 							        <span class="btn btn-xs btn-warning fileinput-button" ng-show="ob.genomeFile != null">
 								        <i class="glyphicon glyphicon-repeat"></i>
-								        <input type="file" ng-file-select="addGenomeFile($files, ob)"> 
+								        <input type="file" ng-file-select ng-file-change="addGenomeFile($files, ob)"> 
 							        </span>
 					                <button class="btn btn-xs btn-danger" ng-click="confirmOrganismFileDelete(ob,'genome')" ng-show="ob.genomeFile != null">
 					                 	<span class="glyphicon glyphicon-minus"></span>
@@ -243,11 +243,11 @@
 				                <div ng-show="ob.show">
 					                <span class="btn btn-xs btn-primary fileinput-button" ng-show="ob.geneIdFile == null">
 							        	<i class="glyphicon glyphicon-plus"></i>
-							        	<input type="file" ng-file-select="addAnnotationFile($files, ob)"> 
+							        	<input type="file" ng-file-select ng-file-change="addAnnotationFile($files, ob)"> 
 							        </span>
 							        <span class="btn btn-xs btn-warning fileinput-button" ng-show="ob.geneIdFile != null">
 								        <i class="glyphicon glyphicon-repeat"></i>
-								        <input type="file" ng-file-select="addAnnotationFile($files, ob)"> 
+								        <input type="file" ng-file-select ng-file-change="addAnnotationFile($files, ob)"> 
 							        </span>
 					                <button class="btn btn-xs btn-danger" ng-click="confirmOrganismFileDelete(ob,'annotations')" ng-show="ob.geneIdFile != null">
 					                 	<span class="glyphicon glyphicon-minus"></span>

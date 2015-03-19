@@ -3,7 +3,7 @@
 			<div class="col-lg-7">
 				<span class="btn btn-success fileinput-button btn-sm"  ng-class="{disabled: disabled}">
 			        <i class="glyphicon glyphicon-upload"></i>
-			        <input type="file" ng-file-select="addDataTrackFiles($files)" multiple> Upload           
+			        <input type="file" ng-file-select ng-file-change="addDataTrackFiles($files)" multiple> Upload           
 			    </span>
 			</div>
 			
@@ -30,7 +30,7 @@
 					  	<label class="control-label" for="data_track_url">Datatrack Path</label>  
 						<span class="btn btn-xs btn-warning fileinput-button" ng-show="datatrack.path!=null">
 							<i class="glyphicon glyphicon-refresh"></i>
-							<input type="file" ng-file-select="addDataTrackFile($files)" multiple> 
+							<input type="file" ng-file-select ng-file-change="addDataTrackFile($files)" multiple> 
 						</span>
 						
 						<span class="btn btn-xs btn-danger fileinput-button" ng-click="showDataTrackError(datatrack)" ng-show="datatrack.message != null">

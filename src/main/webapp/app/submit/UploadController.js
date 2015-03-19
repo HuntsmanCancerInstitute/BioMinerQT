@@ -30,7 +30,6 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 			var promises = [];
 			
 			console.log(files);
-			console.log("YES");
 			
 			for (var i=0;i<files.length;i++) {
 				var promise = $http({

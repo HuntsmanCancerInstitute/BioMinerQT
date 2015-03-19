@@ -330,15 +330,15 @@ function($rootScope, $scope, $http,$window) {
     
     $scope.refreshAll();
 
-    $rootScope.helpMessage = "<h1>Welcome to the Biominer beta!</h1>" 
+    $rootScope.helpMessage = "<h2>Welcome to the Biominer beta!</h2>" 
     	+ "<p>BioMinerQT is a web-based tool that internalizes ChIPseq, RNAseq, "
     	+ "bisulfite, and variant analysis into a searchable database. The goal "
     	+ "of the BioMinerQT is to allow researchers to mine all the data that " 
     	+ "has been uploaded without the help of a bioinformatician. </p>"
     	+ "<p>If you encounter any errors, please submit a <a href='#/reportIssue' style='color: red'>bug report.</a> "
     	+ "If you need a login or have any questions about Biominer, please " 
-    	+ "<a href='mailto:BioMinerSupport@hci.utah.edu' style='color: red'>contact</a> the developers "
-    	+ "The source code and war can be downloaded from <a href='https://sourceforge.net/projects/biominerqt/'>sourceforge.</a>";
+    	+ "<a href='mailto:BioMinerSupport@hci.utah.edu' style='color: red'>contact</a> the developers. "
+    	+ "The source code and war can be downloaded from <a href='https://sourceforge.net/projects/biominerqt/'>sourceforge.</a></p>";
     
 
 

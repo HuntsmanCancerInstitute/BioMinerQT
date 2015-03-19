@@ -15,6 +15,7 @@ import java.io.ObjectOutputStream;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -82,6 +83,11 @@ import java.util.zip.ZipOutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
 import java.util.zip.GZIPOutputStream;
 
 
@@ -214,18 +220,24 @@ public class QueryController {
     
     private void loadGeneNames(OrganismBuild ob) {
     	System.out.println("Loading common names for: " + ob.getName());
-    	List<ExternalGene> egList = this.externalGeneService.getHugoNamesGenesByOrganismBuild(ob);
+    	List<ExternalGene> egList = this.externalGeneService.getExternalGenesByOrganismBuild(ob);
+    	
     	
     	HashSet<String> uniqueNamesHash = new HashSet<String>();
     	List<String> uniqueNamesSort = new ArrayList<String>();
     	for (ExternalGene eg: egList) {
     		String name = eg.getExternalGeneName();
-    		uniqueNamesHash.add(name);
+    		String source = eg.getExternalGeneSource();
+    		if (source.equals("hugo")) {
+    			uniqueNamesHash.add(name);
+    		}
     		if (!nameLookupDict.containsKey(name)) {
     			nameLookupDict.put(name, new ArrayList<Long>());
     		}
     		nameLookupDict.get(name).add(eg.getIdExternalGene());
+    		
     	}
+    	egList.clear();
     	
     	uniqueNamesSort.addAll(uniqueNamesHash);
     	Collections.sort(uniqueNamesSort);
@@ -235,8 +247,10 @@ public class QueryController {
     		GeneNameModel gnm = new GeneNameModel(name);
     		uniqueNamesList.add(gnm);
     	}
+    	uniqueNamesSort.clear();
+    	searchDict.put(ob.getIdOrganismBuild(), uniqueNamesList);
     	
-		searchDict.put(ob.getIdOrganismBuild(), uniqueNamesList);
+  
     }
   
     @RequestMapping(value="/clearNames",method=RequestMethod.POST)
@@ -269,6 +283,8 @@ public class QueryController {
     	} else {
     		username = "guest";
     	}
+    	System.out.println("HERE");
+    	System.out.println(queryWarningsDict.get(username).toString());
     	return queryWarningsDict.get(username).toString();
     }
     
@@ -304,15 +320,22 @@ public class QueryController {
     				ZipInputStream zip = new ZipInputStream(file.getInputStream());
     				ZipEntry ze = (ZipEntry) zip.getNextEntry();
     				br = new BufferedReader(new InputStreamReader(zip));
-    				
-    		
     			} else {
     				br = new BufferedReader(new InputStreamReader(file.getInputStream()));
+    				
+    				
     			}
     
     			String temp;
     			
+    			boolean ok = true;
     			while ((temp = br.readLine()) != null) {
+    				if (!isASCII(temp)) {
+						regions.setMessage("The file appears to be binary.  Biominer accepts text files or bed files.  Can be gzipped or zipped.");
+						ok =false;
+    				}
+    				
+    				
     				String[] parts = temp.split(",\\s*");
     				for (String p: parts) {
     					geneString.append(p.toUpperCase() + "\n");
@@ -320,9 +343,11 @@ public class QueryController {
     				
     			}
     			
-    			regions.setRegions(String.format("<Load genes from file: %s>",name));
+    			if (ok) {
+    				regions.setRegions(String.format("[Load genes from file: %s]",name));
+        			this.geneDict.put(username,geneString.toString());
+    			}
     			
-    			this.geneDict.put(username,geneString.toString());
     			br.close();
     			
     		} catch (IOException ioex) {
@@ -386,16 +411,21 @@ public class QueryController {
     				if (m.matches()) {
     					regionString.append(String.format("%s:%s-%s\n",m.group(1),m.group(3),m.group(5)));
     				} else {
-    					regions.setMessage(String.format("Could not parse region line: %s. The first three columns must be chromsome, "
-    							+ "start coordinate and stop coordinate.  Can be tab, space, comma delimited or in the format "
-    							+ "chr:start-end",temp));
+    					if (isASCII(temp)) {
+    						regions.setMessage(String.format("Could not parse region line: %s. The first three columns must be chromsome, "
+        							+ "start coordinate and stop coordinate.  Can be tab, space, comma delimited or in the format "
+        							+ "chr:start-end",temp));
+    					} else {
+    						regions.setMessage("The file appears to be binary.  Biominer accepts text files or bed files.  Can be gzipped or zipped.");
+    					}
+    					
     					ok = false;
     					break;
     				}
     			}
     			
     			if (ok) {
-    				regions.setRegions(String.format("<Load regions from file: %s>",name));
+    				regions.setRegions(String.format("[Load regions from file: %s]",name));
         			this.regionDict.put(username,regionString.toString());
     			}
     			
@@ -415,6 +445,19 @@ public class QueryController {
     	return regions;
     }
     
+    
+    private boolean isASCII(String test) {
+    	byte[] byteArray = test.getBytes();
+    	CharsetDecoder decoder = Charset.forName("US-ASCII").newDecoder();
+        try {
+            CharBuffer buffer = decoder.decode(ByteBuffer.wrap(byteArray));
+            return true;
+ 
+
+        } catch (CharacterCodingException e) {
+            return false;
+        }
+    }
     
     @RequestMapping(value = "run", method=RequestMethod.GET)
     @ResponseBody
@@ -448,6 +491,7 @@ public class QueryController {
     		genes = genes.toUpperCase();
     	}
     	
+    
     	//Get current active user
     	Subject currentUser = SecurityUtils.getSubject();
     	
@@ -491,7 +535,7 @@ public class QueryController {
     		intervalsToCheck = ip.parseIntervals("", "", 0, genome);
     	} else if (codeResultType.equals("GENE") || (codeResultType.equals("REGION") && target.equals("GENE"))) {
     		List<List<String>> parsed = null;
-    		if (genes.startsWith("<LOAD GENES FROM FILE: ")) {
+    		if (genes.startsWith("[LOAD GENES FROM FILE: ")) {
     			if (geneDict.containsKey(username)) {
     				String loadedGenes = geneDict.get(username);
         			parsed = this.getGeneIntervals(loadedGenes, genome, "TxBoundary",ob);
@@ -508,7 +552,7 @@ public class QueryController {
         		intervalsToCheck = ip.parseIntervals(this.convertListToString(parsed.get(0)), this.convertListToString(parsed.get(1)), geneMargins, genome);
     		} 
     	} else if (codeResultType.equals("REGION"))  {
-    		if (regions.startsWith("<LOAD REGIONS FROM FILE: ")) {
+    		if (regions.startsWith("[Load regions from file: ")) {
     			if (regionDict.containsKey(username)) {
     				String loadedRegions = regionDict.get(username);
         			intervalsToCheck = ip.parseIntervals(loadedRegions, loadedRegions, regionMargins, genome);
@@ -1326,7 +1370,7 @@ public class QueryController {
     		} else {
     			//Warning if no biominer genes can be found
     			missingGenes.add(name);
-    			this.queryWarningsDict.get(username).append("The genes '" + name + "' could not be found in our database<br/>");
+    			this.queryWarningsDict.get(username).append("The gene '" + name + "' could not be found in our database<br/>");
     			continue;
     		}
     		
@@ -1694,8 +1738,7 @@ public class QueryController {
     	public List<LocalInterval> parseIntervals(String region, String search, Integer regionMargin, Genome genome) throws Exception {
     		List<LocalInterval> localIntervals = new ArrayList<LocalInterval>();
     		
-    	
-    		
+  
 //    		if (!regionMargin.equals("")) {
 //    			Matcher marginM = marginP.matcher(regionMargin);
 //    			if (marginM.matches()) {
@@ -1721,10 +1764,11 @@ public class QueryController {
     				throw new Exception(String.format("Region and search lists don't match: %d vs %d",regionList.length,searchList.length));
     			}
     			
-    			for (int i=0;i<regionList.length;i++) {
-    				
+    			for (int i=0;i<regionList.length;i++) {		
     				String r = regionList[i];
-    				String s = searchList[i]; 
+    				String s = searchList[i];
+    				
+    				r = r.replace(",", "");
     				
     				Matcher m1 = pattern1.matcher(r);
     	    		Matcher m2 = pattern2.matcher(r);

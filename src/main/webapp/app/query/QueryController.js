@@ -5,7 +5,7 @@
  * QueryController
  * @constructor
  */
-var query = angular.module('query', ['angularFileUpload','filters', 'services', 'directives', 'ui.bootstrap', 'chosen','angucomplete-alt','dialogs.main','ngProgress','error']);
+var query = angular.module('query', ['angularFileUpload','filters', 'services', 'directives', 'ui.bootstrap', 'chosen','angucomplete-alt','dialogs.main','ngProgress','error','ngSanitize']);
 
 
 angular.module("query").controller("QueryController", 
@@ -80,8 +80,8 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 
 	
 	$scope.mapResultType = {
-			'GENE' :     'Genes',
-			'REGION' :   'Genomic Regions'};
+			'GENE' :     'Exact Match',
+			'REGION' :   'Overlapping Match'};
 //			'VARIANT' :  'Variants' };
 	
 	$scope.mapComparison = {
@@ -150,6 +150,7 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
         		var dialog = dialogs.confirm("Page Navigation","Query isn't complete, are you sure you want to leave this page");
             	dialog.result.then(function() {
             		$timeout(function() {
+            			$scope.abortQuery();
             			$location.path(next.substring($location.absUrl().length - $location.url().length));
                         $scope.$apply();
             		});
@@ -171,8 +172,14 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
     	if (next.originalPath == current.originalPath) {
     		$scope.stopPing();
     	}
-    	
+    	$scope.abortQuery();
     });
+    
+    window.onbeforeunload = function() {
+    	$scope.abortQuery();
+    }
+    
+    
     
     $scope.copyCoordinates = function() {
     	var coordinateList = [];
@@ -183,6 +190,9 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
     				coordinateList.push(coord);
     			}
     		}
+    	}
+    	if (coordinateList.length == 0) {
+    		dialogs.notify("No Results Selected","There are no results selected in the table.  Please select individual results or everything before trying to copy coordinates.");
     	}
     	var coordinateEntry = coordinateList.join("\n");
     	$scope.regions = coordinateEntry;
@@ -199,55 +209,64 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
     			}
     		}
     	}
+    	if (geneList.length == 0) {
+    		dialogs.notify("No Results Selected","There are no results selected in the table.  Please select individual results or everything before trying to copy genes.");
+    	}
     	var geneEntry = geneList.join("\n");
     	$scope.genes = geneEntry;
     	$scope.intersectionTarget = "GENE";
     };
     
     $scope.loadRegions = function(files) {
-    	ngProgress.start();
-    	$upload.upload({
-    		url: "query/upload",
-    		file: files,
-    	}).success(function(data) {
-    		$scope.regions = data.regions;
-    		if (data.message == null) {
-    			$scope.regions = data.regions;
-    		} else {
-    			var message = data.message;
-    			var title = "Error Processing Region File";
-    			
-    			dialogs.error(title,message,null);
+    	if (files.length > 0) {
+    		ngProgress.start();
+        	$upload.upload({
+        		url: "query/upload",
+        		file: files[0],
+        	}).success(function(data) {
+        		$scope.regions = data.regions;
+        		if (data.message == null) {
+        			$scope.regions = data.regions;
+        		} else {
+        			var message = data.message;
+        			var title = "Error Processing Region File";
+        			dialogs.error(title,message,null);
+            		
+        		}
+        		ngProgress.complete();
+        	}).error(function(data,status) {
+        		console.log("error loading genes");
         		
-    		}
-    		ngProgress.complete();
-    	}).error(function(data) {
-    		console.log("Error running upload");
-    		ngProgress.reset();
-    	});
+        		ngProgress.reset();
+        	});
+    	}
+    	
 	};
 	
 	$scope.loadGenes = function(files) {
-		ngProgress.start();
-    	$upload.upload({
-    		url: "query/uploadGene",
-    		file: files,
-    	}).success(function(data) {
-    		$scope.genes = data.regions;
-    		if (data.message == null) {
-    			$scope.genes = data.regions;
-    		} else {
-    			var message = data.message;
-    			var title = "Error Processing Gene File";
-    			
-    			dialogs.error(title,message,null);
-        		
-    		}
-    		ngProgress.complete();
-    	}).error(function(data) {
-    		console.log("Error running upload");
-    		ngProgress.reset();
-    	});
+		if (files.length > 0) {
+			ngProgress.start();
+	    	$upload.upload({
+	    		url: "query/uploadGene",
+	    		file: files[0],
+	    	}).success(function(data) {
+	    		$scope.genes = data.regions;
+	    		if (data.message == null) {
+	    			$scope.genes = data.regions;
+	    		} else {
+	    			var message = data.message;
+	    			var title = "Error Processing Gene File";
+	    			console.log(message);
+	    			dialogs.error(title,message,null);
+	        		
+	    		}
+	    		ngProgress.complete();
+	    	}).error(function(data,status) {
+	    		console.log("error loading genes");
+	    		
+	    		ngProgress.reset();
+	    	});
+		}
 	};
 	
 	$scope.loadIgvSession = function(files) {
@@ -613,10 +632,13 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 	
 	
 	$scope.displayWarnings = function(type){
+		
+		
 		var warnings = $scope.warnings;
 		var title = "Query Warnings";
 		if (type == "igv") {
-			warnings = $scope.igvWarnings;
+			
+			warnings = $scope.igvWarning;
 			title = "IGV Session Warnings";
 		} 
 		
@@ -678,6 +700,13 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 		
 		var regions = "";
 		if ($scope.regions != null && $scope.regions != "") {
+			if ($scope.regions.length > 1000) {
+				ngProgress.reset();
+				$scope.queryStarted = false;
+				dialogs.error("Regions Error","There are more than 1000 characters in the region list, please upload a file instead.");
+				
+				return;
+			}
 			regions = $scope.regions;
 		}
 		
@@ -688,6 +717,13 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 		
 		var genes = "";
 		if ($scope.genes != null && $scope.genes != "") {
+			if ($scope.genes.length > 1000) {
+				ngProgress.reset();
+				$scope.queryStarted = false;
+				dialogs.error("Genes Error","There are more than 1000 characters in gene list, please upload a file instead.");
+				
+				return;
+			}
 			genes = $scope.genes;
 		}
 		
@@ -771,7 +807,6 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 		if ($scope.queryDeferred != null) {
 			$scope.queryDeferred.resolve("Query aborted by user");
 			$scope.queryDeferred = null;
-			console.log("Stop");
 		}
 		
 		

@@ -118,98 +118,107 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
      * Organism file control methods
      **************************************/
 	$scope.addGenomeFile = function(files, ob) {
-		ngProgress.start();
-		$upload.upload({
-    		url: "genetable/addGenomeFile",
-    		file: files,
-    		params: {idOrganismBuild: ob.idOrganismBuild}
-    	}).success(function(data) {
-    		$scope.refreshOrganisms();
-    		ngProgress.complete();
-    	}).error(function(data) {
-    		dialogs.error("Error reading in gene annotation file", data, null);
-    		
-    		ngProgress.reset();
-    	});
+		if (files.length > 0) {
+			ngProgress.start();
+			$upload.upload({
+	    		url: "genetable/addGenomeFile",
+	    		file: files[0],
+	    		params: {idOrganismBuild: ob.idOrganismBuild}
+	    	}).success(function(data) {
+	    		$scope.refreshOrganisms();
+	    		ngProgress.complete();
+	    	}).error(function(data) {
+	    		dialogs.error("Error reading in gene annotation file", data, null);
+	    		
+	    		ngProgress.reset();
+	    	});
+		}
+		
 	};
 	
 	$scope.addTranscriptFile = function(files,ob) {
-		ngProgress.start();
-		$upload.upload({
-			url: "genetable/addTranscriptFile",
-			file: files,
-			params: {idOrganismBuild: ob.idOrganismBuild}
-		}).success(function(data) {
-    		$scope.refreshOrganisms();
-    		ngProgress.complete();
-    	}).error(function(data) {
-    		dialogs.error("Error reading in transcript file", data, null);
-			ngProgress.reset();
-		});
+		if (files.length > 0) {
+			ngProgress.start();
+			$upload.upload({
+				url: "genetable/addTranscriptFile",
+				file: files[0],
+				params: {idOrganismBuild: ob.idOrganismBuild}
+			}).success(function(data) {
+	    		$scope.refreshOrganisms();
+	    		ngProgress.complete();
+	    	}).error(function(data) {
+	    		dialogs.error("Error reading in transcript file", data, null);
+				ngProgress.reset();
+			});
+		}
+		
 	};
 	
 	$scope.addAnnotationFile = function(file,ob) {
-		ngProgress.start();
-		$upload.upload({
-			url: "genetable/addAnnotationFile",
-			file: file,
-			params: {idOrganismBuild: ob.idOrganismBuild}
-		}).success(function(data) {
-	    	var modalInstance = $modal.open({
-	    		templateUrl: 'app/useradmin/annotationPreviewWindow.html',
-	    		controller: 'AnnotationPreviewController',
-	    		windowClass: 'preview-dialog',
-	    		resolve: {
-	    			filename: function() {
-	    				return file.name;
-	    			},
-	    			previewData: function() {
-	    				return data.previewData;
-	    			}
-	    		}
-	    	});
-	    	
-	    	ngProgress.complete();
-	    	modalInstance.result.then(function (setColumns) {
-	    		$scope.columnDefs = setColumns;
-	    		
-	    		ngProgress.start();
-	    		
-	    		var params = {};
-	    		for (var i=0; i<setColumns.length; i++) {
-	    			params[setColumns[i].name] = setColumns[i].index;
-	    		}
-	    		
-	    		params["idOrganismBuild"] = ob.idOrganismBuild;
-	    		
-	    		$http({
-	    			method: 'PUT',
-	    			url: 'genetable/parseAnnotations',
-	    			params: params
-	    		}).success(function(data) {
-	    			ngProgress.complete();
-	    			$scope.refreshOrganisms();
-	    			
-	    			$http({
-	        			method: 'POST',
-	        			url: 'query/clearNames',
-	        			params: {obId: ob.idOrganismBuild}
-	        		});
-	    		}).error(function(data) {
-	    			dialogs.error("Error parsing annotation data",data,null);
-	    			$scope.deleteAnnotationUpload();
-	    			ngProgress.reset();
-	    		});
-	    		
-		    },function() {
-		    	$scope.deleteAnnotationUpload();
-		    });
-			   
-	    	
-		}).error(function(data) {
-			dialogs.error("Error generating annotation preview", data.message, null);
-			ngProgress.reset();
-		});
+		if (file.length > 0) {
+			ngProgress.start();
+			$upload.upload({
+				url: "genetable/addAnnotationFile",
+				file: file[0],
+				params: {idOrganismBuild: ob.idOrganismBuild}
+			}).success(function(data) {
+		    	var modalInstance = $modal.open({
+		    		templateUrl: 'app/useradmin/annotationPreviewWindow.html',
+		    		controller: 'AnnotationPreviewController',
+		    		windowClass: 'preview-dialog',
+		    		resolve: {
+		    			filename: function() {
+		    				return file.name;
+		    			},
+		    			previewData: function() {
+		    				return data.previewData;
+		    			}
+		    		}
+		    	});
+		    	
+		    	ngProgress.complete();
+		    	modalInstance.result.then(function (setColumns) {
+		    		$scope.columnDefs = setColumns;
+		    		
+		    		ngProgress.start();
+		    		
+		    		var params = {};
+		    		for (var i=0; i<setColumns.length; i++) {
+		    			params[setColumns[i].name] = setColumns[i].index;
+		    		}
+		    		
+		    		params["idOrganismBuild"] = ob.idOrganismBuild;
+		    		
+		    		$http({
+		    			method: 'PUT',
+		    			url: 'genetable/parseAnnotations',
+		    			params: params
+		    		}).success(function(data) {
+		    			ngProgress.complete();
+		    			$scope.refreshOrganisms();
+		    			
+		    			$http({
+		        			method: 'POST',
+		        			url: 'query/clearNames',
+		        			params: {obId: ob.idOrganismBuild}
+		        		});
+		    		}).error(function(data) {
+		    			dialogs.error("Error parsing annotation data",data,null);
+		    			$scope.deleteAnnotationUpload();
+		    			ngProgress.reset();
+		    		});
+		    		
+			    },function() {
+			    	$scope.deleteAnnotationUpload();
+			    });
+				   
+		    	
+			}).error(function(data) {
+				dialogs.error("Error generating annotation preview", data.message, null);
+				ngProgress.reset();
+			});
+		}
+		
 	};
 	
 	$scope.removeGenomeFromBuild = function(ob) {

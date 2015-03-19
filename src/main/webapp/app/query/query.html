@@ -155,12 +155,12 @@
     					<span class="btn btn-primary pull-right fileinput-button col-md-4 btn-sm" ng-show="intersectionTarget == 'REGION'">
 					        <i class="glyphicon glyphicon-upload"></i>
 					        <span>Import Regions</span>
-					        <input type="file" ng-file-select="loadRegions($files)">            
+					        <input type="file" ng-file-select ng-file-change="loadRegions($files)">            
 					    </span>
 					    <span class="btn btn-primary pull-right fileinput-button col-md-4 btn-sm" ng-show="intersectionTarget == 'GENE'">
 					        <i class="glyphicon glyphicon-upload"></i>
 					        <span>Import Genes</span>
-					        <input type="file" ng-file-select="loadGenes($files)">            
+					        <input type="file" ng-file-select ng-file-change="loadGenes($files)">            
 					    </span>
 					  </div>
 					</div>
@@ -204,7 +204,7 @@
 					    		<textarea name="geneField" ng-model="genes" class="form-control input-sm" placeholder="ACTB, GAPDH, ..." ng-required="intersectionTarget=='GENE'"/>
 					    		<span class="label label-danger" ng-show="queryForm.geneField.$error.required && showValidation">Required when 'gene' intersections are specified</span>
 					    	</div>
-					    	<div class="col-md-5">
+					    	<div class="col-md-5" ng-hide="codeResultType == 'GENE'">
 						    	&nbsp;&nbsp;Padding +/- bp
 						    	<input type="text" ng-model="geneMargins" style="display: inline;"class="form-control input-sm" placeholder="1000"/>
 					    	</div>
@@ -218,7 +218,7 @@
 						<div class="col-md-3" style="padding-right: 0px;">
 					      <div class="radio">
 						   		<label for="radio-everything">
-							    	<input name="radios-region-everything" id="radio-everything" ng-model="intersectionTarget" value="EVERYTHING" type="radio" class="input-xs"> Anything
+							    	<input name="radios-region-everything" id="radio-everything" ng-model="intersectionTarget" value="EVERYTHING" type="radio" class="input-xs"> Return all results
 						   		</label>
 						  </div>
 					    </div>
@@ -395,16 +395,16 @@
 				            <tr ng-repeat="row in queryResults">
 				            	<td><input type="checkbox" ng-model="row.selected"/></td>
 				            	<td class="nowrap">{{row.index}}</td>
-				                <td class="nowrap-ellipsis" ><span tooltip="{{row.projectName}}">{{row.projectName}}</td>
+				                <td class="nowrap-ellipsis"><span tooltip="{{row.projectName}}">{{row.projectName}}</td>
 				                <td class="nowrap-ellipsis"><span tooltip="{{row.analysisName}}">{{row.analysisName}}</span></td>
-				                <td class="nowrap-ellipsis">{{row.analysisType}}</td>
-				                <td class="nowrap-ellipsis">{{row.search}}</span></td>
-				                <td class="nowrap-ellipsis" ng-show="selectedAnalysisType.type == 'RNASeq'">{{row.mappedName}}</td>
+				                <td class="nowrap-ellipsis"><span tooltip="{{row.analysisType}}">{{row.analysisType}}</td>
+				                <td class="nowrap-ellipsis"><span tooltip="{{row.search}}">{{row.search}}</span></td>
+				                <td class="nowrap-ellipsis" ng-show="selectedAnalysisType.type == 'RNASeq'"><span tooltip="{{row.mappedName}}">{{row.mappedName}}</td>
 				                <td class="nowrap-ellipsis"><span tooltip="{{row.sampleConditions}}">{{row.sampleConditions}}</td>
 				                <td class="nowrap" ng-hide="igvLoaded">{{row.coordinates}}</td>
-				                <td class="nowrap-ellipsis" ng-show="igvLoaded"><a ng-click="loadLocus(row)">{{row.coordinates}}</a></td>
-				                <td class="nowrap-ellipsis">{{row.fdr}}</td>
-				                <td class="nowrap-ellipsis">{{row.log2Ratio}}</td>
+				                <td class="nowrap-ellipsis" ng-show="igvLoaded"><span tooltip="{{row.coordinate}}"><a ng-click="loadLocus(row)">{{row.coordinates}}</a></td>
+				                <td class="nowrap-ellipsis"><span tooltip="{{row.fdr}}">{{row.fdr}}</td>
+				                <td class="nowrap-ellipsis"><span tooltip="{{row.log2Ratio}}">{{row.log2Ratio}}</td>
 				            </tr>
 				
 				        </tbody>

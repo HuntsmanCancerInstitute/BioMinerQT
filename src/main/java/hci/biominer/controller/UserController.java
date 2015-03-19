@@ -103,14 +103,14 @@ public class UserController {
     	Lab aLab = null;
     	for (Long idLab: labIds) {
     		aLab = labService.getLab(idLab);
-    		break;
+    		labList.add(aLab);
     	}
     	
     	List<Institute> instituteList = new ArrayList<Institute>();
     	Institute anInstitute = null;
 		for (Long idInstitute: instituteIds) {
 			anInstitute = instituteService.getInstituteById(idInstitute);
-			break;
+			instituteList.add(anInstitute);
 		}
 			
 		// When signing up for an account, admin checkbox is ignored.

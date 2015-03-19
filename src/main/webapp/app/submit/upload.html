@@ -5,7 +5,7 @@
 			<span class="btn btn-success fileinput-button btn-sm"  ng-class="{disabled: disabled}">
 		        <i class="glyphicon glyphicon-upload"></i>
 		        <span>Upload</span>
-		        <input type="file" ng-file-select="onFileSelect($files)" multiple>            
+		        <input type="file" ng-file-select ng-file-change="onFileSelect($files)" multiple>            
 		    </span>
 		</div>
 		
