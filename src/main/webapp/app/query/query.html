@@ -397,14 +397,14 @@
 				            	<td class="nowrap">{{row.index}}</td>
 				                <td class="nowrap-ellipsis" ><span tooltip="{{row.projectName}}">{{row.projectName}}</td>
 				                <td class="nowrap-ellipsis"><span tooltip="{{row.analysisName}}">{{row.analysisName}}</span></td>
-				                <td class="nowrap">{{row.analysisType}}</td>
-				                <td class="nowrap">{{row.search}}</span></td>
-				                <td class="nowrap" ng-show="selectedAnalysisType.type == 'RNASeq'">{{row.mappedName}}</td>
+				                <td class="nowrap-ellipsis">{{row.analysisType}}</td>
+				                <td class="nowrap-ellipsis">{{row.search}}</span></td>
+				                <td class="nowrap-ellipsis" ng-show="selectedAnalysisType.type == 'RNASeq'">{{row.mappedName}}</td>
 				                <td class="nowrap-ellipsis"><span tooltip="{{row.sampleConditions}}">{{row.sampleConditions}}</td>
 				                <td class="nowrap" ng-hide="igvLoaded">{{row.coordinates}}</td>
-				                <td class="nowrap" ng-show="igvLoaded"><a ng-click="loadLocus(row)">{{row.coordinates}}</a></td>
-				                <td class="nowrap">{{row.fdr}}</td>
-				                <td class="nowrap">{{row.log2Ratio}}</td>
+				                <td class="nowrap-ellipsis" ng-show="igvLoaded"><a ng-click="loadLocus(row)">{{row.coordinates}}</a></td>
+				                <td class="nowrap-ellipsis">{{row.fdr}}</td>
+				                <td class="nowrap-ellipsis">{{row.log2Ratio}}</td>
 				            </tr>
 				
 				        </tbody>

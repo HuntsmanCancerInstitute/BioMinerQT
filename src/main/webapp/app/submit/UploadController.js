@@ -29,6 +29,9 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 			var badFiles = [];
 			var promises = [];
 			
+			console.log(files);
+			console.log("YES");
+			
 			for (var i=0;i<files.length;i++) {
 				var promise = $http({
 					url: "submit/doesRawUploadExist",
@@ -42,6 +45,8 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 						console.log("Good");
 						validFiles.push(files[config.params["index"]]);
 					}
+				}).error(function(data,status,headers,config) {
+					console.log("error");
 				});
 				promises.push(promise);
 			}
@@ -58,7 +63,10 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 					dialogs.error("Duplicate file names",warningMessage);
 				}
 				$scope.processValidFiles(validFiles);
+				files = null;
 			});
+			
+			
 		};
 		
 		

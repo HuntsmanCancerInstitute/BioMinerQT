@@ -141,6 +141,8 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 		}
     });
     
+    
+    
     $scope.$on('$locationChangeStart', function( event, next, current ) {
     	if ($scope.navigationOk == false) {
     		event.preventDefault();
@@ -383,6 +385,7 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 		
 	$scope.clearQuery = function() {
 		console.log("Clearing");
+		$scope.warnings = "";
 		$scope.hasResults = false;
 		$scope.showValidation = false;
 		$scope.queryForm.$setPristine();
@@ -1149,6 +1152,16 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 				$scope.totalDatatracks = data.dataTrackNum;
 				$scope.hasResults = true;
 			}
+			$http({
+				url: "query/warnings",
+				method: "GET",
+			}).success(function(data) {
+				if (data == "") {
+					$scope.warnings = "";
+				} else {
+					$scope.warnings = data;
+				}
+			});
 		}).error(function(data) {
 			ngProgress.reset();
 			$scope.hasResults = false;

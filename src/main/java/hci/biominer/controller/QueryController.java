@@ -123,6 +123,8 @@ public class QueryController {
     
     private HashMap<String,File> fileDict = new HashMap<String,File>();
     private HashMap<Long,List<GeneNameModel>> searchDict = new HashMap<Long,List<GeneNameModel>>();
+    private HashMap<String,ArrayList<Long>> nameLookupDict = new HashMap<String,ArrayList<Long>>();
+    
     
     private HashMap<String,Subject> activeUsers = new HashMap<String,Subject>();
     
@@ -217,7 +219,12 @@ public class QueryController {
     	HashSet<String> uniqueNamesHash = new HashSet<String>();
     	List<String> uniqueNamesSort = new ArrayList<String>();
     	for (ExternalGene eg: egList) {
-    		uniqueNamesHash.add(eg.getExternalGeneName());
+    		String name = eg.getExternalGeneName();
+    		uniqueNamesHash.add(name);
+    		if (!nameLookupDict.containsKey(name)) {
+    			nameLookupDict.put(name, new ArrayList<Long>());
+    		}
+    		nameLookupDict.get(name).add(eg.getIdExternalGene());
     	}
     	
     	uniqueNamesSort.addAll(uniqueNamesHash);
@@ -306,10 +313,9 @@ public class QueryController {
     			String temp;
     			
     			while ((temp = br.readLine()) != null) {
-    				String[] parts = temp.split("(,|\\s+)");
+    				String[] parts = temp.split(",\\s*");
     				for (String p: parts) {
-    					
-    					geneString.append(p + "\n");
+    					geneString.append(p.toUpperCase() + "\n");
     				}
     				
     			}
@@ -1284,41 +1290,48 @@ public class QueryController {
     	}
     	
     	for (String g: genes) {
-    		String[] parts = g.split("[\\s+,\\n]+");
-    		for (String p: parts) {
-    			cleanedGenes.add(p.trim());
-    		}	
+    		String[] byNewLine = g.split("\n");
+    		for (String newLine: byNewLine) {
+    			String[] parts = newLine.split(",\\s*");
+    			for (String p: parts) {
+        			cleanedGenes.add(p.trim());
+        		}	
+    		}
     	}
     	
-    	this.queryWarningsDict.put(username, new StringBuilder(""));
+    	HashSet<String> missingGenes = new HashSet<String>();
     	
     	for (String name: cleanedGenes) {
-    		//Grab external ids matching names
-        	List<ExternalGene> extIds = this.externalGeneService.getBiominerIdByExternalName(name,ob.getIdOrganismBuild() );
-        	if (extIds.size() == 0) {
-        		this.queryWarningsDict.get(username).append("The genes '" + name + "' could not be found in our database<br/>");
-        		continue;
-        	}
-        	
-        	//Create biominerGene index list
-        	HashSet<Long> bIdSet = new HashSet<Long>();
-        	for (ExternalGene eg: extIds) {
-        		bIdSet.add(eg.getBiominerGene().getIdBiominerGene());
-        	}
-        	
-        	//Search for matches
-        	List<Long> bIdList = new ArrayList<Long>();
-        	bIdList.addAll(bIdSet);
-        	List<ExternalGene> extIdFinal = this.externalGeneService.getExternalGeneByBiominerId(bIdList,"ensembl", ob.getIdOrganismBuild());
-        	if (extIdFinal.size() == 0) {
-        		this.queryWarningsDict.get(username).append("Could not find an Ensembl identifier for gene '" + name + "'<br/>");
-        		continue;
-        	}
-        	
+    		if (missingGenes.contains(name)) {
+    			continue;
+    		}
+    		//Lookup biominer id in dictionary.
         	HashSet<String> extIdFinalSet = new HashSet<String>();
-        	for (ExternalGene eg: extIdFinal) {
-        		extIdFinalSet.add(eg.getExternalGeneName());
-        	}
+    		if (nameLookupDict.containsKey(name)) {
+    			//For each biominer id, return the ensembl identifer
+    			for (Long id: nameLookupDict.get(name)) {
+    				List<ExternalGene> eglist = this.externalGeneService.getEnsemblNamesById(id,"ensembl",ob.getIdOrganismBuild());
+ 
+    				for (ExternalGene eg: eglist) {
+    					extIdFinalSet.add(eg.getExternalGeneName());
+    				}
+    			}
+    			
+    			//Warning if no ensembl names can be found
+    			if (extIdFinalSet.size() == 0) {
+    				this.queryWarningsDict.get(username).append("Could not find an Ensembl identifier for gene: '" + name + "'<br/>");
+					continue;
+    			}
+    			
+    		} else {
+    			//Warning if no biominer genes can be found
+    			missingGenes.add(name);
+    			this.queryWarningsDict.get(username).append("The genes '" + name + "' could not be found in our database<br/>");
+    			continue;
+    		}
+    		
+    		
+    		
         
         	HashMap<String, Gene> geneNameGene = genome.getTranscriptomes()[0].getGeneNameGene();
        
@@ -1724,35 +1737,35 @@ public class QueryController {
     	    			try {
     	    				start = Integer.parseInt(m1.group(4)) - regionMargin;
     	    			} catch (NumberFormatException nfe) {
-    	    				warnings.append(String.format("Start boundary not an integer %s, skipping.",m1.group(2)));
+    	    				warnings.append(String.format("Start boundary not an integer %s, skipping.<br/>",m1.group(2)));
     	    				continue;
     	    			}
     	    			
     	    			try {
     	    				end = Integer.parseInt(m1.group(6)) + regionMargin;
     	    			} catch (NumberFormatException nfe) {
-    	    				warnings.append(String.format("End boundary not an integer %s, skipping.",m1.group(3)));
+    	    				warnings.append(String.format("End boundary not an integer %s, skipping.<br/>",m1.group(3)));
     	    				continue;
     	    			}
     	    			
     	    			String chrom = m1.group(2);
     	    			
     	    			if (!genome.getNameChromosome().containsKey(chrom)) {
-    	    				warnings.append(String.format("The chromsome %s could not be found in the genome %s.\n",chrom,genome.getBuildName()));
+    	    				warnings.append(String.format("The chromsome %s could not be found in the genome %s.<br/>",chrom,genome.getBuildName()));
     	    				continue;
     	    			}
     	    			if (start >= end) {
-    	    				warnings.append(String.format("The start coordinate (%d) is greater or equal to the end coordinate (%d).\n",start,end));
+    	    				warnings.append(String.format("The start coordinate (%d) is greater or equal to the end coordinate (%d).<br/>",start,end));
     	    				continue;
     	    			}
     	    			
     	    			if (start < 0) {
-    	    				warnings.append(String.format("The start coordinate ( %d ) is less than 0.  Setting to zero.\n",start));
+    	    				warnings.append(String.format("The start coordinate ( %d ) is less than 0.  Setting to zero.<br/>",start));
     	    				start = 0;
     	    			} 
     	    			if (end > genome.getNameChromosome().get(chrom).getLength()) {
     	    				warnings.append(String.format("The end coordinate ( %d) is greater than the chromsome length (%d). Setting to chromsome"
-    	    						+ " end.\n",end,genome.getNameChromosome().get(chrom).getLength()));
+    	    						+ " end.<br/>",end,genome.getNameChromosome().get(chrom).getLength()));
     	    				end = genome.getNameChromosome().get(chrom).getLength();
     	    			}  
     	    			
@@ -1763,7 +1776,7 @@ public class QueryController {
     	    			String chrom  = m2.group(2);
     	    			
     	    			if (!genome.getNameChromosome().containsKey(chrom)) {
-    	    				warnings.append(String.format("The chromsome %s could not be found in the genome %s.\n",chrom,genome.getBuildName()));
+    	    				warnings.append(String.format("The chromsome %s could not be found in the genome %s.<br/>",chrom,genome.getBuildName()));
     	    				continue;
     	    			}
     	    			
@@ -1775,7 +1788,7 @@ public class QueryController {
 
     	    			
     	    		} else {
-    	    			warnings.append(String.format("The string %s does not match a region format.\n",region));
+    	    			warnings.append(String.format("The string %s does not match a region format.<br/>",region));
     	    			
     	    		}
     			}

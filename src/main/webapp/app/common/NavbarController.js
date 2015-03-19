@@ -29,16 +29,14 @@ angular.module('navbar').controller("NavbarController",['$modal','$scope','$http
 				wasAuth = true;
 			}
 			
-	    	DynamicDictionary.isAuthenticated().success(function(data) {
+	    	return DynamicDictionary.isAuthenticated().success(function(data) {
 	    		$rootScope.loggedUser = data.user;
 	    		if ($rootScope.loggedUser == null) {
 	    			if (angular.isDefined($rootScope.checkInterval)) {
-		        		//console.log("Stopping checking (isAuth)");
 	        			$interval.cancel($rootScope.checkInterval);
 	        		}
 	    			$rootScope.admin = false;
 	    			if (wasAuth) {
-						console.log("Reloading");
 						$route.reload();
 					} 
 	    		} else {
@@ -56,53 +54,53 @@ angular.module('navbar').controller("NavbarController",['$modal','$scope','$http
 		
 		                 		
 		$rootScope.$on('$routeChangeStart',function(event, next, prev) {
-			var url = "/dashboard";
-			if (prev != undefined) {
-				url = prev.originalPath;
-			}
+			$rootScope.isAuthenticated().then(function() {
+				var url = "/dashboard";
+				if (prev != undefined) {
+					url = prev.originalPath;
+					
+				}
 			
-			if (next.restrict == "authorized" && !$scope.admin && $rootScope.loggedUser == null) {
-				$scope.isAuthenticated();
-				$rootScope.lastLocation = url;
-				$location.path("/login");
-			} else if (next.restrict == "authenticated" && $rootScope.loggedUser == null) {
-				$scope.isAuthenticated();
-				$rootScope.lastLocation = url;
-				$location.path("/login");
-			} else {
-				$rootScope.lastLocation = url;
-			}
-		
+				if (next.restrict == "authorized" && !$scope.admin && $rootScope.loggedUser == null) {
+					$rootScope.lastLocation = url;
+					$location.path("/login");
+				} else if (next.restrict == "authenticated" && $rootScope.loggedUser == null) {
+					$rootScope.lastLocation = url;
+					$location.path("/login");
+				} else {
+					$rootScope.lastLocation = url;
+				}
+			});
 		});  
 		
 		$scope.displayHelp = function() {
 			dialogs.notify("Help",$rootScope.helpMessage);
 		};
 		
-$scope.openEditUserWindow = function(e) {
-    	var modalInstance = $modal.open({
-    		templateUrl: 'app/useradmin/userWindow.html',
-    		controller: 'UserController',
-    		resolve: {
-    			labList: function() {
-    				return $scope.labs;
-    			},
-    			instituteList: function() {
-    				return $scope.institutes;
-    			},
-    			userData: function () {
-    				e["password"] = "placeholder"; 
-    				return e;
-    			},
-    			title: function() {
-    				return "Edit";
-    			},
-    			bFace: function() {
-    				return "Update";
-    			},
-    			showAll: function() {
-    				return false;
-    			}
+		$scope.openEditUserWindow = function(e) {
+	    	var modalInstance = $modal.open({
+	    		templateUrl: 'app/useradmin/userWindow.html',
+	    		controller: 'UserController',
+	    		resolve: {
+	    			labList: function() {
+	    				return $scope.labs;
+	    			},
+	    			instituteList: function() {
+	    				return $scope.institutes;
+	    			},
+	    			userData: function () {
+	    				e["password"] = "placeholder"; 
+	    				return e;
+	    			},
+	    			title: function() {
+	    				return "Edit";
+	    			},
+	    			bFace: function() {
+	    				return "Update";
+	    			},
+	    			showAll: function() {
+	    				return false;
+	    			}
     		}
     	});
     	

@@ -1,11 +1,13 @@
 package hci.biominer.dao;
 
+import hci.biominer.model.Analysis;
 import hci.biominer.model.ExternalGene;
 import hci.biominer.model.OrganismBuild;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.hibernate.Query;
 import org.hibernate.Session;
@@ -28,6 +30,24 @@ public class ExternalGeneDAO {
 		query.setParameter("name", name);
 		query.setParameter("ob", obId);
 		List<ExternalGene> externalGenes = query.list();
+		session.close();
+		return externalGenes;
+	}
+	
+	public List<ExternalGene> getEnsemblNamesById(Long idExternalGene, String source, Long obId) {
+		Session session = getCurrentSession();
+		ExternalGene eg = (ExternalGene)session.get(ExternalGene.class,idExternalGene);
+		Query query = session.createQuery("select distinct e from ExternalGene e "
+				+ "left join e.biominerGene as bg "
+				+ "left join e.organismBuild ob "
+				+ "where bg.idBiominerGene = :id and "
+				+ "e.ExternalGeneSource = :source and "
+				+ "ob.idOrganismBuild = :ob");
+		query.setParameter("source", source);
+		query.setParameter("id",eg.getBiominerGene().getIdBiominerGene());
+		query.setParameter("ob", obId);
+		List<ExternalGene> externalGenes = query.list();
+		
 		session.close();
 		return externalGenes;
 	}
