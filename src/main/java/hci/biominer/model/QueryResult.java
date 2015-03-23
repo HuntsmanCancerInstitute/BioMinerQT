@@ -20,7 +20,7 @@ public class QueryResult implements Serializable {
 	private Float log2Ratio;
 	private String FDR; 
 	private String search;
-	private String mappedName;
+	private String mappedName = "NA";
 	private Long idAnalysis;
 	private String chrom;
 	private Integer start;

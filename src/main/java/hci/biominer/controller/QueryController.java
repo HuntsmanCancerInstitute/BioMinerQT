@@ -283,8 +283,6 @@ public class QueryController {
     	} else {
     		username = "guest";
     	}
-    	System.out.println("HERE");
-    	System.out.println(queryWarningsDict.get(username).toString());
     	return queryWarningsDict.get(username).toString();
     }
     
@@ -543,6 +541,9 @@ public class QueryController {
     				queryWarningsDict.get(username).append("Biominer expects genes loaded from file, but none could be found. Please try reloading your gene file.<br/>");
     			}
 
+    		} else if (regions.equals("[ALL RESULT GENES]")) {
+    			String resultGenes = this.getGenesFromResults();
+    			parsed = this.getGeneIntervals(resultGenes, genome, "TxBoundary", ob);
     		} else {
     			parsed = this.getGeneIntervals(genes, genome, "TxBoundary",ob);
     		}
@@ -559,6 +560,9 @@ public class QueryController {
     			} else {
     				queryWarningsDict.get(username).append("Biominer expects regions loaded from file, but none could be found. Please try reloading your gene file.<br/>");
     			}
+    		} else if (regions.equals("[All result coordinates]")) {
+    			String resultCoords = this.getCoordinatesFromResults();
+    			intervalsToCheck = ip.parseIntervals(resultCoords, resultCoords, regionMargins, genome);
     		} else {
     			intervalsToCheck = ip.parseIntervals(regions, regions, regionMargins, genome);
     		}
@@ -664,6 +668,52 @@ public class QueryController {
     	//Create result object
     	QueryResultContainer qrcSub = qrc.getQrcSubset(resultsPerPage, 0, sortType);
     	return qrcSub;	
+    }
+    
+    private String getCoordinatesFromResults() {
+    	Subject currentUser = SecurityUtils.getSubject();
+    	String username = "guest";
+    	    	
+    	//If user isn't authenticated, return nothing
+    	if (currentUser.isAuthenticated()) {
+    		Long userId = (Long) currentUser.getPrincipal();
+    		User user = userService.getUser(userId);
+    		username = user.getUsername();
+    	} 
+    	
+    	if (this.resultsDict.containsKey(username)) {
+    		StringBuilder intervals = new StringBuilder("");
+    		QueryResultContainer qrc = resultsDict.get(username);
+    		for (QueryResult qr: qrc.getResultList()) {
+    			intervals.append(qr.getCoordinates() + "\n");
+    		}
+    		return intervals.toString();
+    	} else {
+    		return "";
+    	}
+    }
+    
+    private String getGenesFromResults() {
+    	Subject currentUser = SecurityUtils.getSubject();
+    	String username = "guest";
+    	    	
+    	//If user isn't authenticated, return nothing
+    	if (currentUser.isAuthenticated()) {
+    		Long userId = (Long) currentUser.getPrincipal();
+    		User user = userService.getUser(userId);
+    		username = user.getUsername();
+    	} 
+    	
+    	if (this.resultsDict.containsKey(username)) {
+    		StringBuilder intervals = new StringBuilder("");
+    		QueryResultContainer qrc = resultsDict.get(username);
+    		for (QueryResult qr: qrc.getResultList()) {
+    			intervals.append(qr.getMappedName() + "\n");
+    		}
+    		return intervals.toString();
+    	} else {
+    		return "";
+    	}
     }
     
     
@@ -1014,26 +1064,13 @@ public class QueryController {
                 
     			System.out.println(codeResultType);
     			
-    			if (codeResultType.equals("REGION")) {
-    				//Write header
-        			if (results.size() > 0) {
-        				bw.write(results.get(0).writeRegionHeader());
-        			}
-        			
-        			for (QueryResult qr: results) {
-        				bw.write(qr.writeRegion());
-        			}
-    			} else if (codeResultType.equals("GENE")) {
-    				//Write header
-        			if (results.size() > 0) {
-        				bw.write(results.get(0).writeGeneHeader());
-        			}
-        			
-        			for (QueryResult qr: results) {
-        				bw.write(qr.writeGene());
-        			}
-    			} 
-    			
+    			if (results.size() > 0) {
+    				bw.write(results.get(0).writeGeneHeader());
+    			}
+    			for (QueryResult qr: results) {
+    				bw.write(qr.writeGene());
+    			}
+
     			bw.close();
     			
     			//Create session file
@@ -1688,6 +1725,8 @@ public class QueryController {
     	for (GenericResult gr: grHash.keySet()) {
     		Integer[] indexes = grHash.get(gr);
     		Analysis a = analyses.get(indexes[0]);
+    		
+    		
     		
     		QueryResult result = new QueryResult();
 			result.setIndex(index++);

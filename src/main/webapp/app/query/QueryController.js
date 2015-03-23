@@ -5,7 +5,7 @@
  * QueryController
  * @constructor
  */
-var query = angular.module('query', ['angularFileUpload','filters', 'services', 'directives', 'ui.bootstrap', 'chosen','angucomplete-alt','dialogs.main','ngProgress','error','ngSanitize']);
+var query = angular.module('query', ['angularFileUpload','filters', 'services', 'directives', 'ui.bootstrap', 'chosen','angucomplete-alt','dialogs.main','ngProgress','error','ngSanitize','cgBusy']);
 
 
 angular.module("query").controller("QueryController", 
@@ -65,6 +65,11 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 	$scope.navigationOk = false; //When this is true, you can navigate away from the page
 	$scope.queryDeferred = null;
 	
+	$scope.geneUploadDeferred = null;
+	$scope.geneUploadRunning = false;
+	$scope.regionUploadDeferred = null;
+	$scope.regionUploadRunning = false;
+	
 	$scope.isReverse = false;
 	$scope.searchExisting = false;
 	
@@ -76,12 +81,11 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 	
 	$scope.showValidation = false;
 	
-	$rootScope.helpMessage = "<p>Placeholder for query help</p>";
-
+	
 	
 	$scope.mapResultType = {
-			'GENE' :     'Exact Match',
-			'REGION' :   'Overlapping Match'};
+			'GENE' :     'Exact Matches',
+			'REGION' :   'Overlapping Matches'};
 //			'VARIANT' :  'Variants' };
 	
 	$scope.mapComparison = {
@@ -151,6 +155,8 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
             	dialog.result.then(function() {
             		$timeout(function() {
             			$scope.abortQuery();
+            			$scope.abortGeneUpload();
+            			$scope.abortRegionUpload();
             			$location.path(next.substring($location.absUrl().length - $location.url().length));
                         $scope.$apply();
             		});
@@ -173,56 +179,77 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
     		$scope.stopPing();
     	}
     	$scope.abortQuery();
+    	$scope.abortGeneUpload();
+    	$scope.abortRegionUpload();
+    	
     });
     
     window.onbeforeunload = function() {
     	$scope.abortQuery();
+    	$scope.abortGeneUpload();
+    	$scope.abortGeneUpload();
     }
     
     
-    
     $scope.copyCoordinates = function() {
-    	var coordinateList = [];
-    	for (var i=0; i<$scope.queryResults.length; i++) {
-    		if ($scope.queryResults[i].selected) {
-    			var coord = $scope.queryResults[i].coordinates;
-    			if (coordinateList.indexOf(coord) == -1) {
-    				coordinateList.push(coord);
-    			}
-    		}
+    	ngProgress.start();
+    	if ($scope.selectAll) {
+    		$scope.regions = "[All result coordinates]";   		
+    	} else {
+    		var coordinateList = [];
+
+        	for (var i=0; i<$scope.queryResults.length; i++) {
+        		if ($scope.queryResults[i].selected) {
+        			var coord = $scope.queryResults[i].coordinates;
+        			if (coordinateList.indexOf(coord) == -1) {
+        				coordinateList.push(coord);
+        			}
+        		}
+        	}
+        	if (coordinateList.length == 0) {
+        		dialogs.notify("No Results Selected","There are no results selected in the table.  Please select individual results or everything before trying to copy coordinates.");
+        	}
+        	var coordinateEntry = coordinateList.join("\n");
+        	$scope.regions = coordinateEntry;
     	}
-    	if (coordinateList.length == 0) {
-    		dialogs.notify("No Results Selected","There are no results selected in the table.  Please select individual results or everything before trying to copy coordinates.");
-    	}
-    	var coordinateEntry = coordinateList.join("\n");
-    	$scope.regions = coordinateEntry;
+    	
     	$scope.intersectionTarget = "REGION";
+    	ngProgress.complete();
     };
     
     $scope.copyGenes = function() {
-    	var geneList = [];
-    	for (var i=0; i<$scope.queryResults.length; i++) {
-    		if ($scope.queryResults[i].selected) {
-    			var gene = $scope.queryResults[i].mappedName;
-    			if (geneList.indexOf(gene) == -1) {
-    				geneList.push(gene);
-    			}
-    		}
+    	ngProgress.start();
+    	if ($scope.selectAll) {
+    		$scope.genes = "[All result genes]";
+    	} else {
+    		var geneList = [];
+        	for (var i=0; i<$scope.queryResults.length; i++) {
+        		if ($scope.queryResults[i].selected) {
+        			var gene = $scope.queryResults[i].mappedName;
+        			if (geneList.indexOf(gene) == -1) {
+        				geneList.push(gene);
+        			}
+        		}
+        	}
+        	if (geneList.length == 0) {
+        		dialogs.notify("No Results Selected","There are no results selected in the table.  Please select individual results or everything before trying to copy genes.");
+        	}
+        	var geneEntry = geneList.join("\n");
+        	$scope.genes = geneEntry;
     	}
-    	if (geneList.length == 0) {
-    		dialogs.notify("No Results Selected","There are no results selected in the table.  Please select individual results or everything before trying to copy genes.");
-    	}
-    	var geneEntry = geneList.join("\n");
-    	$scope.genes = geneEntry;
+    	
     	$scope.intersectionTarget = "GENE";
+    	ngProgress.complete();
     };
     
     $scope.loadRegions = function(files) {
     	if (files.length > 0) {
-    		ngProgress.start();
-        	$upload.upload({
+    		$scope.regionUploadDeferred = $q.defer();
+    		$scope.regionUploadRunning = true;
+        	$scope.uploadCoordinatesPromise = $upload.upload({
         		url: "query/upload",
         		file: files[0],
+        		timeout: $scope.regionUploadDeferred.promise,
         	}).success(function(data) {
         		$scope.regions = data.regions;
         		if (data.message == null) {
@@ -233,11 +260,12 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
         			dialogs.error(title,message,null);
             		
         		}
-        		ngProgress.complete();
+        		$scope.regionUploadDeferred = null;
+        		$scope.regionUploadRunning = false;
         	}).error(function(data,status) {
         		console.log("error loading genes");
-        		
-        		ngProgress.reset();
+        		$scope.regionUploadDeferred = null;
+        		$scope.regionUploadRunning = false;
         	});
     	}
     	
@@ -245,10 +273,12 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 	
 	$scope.loadGenes = function(files) {
 		if (files.length > 0) {
-			ngProgress.start();
-	    	$upload.upload({
+			$scope.geneUploadDeferred = $q.defer();
+			$scope.geneUploadRunning = true;
+	    	$scope.uploadGenesPromise = $upload.upload({
 	    		url: "query/uploadGene",
 	    		file: files[0],
+	    		timeout: $scope.geneUploadDeferred.promise,
 	    	}).success(function(data) {
 	    		$scope.genes = data.regions;
 	    		if (data.message == null) {
@@ -260,11 +290,12 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 	    			dialogs.error(title,message,null);
 	        		
 	    		}
-	    		ngProgress.complete();
+	    		$scope.geneUploadDeferred = null;
+	    		$scope.geneUploadRunning = false;
 	    	}).error(function(data,status) {
 	    		console.log("error loading genes");
-	    		
-	    		ngProgress.reset();
+	    		$scope.geneUploadDeferred = null;
+	    		$scope.geneUploadRunning = false;
 	    	});
 		}
 	};
@@ -653,9 +684,10 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 			return;
 		}
 		
+		$scope.selectAll = false;
+		
 		$scope.warnings = "";
 		$scope.showValidation = false;
-		ngProgress.start();
 		$scope.hasResults = false;
 		$scope.queryCurrentPage = 0;
 		
@@ -701,10 +733,8 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 		var regions = "";
 		if ($scope.regions != null && $scope.regions != "") {
 			if ($scope.regions.length > 1000) {
-				ngProgress.reset();
 				$scope.queryStarted = false;
 				dialogs.error("Regions Error","There are more than 1000 characters in the region list, please upload a file instead.");
-				
 				return;
 			}
 			regions = $scope.regions;
@@ -718,7 +748,6 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 		var genes = "";
 		if ($scope.genes != null && $scope.genes != "") {
 			if ($scope.genes.length > 1000) {
-				ngProgress.reset();
 				$scope.queryStarted = false;
 				dialogs.error("Genes Error","There are more than 1000 characters in gene list, please upload a file instead.");
 				
@@ -738,7 +767,7 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 		
 		
 		// Run the query on the server.
-		$http({
+		$scope.runQueryPromise = $http({
 			url: "query/run",
 			method: "GET",
 			params: {codeResultType:          $scope.codeResultType,
@@ -787,7 +816,6 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 			});
 			$scope.queryStarted = false;
 			$scope.queryDeferred = null;
-			ngProgress.complete();
 		}).error(function(data, status, headers, config) {
 			$scope.hasResults = false;
 			$scope.resultPages = 0;
@@ -797,10 +825,10 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 			$scope.returnedResultType = null;
 			$scope.queryStarted = false;
 			$scope.queryDeferred = null;
-			ngProgress.reset();
 		});
 		
 		$anchorScroll();
+
 	};
 	
 	$scope.abortQuery = function() {
@@ -808,9 +836,21 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 			$scope.queryDeferred.resolve("Query aborted by user");
 			$scope.queryDeferred = null;
 		}
-		
-		
 	};
+	
+	$scope.abortGeneUpload = function() {
+		if ($scope.geneUploadDeferred != null) {
+			$scope.geneUploadDeferred.resolve("Upload aborted by user");
+			$scope.geneUploadDeferred = null;
+		}
+	}
+	
+	$scope.abortRegionUpload = function() {
+		if ($scope.regionUploadDeferred != null) {
+			$scope.regionUploadDeferred.resolve("Upload aborted by user");
+			$scope.regionUploadDeferred = null;
+		}
+	}
 	
 	$scope.downloadAnalysis = function() {
 		$http({
@@ -1173,8 +1213,8 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 	});
 	
 	$scope.loadExistingResults = function() {
-		ngProgress.start();
-		$http({
+		
+		$scope.loadExistingPromise = $http({
 			method: "GET",
 			url: "query/loadExistingResults"
 		}).success(function(data) {
@@ -1198,7 +1238,6 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 				}
 			});
 		}).error(function(data) {
-			ngProgress.reset();
 			$scope.hasResults = false;
 			$scope.resultPages = 0;
 			$scope.totalResults = 0;
@@ -1316,5 +1355,150 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 
 	$scope.loadGenotypeList();
 	$scope.loadGeneAnnotationList();
+	
+	
+	
+	$scope.showHelpFind = function() {
+		var title = "Help: What would you like to find?";
+		
+		dialogs.notify(title, $scope.helpFind);
+	}
+	
+	$scope.showHelpOrganism = function() {
+		var title = "Help: What Genome?";
+		dialogs.notify(title, $scope.helpOrganism);	
+	}
+	
+	$scope.showHelpDataset = function() {
+		var title = "Help: What Datasets?";
+		dialogs.notify(title, $scope.helpDataset);	
+	}
+	
+	$scope.showHelpThatIntersect = function() {
+		var title = "Help: That Intersect/Don't Intersect";
+		dialogs.notify(title, $scope.helpIntersect);
+	}
+	
+	$scope.showHelpThresholds = function() {
+		var title = "Help: That Exceed these Thresholds";
+		dialogs.notify(title, $scope.helpThresholds);
+	}
+	
+	$scope.showHelpResultPanel = function() {
+		var title = "Help: Result Panel";
+		dialogs.notify(title, $scope.helpResults);
+	}
+	
+	$scope.showHelpQueryPanel = function() {
+		var title = "Help: Query Panel";
+		dialogs.notify(title, $scope.helpQuery + $scope.helpFind + $scope.helpOrganism + $scope.helpDatasets + $scope.helpIntersect + $scope.helpThresholds);
+	}
+	
+	$scope.helpFind = 
+		"<h3>What would would you like to find?</h3>" +
+		"<h4>Required</h4>" +
+		"<p>Users have the option to return overlapping or exact matches.  <strong>Overlapping matches</strong> are results that overlap " +
+		"the queried genes or coordinates, plus any specified padding, by at least 1bp. <strong>Overlapping matches</strong> can be searched using " +
+		"gene names or coordinates. <strong>Exact matches</strong> can only be searched using gene names and will only return results " +
+		"with a matching gene annotation.</p>";
+	
+	$scope.helpOrganism = 
+		"<h3>What Genome?</h3>" +
+		"<h4>Required</h4>" +
+		"<p>Only one genome build can be selected per query.  Only genome builds that have searchable data will be displayed " +
+		"in the dropdown menu.  The genome build list can also be restricted by the dropdowns in the datasets section or by " +
+		"the experiment type.</p> ";
+	
+	$scope.helpDataset = 
+		"<h3>What Datasets?</h3>" +
+		"<h4>Required</h4>" +
+		"<p>Only one experiment type can be selected per query.  The list of available experiment types can be restricted " +
+		"by the optional dropdowns in the datasets section.  Currently, only RNA-Seq data can be searched when <strong>Exact " +
+		"Matches</strong> option is specified. All experiment types are available if the <strong>Overlapping Matches</strong> option is selected.</p>" +
+		"<h4>Optional</h4>" +
+		"<p>The queried datasets can be restricted by the labs, projects, analyses and sample source dropdowns.  Only data " +
+		"visible to the user will be displayed and the data displayed reflects previous choices.  In all cases, multiple " +
+		"entries can be selected.</p>"+
+		"<p>If the <strong>Search Results</strong> checkbox is selected, the previous query's results are searched instead of the entire database. " +
+		"Selecting this option will disable all other options in the <strong>What Datasets?</strong> section.</p>";
+	
+	$scope.helpThresholds = 
+		"<h3>Exceed these Thresholds</h3>" +
+		"<h4>Optional</h4>" +
+		"<p>Results can also be restricted by FDR or Log2 Fold Change. Biominer expects FDR to be untransformed, so lower values are " +
+		"more signifant.</p>";
+	
+	$scope.helpIntersect = 
+		"<h3>That Intersect/Don't Intersect</h3>" +
+		"<h4>Optional</h4>" +
+		"<p>Users can opt to restrict results to a desired set of genes or regions.  These can be typed into the available " +
+		"text fields (max 1000 characters) or uploaded from a file (BED files can be uploaded for regions).  Uploaded files " +
+		"can be zipped or gzipped. If the <strong>Overlapping Matches</strong> option is selected, users have the option to add padding to " +
+		"their searches. If region coordinates are negative or are beyond the of the chromosome boundary before or after padding, the " +
+		"query will still run, but a warning message will found in the <strong>Results Panel</strong>. Headers are not expected.</p>" +
+		"<p>A region line must have the chromosome, start coordinate and end coordinate in that order. " +
+		"It's OK if there is information after the region info, but there can't be any information preceding. " +
+		"There can be only one region per line, any more will be skipped.  Regions can be in the format 'chr:start-end' or 'chr\\tstart\\tend', " +
+		"where \\t is a tab.</p>" +
+		"<p>Genes can be separated by commas or newlines.  Genes names are not checked against a database until the query " +
+		"is run.</p>" +
+		"<p>Users can also opt to search for results that do not match a set of genes or regions by selecting the <strong>Does not intersect</strong> " +
+		"button.</p>" +
+	    "<p>Return all results will not intersect results with genes or genomic coordinates.</p>";
+	
+	$scope.helpQuery = "<h3>Running a Query</h3>" +
+		"<p>Queries can be run by clicking on the <strong>Run Query</strong> button found at the top and the botton of the query panel. " +
+		"If a required input is missing, the query is terminated and the missing field is flagged.  While the query is " +
+		"running, there is a busy animation displayed over the results panel.  Users have the option to stop the query while it's running by " +
+		"clicking on the <strong>Stop Query</strong> button.  If the user tries to navigate off the page while the query is running, they will get " +
+		"warning message stating that they will lose the query data. Users can clear the results and query panels by clicking on the " +
+		"<strong>Clear</strong> button</p>";
+	
+	$scope.helpPreamble = 
+		"<p>This page allows users to search for results in the Biominer database.  Users specify the type of data they " +
+		"want to find and can optionally set restrictions on the results they get back. Returned results can be used in new " +
+		"queries, viewed in IGV or downloaded as a tab-delimited text file.  Users that log in before searching will" +
+		"be able to re-load the last run query.</p>"; 
+	
+	$scope.helpResults = "" + 
+		"<h3>Results Panel</h3>" +
+		"<p>When a query completes, the first 25 results are returned to Biominer. The total number of hits are displayed in the <strong>Results Panel</strong> header along with " +
+		"any errors or warnings. A text summary of the users query is also displayed just below the <strong>Results Panel</strong> header. Users have the option to increase " +
+		"the number of returned hits to a maximum of 100 or use the arrow buttons at the bottom of the panel to page through the results. " +
+		"By default, the results are sorted by FDR, but users can sort by coordinate or log2ratio instead.</p>" +
+		"<p>If individual result rows are selected or if all results are selected using the checkbox in the header, users can use the <strong>Copy Coordinates</strong> button " +
+		"in the <strong>Results Panel</strong> header to copy the selected results coordinates back to the query page. If results are annotated with a gene name, there is " +
+		"also a <strong>Copy Genes</strong> button.</p>" +
+		"<p>The <strong>Download</strong> button at the top of the <strong>Results Panel</strong> can be used to save the results of a query as a tab-delimited text file." + 
+		"All results are saved, not just results visible in the <strong>Results Panel</strong>.</p>" +
+		"<p>The <strong>Display in IGV</strong> button at the top of the <strong>Results Panel</strong> can be used to view results in IGV.  See below for more information " +
+		"this feature</p>" +
+		"<p>If Biominer detects and problems with a query or while creating IGV sessions, a red button will appear at the top of the <strong>Results Panel</strong>. " +
+		"Users can click on the button to get a detailed description of the problem.  Typically the messages will list genes that couldn't be " +
+		"identified or boundaries that run off the end of the chromosome.  Occassionally, the message will be more dire, for example a missing " +
+		"datatrack.</p>" +
+		"<h3>Loading Last Result</h3>"  +
+		"<p>If the user is not running Biominer as a guest and no results are displayed, the user can load their last query and results by " +
+		"clicking on the <strong>Load Last</strong> button.</p>" +
+		"<h3>Display in IGV</h3>" +
+		"<p>If returned results are associated with datatracks, users can view their data using IGV. When the IGV button is clicked, Biominer tries to " +
+		"look for an open IGV application.  If that fails, it will offer to download IGV from amazon.  Please note that Biominer is only compatible with " +
+		"IGV 2.3.41 or later.  Once IGV is open, Biominer prepares a session file containing datatracks associated with the results and loads it into " +
+		"IGV.  The coordinates listed in the results become hyperlinks and users can click on them to drive IGV.  Once IGV is closed, the hyperlinks return " +
+		"to plain text. There is a limit to how much data IGV can handle, so if your results contain a ton of datatracks, the performance will be poor.</p>";
+	
+	
+	$rootScope.helpMessage = 
+		
+		    "<h1>Query Page</h1>" +
+		    $scope.helpPreamble +
+		    $scope.helpQuery +
+		    $scope.helpFind +
+		    $scope.helpOrganism + 
+		    $scope.helpDataset + 
+		    $scope.helpIntersect + 
+		    $scope.helpThresholds +
+		    $scope.helpResults;
+			
 	
 }]);

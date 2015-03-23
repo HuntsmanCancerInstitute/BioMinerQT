@@ -208,10 +208,6 @@ public class ChipParser {
 		    if (allTransformedFdrLessThanOne) {
 		    	this.warningMessage = "WARNING: FDR formatting style was set as transformed, but all values were between 0 and 1.  Are you sure the FDR values were transformed? "
 						+ "FDR values are transformed using the formula -10 * log10(FDR)";		
-			} else if (allLog2RatioNeg) {
-				this.warningMessage = "WARNING: All log2ratios were less than or equal to zero.  Are you sure the log2Ratios are formatted correctly?";
-			} else if (allLog2RatioPos) {
-				this.warningMessage = "WARNING: All log2ratios were greater than or equal to zero.  Are you sure the log2Ratios are formatted correctly?";
 			}
 			
 		} catch (IOException ioex) {

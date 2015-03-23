@@ -29,7 +29,7 @@
      	
             <div class="panel panel-default">
 				<div class="panel-heading-btn panel-heading ">
-				   <span class="panel-title">Compose Query</span>
+				   <span class="panel-title">Compose Query <span class="glyphicon glyphicon-question-sign help-button" ng-click="showHelpQueryPanel()"></span></span>
 				    
 				     			
 					<button type="button" class="btn btn-default pull-right btn-sm" style="margin-top: -6px;margin-left: 10px" ng-click="clearQuery()" ng-hide="queryStarted">
@@ -46,7 +46,7 @@
 				
            	 	<div class="panel-body">
             	 	
-           	 		<span class="section-header" style="padding-top: 0px">What would you like to find?</span>
+           	 		<span class="section-header" style="padding-top: 0px">What would you like to find?  <span class="glyphicon glyphicon-question-sign help-button" ng-click="showHelpFind()"></span></span>
            	 			
            	 		<!-- What type of result do you want back? -->
            	 		<div class="form-group" style="padding-top: 0px">
@@ -69,7 +69,7 @@
 					</div>
 
   
-           	 		<span class="section-header" >What Genome?</span>
+           	 		<span class="section-header" >What Genome?  <span class="glyphicon glyphicon-question-sign help-button" ng-click="showHelpOrganism()"></span></span>
 					<div class="form-group" >
 		  				<div class="col-md-12">
 		    				<select name="gbSelect"
@@ -86,7 +86,7 @@
 					</div>
 					
   
-           	 		<span class="section-header" >What Datasets?</span>
+           	 		<span class="section-header" >What Datasets?  <span class="glyphicon glyphicon-question-sign help-button" ng-click="showHelpDataset()"></span></span>
            	 		
            	 		<!-- What data sets? -->
 					<div class="form-group">
@@ -144,7 +144,7 @@
 					</div>
 			
           	 		<!-- Interest or Don't Intersect -->
-           	 		<span class="section-header" >That</span>
+           	 		<span class="section-header" >That  <span class="glyphicon glyphicon-question-sign help-button" ng-click="showHelpThatIntersect()"></span></span>
           	 		
           	 		<div class="form-group">
 					  <div class="col-md-12"> 
@@ -152,21 +152,29 @@
    					     	<label class="btn btn-toggle" ng-model="isReverse" btn-radio="false" >Intersect</label>
         					<label class="btn btn-toggle" ng-model="isReverse" btn-radio="true">Don't Intersect</label>
     					</div>
-    					<span class="btn btn-primary pull-right fileinput-button col-md-4 btn-sm" ng-show="intersectionTarget == 'REGION'">
+    					<span class="btn btn-primary pull-right fileinput-button col-md-4 btn-sm" ng-show="intersectionTarget == 'REGION' && !regionUploadRunning">
 					        <i class="glyphicon glyphicon-upload"></i>
 					        <span>Import Regions</span>
 					        <input type="file" ng-file-select ng-file-change="loadRegions($files)">            
 					    </span>
-					    <span class="btn btn-primary pull-right fileinput-button col-md-4 btn-sm" ng-show="intersectionTarget == 'GENE'">
+					    <span class="btn btn-danger pull-right fileinput-button col-md-4 btn-sm" ng-show="intersectionTarget == 'REGION' && regionUploadRunning" ng-click="abortRegionUpload()">
+					    	<i class="glyphicon glyphicon-remove-sign"></i>
+					        <span>Stop Import</span> 
+					    </span>
+					    <span class="btn btn-primary pull-right fileinput-button col-md-4 btn-sm" ng-show="intersectionTarget == 'GENE' && !geneUploadRunning">
 					        <i class="glyphicon glyphicon-upload"></i>
 					        <span>Import Genes</span>
 					        <input type="file" ng-file-select ng-file-change="loadGenes($files)">            
+					    </span>
+					     <span class="btn btn-danger pull-right fileinput-button col-md-4 btn-sm" ng-show="intersectionTarget == 'GENE' && geneUploadRunning" ng-click="abortGeneUpload()">
+					    	<i class="glyphicon glyphicon-remove-sign"></i>
+					        <span>Stop Import</span> 
 					    </span>
 					  </div>
 					</div>
 				
           	 		<!-- Regions-->
-					<div class="form-group" ng-show="codeResultType!='GENE' && codeResultType == 'REGION'">
+					<div class="form-group" ng-show="codeResultType!='GENE' && codeResultType == 'REGION'" cg-busy="uploadCoordinatesPromise">
 					    <div class="col-md-2" style="padding-right: 0px;">
 					      <div class="radio" required>
 						   		<label for="radio-region">
@@ -187,7 +195,7 @@
 					</div>
 							 
           	 		<!-- Genes-->
-					<div class="form-group" ng-show="codeResultType=='GENE' || codeResultType=='REGION'">
+					<div class="form-group" ng-show="codeResultType=='GENE' || codeResultType=='REGION'" cg-busy="uploadGenesPromise">
 						<div class="col-md-2" style="padding-right: 0px;" >
 					      <div class="radio">
 						   		<label for="radio-gene">
@@ -197,11 +205,11 @@
 						</div>
 					 	<div class="col-md-10" ng-show="intersectionTarget == 'GENE'" style="padding-left: 1px; padding-right: 0px;">
  							<div class="col-md-7">
- 								<angucomplete-alt id="test" minlength="2" placeholder="Search for gene.." pause="400" selected-object="searchGenes" local-data="hugoList" title-field="geneName" search-fields="geneName" input-class="form-control input-sm" match-class="highlight" clear-selected="true"/>
+ 								<angucomplete-alt tooltip="Search gene name database" id="test" minlength="2" placeholder="Search for gene.." pause="400" selected-object="searchGenes" local-data="hugoList" title-field="geneName" search-fields="geneName" input-class="form-control input-sm" match-class="highlight" clear-selected="true"/>
  							</div>
 					    	<br>
 					    	<div class="col-md-7">
-					    		<textarea name="geneField" ng-model="genes" class="form-control input-sm" placeholder="ACTB, GAPDH, ..." ng-required="intersectionTarget=='GENE'"/>
+					    		<textarea tooltip="Add gene names manually" name="geneField" ng-model="genes" class="form-control input-sm" placeholder="ACTB, GAPDH, ..." ng-required="intersectionTarget=='GENE'"/>
 					    		<span class="label label-danger" ng-show="queryForm.geneField.$error.required && showValidation">Required when 'gene' intersections are specified</span>
 					    	</div>
 					    	<div class="col-md-5" ng-hide="codeResultType == 'GENE'">
@@ -225,7 +233,7 @@
 					</div>
 					
 					<!--  Thresholds -->
-           	 		<span class="section-header" ng-show="isThresholdBasedQuery">That Exceed these Thresholds</span>
+           	 		<span class="section-header" ng-show="isThresholdBasedQuery">That Exceed these Thresholds <span class="glyphicon glyphicon-question-sign help-button" ng-click="showHelpThesholds()"></span></span>
            	 		 
            	 		 <!-- FDR-->
 					<div class="form-group" ng-show="isThresholdBasedQuery">
@@ -327,20 +335,21 @@
      	<!--                 -->
         <!--  Results Panel  -->
      	<!--                 -->
-		<div class="col-sm-12 col-md-12 col-lg-8" >
+		<div class="col-sm-12 col-md-12 col-lg-8" cg-busy="{promise: runQueryPromise,message: 'Searching'}">
 			
-			<div class=" panel panel-default">
+			<div class=" panel panel-default" cg-busy="{promise: loadExistingPromise,message: 'Loading'}" >
 			
 				<div class="panel-heading panel-heading-btn">
-				  <span class=panel-title>Results</span>
+				  
+				  <span class=panel-title>Results Panel <span class="glyphicon glyphicon-question-sign help-button" ng-click="showHelpResultPanel()"></span></span>
 				    
-				  <span class="label label-success panel-heading-label" ng-show="totalResults>0">{{totalResults}}</span>
+				  <span class="label label-success panel-heading-label" ng-show="totalResults>0">{{totalResults}} results</span>
 			   	  <button type="button" class="btn btn-sm btn-info pull-right" ng-show="hasResults" ng-click="loadIgvSession()" ng-disabled="totalDatatracks == 0" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-eye-open"></span> Display in IGV</button>
 			   	  <a class="btn btn-sm btn-info pull-right" ng-show="hasResults" style="margin-top: -6px; margin-left: 10px" target="_self" ng-href="query/downloadAnalysis?codeResultType={{returnedResultType}}"><span class="glyphicon glyphicon-download"></span> Download</a>
 			   	  <button type="button" class="btn btn-sm btn-danger pull-right" ng-show="warnings != ''" ng-click="displayWarnings()" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-exclamation-sign"></span> Query</button>
 			   	  <button type="button" class="btn btn-sm btn-danger pull-right" ng-show="igvWarnings != ''" ng-click="displayWarnings('igv')" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-exclamation-sign"></span> IGV</button>
 			   	  <button type="button" class="btn btn-sm btn-primary pull-right" style="margin-top: -6px;margin-left: 10px" ng-click="loadExistingData()" ng-hide="loggedUser == null || hasResults">	
-				   	<span class="glyphicon glyphicon-cloud-download"></span> Load Last
+				   	<span class="glyphicon glyphicon-cloud-download" tooltip="Load last query and results"></span> Load Last
 				  </button> 	 
 				</div>
 				
@@ -367,14 +376,14 @@
 	<!-- 				        <col width="0%" /> -->
 	<!-- 				    </colgroup> -->
 				        <thead>
-				            <tr>
-				                <th><input type="checkbox" ng-model="selectAll"></th>
+				            <tr >
+				                <th><input type="checkbox" ng-model="selectAll" tooltip="Select All Results"></th>
 				                <th>Index</th>
 								<th>Project</th>
 								<th>Analysis</th>
 								<th>Type</th>
 								<th>Search</th>
-								<th ng-show="selectedAnalysisType.type == 'RNASeq'"><button type="button" class="btn btn-xs btn-primary" tooltip="Copy selected genes to query" ng-click="copyGenes()"><span class="glyphicon glyphicon-share"></span></button>Gene</th>
+								<th ng-show="selectedAnalysisType.type == 'RNASeq'"><button type="button" class="btn btn-xs btn-primary" tooltip="Copy selected genes to query" ng-click="copyGenes()"><span class="glyphicon glyphicon-share"></span></button><span > Gene</span></th>
 								<th>Conditions</th>
 								<th>
 									<button type="button" class="btn btn-xs btn-primary" tooltip="Copy selected coordinates to query" ng-click="copyCoordinates()"><span class="glyphicon glyphicon-share"></span></button>
@@ -399,7 +408,7 @@
 				                <td class="nowrap-ellipsis"><span tooltip="{{row.analysisName}}">{{row.analysisName}}</span></td>
 				                <td class="nowrap-ellipsis"><span tooltip="{{row.analysisType}}">{{row.analysisType}}</td>
 				                <td class="nowrap-ellipsis"><span tooltip="{{row.search}}">{{row.search}}</span></td>
-				                <td class="nowrap-ellipsis" ng-show="selectedAnalysisType.type == 'RNASeq'"><span tooltip="{{row.mappedName}}">{{row.mappedName}}</td>
+				                <td class="nowrap" ng-show="selectedAnalysisType.type == 'RNASeq'"><span tooltip="{{row.mappedName}}">{{row.mappedName}}</td>
 				                <td class="nowrap-ellipsis"><span tooltip="{{row.sampleConditions}}">{{row.sampleConditions}}</td>
 				                <td class="nowrap" ng-hide="igvLoaded">{{row.coordinates}}</td>
 				                <td class="nowrap-ellipsis" ng-show="igvLoaded"><span tooltip="{{row.coordinate}}"><a ng-click="loadLocus(row)">{{row.coordinates}}</a></td>
