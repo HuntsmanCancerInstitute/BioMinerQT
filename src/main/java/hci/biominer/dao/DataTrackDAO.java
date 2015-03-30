@@ -5,7 +5,9 @@ import java.util.List;
 import hci.biominer.model.DataTrack;
 import hci.biominer.model.Project;
 import hci.biominer.model.Analysis;
+import hci.biominer.util.Enumerated.FileStateEnum;
 
+import org.hibernate.Hibernate;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -25,6 +27,9 @@ public class DataTrackDAO {
 	public List<DataTrack> getDataTracks() {
 		Session session = this.getCurrentSession();
 		List<DataTrack> dataTracks = session.createQuery("from DataTrack").list();
+		for (DataTrack d: dataTracks) {
+			Hibernate.initialize(d.isAnalysisSet());
+		}
 		session.close();
 		return dataTracks;
 	}
@@ -32,6 +37,7 @@ public class DataTrackDAO {
 	public DataTrack getDataTrackById(Long idDataTrack) {
 		Session session = getCurrentSession();
 		DataTrack dataTrack = (DataTrack)session.get(DataTrack.class, idDataTrack);
+		Hibernate.initialize(dataTrack.isAnalysisSet());
 		session.close();
 		return dataTrack;
 	}
@@ -42,6 +48,9 @@ public class DataTrackDAO {
 		Query query = session.createQuery("from DataTrack where project = :project");
 		query.setParameter("project", project);
 		List<DataTrack> dataTracks = query.list();
+		for (DataTrack d: dataTracks) {
+			Hibernate.initialize(d.isAnalysisSet());
+		}
 		session.close();
 		return dataTracks;
 		
@@ -53,6 +62,9 @@ public class DataTrackDAO {
 		Query query = session.createQuery("from DataTrack where analysis = :analysis");
 		query.setParameter("analysis", analysis);
 		List<DataTrack> dataTracks = query.list();
+		for (DataTrack d: dataTracks) {
+			Hibernate.initialize(d.isAnalysisSet());
+		}
 		session.close();
 		return dataTracks;
 	}
@@ -72,7 +84,7 @@ public class DataTrackDAO {
 		DataTrackToUpdate.setName(dataTrack.getName());
 		DataTrackToUpdate.setPath(dataTrack.getPath());
 		DataTrackToUpdate.setProject(dataTrack.getProject());
-		DataTrackToUpdate.setAnalyses(dataTrack.getAnalyses());
+		DataTrackToUpdate.setState(dataTrack.getState());
 		session.update(DataTrackToUpdate);
 		session.getTransaction().commit();
 		session.close();	
@@ -83,6 +95,17 @@ public class DataTrackDAO {
 		session.beginTransaction();
 		DataTrack dataTrack = (DataTrack) session.get(DataTrack.class, idDataTrack);
 		session.delete(dataTrack);
+		session.getTransaction().commit();
+		session.close();
+	}
+	
+	public void finalizeDataTrack(Long idDataTrack, FileStateEnum fs, String message) {
+		Session session = getCurrentSession();
+		session.beginTransaction();
+		DataTrack DataTrackToUpdate = (DataTrack) session.get(DataTrack.class, idDataTrack);
+		DataTrackToUpdate.setState(fs);
+		DataTrackToUpdate.setMessage(message);
+		session.update(DataTrackToUpdate);
 		session.getTransaction().commit();
 		session.close();
 	}

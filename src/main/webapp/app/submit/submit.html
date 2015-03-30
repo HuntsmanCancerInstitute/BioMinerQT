@@ -22,7 +22,7 @@
 				</div>
 	  	   
 				
-           	 	<div class="panel-body">
+           	 	<div class="panel-body" cg-busy="{promise: dataTrackUploadPromise,message: 'Uploading Datatracks'}">
 					<ul>
 				 		<li class="list-group" ng-repeat="project in projects">
 				 			<a ng-class="project.cssClass" href="#/submit" ng-click="select(project.idProject)">
@@ -48,15 +48,23 @@
 				<div class="panel-body" style="padding-top: 10px;">
 				
 					<tabset>
-					   <tab heading="1. Describe Project">
+					   <tab heading="1. Edit Project Metadata">
 							<ng:include src="'app/submit/basicinfo.html'"></ng:include>				
 					   </tab>
+					   
+					   <tab heading="2. Import Samples into Project">
+							<ng:include src="'app/submit/samples.html'"></ng:include>				
+					   </tab>
+					   
+					   <tab heading="3. Import IGV Files into Project">
+							<ng:include src="'app/submit/datatracks.html'"></ng:include>				
+					   </tab>
 
-					   <tab heading="2. Import Data">
+					   <tab heading="4. Import Processed Data into Project">
 							<ng:include src="'app/submit/upload.html'"></ng:include>				
 					   </tab>
 					   
-					   <tab heading="3. Describe Each Analysis" >
+					   <tab heading="5. Assemble Project Data into Analyses" >
 							<ng:include src="'app/submit/results.html'"></ng:include>				
 					   </tab>
 					</tabset>

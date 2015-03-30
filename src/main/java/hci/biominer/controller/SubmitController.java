@@ -667,112 +667,10 @@ public class SubmitController {
     }
     
     /***************************************************
-	 * URL: /project/addDatatrack
-	 * addTranscriptFile
+	 * URL: /project/uploadDataTrack
+	 * This method uploads a datatrack to biominer
 	 ****************************************************/
-	@RequestMapping(value="addDataTrack",method=RequestMethod.POST)
-	public @ResponseBody
-	FileMeta uploadAddDataTrack(
-			@RequestParam("file") MultipartFile file,  
-			@RequestParam(value="index") Integer index, 
-			@RequestParam(value="total") Integer total, 
-			@RequestParam(value="name") String filename,
-			@RequestParam(value="idProject") Long idProject,
-			@RequestParam(value="dtname") String dtname, 		
-			HttpServletResponse response) throws Exception {
-		
-		File subDirectory = new File(FileController.getIgvDirectory(),String.valueOf(idProject));
-		if (!subDirectory.exists()) {
-			subDirectory.mkdir();
-		}
-		File localFile =  new File(subDirectory,filename);
-		File tabixFile = new File(subDirectory,filename.substring(0,filename.length()-3));
-		File tabixIndex = new File(subDirectory,filename + ".tbi");
-		String tabixPath = BiominerProperties.getProperty("tabixPath");
-		
-		FileMeta fm = new FileMeta();
-		
-		//If first file, set append flag to false and delete existing files with the same name.
-		boolean append = true;
-		if (index == 0) {
-			if (localFile.exists()) {
-				localFile.delete();
-			}
-			append = false;
-		}
-		
-		try {
-	
-			//copy file to directory
-			if (filename.endsWith(".bw") || filename.endsWith(".bb") || filename.endsWith(".vcf.gz")) {
-				FileCopyUtils.copy(file.getInputStream(), new FileOutputStream(localFile,append));
-				
-				//If last file, return info
-				if (index+1 == total) {
-					fm.setDirectory(filename);
-					fm.setFinished(true);
-					
-					if (filename.endsWith(".vcf.gz")) {
-						try {
-							VCFUtilities.unzipTabix(localFile, tabixFile, tabixPath);
-							VCFUtilities.createTabix(tabixFile, localFile, tabixPath);
-						} catch (Exception ex) {
-							throw new Exception("Tabix creation or indexing failed: " + ex.getMessage());
-						}
-						
-					}
-					
-			    	//Create secondary objects
-			    	Project project = this.projectService.getProjectById(idProject);
-			    	
-			    	//Create sample object
-			    	DataTrack dataTrack = new DataTrack(dtname, filename, project);
-			    	
-			    	//Update sample
-			    	this.dataTrackService.addDataTrack(dataTrack);	
-			    	
-			    	
-				}
-			
-				fm.setState(FileStateEnum.SUCCESS.toString());
-				response.setStatus(200);
-			} else {
-				fm.setMessage(String.format("The suffix for file %s is not supported.  Only bw, bb and vcf.gz can be loaded into biominer.",filename));
-				fm.setState(FileStateEnum.FAILURE.toString());
-				response.setStatus(405);
-			}
-		} catch (Exception ex) {
-			ex.printStackTrace();
-			
-			//If failed, send error response back
-			response.setStatus(405);
-			
-			//delete file
-			if (localFile.exists()) {
-				localFile.delete();
-			}
-			
-			if (tabixFile.exists()) {
-				tabixFile.delete();
-			}
-			
-			if (tabixIndex.exists()) {
-				tabixIndex.delete();
-			}
-			
-			//set error message
-			fm.setMessage(ex.getMessage());
-			fm.setState(FileStateEnum.FAILURE.toString());
-		}
-		return fm;
-	}
-
-	
-    /***************************************************
-	 * URL: /project/addDatatrackFile
-	 * addTranscriptFile
-	 ****************************************************/
-	@RequestMapping(value="addDataTrackFile",method=RequestMethod.POST)
+	@RequestMapping(value="uploadDataTrack",method=RequestMethod.POST)
 	public @ResponseBody
 	FileMeta uploadDataTrack(
 			@RequestParam("file") MultipartFile file,  
@@ -782,15 +680,19 @@ public class SubmitController {
 			@RequestParam(value="idProject") Long idProject,
 			HttpServletResponse response) throws Exception {
 		
+		//Create a directory for the datatrack if it doesn't yet exist
 		File subDirectory = new File(FileController.getIgvDirectory(),String.valueOf(idProject));
 		if (!subDirectory.exists()) {
 			subDirectory.mkdir();
 		}
+		
+		//Create File handlers for uploaded files
 		File localFile =  new File(subDirectory,filename);
 		File tabixFile = new File(subDirectory,filename.substring(0,filename.length()-3));
 		File tabixIndex = new File(subDirectory,filename + ".tbi");
 		String tabixPath = BiominerProperties.getProperty("tabixPath");
 		
+		//Create FileMeta object, which contains information
 		FileMeta fm = new FileMeta();
 		
 		//If first file, set append flag to false and delete existing files with the same name.
@@ -824,19 +726,17 @@ public class SubmitController {
 					
 				}
 				fm.setState(FileStateEnum.SUCCESS.toString());
-				response.setStatus(200);
+				
 			} else {
 				fm.setMessage(String.format("The suffix for file %s is not supported.  Only bw, bb and vcf.gz can be loaded into biominer.",filename));
 				fm.setState(FileStateEnum.FAILURE.toString());
-				response.setStatus(405);
+				fm.setFinished(true);
 			}
 		} catch (Exception ex) {
-			ex.printStackTrace();
 			
-			//If failed, send error response back
-			response.setStatus(405);
 			
-			//delete file
+			fm.setFinished(true);
+			//Cleanup all partial files
 			if (localFile.exists()) {
 				localFile.delete();
 			}
@@ -849,7 +749,6 @@ public class SubmitController {
 				tabixIndex.delete();
 			}
 			
-
 			//set error message
 			fm.setMessage(ex.getMessage());
 			fm.setState(FileStateEnum.FAILURE.toString());
@@ -873,9 +772,23 @@ public class SubmitController {
     }
     
     /***************************************************
+     * URL: /project/finalizeDataTrack
+     * finalizeDataTrack(): update dataTrack with upload status (FAILURE or SUCCESS)
+     * @param idDataTrack
+     * @param uploadStatus
+     * @param message
+     */
+    @RequestMapping(value="finalizeDataTrack", method=RequestMethod.PUT)
+    @ResponseBody
+    public void finalizeDataTrack(@RequestParam(value="idDataTrack") Long idDataTrack, @RequestParam(value="uploadStatus") FileStateEnum fs, 
+    		@RequestParam(value="message",required=false) String message) {
+    	this.dataTrackService.finalizeDataTrack(idDataTrack, fs, message);
+    }
+    
+    /***************************************************
 	 * URL: /project/updateDataTrack
 	 * updateDataTrack(): update dataTrack with new information
-	 * method: post
+	 * method: put
 	 * @param idDataTrack
 	 * @param idProject
 	 * @param name
@@ -883,7 +796,7 @@ public class SubmitController {
 	 ****************************************************/
     @RequestMapping(value="updateDataTrack",method=RequestMethod.PUT)
     @ResponseBody
-    public void updateDataTrack(@RequestParam(value="idProject") Long idProject, @RequestParam(value="idDataTrack") Long idDataTrack, 
+    public DataTrack updateDataTrack(@RequestParam(value="idProject") Long idProject, @RequestParam(value="idDataTrack") Long idDataTrack, 
     		@RequestParam(value="name") String name, @RequestParam(value="path") String path) throws Exception {
     	
     	//Create secondary objects
@@ -901,11 +814,13 @@ public class SubmitController {
     	updatedDataTrack.setName(name);
     	updatedDataTrack.setPath(path);
     	updatedDataTrack.setProject(project);
+    	updatedDataTrack.setState(FileStateEnum.INCOMPLETE);
 
     	//Update sample
     	this.dataTrackService.updateDataTrack(idDataTrack, updatedDataTrack);
+    	return this.dataTrackService.getDataTrackById(idDataTrack);
     }
-    
+   
     
     /***************************************************
 	 * URL: /project/createDataTrack
@@ -913,21 +828,23 @@ public class SubmitController {
 	 * method: post
 	 * @param idProject
 	 * @param name
-	 * @param url
+	 * @param path
 	 ****************************************************/
     @RequestMapping(value="createDataTrack",method=RequestMethod.PUT)
     @ResponseBody
-    public void createDataTrack(@RequestParam(value="idProject") Long idProject, @RequestParam(value="name") String name, 
+    public DataTrack createDataTrack(@RequestParam(value="idProject") Long idProject, @RequestParam(value="name") String name, 
     		@RequestParam(value="path") String path) {
     	
     	//Create secondary objects
     	Project project = this.projectService.getProjectById(idProject);
     	
     	//Create sample object
-    	DataTrack dataTrack = new DataTrack(name, path, project);
+    	DataTrack dataTrack = new DataTrack(name, path, project, FileStateEnum.INCOMPLETE);
     	
     	//Update sample
     	this.dataTrackService.addDataTrack(dataTrack);
+    	
+    	return dataTrack;
     }
 	
 	private void deleteDataTrackFile(DataTrack dt) throws Exception {
@@ -936,6 +853,24 @@ public class SubmitController {
 			dataTrackFile.delete();
 		}
 	}
+	
+	/***************************************************
+	 * URL: /project/cleanDataTracks
+	 * cleanDataTracks(): delete data tracks that are incomplete or failed
+	 * method: post
+	 * @param idProject
+	 ****************************************************/
+    @RequestMapping(value="cleanDataTracks",method=RequestMethod.DELETE)
+    @ResponseBody
+    public void cleanDataTrack(@RequestParam(value="idProject") Long idProject) throws Exception {
+    	Project project = this.projectService.getProjectById(idProject);
+    	List<DataTrack> dtList = this.dataTrackService.getDataTrackByProject(project);
+    	for (DataTrack dt: dtList) {
+    		if (dt.getState() != FileStateEnum.SUCCESS) {
+    			this.deleteDataTrack(dt.getIdDataTrack());
+    		}
+    	}
+    }
 	
 	@RequestMapping(value="isSampleSourceUsed",method=RequestMethod.GET)
 	@ResponseBody

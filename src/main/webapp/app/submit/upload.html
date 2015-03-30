@@ -1,18 +1,20 @@
 <div class="container-fluid" data-ng-controller="UploadController">
 	<div class="row">
 	    <span class="section-header">Upload Files</span>
-		<div class="col-lg-7">
-			<span class="btn btn-success fileinput-button btn-sm"  ng-class="{disabled: disabled}">
-		        <i class="glyphicon glyphicon-upload"></i>
-		        <span>Upload</span>
-		        <input type="file" ng-file-select ng-file-change="onFileSelect($files)" multiple>            
-		    </span>
-		</div>
-		
-		<div class="col-lg-5" >
-              <span ng-show="complete > 0 && complete < 100">Uploading files....{{complete | number }}%</span>
-              <div class="progress progress-striped active" ng-show="complete > 0 && complete < 100"><div class="progress-bar progress-bar-info" data-ng-style="{width: complete + '%'}"></div></div>
-        </div>
+	    <div class="row" style="padding-top: 10px; padding-bottom: 10px">
+			<div class="col-lg-7">
+				<span class="btn btn-success fileinput-button btn-sm"  ng-class="{disabled: disabled}">
+			        <i class="glyphicon glyphicon-upload"></i>
+			        <span>Upload</span>
+			        <input type="file" ng-file-select ng-file-change="onFileSelect($files)" multiple>            
+			    </span>
+			</div>
+			
+			<div class="col-lg-5" >
+	              <span ng-show="complete > 0 && complete < 100">Uploading files....{{complete | number }}%</span>
+	              <div class="progress progress-striped active" ng-show="complete > 0 && complete < 100"><div class="progress-bar progress-bar-info" data-ng-style="{width: complete + '%'}"></div></div>
+	        </div>
+	     </div>
 	</div>
 	<div class="row">
 			<table class="table table-striped table-hover" ng-show="files.uploadedFiles.length > 0">
@@ -58,26 +60,30 @@
 			</table>
 	</div> <!-- end row -->
 	<div class="row">
-        <div class="col-lg-3">
-        	<button class="btn btn-danger" data-ng-click="deleteSelected(files.uploadedFiles,'UPLOADED')" ng-show="uploadSelected">
-         		<span class="glyphicon glyphicon-fire"></span> Delete
-         	</button>
-        </div>
+	    <div class="row" style="padding-top: 10px; padding-bottom: 10px">
+	        <div class="col-lg-3">
+	        	<button class="btn btn-danger btn-sm" data-ng-click="deleteSelected(files.uploadedFiles,'UPLOADED')" ng-show="uploadSelected">
+	         		<span class="glyphicon glyphicon-fire"></span> Delete
+	         	</button>
+	        </div>
+	     </div>
 	</div>
-	<div class="row">
+	
+	<div class="row" >
 		<span class="section-header" >Import Files</span>
 		
-	    <div class="col-lg-2">
-		    <button class="btn btn-primary btn-sm" tootip="Select files you want to import from the upload section and select analysis type" data-ng-click="parse()" ng-disabled="selectedAnalysisType==null || !uploadSelected">
-	           <span class="glyphicon glyphicon-tasks"></span> Import
-         	</button>
-	    </div>
-		<div class="col-lg-2">
-	  		<select width="100" data-placeholder="Choose analysis type..." ng-model="selectedAnalysisType" chosen class="form-control chosen-select" ng-options="at as at.type for at in analysisTypeList">
-	  			<option value="">Select Analysis Type</option>
-	  		</select>
-	  	</div>
-		
+		<div class="row" style="padding-top: 10px; padding-bottom: 10px">
+		    <div class="col-lg-2">
+			    <button class="btn btn-primary btn-sm" tootip="Select files you want to import from the upload section and select analysis type" data-ng-click="parse()" ng-disabled="selectedAnalysisType==null || !uploadSelected">
+		           <span class="glyphicon glyphicon-tasks"></span> Import
+	         	</button>
+		    </div>
+			<div class="col-lg-2">
+		  		<select width="100" data-placeholder="Choose analysis type..." ng-model="selectedAnalysisType" chosen class="form-control chosen-select" ng-options="at as at.type for at in analysisTypeList">
+		  			<option value="">Select Analysis Type</option>
+		  		</select>
+		  	</div>
+		</div>
 	</div>
 	
 	<div class="row">

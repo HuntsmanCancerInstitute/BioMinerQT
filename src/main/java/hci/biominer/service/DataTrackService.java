@@ -10,6 +10,7 @@ import hci.biominer.dao.DataTrackDAO;
 import hci.biominer.model.DataTrack;
 import hci.biominer.model.Project;
 import hci.biominer.model.Analysis;
+import hci.biominer.util.Enumerated.FileStateEnum;
 
 @Service("DataTrackService")
 @Transactional
@@ -43,6 +44,10 @@ public class DataTrackService {
 
 	public void updateDataTrack(Long idDataTrack, DataTrack dataTrack) {
         dataTrackDAO.updateDataTrack(idDataTrack, dataTrack);
+	}
+	
+	public void finalizeDataTrack(Long idDataTrack, FileStateEnum fs, String message) {
+		dataTrackDAO.finalizeDataTrack(idDataTrack, fs, message);
 	}
 
 }

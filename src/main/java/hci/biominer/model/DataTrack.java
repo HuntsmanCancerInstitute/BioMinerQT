@@ -1,10 +1,14 @@
 package hci.biominer.model;
 
+import hci.biominer.util.Enumerated.FileStateEnum;
+
 import java.util.List;
 
 import org.codehaus.jackson.annotate.JsonIgnore;
 
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GenerationType;
 import javax.persistence.JoinTable;
 import javax.persistence.Table;
@@ -41,14 +45,38 @@ public class DataTrack {
 	@Column(name="path")
 	String path;
 	
+	@Column(name="status")
+	@Enumerated(EnumType.STRING)
+	FileStateEnum state;
+	
+	@Column(name="message")
+	String message;
+	
+	public String getMessage() {
+		return message;
+	}
+
+	public void setMessage(String message) {
+		this.message = message;
+	}
+
+	public FileStateEnum getState() {
+		return state;
+	}
+
+	public void setState(FileStateEnum state) {
+		this.state = state;
+	}
+
 	public DataTrack() {
 		
 	}
 	
-	public DataTrack(String name, String path, Project project) {
+	public DataTrack(String name, String path, Project project, FileStateEnum state) {
 		this.name = name;
 		this.path = path;
 		this.project = project;
+		this.state = state;
 	}
 
 	public Long getIdDataTrack() {

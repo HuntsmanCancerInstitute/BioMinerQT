@@ -1347,9 +1347,15 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 	prepList.push($scope.loadAnalyses());
 	prepList.push($scope.loadSampleSources());
 	
+	//When all dictionaries are loaded, load settings
+	$q.all(prepList).then(function() {});
+	
+	
 	$scope.loadExistingData = function() {
-		$scope.loadExistingSettings();
-		$scope.loadExistingResults();
+		$q.all(prepList).then(function() {
+		  $scope.loadExistingSettings();
+		  $scope.loadExistingResults();
+	     });
 	}
 	
 

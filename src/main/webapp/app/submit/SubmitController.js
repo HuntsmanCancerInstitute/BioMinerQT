@@ -5,11 +5,11 @@
  * @constructor
  */
  
-var submit    = angular.module('submit', ['ui.bootstrap','ui.validate','filters', 'services', 'directives','chosen','ngProgress','dialogs.main','error']);
+var submit    = angular.module('submit', ['ui.bootstrap','ui.validate','filters', 'services', 'directives','chosen','ngProgress','dialogs.main','error','cgBusy']);
 
 angular.module("submit").controller("SubmitController", [
-'$scope', '$http', '$modal','DynamicDictionary','StaticDictionary','$rootScope','$upload','$q','ngProgress','dialogs','$anchorScroll','$location',
-function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$upload,$q,ngProgress, dialogs, $anchorScroll, $location) {
+'$scope', '$http', '$modal','DynamicDictionary','StaticDictionary','$rootScope','$upload','$q','ngProgress','dialogs','$anchorScroll','$location','$timeout',
+function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$upload,$q,ngProgress, dialogs, $anchorScroll, $location, $timeout) {
 	/**********************
 	 * Initialization!
 	 *********************/
@@ -59,9 +59,16 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
     $scope.sampleConditionUsed = true;
     $scope.sampleSourceUsed = true;
     
-    $scope.complete = 0;
+    $scope.dtcomplete = 0;
     $scope.totalGlobalSize = 0;
 	$scope.currGlobalSize = 0;
+	
+	//datatracks
+	$scope.dataTracksUploading = false;
+	$scope.dataTrackUploadPromise = null;
+	$scope.dataTrackUploadDefer = null;
+	
+	$scope.navigationOk = false;
 	
 	//holds valid analyses
 	$scope.validFiles = [];
@@ -193,6 +200,44 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
     		}
     	}
     };
+    
+    /*********************
+     * 
+     * 
+     * Catch Interrupts
+     * 
+     * 
+     *********************/
+    
+    $scope.$on('$locationChangeStart', function( event, next, current ) {
+    	console.log("LOCATION CHANGE START");
+    	if ($scope.dataTracksUploading) {
+    		event.preventDefault();
+    		var dialog = dialogs.confirm("Page Navigation","Datatrack upload in progress, are you sure you want to leave this page?  All incomplete uploads will be removed from the database.");
+        	dialog.result.then(function() {
+        		$timeout(function() {
+        			$scope.stopDataTrackUpload();
+        			$scope.cleanDataTracks();
+        			$location.path(next.substring($location.absUrl().length - $location.url().length));
+                    $scope.$apply();
+        		});
+        		$scope.navigationOk = true;
+        	});
+    	} else {
+    		$scope.stopDataTrackUpload();
+    		$scope.cleanDataTracks();
+    	}
+    });
+    
+    $scope.$on('$routeChangeStart', function (event, next, current) {
+    	console.log("ROUTE CHANGE START");
+    	
+    });
+    
+    window.onbeforeunload = function() {
+    	$scope.stopDataTrackUpload();
+    	$scope.cleanDataTracks();
+    }
     
     /**********************
 	 * Project management
@@ -578,8 +623,15 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 	
 	
 	/**********************
+	 * 
+	 * 
 	 * Datatrack management
+	 * 
+	 * 
+	 * 
+	 * 
 	 *********************/
+	
 	$scope.clearDataTrack = function() {
 		$scope.datatrack = {};
 		$scope.datatrackEditMode = false;
@@ -590,114 +642,196 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 		$scope.datatrackEditMode = true;
     };
 	
-	$scope.saveDataTrack = function(datatrack) {
+    /** 
+     *  This method updates a datatrack. It first calls the method uploadDataTrack()
+     *  and then updates the information in the database
+     */
+   
+	$scope.saveDataTrack = function() {
 		var deferred = $q.defer();
 		var promise = deferred.promise;
 		
-		ngProgress.start();
-		
+		$scope.dataTracksUploading = true;
 		if ($scope.datatrack.file != null) {
-			promise = $scope.uploadDatatrack($scope.datatrack.file, promise);
+			var files = [];
+			files.push($scope.datatrack.file);
+			promise = $scope.checkDataTrackNames(files, promise);
+			promise = $scope.updateDataTrack($scope.datatrack, promise);
+			promise = $scope.uploadAllFiles(files, promise);
+		} else {
+			promise = $scope.updateDataTrack($scope.datatrack, promise);
+			promise = promise.then(function() {
+				return $http({
+					url: "project/finalizeDataTrack",
+					method: "PUT",
+					params: {uploadStatus: $scope.datatrack.state, idDataTrack: $scope.datatrack.idDataTrack, message: $scope.datatrack.message},
+				}).success(function() {
+					$scope.loadProjects($scope.projectId);
+				});
+			});
+			
 		}
 		
-		promise = promise.then(function(data) {
-			return $http({
-				url : "project/updateDataTrack",
-				method: "PUT",
-				params: {idProject: $scope.projectId, name: datatrack.name, path: datatrack.path, idDataTrack: datatrack.idDataTrack},
-			}).success(function(data) {
-				$scope.loadProjects($scope.projectId);
-				$scope.datatrackEditMode = false;
-				$scope.datatrack = {};
-				ngProgress.complete();
-			}).error(function(data) {
-				console.log("Could not update datatrack");
-				ngProgress.reset();
-			});
-		});
-		
+		promise = promise.then(function() {
+			console.log("GLOBAL OK");
+			$scope.datatrackEditMode = false;
+			$scope.datatrack = null;
+			cleanupAfterDatatrackUpload();
+		}, function() {
+			console.log("GLOBAL FAIL");
+			cleanupAfterDatatrackUpload();
+		})
 		deferred.resolve();
+		
+		
 	};
 	
+	$scope.addDataTracks = function(files) {
+		if (files.length == 0) {
+			return;
+		}
+		
+		
+		$scope.dataTracksUploading = true;
+		
+		var deferred = $q.defer();
+		var promise = deferred.promise;
+		
+		promise = $scope.checkDataTrackNames(files, promise);
+		promise = $scope.createDataTracks(files, promise)
+		promise = $scope.uploadAllFiles(files, promise);
+		promise = promise.then(function() {
+			$scope.dtcomplete = 100;
+			cleanupAfterDatatrackUpload();
+		},function() {
+			cleanupAfterDatatrackUpload();
+			$scope.dtcomplete = 0;
+			
+		})
+		deferred.resolve()
+	}
 	
-	$scope.addDataTrackFile = function(files) {
-		$scope.datatrack.file = files[0];
-		$scope.datatrack.path = files[0].name;
-		$scope.datatrack.name = baseName(files[0].name);
-	};
 	
+	var cleanupAfterDatatrackUpload = function() {
+		console.log("CLEANING");
+		$scope.dataTracksUploading = false;
+		$scope.loadProjects($scope.projectId);
+		$scope.dataTrackUploadPromise = null;
+		$scope.dataTrackUploadDeferred = null;
+	}
 	
-	$scope.addDataTrackFiles = function(files) {
-		var validFiles = [];
-		var badFiles = [];
-		var promises = [];
+	/** 
+	 * Check if any of the filenames exist.  If they do, display a message and break the promise chain!!
+	 */
+	$scope.checkDataTrackNames = function(files, promise) {
+		var badFiles = []
+		var existPromiseList = []
 		
 		for (var i=0;i<files.length;i++) {
-			var promise = $http({
+			var existPromise = $http({
 				url: "submit/doesDatatrackExist",
 				method: "GET",
 				params: {idProject : $scope.projectId, fileName: files[i].name, index: i}
 			}).success(function(data, status, headers, config) {
 				if (data.found) {
 					badFiles.push(files[config.params["index"]]);
-				} else {
-					validFiles.push(files[config.params["index"]]);
-				}
+				} 
 			});
-			promises.push(promise);
+			existPromiseList.push(existPromise);
 		}
 		
-		$q.all(promises).then(function(data) {
-			if (badFiles.length > 0) {
-				var warningMessage = "<p>The following files have already been uploaded and won't be overwritten.</p>";
-				warningMessage += "<ul>";
-				for (var idx in badFiles) {
-					warningMessage += "<li>" + files[idx].name + "</li>";
+		promise = promise.then(function() {
+			return $q.all(existPromiseList).then(function() {
+				var fileDeferred = $q.defer();
+				
+				if (badFiles.length > 0) {
+					fileDeferred.reject("Duplicate File Names");
+					var warningMessage = "<p>The following files have already been uploaded and won't be overwritten, please re-select your datatracks.</p>";
+					warningMessage += "<ul>";
+					for (var i=0;i<badFiles.length;i++) {
+						
+						warningMessage += "<li>" + badFiles[i].name + "</li>";
+					}
+					warningMessage += "</ul>";
+					 
+					dialogs.error("Duplicate file names",warningMessage);
+				} else {
+					fileDeferred.resolve();
 				}
-				warningMessage += "</ul>";
-				 
-				dialogs.error("Duplicate file names",warningMessage);
-			}
-			$scope.processDataTrackFiles(validFiles);
+				return fileDeferred.promise;
+			});
 		});
-	};
+		return promise;
+	}
 	
 
-	$scope.processDataTrackFiles = function(files) {
-		$scope.complete = 0;
+	
+	/**
+	 * This method generates progress statistics and calls upload function 
+	 * for each file
+	 */
+	$scope.uploadAllFiles = function(files, promise) {
+		$scope.dtcomplete = 0;
 		$scope.totalGlobalSize = 0;
 		$scope.currGlobalSize = 0;	
 		$scope.currIndSize = [];
 		$scope.totalIndSize = [];
 			
-
 		//Calculate global size
 		for (var i=0; i<files.length; i++) {
 			$scope.totalGlobalSize += files[i].size;
 			$scope.totalIndSize.push(files[i].size);
 			$scope.currIndSize.push(0);			
 		}
-		 
-		var promise = $q.all(null);
 		
-		var myfiles = [];
-		var mydatatracks = [];
-		for (var i=0; i<files.length; i++) {
-			myfiles.push(files[i]);
-			}
-
+		promise = promise.then(function() {
+			var deferred = $q.defer();
+			$scope.dataTrackUploadDeferred = $q.defer();
+			var uploadPromise = deferred.promise;
+			for (var dtIdx=0; dtIdx<$scope.datatracks.length;dtIdx++) {
+				for (var fIdx=0;fIdx<files.length;fIdx++) {
 		
-		for (var i=0; i<myfiles.length; i++) {
-			var adatatrack = {file: myfiles[i], path: myfiles[i].name, name: baseName(myfiles[i].name), completed: 0}; 
-			mydatatracks.push(adatatrack);
+					if ($scope.datatracks[dtIdx].path == files[fIdx].name) {
+						uploadPromise = $scope.uploadSingleDataTrack(dtIdx,fIdx,files[fIdx],uploadPromise);
+						break;
+					}
+				}
 			}
 			
-		for (var i=0; i<mydatatracks.length; i++) {				
-			var index = i;			
-			promise = $scope.uploadAddDataTrack(i,index,mydatatracks[i].file,mydatatracks[i],promise);		
-		}
+			$scope.dataTrackUploadPromise = uploadPromise;
+			deferred.resolve();
+			return uploadPromise;
+		});
+		
+		
+		return promise;
 	};
 	
+	$scope.stopDataTrackUpload = function() {
+		if ($scope.dataTrackUploadDeferred != null) {
+			$scope.dataTrackUploadDeferred.resolve();
+		}
+		
+		
+		
+	};
+	
+	$scope.cleanDataTracks = function() {
+		if ($scope.projectId != -1 || $scope.projectId != null) {
+			$http({
+				url: "project/cleanDataTracks",
+				method: "DELETE",
+				params: {idProject: $scope.projectId},
+			}).success(function() {
+				$scope.loadProjects($scope.projectId);
+			});
+		}
+		
+	};
+	
+	/**
+	 * Returns the basename of the file
+	 */
 	function baseName(str)
 	{
 	   var base = new String(str).substring(str.lastIndexOf('/') + 1); 
@@ -706,8 +840,11 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 	   return base;
 	}
 	
-	$scope.uploadDatatrack = function(file, promise) {
-		$scope.complete = 0;
+	/**  
+	 * This function uploads a single file to the server.  It chunks the file if necessary and then
+	 * returns the upload promise. 
+	 */
+	$scope.uploadSingleDataTrack = function(datatrackIdx, fileIdx, file, promise) {
 		var max = 10000000;
 	
 		var fileChunks = [];
@@ -716,99 +853,74 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 			for (var i=0;i<file.size;i+=max) {
 				fileChunks.push(file.slice(i,i+max));
 			}
-			
 		} else {
 			fileChunks.push(file);
 		}
 		
-
 		var loaded = 0;
 		for (var i=0; i<fileChunks.length; i++) {
-			(function(i) {
+			(function(i, fileIdx, datatrackIdx) {
 				promise = promise.then(function() {
-					return $upload.upload({
-						url: "project/addDataTrackFile",
-						file: fileChunks[i],
-						params : {index: i, total: fileChunks.length, name: file.name, idProject: $scope.project.idProject},
-					}).progress(function(evt) {
-						$scope.complete = (loaded + evt.loaded) / file.size * 100;
-					}).success(function(data) {
-						loaded += fileChunks[i].size;
-						if (data.finished) {
-							$scope.datatrack.path = data.directory;
-						}
-						$scope.complete = (loaded) / file.size * 100;
-						
-					}).error(function(data) {
-						$scope.datatrack.message = data.message;
-						$scope.complete = 0;
-					});
+					if ($scope.datatracks[datatrackIdx].state != "FAILURE") {
+						return $upload.upload({
+							url: "project/uploadDataTrack",
+							file: fileChunks[i],
+							params : {index: i, total: fileChunks.length, name: file.name, idProject: $scope.project.idProject, dtname: $scope.datatracks[datatrackIdx].name},
+							timeout: $scope.dataTrackUploadDeferred.promise,
+						}).progress(function(evt) {
+							$scope.datatracks[datatrackIdx].complete = 100 * (evt.loaded + $scope.currIndSize[fileIdx]) / $scope.totalIndSize[fileIdx];
+							$scope.currGlobalSize = 0;
+							for (var j = 0; j < $scope.currIndSize.length; j++) {
+								$scope.currGlobalSize += $scope.currIndSize[j];
+							}
+							$scope.dtcomplete = 100.0 * (evt.loaded + $scope.currGlobalSize) / $scope.totalGlobalSize;
+													
+						}).success(function(data) {
+							$scope.currIndSize[fileIdx] += fileChunks[i].size;
+							$scope.datatracks[datatrackIdx].state = data.state;
+							$scope.datatracks[datatrackIdx].message = data.message;
+							if (data.finished) {
+								
+								if (data.state == "SUCCESS") {
+									$scope.datatracks[datatrackIdx].complete = 100;
+									$http({
+										url: "project/finalizeDataTrack",
+										method: "PUT",
+										params: {uploadStatus: data.state, idDataTrack: $scope.datatracks[datatrackIdx].idDataTrack, message: data.message},
+									});
+								} else {
+									$scope.datatracks[datatrackIdx].complete = 100;
+									$http({
+										url: "project/finalizeDataTrack",
+										method: "PUT",
+										params: {uploadStatus: data.state, idDataTrack: $scope.datatracks[datatrackIdx].idDataTrack, message: data.message},
+									});
+								}
+							}
+						})
+					}
+					
 				});
-			})(i);
-		}
-		return promise;
-	};
-	
-	$scope.uploadAddDataTrack = function(fileIdx,index,file, datatrack, promise) {
-
-		var max = 10000000;
-	
-		var fileChunks = [];
-		
-		if (file.size > max) {
-			for (var i=0;i<file.size;i+=max) {
-				fileChunks.push(file.slice(i,i+max));
-			}
-			
-		} else {
-			fileChunks.push(file);
-		}
-		
-
-		var loaded = 0;
-		for (var i=0; i<fileChunks.length; i++) {
-			(function(i,fileIdx) {
-				promise = promise.then(function() {
-					return $upload.upload({
-						url: "project/addDataTrack",
-						file: fileChunks[i],
-						params : {index: i, total: fileChunks.length, name: file.name, idProject: $scope.project.idProject, dtname: datatrack.name},
-					}).progress(function(evt) {
-						datatrack.complete = 100 * (evt.loaded + $scope.currIndSize[fileIdx]) / $scope.totalIndSize[fileIdx];
-										        
-						$scope.currGlobalSize = 0;
-						for (var j = 0; j < $scope.currIndSize.length; j++) {
-							$scope.currGlobalSize += $scope.currIndSize[j];
-						}
-						$scope.complete = 100.0 * (evt.loaded + $scope.currGlobalSize) / $scope.totalGlobalSize;
-												
-					}).success(function(data) {
-						$scope.currIndSize[fileIdx] += fileChunks[i].size;
-						if (data.finished) {
-							$scope.datatrack.path = data.directory;
-							$scope.loadProjects($scope.projectId);
-							$scope.datatrack = {};							
-						}
-						
-					}).error(function(data) {
-						dialogs.error("Error Adding Datatrack",data.message);
-						$scope.datatrack.message = data.message;
-					});
-				});
-			})(i,fileIdx);
+			})(i,fileIdx,datatrackIdx);
 		}
 		return promise;
 	};
 		
+	
+	/** This function removes a datatrack from the database.  It clears the datatrack from the database and clears the
+	 * file from the server.  This function only works if the datatrack is not already associated with an analysis.
+	 */
 	$scope.removeDataTrack = function(datatrack) {
 		//Keeping it a list in case we move over to checkboxes
 		var fileList = [];
 		fileList.push(datatrack);
+		$scope.clearDataTrack();
+		
 		
 		
 		if (datatrack.analysisSet) {
 			var message = "";
-			message += "<p>The following Datatracks are associated with existing analyses and can't be deleted. Please delete the appropriate analyses and try again.</p>";
+			message += "<p>The datatrack you are trying to delete is associated with at least one existing analyses and can't be deleted. Please delete the appropriate analyses and try again.</p>";
 			message += "<br/>";
 			message += "<ul>";
 			for (var i=0;i<fileList.length;i++) {
@@ -832,32 +944,74 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 		});
     };
     
+    /** 
+     * Displays errors assocated with the datatrack upload
+     */
     $scope.showDataTrackError = function(datatrack) {
     	$scope.showErrorMessage("Error uploading datatracks", datatrack.message);
     };
 	
-	$scope.addDataTrack = function(datatrack,promise) {
-		//var deferred = $q.defer();
-		//var promise = deferred.promise;
-		//	var promise = $q.all(null);		
-		
-		promise = $scope.uploadDatatrack(datatrack.file, promise);
-		
-		promise = promise.then(function() {
-			return  $http({
-				url : "project/createDataTrack",
-				method: "PUT",
-				params: {idProject: $scope.projectId, name: datatrack.name, path: datatrack.path},
-			}).success(function(data) {
-				$scope.loadProjects($scope.projectId);
-				$scope.datatrack = {};
-			}).error(function(data) {
-				console.log("Could not create datatrack");
-			});
-		});
-		//deferred.resolve();
+    /** 
+     * Creates new datatrack entries in the database.
+     */
+	$scope.createDataTracks = function(files, promise) {
+		for (var i=0; i<files.length;i++) {
+			var name = baseName(files[i].name);
+			var path = files[i].name;
+			(function(name,path) {
+				promise = promise.then(function() {
+					return  $http({
+						url : "project/createDataTrack",
+						method: "PUT",
+						params: {idProject: $scope.projectId, name: name, path: path},
+					}).success(function(data) {
+						$scope.datatracks.push(data);
+					}).error(function(data) {
+						console.log("Could not create datatrack");
+					});
+				})
+			})(name,path);
+				
+		}
 		return promise;
-	}; 
+	};
+	
+	/**
+	 *  Updates a datatrack inthe database
+	 */
+	$scope.updateDataTrack = function(datatrack, promise) {
+		promise = promise.then(function() {
+			return $http({
+				url: "project/updateDataTrack",
+				method: "PUT",
+				params: {idProject: $scope.projectId, name: datatrack.name, path: datatrack.path, idDataTrack: datatrack.idDataTrack},
+			}).success(function(data) {
+				for (var i=0;i<$scope.datatracks.length;i++) {
+					if ($scope.datatracks[i].idDataTrack == data.idDataTrack) {
+						$scope.datatracks[i] = data;
+						break;
+					}
+				}
+			}).error(function(data) {
+				console.log("Could not update datatrack");
+			})
+		})
+		return promise;
+	};
+	
+	
+	/**
+	 * This function sets the scope object datatrack to the first selected file
+	 * This file is used when the file is updated.
+	 */
+	$scope.addDataTrackFile = function(files) {
+		if (files.length > 0) {
+			$scope.datatrack.file = files[0];
+			$scope.datatrack.path = files[0].name;
+		}
+		
+	};
+	
 	
 	
 	

@@ -6,7 +6,7 @@ public class Enumerated {
 	}
 
 	public static enum FileStateEnum {
-		SUCCESS, FAILURE, WARNING
+		SUCCESS, FAILURE, WARNING, INCOMPLETE
 	}
 	
 	public static enum ProjectVisibilityEnum {

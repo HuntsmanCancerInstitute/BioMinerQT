@@ -3,11 +3,13 @@ package hci.biominer.dao;
 import java.util.List;
 
 import hci.biominer.model.AnalysisType;
+import hci.biominer.model.DataTrack;
 import hci.biominer.model.Sample;
 import hci.biominer.model.Project;
 import hci.biominer.model.Analysis;
 import hci.biominer.model.SampleType;
 
+import org.hibernate.Hibernate;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -34,6 +36,7 @@ public class SampleDAO {
 	public Sample getSampleById(Long idSample) {
 		Session session = getCurrentSession();
 		Sample sample = (Sample)session.get(Sample.class, idSample);
+		Hibernate.initialize(sample.isAnalysisSet());
 		session.close();
 		return sample;
 	}
@@ -44,6 +47,9 @@ public class SampleDAO {
 		Query query = session.createQuery("from Sample where project = :project");
 		query.setParameter("project", project);
 		List<Sample> samples = query.list();
+		for (Sample s: samples) {
+			Hibernate.initialize(s.isAnalysisSet());
+		}
 		session.close();
 		return samples;
 		
@@ -55,6 +61,9 @@ public class SampleDAO {
 		Query query = session.createQuery("from Sample where analysis = :analysis");
 		query.setParameter("analysis", analysis);
 		List<Sample> samples = query.list();
+		for (Sample s: samples) {
+			Hibernate.initialize(s.isAnalysisSet());
+		}
 		session.close();
 		return samples;
 	}
@@ -73,7 +82,6 @@ public class SampleDAO {
 		Sample SampleToUpdate = (Sample) session.get(Sample.class, idSample);
 		SampleToUpdate.setName(sample.getName());
 		SampleToUpdate.setProject(sample.getProject());
-		SampleToUpdate.setAnalyses(sample.getAnalyses());
 		SampleToUpdate.setSampleType(sample.getSampleType());
 		SampleToUpdate.setSamplePrep(sample.getSamplePrep());
 		SampleToUpdate.setSampleSource(sample.getSampleSource());
