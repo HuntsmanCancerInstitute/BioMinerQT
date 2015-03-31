@@ -192,9 +192,29 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
     
     
     $scope.copyCoordinates = function() {
+    	if ($scope.returnedOrganismBuild != $scope.idOrganismBuild) {
+    		dialogs.notify("Organism Build Confict","The selected organism build differs from the results.  Copying is disabled to avoid confusing results");
+    		return;
+    	}
+    	
     	ngProgress.start();
+    	$scope.codeResultType = "REGION";
     	if ($scope.selectAll) {
-    		$scope.regions = "[All result coordinates]";   		
+    		$http({
+    			url: "query/copyAllCoordinates",
+    			method: "POST",
+    		}).success(function() {
+    			ngProgress.complete();
+    			$scope.regions = "[All result coordinates]"; 
+    		}).error(function(data,status) {
+    			if (status == 998) {
+    				dialogs.error("Error Retrieving Results","The query results for this user could not be found.  Please submit a bug report.");
+    				
+    			}
+    			ngProgress.reset();
+    			$scope.regions = ""; 
+    		});
+    		  		
     	} else {
     		var coordinateList = [];
 
@@ -211,16 +231,34 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
         	}
         	var coordinateEntry = coordinateList.join("\n");
         	$scope.regions = coordinateEntry;
+        	ngProgress.complete();
     	}
     	
     	$scope.intersectionTarget = "REGION";
-    	ngProgress.complete();
+    	
     };
     
     $scope.copyGenes = function() {
+    	if ($scope.returnedOrganismBuild != $scope.idOrganismBuild) {
+    		dialogs.notify("Organism Build Confict","The selected organism build differs from the results.  Copying is disabled to avoid confusing results.");
+    		return;
+    	}
     	ngProgress.start();
     	if ($scope.selectAll) {
-    		$scope.genes = "[All result genes]";
+    		$http({
+    			url: "query/copyAllGenes",
+    			method: "POST",
+    		}).success(function() {
+    			ngProgress.complete();
+    			$scope.genes = "[All result genes]"; 
+    		}).error(function(data,status) {
+    			if (status == 998) {
+    				dialogs.error("Error Retrieving Results","The query results for this user could not be found.  Please submit a bug report.");
+    				
+    			}
+    			ngProgress.reset();
+    			$scope.genes = ""; 
+    		});
     	} else {
     		var geneList = [];
         	for (var i=0; i<$scope.queryResults.length; i++) {
@@ -236,10 +274,11 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
         	}
         	var geneEntry = geneList.join("\n");
         	$scope.genes = geneEntry;
+        	ngProgress.complete();
     	}
     	
     	$scope.intersectionTarget = "GENE";
-    	ngProgress.complete();
+    	
     };
     
     $scope.loadRegions = function(files) {
@@ -763,6 +802,8 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 		
 		
 		$scope.returnedResultType = $scope.codeResultType;
+		$scope.returnedAnalysisType = angular.copy($scope.selectedAnalysisType);
+		$scope.returnedOrganismBuild = angular.copy($scope.idOrganismBuild);
 		$scope.totalResults = 0;
 		
 		
@@ -1209,6 +1250,10 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 			$scope.loadAnalyses();
 			$scope.loadSampleSources();
 			$scope.loadAnalysisTypes();
+			$scope.regions = "";
+			$scope.genes = "";
+			$scope.intersectionTarget = "EVERYTHING";
+			$scope.selectAll = false;
 		}
 	});
 	

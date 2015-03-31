@@ -106,8 +106,9 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
     //Dynamic dictionaries.  These http calls aren't cached.
     $scope.loadSampleSources = function() {
     	DynamicDictionary.loadSampleSources().success(function(data) {
+    		
     		$scope.sampleSourceList = data;
-    		var addNew = {source: "Add New", idSampleSource: -1};
+    		var addNew = {source: "Add New", idSampleSource: -1, idOrganismBuild: null, first: true};
     		$scope.sampleSourceList.unshift(addNew);
     	});
     };
@@ -115,7 +116,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
     $scope.loadSampleConditions = function() {
     	DynamicDictionary.loadSampleConditions().success(function(data) {
     		$scope.sampleConditionList = data;
-    		var addNew = {cond: "Add New", idSampleCondition: -1};
+    		var addNew = {cond: "Add New", idSampleCondition: -1, idOrganismBuild: null, first: true};
     		$scope.sampleConditionList.unshift(addNew);
     	});
     };
@@ -142,8 +143,39 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 	$scope.loadAnalysisTypeList();
 	$scope.loadSampleTypeList();
 	$scope.loadOrganismBuildList();
+	
+	/********************* 
+	 * 
+	 * Filters
+	 * 
+	 ********************/
+	
+	$scope.filterSampleSource = function() {
+		return function(source) {
+			if (Object.keys($scope.project).length != 0) {
+				return source.idOrganismBuild == null || source.idOrganismBuild == $scope.project.organismBuild.idOrganismBuild;
+			} else {
+				return true;
+			}	
+		}
+	}
+	
+	$scope.filterSampleCondition = function() {
+		return function(cond) {
+			if (Object.keys($scope.project).length != 0) {
+				return cond.idOrganismBuild == null || cond.idOrganismBuild == $scope.project.organismBuild.idOrganismBuild;
+			} else {
+				return true;
+			}
+		}
+	}
     
-    //Watchers
+    
+	/********************* 
+	 * 
+	 * Watchers
+	 * 
+	 ********************/
     $scope.$watch('sample.sampleType',function() {
     	if ($scope.sample.sampleType == null) {
     		$scope.samplePrepList = null;
@@ -210,7 +242,6 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
      *********************/
     
     $scope.$on('$locationChangeStart', function( event, next, current ) {
-    	console.log("LOCATION CHANGE START");
     	if ($scope.dataTracksUploading) {
     		event.preventDefault();
     		var dialog = dialogs.confirm("Page Navigation","Datatrack upload in progress, are you sure you want to leave this page?  All incomplete uploads will be removed from the database.");
@@ -230,7 +261,6 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
     });
     
     $scope.$on('$routeChangeStart', function (event, next, current) {
-    	console.log("ROUTE CHANGE START");
     	
     });
     
@@ -365,8 +395,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
     	$scope.datatrack = {};
     	$scope.setActiveProject();
     };
-    
- 
+   
     //delete project
     $scope.deleteProject = function() {
     	if ($scope.results.length > 0 || $scope.samples.length > 0 || $scope.datatracks.length > 0 || $scope.files.uploadedFiles.length > 0 || 
@@ -450,6 +479,8 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 	$scope.saveSample = function(sample) {
 		$scope.sampleEditMode = false;
 		
+		
+		
 		$http({
 			url: "project/updateSample",
 			method: "PUT",
@@ -527,7 +558,6 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 		}
 		var retVal = true;
 		for (var i=0; i<$scope.samples.length;i++) {
-			console.log(name + " " + $scope.samples[i].name);
 			if (name == $scope.samples[i].name) {
 				retVal = false;
 			}
@@ -541,7 +571,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 			$http({
 				url: "project/isSamplePrepUsed",
 				method: "GET",
-				params: {"description": samplePrep.description },
+				params: {"description": samplePrep.description}
 			}).success(function(data) {
 				$scope.samplePrepUsed = data.found;
 				
@@ -556,7 +586,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 			$http({
 				url: "project/isSampleSourceUsed",
 				method: "GET",
-				params: {"source": sampleSource.source },
+				params: {"source": sampleSource.source, idOrganismBuild: $scope.project.organismBuild.idOrganismBuild}
 			}).success(function(data) {
 				$scope.sampleSourceUsed = data.found;
 				
@@ -571,7 +601,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 			$http({
 				url: "project/isSampleConditionUsed",
 				method: "GET",
-				params: {"cond": sampleCondition.cond },
+				params: {"cond": sampleCondition.cond , idOrganismBuild: $scope.project.organismBuild.idOrganismBuild}
 			}).success(function(data) {
 				$scope.sampleConditionUsed = data.found;
 				
@@ -640,6 +670,9 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 	$scope.editDataTrack = function(datatrack) {
 		$scope.datatrack = angular.copy(datatrack);
 		$scope.datatrackEditMode = true;
+		if ($scope.datatrack.state != "SUCCESS") {
+			$scope.datatrack.path = null;
+		}
     };
 	
     /** 
@@ -648,39 +681,43 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
      */
    
 	$scope.saveDataTrack = function() {
+		
+		
+		//Turn on uploading flag
+		$scope.dataTracksUploading = true;
+		$scope.datatrackEditMode = false;
+		
+		//Create promise
 		var deferred = $q.defer();
 		var promise = deferred.promise;
 		
-		$scope.dataTracksUploading = true;
+		
+		//Process datatracks
 		if ($scope.datatrack.file != null) {
 			var files = [];
 			files.push($scope.datatrack.file);
+			promise = $scope.updateDataTrack($scope.datatrack, true, promise);
 			promise = $scope.checkDataTrackNames(files, promise);
-			promise = $scope.updateDataTrack($scope.datatrack, promise);
 			promise = $scope.uploadAllFiles(files, promise);
 		} else {
-			promise = $scope.updateDataTrack($scope.datatrack, promise);
-			promise = promise.then(function() {
-				return $http({
-					url: "project/finalizeDataTrack",
-					method: "PUT",
-					params: {uploadStatus: $scope.datatrack.state, idDataTrack: $scope.datatrack.idDataTrack, message: $scope.datatrack.message},
-				}).success(function() {
-					$scope.loadProjects($scope.projectId);
-				});
-			});
-			
+			promise = $scope.updateDataTrack($scope.datatrack, false, promise);
 		}
 		
+		//Cleanup
 		promise = promise.then(function() {
 			console.log("GLOBAL OK");
-			$scope.datatrackEditMode = false;
+			
 			$scope.datatrack = null;
+			$scope.dtcomplete = 100;
 			cleanupAfterDatatrackUpload();
 		}, function() {
 			console.log("GLOBAL FAIL");
+			$scope.datatrack = null;
 			cleanupAfterDatatrackUpload();
+			$scope.dtcomplete = 0;
 		})
+		
+		//Launch
 		deferred.resolve();
 		
 		
@@ -691,16 +728,40 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 			return;
 		}
 		
-		
+		//Turn on uploading flag
 		$scope.dataTracksUploading = true;
 		
 		var deferred = $q.defer();
 		var promise = deferred.promise;
 		
-		promise = $scope.checkDataTrackNames(files, promise);
-		promise = $scope.createDataTracks(files, promise)
-		promise = $scope.uploadAllFiles(files, promise);
+		//Clean up datatracks
 		promise = promise.then(function() {
+			var cleanPromise = 	$http({
+				url: "project/cleanDataTracks",
+				method: "DELETE",
+				params: {idProject: $scope.projectId},
+			}).success(function(data) {
+				var newDt = [];
+				for (var i=0;i<$scope.datatracks.length;i++) {
+					if (data.indexOf($scope.datatracks[i].idDataTrack) == -1) {
+						newDt.push($scope.datatracks[i]);
+					}
+				}
+				$scope.datatracks = newDt;
+			});
+			
+			
+			return $q.all(cleanPromise);
+		});
+		
+		//Process datatracks
+		promise = $scope.checkDataTrackNames(files, promise); //Make sure there are no duplicates
+		promise = $scope.createDataTracks(files, promise); //create datatrack entries
+		promise = $scope.uploadAllFiles(files, promise); //upload files
+		
+		
+		//Cleanup
+		promise = promise.then(function() { 
 			$scope.dtcomplete = 100;
 			cleanupAfterDatatrackUpload();
 		},function() {
@@ -708,12 +769,13 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 			$scope.dtcomplete = 0;
 			
 		})
+		
+		//Launch!
 		deferred.resolve()
 	}
 	
 	
 	var cleanupAfterDatatrackUpload = function() {
-		console.log("CLEANING");
 		$scope.dataTracksUploading = false;
 		$scope.loadProjects($scope.projectId);
 		$scope.dataTrackUploadPromise = null;
@@ -727,20 +789,19 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 		var badFiles = []
 		var existPromiseList = []
 		
-		for (var i=0;i<files.length;i++) {
-			var existPromise = $http({
-				url: "submit/doesDatatrackExist",
-				method: "GET",
-				params: {idProject : $scope.projectId, fileName: files[i].name, index: i}
-			}).success(function(data, status, headers, config) {
-				if (data.found) {
-					badFiles.push(files[config.params["index"]]);
-				} 
-			});
-			existPromiseList.push(existPromise);
-		}
-		
 		promise = promise.then(function() {
+			for (var i=0;i<files.length;i++) {
+				var existPromise = $http({
+					url: "submit/doesDatatrackExist",
+					method: "GET",
+					params: {idProject : $scope.projectId, fileName: files[i].name, index: i}
+				}).success(function(data, status, headers, config) {
+					if (data.found) {
+						badFiles.push(files[config.params["index"]]);
+					} 
+				});
+				existPromiseList.push(existPromise);
+			}
 			return $q.all(existPromiseList).then(function() {
 				var fileDeferred = $q.defer();
 				
@@ -790,7 +851,6 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 			var uploadPromise = deferred.promise;
 			for (var dtIdx=0; dtIdx<$scope.datatracks.length;dtIdx++) {
 				for (var fIdx=0;fIdx<files.length;fIdx++) {
-		
 					if ($scope.datatracks[dtIdx].path == files[fIdx].name) {
 						uploadPromise = $scope.uploadSingleDataTrack(dtIdx,fIdx,files[fIdx],uploadPromise);
 						break;
@@ -811,13 +871,10 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 		if ($scope.dataTrackUploadDeferred != null) {
 			$scope.dataTrackUploadDeferred.resolve();
 		}
-		
-		
-		
 	};
 	
 	$scope.cleanDataTracks = function() {
-		if ($scope.projectId != -1 || $scope.projectId != null) {
+		if ($scope.projectId != -1 && $scope.projectId != null) {
 			$http({
 				url: "project/cleanDataTracks",
 				method: "DELETE",
@@ -825,9 +882,9 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 			}).success(function() {
 				$scope.loadProjects($scope.projectId);
 			});
-		}
-		
+		} 
 	};
+
 	
 	/**
 	 * Returns the basename of the file
@@ -979,12 +1036,12 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 	/**
 	 *  Updates a datatrack inthe database
 	 */
-	$scope.updateDataTrack = function(datatrack, promise) {
+	$scope.updateDataTrack = function(datatrack, toDelete, promise) {
 		promise = promise.then(function() {
 			return $http({
 				url: "project/updateDataTrack",
 				method: "PUT",
-				params: {idProject: $scope.projectId, name: datatrack.name, path: datatrack.path, idDataTrack: datatrack.idDataTrack},
+				params: {idProject: $scope.projectId, name: datatrack.name, path: datatrack.path, idDataTrack: datatrack.idDataTrack, toDelete: toDelete},
 			}).success(function(data) {
 				for (var i=0;i<$scope.datatracks.length;i++) {
 					if ($scope.datatracks[i].idDataTrack == data.idDataTrack) {
@@ -1124,7 +1181,6 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 		}
 		var retVal = true;
 		for (var i=0; i<$scope.results.length;i++) {
-			console.log(name + " " + $scope.results[i].name);
 			if (name == $scope.results[i].name) {
 				retVal = false;
 			}
@@ -1156,29 +1212,28 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 			return;
 		}
 		
-		var found = false;
-		for (var i=0; i < $scope.samplePrepList.length; i++) {
-			if ($scope.samplePrepList[i].description == $scope.newSamplePrep.description) {
-				found = true;
-			}
-		}
-		
-		if (found) {
-			var message = "<p>The specified sample prep " + $scope.newSamplePrep.description + " already exists!</p>";
-			$scope.showErrorMessage("Duplicate sample prep",message);
-			return;
-		}
-		
 		$http({
-			url: "project/addSamplePrep",
-			method: "PUT",
-			params: {description: $scope.newSamplePrep.description, idSampleType: $scope.sample.sampleType.idSampleType},
+			url: "project/isSamplePrepNameUsed",
+			method: "GET",
+			params: {prep: $scope.newSamplePrep.description}
 		}).success(function(data) {
-			$scope.newSamplePrep.description = "";
-			$scope.loadSamplePreps();
-			$scope.loadSamplePrepsBySampleType();
-			$scope.sample.samplePrep = data;
-			$scope.checkSamplePrep($scope.sample.samplePrep);
+			if (data.found) {
+				var message = "<p>The specified sample prep " + $scope.newSamplePrep.description + " already exists!</p>";
+				$scope.showErrorMessage("Duplicate sample prep",message);
+			} else {
+				$http({
+					url: "project/addSamplePrep",
+					method: "PUT",
+					params: {description: $scope.newSamplePrep.description, idSampleType: $scope.sample.sampleType.idSampleType},
+				}).success(function(data) {
+					$scope.newSamplePrep.description = "";
+					$scope.loadSamplePreps();
+					$scope.loadSamplePrepsBySampleType();
+					$scope.sample.samplePrep = data;
+					$scope.checkSamplePrep($scope.sample.samplePrep);
+				});
+			}
+			
 		});
 	};
 	
@@ -1187,29 +1242,26 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 			return;
 		}
 		
-		var found = false;
-		for (var i=0; i < $scope.sampleSourceList.length; i++) {
-			if ($scope.sampleSourceList[i].source == $scope.newSampleSource.source) {
-				found = true;
-			}
-		}
-		
-		if (found) {
-			var message = "<p>The specified sample souce " + $scope.newSampleSource.source + " already exists!</p>";
-			$scope.showErrorMessage("Duplicate sample source",message);
-			return;
-		}
-		
-		
 		$http({
-			url: "project/addSampleSource",
-			method: "PUT",
-			params: {source: $scope.newSampleSource.source},
+			url: "project/isSampleSourceNameUsed",
+			method: "GET",
+			params: {source: $scope.newSampleSource.source, idOrganismBuild: $scope.project.organismBuild.idOrganismBuild}
 		}).success(function(data) {
-			$scope.newSampleSource.source = "";
-			$scope.loadSampleSources();
-			$scope.sample.sampleSource = data;
-			$scope.checkSampleSource($scope.sample.sampleSource);
+			if (data.found) {
+				var message = "<p>The specified sample souce " + $scope.newSampleSource.source + " already exists!</p>";
+				$scope.showErrorMessage("Duplicate sample source",message);
+			} else {
+				$http({
+					url: "project/addSampleSource",
+					method: "PUT",
+					params: {source: $scope.newSampleSource.source, idOrganismBuild: $scope.project.organismBuild.idOrganismBuild},
+				}).success(function(data) {
+					$scope.newSampleSource.source = "";
+					$scope.loadSampleSources();
+					$scope.sample.sampleSource = data;
+					$scope.checkSampleSource($scope.sample.sampleSource);
+				});
+			}
 		});
 	};
 	
@@ -1218,28 +1270,26 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 			return;
 		}
 		
-		var found = false;
-		for (var i=0; i < $scope.sampleConditionList.length; i++) {
-			if ($scope.sampleConditionList[i].cond == $scope.newSampleCond.cond) {
-				found = true;
-			}
-		}
-		
-		if (found) {
-			var message = "<p>The specified sample condition " + $scope.newSampleCond.cond + " already exists!</p>";
-			$scope.showErrorMessage("Duplicate sample condition",message);
-			return;
-		}
-		
 		$http({
-			url: "project/addSampleCondition",
-			method: "PUT",
-			params: {condition: $scope.newSampleCond.cond},
+			url: "project/isSampleConditionNameUsed",
+			method: "GET",
+			params: {cond: $scope.newSampleCond.cond, idOrganismBuild: $scope.project.organismBuild.idOrganismBuild}
 		}).success(function(data) {
-			$scope.newSampleCond.cond = "";
-			$scope.loadSampleConditions();
-			$scope.sample.sampleCondition = data;
-			$scope.checkSampleCondition($scope.sample.sampleCondition);
+			if (data.found) {
+				var message = "<p>The specified sample condition " + $scope.newSampleCond.cond + " already exists!</p>";
+				$scope.showErrorMessage("Duplicate sample condition",message);
+			} else {
+				$http({
+					url: "project/addSampleCondition",
+					method: "PUT",
+					params: {condition: $scope.newSampleCond.cond, idOrganismBuild: $scope.project.organismBuild.idOrganismBuild},
+				}).success(function(data) {
+					$scope.newSampleCond.cond = "";
+					$scope.loadSampleConditions();
+					$scope.sample.sampleCondition = data;
+					$scope.checkSampleCondition($scope.sample.sampleCondition);
+				});
+			}
 		});
 	};
 	

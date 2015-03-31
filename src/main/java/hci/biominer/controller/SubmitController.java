@@ -587,11 +587,13 @@ public class SubmitController {
 	 ****************************************************/
     @RequestMapping(value="addSampleCondition",method=RequestMethod.PUT)
     @ResponseBody
-    public SampleCondition addSampleCondition(@RequestParam(value="condition") String condition) {
+    public SampleCondition addSampleCondition(@RequestParam(value="condition") String condition, @RequestParam(value="idOrganismBuild") Long idOrganismBuild) {
+    	OrganismBuild ob = this.organismBuildService.getOrganismBuildById(idOrganismBuild);
+    	
     	SampleCondition sampleCondition = new SampleCondition();
     	sampleCondition.setCond(condition);
- 
-    	
+    	sampleCondition.setOrganismBuild(ob);
+
     	this.sampleConditionService.addSampleCondition(sampleCondition);
     	
     	return sampleCondition;
@@ -605,9 +607,12 @@ public class SubmitController {
 	 ****************************************************/
     @RequestMapping(value="addSampleSource",method=RequestMethod.PUT)
     @ResponseBody
-    public SampleSource addSampleSource(@RequestParam(value="source") String source) {
+    public SampleSource addSampleSource(@RequestParam(value="source") String source, @RequestParam(value="idOrganismBuild") Long idOrganismBuild) {
+    	OrganismBuild ob = this.organismBuildService.getOrganismBuildById(idOrganismBuild);
+    	
     	SampleSource sampleSource = new SampleSource();
     	sampleSource.setSource(source);
+    	sampleSource.setOrganismBuild(ob);
     	
     	this.sampleSourceService.addSampleSource(sampleSource);
     	
@@ -797,7 +802,7 @@ public class SubmitController {
     @RequestMapping(value="updateDataTrack",method=RequestMethod.PUT)
     @ResponseBody
     public DataTrack updateDataTrack(@RequestParam(value="idProject") Long idProject, @RequestParam(value="idDataTrack") Long idDataTrack, 
-    		@RequestParam(value="name") String name, @RequestParam(value="path") String path) throws Exception {
+    		@RequestParam(value="name") String name, @RequestParam(value="path") String path, @RequestParam(value="toDelete") boolean delete) throws Exception {
     	
     	//Create secondary objects
     	Project project = this.projectService.getProjectById(idProject);
@@ -806,15 +811,17 @@ public class SubmitController {
     	//Load existing datatrack
     	DataTrack updatedDataTrack = this.dataTrackService.getDataTrackById(idDataTrack);
     	
-    	//Check to see if path has changed
-    	if (!updatedDataTrack.getPath().equals(path)) {
+    	//delete
+    	//if (!updatedDataTrack.getPath().equals(path) || updatedDataTrack.getState().equals(FileStateEnum.INCOMPLETE)) {
+    	if (delete) {
     		deleteDataTrackFile(updatedDataTrack);
-    	}
+    		updatedDataTrack.setState(FileStateEnum.INCOMPLETE);
+    	} 
     	
     	updatedDataTrack.setName(name);
     	updatedDataTrack.setPath(path);
     	updatedDataTrack.setProject(project);
-    	updatedDataTrack.setState(FileStateEnum.INCOMPLETE);
+    	
 
     	//Update sample
     	this.dataTrackService.updateDataTrack(idDataTrack, updatedDataTrack);
@@ -849,8 +856,12 @@ public class SubmitController {
 	
 	private void deleteDataTrackFile(DataTrack dt) throws Exception {
 		File dataTrackFile = new File(FileController.getIgvDirectory(),dt.getProject().getIdProject() + "/" + dt.getPath());
+		File dataTrackIndexFile = new File(FileController.getIgvDirectory(),dt.getProject().getIdProject() + "/" + dt.getPath() + ".tbi");
 		if (dataTrackFile.exists()) {
 			dataTrackFile.delete();
+		}
+		if (dataTrackIndexFile.exists()) {
+			dataTrackIndexFile.delete();
 		}
 	}
 	
@@ -858,34 +869,41 @@ public class SubmitController {
 	 * URL: /project/cleanDataTracks
 	 * cleanDataTracks(): delete data tracks that are incomplete or failed
 	 * method: post
-	 * @param idProject
+	 * @param idProject : Project identifier
+	 * @param idProtect : ID of datatrack you want to protect.  Optional
 	 ****************************************************/
     @RequestMapping(value="cleanDataTracks",method=RequestMethod.DELETE)
     @ResponseBody
-    public void cleanDataTrack(@RequestParam(value="idProject") Long idProject) throws Exception {
+    public List<Long> cleanDataTrack(@RequestParam(value="idProject") Long idProject, @RequestParam(value="idProtect",required=false) Long idProtect) throws Exception {
     	Project project = this.projectService.getProjectById(idProject);
+    	List<Long> removed = new ArrayList<Long>();
+    	if (idProtect == null) {
+    		idProtect = new Long(-1);
+    	}
     	List<DataTrack> dtList = this.dataTrackService.getDataTrackByProject(project);
     	for (DataTrack dt: dtList) {
-    		if (dt.getState() != FileStateEnum.SUCCESS) {
+    		if (dt.getState() != FileStateEnum.SUCCESS && !dt.getIdDataTrack().equals(idProtect)) {
     			this.deleteDataTrack(dt.getIdDataTrack());
+    			removed.add(dt.getIdDataTrack());
     		}
     	}
+    	return removed;
     }
 	
 	@RequestMapping(value="isSampleSourceUsed",method=RequestMethod.GET)
 	@ResponseBody
-	public BooleanModel isSampleSourceUsed(@RequestParam(value="source") String source) {
+	public BooleanModel isSampleSourceUsed(@RequestParam(value="source") String source, @RequestParam(value="idOrganismBuild") Long idOrganismBuild) {
 		BooleanModel bm = new BooleanModel();
-		boolean response = this.sampleService.isSampleSourceUsed(source);
+		boolean response = this.sampleService.isSampleSourceUsed(source, idOrganismBuild);
 		bm.setFound(response);
 		return bm;
 	}
 	
 	@RequestMapping(value="isSampleConditionUsed",method=RequestMethod.GET)
 	@ResponseBody
-	public BooleanModel isSampleConditionUsed(@RequestParam(value="cond") String cond) {
+	public BooleanModel isSampleConditionUsed(@RequestParam(value="cond") String cond, @RequestParam(value="idOrganismBuild") Long idOrganismBuild) {
 		BooleanModel bm = new BooleanModel();
-		boolean response = this.sampleService.isSampleConditionUsed(cond);
+		boolean response = this.sampleService.isSampleConditionUsed(cond, idOrganismBuild);
 		bm.setFound(response);
 		return bm;
 	}
@@ -896,6 +914,58 @@ public class SubmitController {
 		BooleanModel bm = new BooleanModel();
 		boolean response = this.sampleService.isSamplePrepUsed(description);
 		bm.setFound(response);
+		return bm;
+	}
+	
+	@RequestMapping(value="isSampleSourceNameUsed",method=RequestMethod.GET)
+	@ResponseBody
+	public BooleanModel isSampleSourceNameUsed(@RequestParam(value="source") String source, @RequestParam(value="idOrganismBuild") Long idOrganismBuild) {
+		BooleanModel bm = new BooleanModel();
+		List<SampleSource> ssList = this.sampleSourceService.getAllSampleSources();
+		boolean found = false;
+		for (SampleSource ss: ssList) {
+			String dSource = ss.getSource().toUpperCase();
+			if (idOrganismBuild.equals(ss.getIdOrganismBuild()) && dSource.equals(source.toUpperCase())) {
+				found = true;
+				break;
+			}
+		}
+		bm.setFound(found);
+		return bm;
+	}
+
+	
+	@RequestMapping(value="isSampleConditionNameUsed",method=RequestMethod.GET)
+	@ResponseBody
+	public BooleanModel isSampleConditionNameUsed(@RequestParam(value="cond") String cond, @RequestParam(value="idOrganismBuild") Long idOrganismBuild) {
+		BooleanModel bm = new BooleanModel();
+		List<SampleCondition> scList = this.sampleConditionService.getAllSampleConditions();
+		boolean found = false;
+		for (SampleCondition sc: scList) {
+			String dCond = sc.getCond().toUpperCase();
+			if (idOrganismBuild.equals(sc.getIdOrganismBuild()) && dCond.equals(cond.toUpperCase())) {
+				found = true;
+				break;
+			}
+		}
+		bm.setFound(found);
+		return bm;
+	}
+	
+	@RequestMapping(value="isSamplePrepNameUsed",method=RequestMethod.GET)
+	@ResponseBody
+	public BooleanModel isSampleConditionNameUsed(@RequestParam(value="prep") String prep) {
+		BooleanModel bm = new BooleanModel();
+		List<SamplePrep> spList = this.samplePrepService.getAllSamplePreps();
+		boolean found = false;
+		for (SamplePrep sp: spList) {
+			String dPrep = sp.getDescription().toUpperCase();
+			if (dPrep.equals(prep.toUpperCase())) {
+				found = true;
+				break;
+			}
+		}
+		bm.setFound(found);
 		return bm;
 	}
 	

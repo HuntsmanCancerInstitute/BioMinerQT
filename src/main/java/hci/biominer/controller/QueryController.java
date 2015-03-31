@@ -542,8 +542,12 @@ public class QueryController {
     			}
 
     		} else if (regions.equals("[ALL RESULT GENES]")) {
-    			String resultGenes = this.getGenesFromResults();
-    			parsed = this.getGeneIntervals(resultGenes, genome, "TxBoundary", ob);
+    			if (geneDict.containsKey(username)) {
+    				String loadedGenes = geneDict.get(username);
+        			parsed = this.getGeneIntervals(loadedGenes, genome, "TxBoundary",ob);
+    			} else {
+    				queryWarningsDict.get(username).append("Biominer expects genes copied from the previous query, but none could be found. Please submit a bug report.<br/>");
+    			}
     		} else {
     			parsed = this.getGeneIntervals(genes, genome, "TxBoundary",ob);
     		}
@@ -561,8 +565,12 @@ public class QueryController {
     				queryWarningsDict.get(username).append("Biominer expects regions loaded from file, but none could be found. Please try reloading your gene file.<br/>");
     			}
     		} else if (regions.equals("[All result coordinates]")) {
-    			String resultCoords = this.getCoordinatesFromResults();
-    			intervalsToCheck = ip.parseIntervals(resultCoords, resultCoords, regionMargins, genome);
+    			if (regionDict.containsKey(username)) {
+    				String loadedRegions = regionDict.get(username);
+        			intervalsToCheck = ip.parseIntervals(loadedRegions, loadedRegions, regionMargins, genome);
+    			} else {
+    				queryWarningsDict.get(username).append("Biominer expects regions copied from the previous query , but none could be found. Please submit a bug report.<br/>");
+    			}
     		} else {
     			intervalsToCheck = ip.parseIntervals(regions, regions, regionMargins, genome);
     		}
@@ -670,7 +678,10 @@ public class QueryController {
     	return qrcSub;	
     }
     
-    private String getCoordinatesFromResults() {
+    
+    @RequestMapping(value="copyAllCoordinates",method=RequestMethod.POST)
+    @ResponseBody
+    private void copyAllCoordinates(HttpServletResponse response) {
     	Subject currentUser = SecurityUtils.getSubject();
     	String username = "guest";
     	    	
@@ -687,13 +698,16 @@ public class QueryController {
     		for (QueryResult qr: qrc.getResultList()) {
     			intervals.append(qr.getCoordinates() + "\n");
     		}
-    		return intervals.toString();
+    		this.regionDict.put(username, intervals.toString());
     	} else {
-    		return "";
+    		response.setStatus(998);
+    		this.regionDict.put(username, "");
     	}
     }
     
-    private String getGenesFromResults() {
+    @RequestMapping(value="copyAllGenes",method=RequestMethod.POST)
+    @ResponseBody
+    private void copyAllGenes(HttpServletResponse response) {
     	Subject currentUser = SecurityUtils.getSubject();
     	String username = "guest";
     	    	
@@ -710,9 +724,11 @@ public class QueryController {
     		for (QueryResult qr: qrc.getResultList()) {
     			intervals.append(qr.getMappedName() + "\n");
     		}
-    		return intervals.toString();
+    		this.geneDict.put(username, intervals.toString());
+    		
     	} else {
-    		return "";
+    		response.setStatus(998);
+    		this.geneDict.put(username,"");
     	}
     }
     

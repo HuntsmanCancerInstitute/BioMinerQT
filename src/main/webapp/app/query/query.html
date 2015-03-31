@@ -233,10 +233,10 @@
 					</div>
 					
 					<!--  Thresholds -->
-           	 		<span class="section-header" ng-show="isThresholdBasedQuery">That Exceed these Thresholds <span class="glyphicon glyphicon-question-sign help-button" ng-click="showHelpThesholds()"></span></span>
+           	 		<span class="section-header" ng-show="isThresholdBasedQuery" ng-hide="selectedAnalysisType != '' && selectedAnalysisType.type == 'Variant'">That Exceed these Thresholds <span class="glyphicon glyphicon-question-sign help-button" ng-click="showHelpThesholds()"></span></span>
            	 		 
            	 		 <!-- FDR-->
-					<div class="form-group" ng-show="isThresholdBasedQuery">
+					<div class="form-group" ng-show="isThresholdBasedQuery" ng-hide="selectedAnalysisType != '' && selectedAnalysisType.type == 'Variant'">
 					  <label class="col-md-2 control-label" >FDR</label>  
 				  	  <div class="col-md-5 btn-group btn-group-sm ">
 				  	  		<label class="btn btn-toggle" ng-model="codeThresholdFDRComparison" btn-radio="'GT'" >&gt;</label>
@@ -248,7 +248,7 @@
 					
            	 		
            	 		 <!-- Log2 Ratio-->
-					<div class="form-group" ng-show="isThresholdBasedQuery">
+					<div class="form-group" ng-show="isThresholdBasedQuery" ng-hide="selectedAnalysisType != '' && selectedAnalysisType.type == 'Variant'">
 					    <label class="col-md-2 control-label">Log2Ratio</label>  
 					  	<div class="col-md-5 btn-group btn-group-sm">
    					     	<label class="btn btn-toggle" ng-model="codeThresholdLog2RatioComparison" btn-radio="'GTABS'" >&gt; abs</label>
@@ -383,7 +383,7 @@
 								<th>Analysis</th>
 								<th>Type</th>
 								<th>Search</th>
-								<th ng-show="selectedAnalysisType.type == 'RNASeq'"><button type="button" class="btn btn-xs btn-primary" tooltip="Copy selected genes to query" ng-click="copyGenes()"><span class="glyphicon glyphicon-share"></span></button><span > Gene</span></th>
+								<th ng-show="returnedAnalysisType.type == 'RNASeq'"><button type="button" class="btn btn-xs btn-primary" tooltip="Copy selected genes to query" ng-click="copyGenes()"><span class="glyphicon glyphicon-share"></span></button><span > Gene</span></th>
 								<th>Conditions</th>
 								<th>
 									<button type="button" class="btn btn-xs btn-primary" tooltip="Copy selected coordinates to query" ng-click="copyCoordinates()"><span class="glyphicon glyphicon-share"></span></button>
@@ -408,7 +408,7 @@
 				                <td class="nowrap-ellipsis"><span tooltip="{{row.analysisName}}">{{row.analysisName}}</span></td>
 				                <td class="nowrap-ellipsis"><span tooltip="{{row.analysisType}}">{{row.analysisType}}</td>
 				                <td class="nowrap-ellipsis"><span tooltip="{{row.search}}">{{row.search}}</span></td>
-				                <td class="nowrap" ng-show="selectedAnalysisType.type == 'RNASeq'"><span tooltip="{{row.mappedName}}">{{row.mappedName}}</td>
+				                <td class="nowrap" ng-show="returnedAnalysisType.type == 'RNASeq'"><span tooltip="{{row.mappedName}}">{{row.mappedName}}</td>
 				                <td class="nowrap-ellipsis"><span tooltip="{{row.sampleConditions}}">{{row.sampleConditions}}</td>
 				                <td class="nowrap" ng-hide="igvLoaded">{{row.coordinates}}</td>
 				                <td class="nowrap-ellipsis" ng-show="igvLoaded"><span tooltip="{{row.coordinate}}"><a ng-click="loadLocus(row)">{{row.coordinates}}</a></td>

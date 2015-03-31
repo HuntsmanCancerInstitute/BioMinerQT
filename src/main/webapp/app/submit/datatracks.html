@@ -3,7 +3,7 @@
 		<span class="section-header">Import IGV Files into Project</span>
 		<div class="row" style="padding-top: 10px; padding-bottom: 10px">
 				<div class="col-lg-6" ng-hide="dataTracksUploading">
-					<span class="btn btn-success fileinput-button btn-sm"  ng-class="{disabled: disabled}">
+					<span class="btn btn-success fileinput-button btn-sm"  ng-class="{disabled: disabled}" ng-hide="datatrackEditMode">
 				        <i class="glyphicon glyphicon-upload"></i>
 				        <input type="file" ng-file-select ng-file-change="addDataTracks($files)" multiple> Upload           
 				    </span>
@@ -35,15 +35,16 @@
 					<div class="col-lg-8">
 						<!-- Text input-->
 						<div class="form-group" >
-						  	<label class="control-label" for="data_track_url">Datatrack Path</label>  
-							<span class="btn btn-xs btn-warning fileinput-button" ng-show="datatrack.path!=null">
+						  	<label class="control-label" for="data_track_url">Datatrack File</label>  
+							<span class="btn btn-xs btn-primary fileinput-button" tooltip="replace datatrack" ng-show="datatrack.path != null">
 								<i class="glyphicon glyphicon-refresh"></i>
 								<input type="file" ng-file-select ng-file-change="addDataTrackFile($files)"> 
 							</span>
-							
-							<span class="btn btn-xs btn-danger fileinput-button" ng-click="showDataTrackError(datatrack)" ng-show="datatrack.message != null">
-								<i class="glyphicon glyphicon-exclamation-sign"></i>
+							<span class="btn btn-xs btn-primary fileinput-button" tooltip="select datatrack" ng-show="datatrack.path == null">
+								<i class="glyphicon glyphicon glyphicon-folder-open"></i>
+								<input type="file" ng-file-select ng-file-change="addDataTrackFile($files)"> 
 							</span>
+							
 						  	<input ng-model="datatrack.path" class="form-control input-sm" type="text" placeholder="datatrack name" ng-readonly="true">
 						  	<input ng-model="datatrack.path" class="form-control input-sm" ng-show="false" required type="text">
 						</div>
@@ -55,7 +56,7 @@
 						  	<label class="control-label" for=""></label>  
 							<div class="animate-switch-container">
 							<button id="save_datatrack_button" class="animate-switch btn btn-primary btn-sm" ng-click="saveDataTrack()" ng-disabled="datatrack_form.$invalid">Save</button>
-							<button id="save_sample_button" class="animate-switch btn btn-warning btn-sm" ng-click="clearDataTrack()">Clear</button>
+							<button id="canel_datatrack_button" class="animate-switch btn btn-danger btn-sm" ng-click="clearDataTrack()">Cancel</button>
 						</div>
 					</div> <!-- end col -->
 				</div>

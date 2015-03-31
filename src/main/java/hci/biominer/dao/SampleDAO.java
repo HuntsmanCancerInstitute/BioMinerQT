@@ -101,11 +101,12 @@ public class SampleDAO {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public boolean isSampleConditionUsed(String cond) {
+	public boolean isSampleConditionUsed(String cond, Long idOrganismBuild) {
 		Session session = getCurrentSession();
 		session.beginTransaction();
-		Query query = session.createQuery("from Sample as s left join s.sampleCondition as sc where sc.cond = :cond");
+		Query query = session.createQuery("from Sample as s left join s.sampleCondition as sc where sc.cond = :cond and sc.organismBuild.idOrganismBuild = :idOrganismBuild");
 		query.setParameter("cond", cond);
+		query.setParameter("idOrganismBuild", idOrganismBuild);
 		List<SampleType> stList = query.list();
 		session.close();
 		if (stList.size() > 0) {
@@ -131,11 +132,12 @@ public class SampleDAO {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public boolean isSampleSource(String source) {
+	public boolean isSampleSource(String source, Long idOrganismBuild) {
 		Session session = getCurrentSession();
 		session.beginTransaction();
-		Query query = session.createQuery("from Sample as s left join s.sampleSource as ss where ss.source = :source");
+		Query query = session.createQuery("from Sample as s left join s.sampleSource as ss where ss.source = :source and ss.organismBuild.idOrganismBuild = :idOrganismBuild");
 		query.setParameter("source", source);
+		query.setParameter("idOrganismBuild",idOrganismBuild);
 		List<AnalysisType> ssList = query.list();
 		session.close();
 		if (ssList.size() > 0) {
