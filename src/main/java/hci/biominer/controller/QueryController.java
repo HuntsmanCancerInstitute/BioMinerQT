@@ -541,7 +541,7 @@ public class QueryController {
     				queryWarningsDict.get(username).append("Biominer expects genes loaded from file, but none could be found. Please try reloading your gene file.<br/>");
     			}
 
-    		} else if (regions.equals("[ALL RESULT GENES]")) {
+    		} else if (genes.equals("[ALL RESULT GENES]")) {
     			if (geneDict.containsKey(username)) {
     				String loadedGenes = geneDict.get(username);
         			parsed = this.getGeneIntervals(loadedGenes, genome, "TxBoundary",ob);
@@ -961,6 +961,8 @@ public class QueryController {
     	
     	igvSR.setUrl(igvSession.fetchIGVLaunchURL(sessionUrl).toString());
     	igvSR.setUrl2(sessionUrl.toString());
+    	
+    	
     	
     	return igvSR;
     }

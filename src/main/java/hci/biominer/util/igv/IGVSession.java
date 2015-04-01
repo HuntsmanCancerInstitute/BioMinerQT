@@ -21,7 +21,7 @@ public class IGVSession {
 	
 	//constants
 	private static final String sessionVersion = "3";
-	public static final String igvLaunchURL = "http://www.broadinstitute.org/igv/projects/current/igv.php?sessionURL=";
+	public static final String igvLaunchURL = "http://www.broadinstitute.org/igv/projects/current/igv.php?merge=true&sessionURL=";
 	public static final String igvGoToURL = "http://localhost:60151/goto?locus=";
 
 	//constructors

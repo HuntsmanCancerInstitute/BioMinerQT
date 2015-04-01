@@ -51,7 +51,7 @@
            	 		<!-- What type of result do you want back? -->
            	 		<div class="form-group" style="padding-top: 0px">
 					  <div class="col-md-12"> 
-					    <label ng-repeat="(key,name) in mapResultType" class="radio-inline" for="radio-rt-{{ key }}">
+					    <label ng-repeat="key in mapResultOrder " class="radio-inline" for="radio-rt-{{ key }}">
 					      <input name="resultType" 
 					      		 class="input-xs" 
 					      		 id="radio-rt-{{ key }}"
@@ -59,7 +59,7 @@
 					      	     ng-model="$parent.codeResultType" 
 					      	     ng-value="key" 
 					      	     ng-change="pickResultType()"
-					      	     type="radio">{{ name }}
+					      	     type="radio">{{ mapResultType[key] }}
 					    </label> 
 					  </div>
 					  <div class="col-md-12" ng-show="queryForm.resultType.$error.required && showValidation">

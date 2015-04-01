@@ -18,7 +18,7 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 	$scope.igvWarnings = "";
 	
 	$scope.querySummary = [];
-	$scope.codeResultType = "";
+	$scope.codeResultType = "REGION";
 	$scope.returedResultType = "";
 	$scope.isGeneBasedQuery = false;
 	$scope.idOrganismBuild = "";
@@ -84,9 +84,10 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 	
 	
 	$scope.mapResultType = {
-			'GENE' :     'Exact Matches',
-			'REGION' :   'Overlapping Matches'};
-//			'VARIANT' :  'Variants' };
+			'REGION' :   'Overlapping Matches',
+			'GENE' :     'Exact Matches' };
+	$scope.mapResultOrder = ['REGION','GENE'];
+
 	
 	$scope.mapComparison = {
 		'GT':    '>',
@@ -171,12 +172,14 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
         	}
     	} else {
     		$scope.stopPing();
+    		$scope.stopLaunchPing();
     	} 	
     });
     
     $scope.$on('$routeChangeStart', function (event, next, current) {
     	if (next.originalPath == current.originalPath) {
     		$scope.stopPing();
+    		$scope.stopLaunchPing();
     	}
     	$scope.abortQuery();
     	$scope.abortGeneUpload();
@@ -351,11 +354,11 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 				$scope.igvWarnings = data.warnings;
 			}
 			
-			var urlPass = "http://127.0.0.1:60151/load?file=" + data.url2;
+			var urlPass = "http://127.0.0.1:60151/load?file=" + data.url2 + "&merge=true";
 			var urlFail = data.url;
 			$scope.pingIgvUrl(urlPass, urlFail);
 			
-			$scope.startPing();
+			
 			
 		}).error(function(data) {
 			dialogs.error("IGV Session Error",data.error,null);
@@ -397,9 +400,19 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 		
 	};
 	
+	$scope.startLaunchPing = function() {
+		$scope.stopLaunchPing();
+		$scope.checkLaunchIgv = $interval(function() {$scope.pingLaunchIGV();}, 10000);	
+	}
+	
+	$scope.stopLaunchPing = function() {
+		$interval.cancel($scope.checkLaunchIgv);
+	}
+	
 	
 	$scope.startPing = function() {
 		$scope.stopPing();
+		$scope.launchCounter = 0;
 		$scope.checkIgv = $interval(function() {$scope.pingIGV();}, 10000);
 	};
 	
@@ -417,15 +430,36 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 		}).success(function(data) {
 			$scope.igvLoaded = true;
 			$window.open(urlPass,"IGV");
+			$scope.startPing();
+			console.log("IT'S OPEN");
 		}).error(function(data) {
 			$scope.igvLoaded = false;
 			$window.open(urlFail,"IGV");
+			$scope.startLaunchPing();
+			console.log("IT'S CLOSED");
+		});
+	};
+	
+	$scope.pingLaunchIGV = function() {
+		var url = "http://127.0.0.1:60151/execute?command=echo";
+		$http({
+			method: "GET",
+			url: url
+		}).success(function(data) {
+			$scope.launchCounter = 0;
+			$scope.stopLaunchPing();
+			$scope.startPing();
+		}).error(function(data) {
+			$scope.launchCounter += 1;
+			if ($scope.launchCounter > 30) {
+				$scope.stopLaunchPing();
+				$scope.launchCounter = 0;
+			}
 		});
 	};
 	
 	$scope.pingIGV = function() {
 		var url = "http://127.0.0.1:60151/execute?command=echo";
-		
 		$http({
 			method: "GET",
 			url: url
@@ -435,7 +469,6 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 			$scope.igvLoaded = false;
 			$scope.stopPing();
 		});
-	
 	};
 	
 	$scope.pickResultType = function() {
@@ -475,6 +508,7 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 	$scope.clearQuery = function() {
 		console.log("Clearing");
 		$scope.warnings = "";
+		$scope.igvWarnings = "";
 		$scope.hasResults = false;
 		$scope.showValidation = false;
 		$scope.queryForm.$setPristine();
@@ -517,6 +551,7 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 		$scope.isReverse = false;
 		
 		$scope.stopPing();
+		$scope.stopLaunchPing();
 		
 		for (var x =0; x < $scope.analysisTypeCheckedList.length; x++) {
 			$scope.analysisTypeCheckedList[x].show = true;
@@ -723,15 +758,19 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 			return;
 		}
 		
+		
 		$scope.selectAll = false;
 		
 		$scope.warnings = "";
+		$scope.igvWarnings = "";
 		$scope.showValidation = false;
 		$scope.hasResults = false;
 		$scope.queryCurrentPage = 0;
 		
 		//Turn query state to on
 		$scope.stopPing();
+		$scope.stopLaunchPing();
+		
 		$scope.queryStarted = true;
 		$scope.queryDeferred = $q.defer();
 		
@@ -805,7 +844,6 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 		$scope.returnedAnalysisType = angular.copy($scope.selectedAnalysisType);
 		$scope.returnedOrganismBuild = angular.copy($scope.idOrganismBuild);
 		$scope.totalResults = 0;
-		
 		
 		// Run the query on the server.
 		$scope.runQueryPromise = $http({
