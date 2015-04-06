@@ -4,12 +4,12 @@
  * UserAdminController
  * @constructor
  */
-var useradmin = angular.module('useradmin', ['angularFileUpload','ui.mask','ui.validate','filters','directives','services','ngProgress','dialogs.main','error']);
+var useradmin = angular.module('useradmin', ['angularFileUpload','ui.mask','ui.validate','filters','directives','services','ngProgress','dialogs.main','error','cgBusy']);
 
 angular.module("useradmin").controller("UserAdminController", ['$rootScope','$scope','$http','$location','$window','$modal','$timeout','$upload','DynamicDictionary',
-                                                               'StaticDictionary','ngProgress','dialogs',
+                                                               'StaticDictionary','ngProgress','dialogs','$q',
                                                       
-function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $upload, DynamicDictionary, StaticDictionary, ngProgress, dialogs) {
+function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $upload, DynamicDictionary, StaticDictionary, ngProgress, dialogs,$q) {
 	
 	// approve user variables
 	$scope.guid = "";
@@ -43,12 +43,57 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
 	//Select all users
 	$scope.selectAllUsers = false;
 	
+	//Annotation promises and deferred objects
+	$scope.uploadGenomePromise = null;
+	$scope.uploadTranscriptPromise = null;
+	$scope.uploadAnnotationPromise = null;
+	$scope.parseAnnotationPromise = null;
+	$scope.deletePromise = null;
+	
 	$scope.columnDefs = null;
+	
 	//console.log("In UserAdminController.js at the top");
 	
-	/*************************************
-	 * Watchers
-	 */
+	/***************************************
+	 * *************************************
+	 * 
+	 *      Interrupts
+	 * 
+	 * *************************************
+	 ***************************************/
+    
+    $scope.$on('$locationChangeStart', function( event, next, current ) {
+    	if ($scope.uploadGenomePromise != null || $scope.uploadTranscriptPromise != null || $scope.uploadAnnotationPromise != null) {
+    		event.preventDefault();
+    		var dialog = dialogs.confirm("Page Navigation","File upload in progress, are you sure you want to leave this page?  The upload should complete even if you leave.");
+        	dialog.result.then(function() {
+        		$timeout(function() {
+        			$location.path(next.substring($location.absUrl().length - $location.url().length));
+                    $scope.$apply();
+        		});
+        	});
+    	}  else if ($scope.parseAnnotationPromise != null) {
+    		event.preventDefault();
+    		var dialog = dialogs.confirm("Page Navigation","Annotation parsing in progress, are you sure you want to leave the page? The parsing should complete, even if you leave.");
+        	dialog.result.then(function() {
+        		$timeout(function() {
+        			$location.path(next.substring($location.absUrl().length - $location.url().length));
+                    $scope.$apply();
+        		});
+        	}); 
+    	} 
+    });
+    
+
+  
+	
+    /***************************************
+	 * *************************************
+	 * 
+	 *     Watchers
+	 * 
+	 * *************************************
+	 ***************************************/
 	
 	 $scope.$watch('userTabOpen', function() {
 	    if ($scope.userTabOpen == true) {
@@ -83,9 +128,13 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
 		 }
 	 });
 
-	/**************************************
-     * Load dictionaries
-     **************************************/
+	 /***************************************
+	 * *************************************
+	 * 
+	 *      Load Dictionaries
+	 * 
+	 * *************************************
+	 ***************************************/
 	//Static dictionaries. These http calls are cached.
     $scope.getInstituteList = function () {
     	StaticDictionary.getInstituteList().success(function(data) {
@@ -114,164 +163,177 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
 	};
 	
 	
-	/**************************************
-     * Organism file control methods
-     **************************************/
+	/***************************************
+	 * *************************************
+	 * 
+	 *     Annotation upload/stop/delete methods
+	 * 
+	 * *************************************
+	 ***************************************/
+	
+	
 	$scope.addGenomeFile = function(files, ob) {
+		$scope.uploadGenomeDeferred = $q.defer();
 		if (files.length > 0) {
-			ngProgress.start();
-			$upload.upload({
-	    		url: "genetable/addGenomeFile",
-	    		file: files[0],
-	    		params: {idOrganismBuild: ob.idOrganismBuild}
-	    	}).success(function(data) {
-	    		$scope.refreshOrganisms();
-	    		ngProgress.complete();
-	    	}).error(function(data) {
-	    		dialogs.error("Error reading in gene annotation file", data, null);
-	    		
-	    		ngProgress.reset();
-	    	});
+			(function(ob) {
+				$scope.uploadGenomePromise = $upload.upload({
+		    		url: "genetable/addGenomeFile",
+		    		file: files[0],
+		    		params: {idOrganismBuild: ob.idOrganismBuild},
+		    		
+		    	}).success(function(data) {
+		    		$scope.refreshOrganisms();
+		    		$scope.uploadGenomePromise = null;
+		    	}).error(function(data) {
+		    		if (data != null) {
+		    			dialogs.error("Upload Error","Error reading in genome file", "Removing from database: " + data);
+		    		}
+		    		$scope.removeGenomeFromBuild(ob);
+		    		$scope.uploadGenomePromise = null;
+		    	});
+			}(ob));
 		}
-		
 	};
+	
+	
 	
 	$scope.addTranscriptFile = function(files,ob) {
-		if (files.length > 0) {
-			ngProgress.start();
-			$upload.upload({
-				url: "genetable/addTranscriptFile",
-				file: files[0],
-				params: {idOrganismBuild: ob.idOrganismBuild}
-			}).success(function(data) {
-	    		$scope.refreshOrganisms();
-	    		ngProgress.complete();
-	    	}).error(function(data) {
-	    		dialogs.error("Error reading in transcript file", data, null);
-				ngProgress.reset();
-			});
-		}
+		$scope.uploadTranscriptDeferred = $q.defer();
 		
+		if (files.length > 0) {
+			(function(ob) {
+				$scope.uploadTranscriptPromise = $upload.upload({
+					url: "genetable/addTranscriptFile",
+					file: files[0],
+					params: {idOrganismBuild: ob.idOrganismBuild},
+					
+				}).success(function(data) {
+		    		$scope.refreshOrganisms();
+		    		$scope.uploadTranscriptPromise = null;
+		    	}).error(function(data) {
+		    		if (data != null) {
+		    			dialogs.error("Error reading in transcript file", "Removing from database: " + data);
+		    		}
+		    		$scope.removeTranscriptsFromBuild(ob);
+		    		$scope.uploadTranscriptPromise = null;
+				});
+			}(ob));
+		}
 	};
+
 	
 	$scope.addAnnotationFile = function(file,ob) {
+		$scope.uploadAnnotationDeferred = $q.defer();
 		if (file.length > 0) {
-			ngProgress.start();
-			$upload.upload({
-				url: "genetable/addAnnotationFile",
-				file: file[0],
-				params: {idOrganismBuild: ob.idOrganismBuild}
-			}).success(function(data) {
-		    	var modalInstance = $modal.open({
-		    		templateUrl: 'app/useradmin/annotationPreviewWindow.html',
-		    		controller: 'AnnotationPreviewController',
-		    		windowClass: 'preview-dialog',
-		    		resolve: {
-		    			filename: function() {
-		    				return file.name;
-		    			},
-		    			previewData: function() {
-		    				return data.previewData;
-		    			}
-		    		}
-		    	});
-		    	
-		    	ngProgress.complete();
-		    	modalInstance.result.then(function (setColumns) {
-		    		$scope.columnDefs = setColumns;
-		    		
-		    		ngProgress.start();
-		    		
-		    		var params = {};
-		    		for (var i=0; i<setColumns.length; i++) {
-		    			params[setColumns[i].name] = setColumns[i].index;
-		    		}
-		    		
-		    		params["idOrganismBuild"] = ob.idOrganismBuild;
-		    		
-		    		$http({
-		    			method: 'PUT',
-		    			url: 'genetable/parseAnnotations',
-		    			params: params
-		    		}).success(function(data) {
-		    			ngProgress.complete();
-		    			$scope.refreshOrganisms();
-		    			
-		    			$http({
-		        			method: 'POST',
-		        			url: 'query/clearNames',
-		        			params: {obId: ob.idOrganismBuild}
-		        		});
-		    		}).error(function(data) {
-		    			dialogs.error("Error parsing annotation data",data,null);
-		    			$scope.deleteAnnotationUpload();
-		    			ngProgress.reset();
-		    		});
-		    		
-			    },function() {
-			    	$scope.deleteAnnotationUpload();
-			    });
-				   
-		    	
-			}).error(function(data) {
-				dialogs.error("Error generating annotation preview", data.message, null);
-				ngProgress.reset();
-			});
+			(function(ob) {
+				$scope.uploadAnnotationPromise = $upload.upload({
+					url: "genetable/addAnnotationFile",
+					file: file[0],
+					params: {idOrganismBuild: ob.idOrganismBuild},
+					
+				}).success(function(data) {
+			    	var modalInstance = $modal.open({
+			    		templateUrl: 'app/useradmin/annotationPreviewWindow.html',
+			    		controller: 'AnnotationPreviewController',
+			    		windowClass: 'preview-dialog',
+			    		resolve: {
+			    			filename: function() {
+			    				return file.name;
+			    			},
+			    			previewData: function() {
+			    				return data.previewData;
+			    			}
+			    		}
+			    	});
+			    	
+			    	modalInstance.result.then(function (setColumns) {
+			    		$scope.columnDefs = setColumns;
+			    		
+			    		var params = {};
+			    		for (var i=0; i<setColumns.length; i++) {
+			    			params[setColumns[i].name] = setColumns[i].index;
+			    		}
+			    		
+			    		params["idOrganismBuild"] = ob.idOrganismBuild;
+			    		
+			    		(function(ob) {
+			    			$scope.parseAnnotationPromise = $http({
+				    			method: 'PUT',
+				    			url: 'genetable/parseAnnotations',
+				    			params: params,
+				    			
+				    		}).success(function(data) {
+				    			$scope.refreshOrganisms();
+				    			
+				    			$http({
+				        			method: 'POST',
+				        			url: 'query/clearNames',
+				        			params: {obId: ob.idOrganismBuild}
+				        		});
+								$scope.uploadAnnotationPromise = null;
+								$scope.parseAnnotationPromise = null;
+				    		}).error(function(data) {
+				    			if (data != null) {
+				    				dialogs.error("Upload Error","Error parsing annotation data", "Removing from database: " + data);
+				    			}
+				    			
+				    			$scope.removeAnnotationsFromBuild(ob,true);
+								$scope.uploadAnnotationPromise = null;
+								$scope.parseAnnotationPromise = null;
+				    		});
+			    		}(ob));
+			    		
+			    		
+				    },function() {
+				    	$scope.deleteAnnotationUpload();
+						$scope.uploadAnnotationPromise = null;
+						$scope.parseAnnotationPromise = null;
+				    });
+					   
+			    	
+				}).error(function(data) {
+					if (data != null) {
+						dialogs.error("Upload Error","Error generating annotation preview: " + data);
+					}
+					$scope.removeAnnotationsFromBuild(ob,true);
+					$scope.uploadAnnotationPromise = null;
+					$scope.parseAnnotationPromise = null;
+				});
+			}(ob));
+			
 		}
 		
 	};
 	
 	$scope.removeGenomeFromBuild = function(ob) {
-		ngProgress.start();
-		$http({
+		$scope.deletePromise = $http({
 	    	method: 'DELETE',
 	    	url: 'genetable/removeGenomeFromBuild',
 	    	params: {idOrganismBuild: ob.idOrganismBuild}
 	    }).success(function(data) {
     		$scope.refreshOrganisms();
-    		ngProgress.complete();
     	}).error(function(data) {
-    		ngProgress.reset();
     	});
 	};
 	
 	$scope.removeTranscriptsFromBuild = function(ob) {
-		ngProgress.start();
-		$http({
+		$scope.deletePromise = $http({
 	    	method: 'DELETE',
 	    	url: 'genetable/removeTranscriptsFromBuild',
 	    	params: {idOrganismBuild: ob.idOrganismBuild}
-		
 	    }).success(function(data) {
     		$scope.refreshOrganisms();
-    		ngProgress.complete();
     	}).error(function(data) {
-    		ngProgress.reset();
     	});
 	};
 	
-	$scope.deleteAnnotationUpload = function() {
-		ngProgress.start();
-		$http({
-    		method: 'DELETE',
-    		url: 'genetable/deleteAnnotationUpload',
-    	}).success(function(data) {
-    		$scope.refreshOrganisms();
-    		ngProgress.complete();
-    	}).error(function(data) {
-    		ngProgress.reset();
-    	});
-	};
-	
-	$scope.removeAnnotationsFromBuild = function(ob) {
-		ngProgress.start();
-		$http({
+	$scope.removeAnnotationsFromBuild = function(ob,delay) {
+		$scope.deletePromise = $http({
     		method: 'DELETE',
     		url: 'genetable/removeAnnotationsFromBuild',
-    		params: {idOrganismBuild: ob.idOrganismBuild}
+    		params: {idOrganismBuild: ob.idOrganismBuild, delay: delay}
     	}).success(function(data) {
     		$scope.refreshOrganisms();
-    		ngProgress.complete();
     		
     		$http({
     			method: 'POST',
@@ -280,17 +342,35 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
     		});
     		
     	}).error(function(data) {
-    		ngProgress.reset();
+    	
+    	});
+		
+		$http({
+			method: 'POST',
+			url: 'query/clearNames',
+			params: {obId: ob.idOrganismBuild}
+		});
+	};
+	
+	$scope.deleteAnnotationUpload = function() {
+		$http({
+    		method: 'DELETE',
+    		url: 'genetable/deleteAnnotationUpload',
+    	}).success(function(data) {
+    		$scope.refreshOrganisms();
     	});
 	};
 	
 	
-	
 	 
 	
-	/**************************************
-     * Utilities
-     **************************************/
+	/***************************************
+	 * *************************************
+	 * 
+	 *      Utilities
+	 * 
+	 * *************************************
+	 ***************************************/
 	
 	
 	$scope.setMessage = function(message) {
@@ -313,13 +393,12 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
 		return selectedUsers;
 	};
 	
-	
-	
-	/**************************************
-     * Display
-     **************************************/
+
 	$scope.hideOrganismControls = function(ob) {
-		ob.show = !ob.show;
+		ob.show = false;
+	};
+	$scope.showOrganismControls = function(ob) {
+		ob.show = true;
 	};
 	
 	$scope.loadCounts = function() {
@@ -364,9 +443,14 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
     	$scope.loadSelected();
     });
     
-    /**************************************
-     * Edit exising users, labs, organism, builds
-     **************************************/
+    
+    /***************************************
+	 * *************************************
+	 * 
+	 *      Edit exising users, labs, organism, builds
+	 * 
+	 * *************************************
+	 ***************************************/
     $scope.openEditUserWindow = function(e) {
     	var modalInstance = $modal.open({
     		templateUrl: 'app/useradmin/userWindow.html',
@@ -527,6 +611,7 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
 	    	
 	    });
     };
+    
     
     /**************************************
      * Add new users/labs/organism
@@ -860,7 +945,7 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
 			} else if (toDelete == "genome") {
 				$scope.removeGenomeFromBuild(ob);
 			} else if (toDelete == "annotations") {
-				$scope.removeAnnotationsFromBuild(ob);
+				$scope.removeAnnotationsFromBuild(ob, false);
 			}
     	});
     };

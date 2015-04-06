@@ -58,6 +58,12 @@ public class FileUpload {
 	@JsonIgnore
 	Analysis analysis;
 	
+	@ManyToOne
+	@JoinColumn(name="idParent")
+	@JsonIgnore
+	FileUpload parent;
+	
+	
 
 	public FileUpload() {
 		
@@ -175,5 +181,22 @@ public class FileUpload {
 			return true;
 		}
 	}
+	
+	public FileUpload getParent() {
+		return parent;
+	}
+
+	public void setParent(FileUpload parent) {
+		this.parent = parent;
+	}
+	
+	public Long getIdParent() {
+		if (this.parent == null) {
+			return null;
+		} else {
+			return this.parent.idFileUpload;
+		}
+	}
+
 
 }

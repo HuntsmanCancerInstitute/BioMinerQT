@@ -11,9 +11,9 @@
     <div class="form" name="filenameForm">
 		<table class="table">
 			<thead>
-				<th>Index</th>
-				<th>Imported file name</th>
-				<th>Parsed file name</th>
+				<th style="width: 10%">Index</th>
+				<th style="width: 40%">Imported file name</th>
+				<th style="width: 40%">Parsed file name</th>
 			</thead>
 			<tbody ng-repeat="s in selected track by $index">
 				<td>
@@ -24,8 +24,8 @@
 				</td>
 				<td>
 					<span ><input class="input form-control" type="text" name="parsedName" ng-model="s.outname"/></span>
-					<span ng-show="usedExist" class="label label-danger">filename already in use</span>
-					<span ng-show="usedNew" class="label label-danger">duplicate filename on form</span>
+					<span ng-show="s.usedExist" class="label label-danger">filename already in use</span>
+					<span ng-show="s.usedNew" class="label label-danger">duplicate filename on form</span>
 				</td>
 			</tbody>
 		</table>

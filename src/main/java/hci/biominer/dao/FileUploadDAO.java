@@ -55,6 +55,8 @@ public class FileUploadDAO {
 		FileUploadToUpdate.setType(fileUpload.getType());
 		FileUploadToUpdate.setProject(fileUpload.getProject());
 		FileUploadToUpdate.setAnalysisType(fileUpload.getAnalysisType());
+		FileUploadToUpdate.setState(fileUpload.getState());
+		FileUploadToUpdate.setParent(fileUpload.getParent());
 		session.update(FileUploadToUpdate);
 		session.getTransaction().commit();
 		session.close();	
@@ -64,8 +66,9 @@ public class FileUploadDAO {
 		Session session = getCurrentSession();
 		session.beginTransaction();
 		FileUpload FileUpload = (FileUpload) session.get(FileUpload.class, idFileUpload);
-		if (FileUpload != null) 
+		if (FileUpload != null) {
 			session.delete(FileUpload);
+		}
 		session.getTransaction().commit();
 		session.close();
 	}
@@ -92,6 +95,16 @@ public class FileUploadDAO {
 		Session session = getCurrentSession();
 		Query query = session.createQuery("from FileUpload where type = :type and project = :project");
 		query.setParameter("type", type);
+		query.setParameter("project",project);
+		List<FileUpload> fileUploads = query.list();
+		session.close();
+		return fileUploads;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public List<FileUpload> getFileUploadByProject(Project project) {
+		Session session = getCurrentSession();
+		Query query = session.createQuery("from FileUpload where project = :project");
 		query.setParameter("project",project);
 		List<FileUpload> fileUploads = query.list();
 		session.close();

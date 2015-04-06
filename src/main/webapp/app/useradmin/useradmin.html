@@ -143,6 +143,8 @@
 					        <th>Selected</th>
 					        <th ng-click="labOrderByField='first'; labReverseSort=!labReverseSort">First Name</th>
 					        <th ng-click="labOrderByField='last'; labReverseSort=!labReverseSort">Last Name</th>
+					        <th ng-click="labOrderByField='email'; labReverseSort=!labReverseSort">Email</th>
+					        <th ng-click="labOrderByField='phone'; labReverseSort=!labReverseSort">Phone</th>
 					        <th ng-click="labOrderByField='count'; labReverseSort=!labReverseSort">Member Count</th>
 					      </tr>
 				    </thead>
@@ -151,6 +153,8 @@
 				    	    <td><input ng-model=lab.selected type="checkbox" ng-disabled="lab.count != 0"/></td>
 			             	<td>{{lab.first}}</td>
 			             	<td>{{lab.last}}</td>
+			             	<td>{{lab.email}}</td>
+			             	<td>{{lab.phone | displayPhone}}</td>
 			             	<td>{{lab.count}}</td>
 		         		</tr>
 				    </tbody>
@@ -177,7 +181,14 @@
 	     	   	</div>
 	     	</tab>
 	     	<tab heading="Organisms" active="$parent.genomeTabOpen">
-	     	   <div>
+	     	   <div cg-busy="{promise:uploadGenomePromise,message:'Uploading Files',minDuration: 1000}">
+	     	   <div cg-busy="{promise:uploadTranscriptPromise,message:'Uploading Files',minDuration: 1000}">
+	     	   <div cg-busy="{promise:uploadAnnotationPromise,message:'Uploading Files',minDuration: 1000}">
+	     	   <div cg-busy="{promise:parseAnnotationPromise,message:'Parsing Files',minDuration: 1000}">
+	     	   <div cg-busy="{promise:deletePromise,message:'Deleting',minDuration: 1000}">
+	     	   		
+	     			
+	     	   
 		     	<table class="table " >
 				    <thead>
 				        <tr>
@@ -194,7 +205,7 @@
 				        </tr>
 				    </thead>
 				    <tbody>
-				        <tr ng-repeat="ob in organismBuildList" ng-mouseenter="hideOrganismControls(ob)" ng-mouseleave="hideOrganismControls(ob)" >
+				        <tr ng-repeat="ob in organismBuildList" ng-mouseenter="showOrganismControls(ob)" ng-mouseleave="hideOrganismControls(ob)" >
 				        	<td style="width: 10% "><input ng-model=ob.selected type="checkbox"/></td>	
 				        	<td style="width: 12%;" ng-dblclick="openEditOrganismWindow(ob.organism.idOrganism)">{{ob.organism.idOrganism | lookupOrganism:organismList}}</td>
 				            <td style="width: 12%;" ng-dblclick="openEditBuildWindow(ob)">
@@ -260,6 +271,10 @@
 				    </tbody>
 				</table>
 			   </div>
+			   </div> <!-- for cg-busy -->
+			   </div> <!-- for cg-busy -->
+			   </div> <!-- for cg-busy -->
+			   </div> <!-- for cg-busy -->
 	     	</tab>
 	    </tabset>
 		</div>

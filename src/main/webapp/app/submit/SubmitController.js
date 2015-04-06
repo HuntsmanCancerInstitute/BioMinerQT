@@ -13,7 +13,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 	/**********************
 	 * Initialization!
 	 *********************/
-
+    $scope.disableElement = false;
 	//enums!
 	$scope.projectVisibilities = [{enum: "LAB",name: "Lab"},{enum: "INSTITUTE", name: "Institute"},{enum: "PUBLIC", name: "Public"}];
 	
@@ -50,7 +50,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
     $scope.originalSampleName;
        
     //flags
-    $scope.sampleEditMode = false;
+    $scope.sampleEditMode = true;
     $scope.datatrackEditMode = false;
     $scope.resultEditMode = false;
     $scope.projectEditMode = false;
@@ -73,17 +73,8 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 	//holds valid analyses
 	$scope.validFiles = [];
     
-    
-    $rootScope.helpMessage = "<p>Placeholder for data submission help.</p>";
-    
-	
 	//Static dictionaries. These http calls are cached.
-    $scope.loadOrganismBuildList = function () {
-    	StaticDictionary.getOrganismBuildList().success(function(data) {
-    		$scope.organismBuildList = data;
-    	});
-    };
-    
+   
     $scope.loadAnalysisTypeList = function () {
     	StaticDictionary.getAnalysisTypeList().success(function(data) {
     		$scope.analysisTypeList = data;
@@ -95,15 +86,14 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
     		$scope.sampleTypeList = data;
     	});
     };
-    
-    $scope.loadOrganismBuildList = function () {
-    	StaticDictionary.getOrganismBuildList().success(function(data) {
+
+    //Dynamic dictionaries.  These http calls aren't cached.
+    $scope.loadOrganismBuildList = function() {
+    	DynamicDictionary.loadOrganismBuilds().success(function(data) {
     		$scope.organismBuildList = data;
     	});
-    };
+    }
     
-     
-    //Dynamic dictionaries.  These http calls aren't cached.
     $scope.loadSampleSources = function() {
     	DynamicDictionary.loadSampleSources().success(function(data) {
     		
@@ -134,6 +124,12 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 			$scope.samplePrepList.unshift(addNew);
 		});
     };
+    
+    $scope.organismCanChange = function() {
+    	if ($scope.files.importedFiles.length > 0) {
+    		return false;
+    	}
+    }
   
     //Load up all dictionaries
 	$scope.loadSampleConditions();
@@ -199,7 +195,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
     $scope.$watch("result.analysisType",function() {
 		if ($scope.result.analysisType != null) {
 			for (var i=0; i<$scope.files.importedFiles.length; i++) {
-				if ($scope.files.importedFiles[i].analysisType.idAnalysisType == $scope.result.analysisType.idAnalysisType) {
+				if ($scope.files.importedFiles[i].analysisType != null && $scope.files.importedFiles[i].analysisType.idAnalysisType == $scope.result.analysisType.idAnalysisType) {
 					$scope.files.importedFiles[i].doesAnalysisMatch = true;
 				} else {
 					$scope.files.importedFiles[i].doesAnalysisMatch = false;
@@ -1370,8 +1366,124 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 			$scope.datatrackPanelStyle = {'background-color':'white'};
 		}
 	})
-
 	
+	
+	$scope.sampleEditMode = false;
+
+	$timeout(function() {
+		$scope.disableElement = true;
+	},1000);
+	
+	/***************************************
+	 * *************************************
+	 * 
+	 *     Help!!
+	 * 
+	 * *************************************
+	 ***************************************/
+	
+	
+	$scope.showHelpProject = function() {
+		var title = "Help: Edit Project Metadata";
+		
+		dialogs.notify(title, $scope.helpProject);
+	}
+	
+	$scope.helpPreamble = 
+		"<p>This page allows users to create new <strong>Projects</strong> or modify exising ones.  Once a user creates a new <strong>Project</strong>, they can " +
+		"enter information about samples used in the project, upload datatracks that can be used to visualize data, and upload outputs " +
+		"from differential expression, differential methylation, variant detection and ChIP-Seq peak detection analyses.  Once " +
+		"all of these components are entered, they can be assembled into an <strong>Analysis</strong>. Each <strong>Analysis</strong> is " +
+		"defined by a single differential expression, differential methylation, variant detection or ChIP-Seq peak detection result and any number " +
+		"of samples and datatracks.  Once an <strong>Analysis</strong> is created, it can be searched in the query page.</p> " +
+		"<h3>Basic Controls</h3> " +
+		"<p><strong>Submissions Panel</strong>: The submissions panel can be found on the left of the page and lists all of the projects that are visible to the user. " +
+		"Clicking on a project name will load the project information in the panel on the right side of the page.</p> " +
+		"<p><strong>New Submission Button</strong>: The new submission button is the first step in creating a new project. Clicking this link will bring up a window " +
+		"that asks for basic information about the project:</p>" +
+		"<ol>" +
+		"<li><strong>Name</strong> <em>required</em>: A descriptive name for the project. Projects can be selected by name in the query page, so it is helpful if the name " +
+		"clearly identifies the project.</li>" +
+		"<li><strong>Description</strong>: An optional description of the project.</li> " +
+		"<li><strong>Genome Build </strong><em>required</em>: The genome build used when analyzing the data (i.e hg19, mm10, zv9).  Only genome builds with loaded annotations will be included " +
+		"in this list.  If your favorite build is missing, please contact the Biominer Team.</li> " +
+		"<li><strong>Lab </strong><em>required</em>: The list of labs associated with the project. If the project visiblity is set to <strong>Lab</strong>, only " +
+		"users belonging to the labs set in this field can view or search the data. The dropdown will only contain labs affiliated with the user.</li>" +
+		"<li><strong>Institute </strong><em>required</em>: The list of institutes associated with the project.  If the project visibility is set to <strong>Institute</strong>, " +
+		"only users belonging to the institutes set in this field will be able to view or search the data.  The drowpdown will only contain institutes affiliated with the user.</li> " +
+		"</ol>" +
+		"<p>Once the user fills out the required fields, the <strong>Add</strong> button becomes active.  Pressing this button will add the project to the biominer database.</p> " +
+		"<p><strong>Refresh</strong>: Refresh will relead the project list contained in the <strong>Submissions Panel</strong></p> " +
+		"<p><strong>Delete</strong>: Delete will remove the project from the database. The project can only be deleted once all samples, datatracks, files and analyses are deleted " +
+		"from the project.</p>";
+	
+	$scope.showHelpProject = function() {
+		var title = "Help: Edit Project Metadata";
+		
+		dialogs.notify(title, $scope.helpProject);
+	}
+	
+	$scope.helpProject = 
+		"<h3>Edit Project Metadata</h3>" +
+		"The project metatdata screen can be used to view or edit the basic project information.  By default, the information is read only, but can be edited if the user presses the " +
+		"<strong>Edit</strong> button.  Once the user is happy with the changes, they can click the <strong>Save</strong> button to commit the changes. Most of the data is identical " +
+		"to the entry form, but there are a few additions:</p> " +
+		"<ol>" +
+		"<li><strong>Name</strong> <em>required</em>: A descriptive name for the project. Projects can be selected by name in the query page, so it is helpful if the name " +
+		"clearly identifies the project.</li>" +
+		"<li><strong>Description</strong>: An optional description of the project.</li> " +
+		"<li><strong>Data URLs</strong>: If the original data is stored in a LIMS system like GNomEx, it might be helpful to include the location of the data.</li>" +
+		"<li><strong>Genome Build </strong><em>required</em>: The genome build used when analyzing the data (i.e hg19, mm10, zv9).  Only genome builds with loaded annotations will be included " +
+		"in this list.  If your favorite build is missing, please contact the Biominer Team.</li> " +
+		"<li><strong>Lab </strong><em>required</em>: The list of labs associated with the project. If the project visiblity is set to <strong>Lab</strong>, only " +
+		"users belonging to the labs set in this field can view or search the data. The dropdown will only contain labs affiliated with the user.</li>" +
+		"<li><strong>Institute </strong><em>required</em>: The list of institutes associated with the project.  If the project visibility is set to <strong>Institute</strong>, " +
+		"only users belonging to the institutes set in this field will be able to view or search the data.  The drowpdown will only contain institutes affiliated with the user.</li> " +
+		"<li><strong>Visibility</strong>: Project visibility.  The visibility is set to <strong>Public</strong> by default.  The user can also set the visibility to members of " +
+		"their <strong>Lab</strong> or members of their <strong>Institution.</strong></li>" +
+		"</ol>";
+	
+	$scope.showHelpSample = function() {
+		var title = "Help: Import Samples into Project";
+		dialogs.notify(title, $scope.helpSample);
+	}
+	
+	$scope.helpSample = 
+		"<h3>Import Samples into Project</h3>" +
+		"<p>The samples page can be used to view or edit the samples used in the project. Once all of the required fields are filled out, the user " +
+		"can press the <strong>Add</strong> button to save the sample to the database. If the user is submitting multiple samples, they can use the " +
+		"<strong>Duplicate</strong> button to replicate the last entered sample. The sample name must be unique to the project, so the <strong>Add</strong> button will " +
+		"be disabled until the name is unique. If the user wants to start over with the sample entry, the user can click the <strong>Clear</strong> button. " +
+		"The entry fields are: <p>" +
+		"<ol>" +
+		"<li><strong>Name </strong><em>required</em>: The name of the sample</li>" +
+		"<li><strong>Type </strong><em>required</em>: Sample type (i.e. RNA, DNA).</li>" +
+		"<li><strong>Prep Method </strong><em>required</em>: Kit used when prepping the sample for sequencing. Users can add new kits by selecting the <strong> " +
+		"Add New</strong> option from the dropdown. Once the user is finished typing out the name, they must click on the <strong>+</strong> button " +
+		"to add it to the database.  If the prep method has not been used by anyone, it can be removed from the database using the <strong>-</strong> button " +
+		". The prep method dropdown is disabled until the user selects a sample type.</li>" +
+		"<li><strong>Source </strong><em>required</em>: The source of the sample, which is often the tissue or cell type. The entries in this dropdown tied to the genome build. " +
+		"Users can add new sample sources by selecting the <strong>Add New</strong> option from the dropdown. Once the user is finished typing out " +
+		"the source, they must click on the <strong>+</strong> button to add it to the database.  If the sample source has not been used by anyone, it " +
+		"can be removed from the database using the <strong>-</strong> button.</li>" +
+		"<li><strong>Condition </strong><em>required</em>: The sample condition (i.e. Treatment, Control, H3K27me3, mutant, normal). The entries in this dropdown tied to the genome build. " +
+		"Users can add new sample conditions by selecting the <strong>Add New</strong> option from the dropdown. Once the user is finished typing out " +
+		"the condition, they must click on the <strong>+</strong> button to add it to the database.  If the sample condition has not been used by anyone, it " +
+		"can be removed from the database using the <strong>-</strong> button.</li>" +
+		"</ol>" +
+		"<p>Samples in the database are listed in the table below the entry form. The table can't be sorted. Users can use the <strong>Controls</strong> column to delete samples, " +
+		"edit samples, or copy sample information to the entry form. Samples cannot be deleted if they are included in an <strong>Analysis</strong>.</p>" +
+		"<p>If the <strong>Edit</strong> button is pushed, the sample information is displayed in the entry form.  Once the user is happy with the " +
+		"changes, the <strong>Save</strong> button can be pushed to commit the changes to the database.  If the user decides against the edits, the " +
+		"<strong>Cancel</strong> button can be pushed.</p>";
+	
+	$rootScope.helpMessage = 
+		
+	    "<h1>Submit Data Page</h1>" +
+	    $scope.helpPreamble +
+	    $scope.helpProject +
+	    $scope.helpSample;
+	    
 }]);
 
 

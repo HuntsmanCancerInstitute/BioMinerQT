@@ -205,11 +205,11 @@
 						</div>
 					 	<div class="col-md-10" ng-show="intersectionTarget == 'GENE'" style="padding-left: 1px; padding-right: 0px;">
  							<div class="col-md-7">
- 								<angucomplete-alt tooltip="Search gene name database" id="test" minlength="2" placeholder="Search for gene.." pause="400" selected-object="searchGenes" local-data="hugoList" title-field="geneName" search-fields="geneName" input-class="form-control input-sm" match-class="highlight" clear-selected="true"/>
+ 								<angucomplete-alt tooltip-placement="right" tooltip="Search gene name database" id="test" minlength="2" placeholder="Search for gene.." pause="400" selected-object="searchGenes" local-data="hugoList" title-field="geneName" search-fields="geneName" input-class="form-control input-sm" match-class="highlight" clear-selected="true"/>
  							</div>
 					    	<br>
 					    	<div class="col-md-7">
-					    		<textarea tooltip="Add gene names manually" name="geneField" ng-model="genes" class="form-control input-sm" placeholder="ACTB, GAPDH, ..." ng-required="intersectionTarget=='GENE'"/>
+					    		<textarea tooltip-placement="right"  tooltip="Add gene names manually" name="geneField" ng-model="genes" class="form-control input-sm" placeholder="ACTB, GAPDH, ..." ng-required="intersectionTarget=='GENE'"/>
 					    		<span class="label label-danger" ng-show="queryForm.geneField.$error.required && showValidation">Required when 'gene' intersections are specified</span>
 					    	</div>
 					    	<div class="col-md-5" ng-hide="codeResultType == 'GENE'">
@@ -362,7 +362,7 @@
 						</div>
 					</div>	
 	
-				    <table class="table table-striped table-hover col-md-12"  ng-show="hasResults">
+				    <table class="table table-striped table-hover col-md-12" ng-show="hasResults">
 	<!-- 			    	<colgroup> -->
 	<!-- 			    	    <col width="0%" /> -->
 	<!-- 				        <col width="0%" /> -->
@@ -377,43 +377,42 @@
 	<!-- 				    </colgroup> -->
 				        <thead>
 				            <tr >
-				                <th><input type="checkbox" ng-model="selectAll" tooltip="Select All Results"></th>
-				                <th>Index</th>
+				                <th ><input type="checkbox" ng-model="selectAll" tooltip="Select All Results"></th>
+				                <th >Index</th>
 								<th>Project</th>
 								<th>Analysis</th>
 								<th>Type</th>
 								<th>Search</th>
-								<th ng-show="returnedAnalysisType.type == 'RNASeq'"><button type="button" class="btn btn-xs btn-primary" tooltip="Copy selected genes to query" ng-click="copyGenes()"><span class="glyphicon glyphicon-share"></span></button><span > Gene</span></th>
-								<th>Conditions</th>
-								<th>
+								<th style="width: 15%" ng-show="returnedAnalysisType.type == 'RNASeq'">
+									<button type="button" class="btn btn-xs btn-primary" tooltip="Copy selected genes to query" ng-click="copyGenes()"><span class="glyphicon glyphicon-share"></span></button>
+									<span > Gene</span></th>
+								<th >Conditions</th>
+								<th style="width: 20%">
 									<button type="button" class="btn btn-xs btn-primary" tooltip="Copy selected coordinates to query" ng-click="copyCoordinates()"><span class="glyphicon glyphicon-share"></span></button>
-									<span >Coordinates</span>
-									<button type="button" class="btn btn-xs btn-primary" tooltip="Sort by coordinate" ng-click="sortType='Coordinate';changeTablePosition()"><span class="glyphicon glyphicon-sort"></span></button>
+									<span class="cursor: pointer" tooltip="Sort by coordinate" ng-click="sortType='Coordinate';changeTablePosition()">Coordinates</span>
 								</th>
-								<th>
-									<span>FDR</span>
-									<button type="button" class="btn btn-xs btn-primary" tooltip="Sort by FDR" ng-click="sortType='FDR';changeTablePosition()"><span class="glyphicon glyphicon-sort"></span></button>
+								<th style="width: 10%" ng-hide="returnedAnalysisType.type=='Variant'">
+									<span class="cursor: pointer" tooltip="Sort by FDR" ng-click="sortType='FDR';changeTablePosition()" >FDR</span>
 								</th>
-								<th>
-									<span >Log2Ratio</span>
-									<button type="button" class="btn btn-xs btn-primary" tooltip="Sort by log2ratio" ng-click="sortType='Log2Ratio';changeTablePosition()"><span class="glyphicon glyphicon-sort"></span></button>
+								<th style="width: 10%" ng-hide="returnedAnalysisType.type=='Variant'">
+									<span class="cursor: pointer" tooltip="Sort by log2ratio" ng-click="sortType='Log2Ratio';changeTablePosition()">Log2FC</span>
 								</th>
 				            </tr>
 				        </thead>
 				        <tbody>
 				            <tr ng-repeat="row in queryResults">
 				            	<td><input type="checkbox" ng-model="row.selected"/></td>
-				            	<td class="nowrap">{{row.index}}</td>
-				                <td class="nowrap-ellipsis"><span tooltip="{{row.projectName}}">{{row.projectName}}</td>
-				                <td class="nowrap-ellipsis"><span tooltip="{{row.analysisName}}">{{row.analysisName}}</span></td>
-				                <td class="nowrap-ellipsis"><span tooltip="{{row.analysisType}}">{{row.analysisType}}</td>
-				                <td class="nowrap-ellipsis"><span tooltip="{{row.search}}">{{row.search}}</span></td>
-				                <td class="nowrap" ng-show="returnedAnalysisType.type == 'RNASeq'"><span tooltip="{{row.mappedName}}">{{row.mappedName}}</td>
-				                <td class="nowrap-ellipsis"><span tooltip="{{row.sampleConditions}}">{{row.sampleConditions}}</td>
-				                <td class="nowrap" ng-hide="igvLoaded">{{row.coordinates}}</td>
-				                <td class="nowrap-ellipsis" ng-show="igvLoaded"><span tooltip="{{row.coordinate}}"><a ng-click="loadLocus(row)">{{row.coordinates}}</a></td>
-				                <td class="nowrap-ellipsis"><span tooltip="{{row.fdr}}">{{row.fdr}}</td>
-				                <td class="nowrap-ellipsis"><span tooltip="{{row.log2Ratio}}">{{row.log2Ratio}}</td>
+				            	<td class="nowrap">{{row.index | limitTo:15}}</td>
+				                <td class="nowrap-ellipsis"><span popover-trigger="mouseenter" popover-popup-delay="500" popover="{{row.projectName}}">{{row.projectName | limitTo : 20}}</td>
+				                <td class="nowrap-ellipsis"><span popover-trigger="mouseenter" popover-popup-delay="500" popover="{{row.analysisName}}">{{row.analysisName | limitTo : 20}}</span></td>
+				                <td class="nowrap-ellipsis"><span popover-trigger="mouseenter" popover-popup-delay="500" popover="{{row.analysisType}}">{{row.analysisType | limitTo : 20}}</td>
+				                <td class="nowrap-ellipsis"><span popover-trigger="mouseenter" popover-popup-delay="500" popover="{{row.search}}">{{row.search | limitTo: 20}}</span></td>
+				                <td class="nowrap-ellipsis" ng-show="returnedAnalysisType.type == 'RNASeq'"><span popover-trigger="mouseenter" popover-popup-delay="1000" popover="{{row.mappedName}}">{{row.mappedName | limitTo: 30}}</td>
+				                <td class="nowrap-ellipsis"><span popover-trigger="mouseenter" popover-popup-delay="500" popover="{{row.sampleConditions}}">{{row.sampleConditions | limitTo:15}}</td>
+				                <td class="nowrap-ellipsis" ng-hide="igvLoaded"><span popover-trigger="mouseenter" popover-popup-delay="1000" popover="{{row.coordinates}}">{{row.coordinates | limitTo:30}}</td>
+				                <td class="nowrap-ellipsis" ng-show="igvLoaded"><span popover-trigger="mouseenter" popover-popup-delay="1000" popover="{{row.coordinates}}"><span tooltip="{{row.coordinate}}"><a ng-click="loadLocus(row)">{{row.coordinates | limitTo:30}}</a></td>
+				                <td class="nowrap-ellipsis" ng-hide="returnedAnalysisType.type=='Variant'"><span popover-trigger="mouseenter" popover-popup-delay="500" popover="{{row.fdr}}">{{row.fdr | limitTo:15}}</td>
+				                <td class="nowrap-ellipsis" ng-hide="returnedAnalysisType.type=='Variant'"><span popover-trigger="mouseenter" popover-popup-delay="500" popover="{{row.log2Ratio}}">{{row.log2Ratio | limitTo:15}}</td>
 				            </tr>
 				
 				        </tbody>

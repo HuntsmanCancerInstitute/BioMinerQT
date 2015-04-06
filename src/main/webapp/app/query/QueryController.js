@@ -576,7 +576,12 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 			if ($scope.genes == "") {
 				$scope.genes = $scope.searchGenes.title;
 			} else {
-				$scope.genes = $scope.genes + "," + $scope.searchGenes.title;
+				if ($scope.genes != null) {
+					$scope.genes = $scope.genes + "," + $scope.searchGenes.title;
+				} else {
+					$scope.genes = $scope.searchGenes.title;
+				}
+				
 			}
 		}
 		
@@ -1340,12 +1345,14 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 				$scope.returnedResultType = data.codeResultType;
 				$scope.intersectionTarget = data.target;
 				
+				
 				$scope.idOrganismBuild = data.idOrganismBuild;
 
 				for (var i=0;i<$scope.analysisTypeCheckedList.length;i++) {
 					for (var j=0;j<data.idAnalysisTypes.length;j++) {
 						if ($scope.analysisTypeCheckedList[i].idAnalysisType == data.idAnalysisTypes[j]) {
 							$scope.selectedAnalysisType = $scope.analysisTypeCheckedList[i];
+							$scope.returnedAnalysisType = angular.copy($scope.selectedAnalysisType);
 						}
 					}
 				}

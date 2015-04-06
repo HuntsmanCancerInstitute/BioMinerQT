@@ -50,6 +50,7 @@ public class OrganismBuildDAO {
 		Session session = getCurrentSession();
 		session.beginTransaction();
 		session.save(organismBuild);
+		session.flush();
 		session.getTransaction().commit();
 		session.close();
 	}

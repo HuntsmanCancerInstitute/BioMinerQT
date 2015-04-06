@@ -60,7 +60,8 @@ select.form-control + .chosen-container .chosen-results {
     list-style: none;
     background-color: #fff;
     margin-bottom: 5px;
-    overflow-x: auto;
+    overflow-x: visible;
+    
 }
 
 select.form-control + .chosen-container .chosen-results li , 

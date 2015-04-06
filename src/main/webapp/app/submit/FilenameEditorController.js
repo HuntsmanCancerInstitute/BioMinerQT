@@ -29,10 +29,16 @@ function($scope, $http, $q, $modal, selected, idProject) {
 		
 		for (var i=0; i<$scope.selected.length;i++) {
 			if ($scope.checkExistingNames($scope.selected[i])) {
+				$scope.selected[i].usedExist = true;
 				usedExist = true;
+			} else {
+				$scope.selected[i].usedExist = false;
 			}
 			if($scope.checkCurrentNames($scope.selected[i])) {
+				$scope.selected[i].usedNew = true;
 				usedNew = true;
+			} else {
+				$scope.selected[i].usedNew = false;
 			}
 		};
 		
@@ -57,7 +63,6 @@ function($scope, $http, $q, $modal, selected, idProject) {
 	};
 	
 	$scope.checkCurrentNames = function(s) {
-		console.log("Checking current names");
 		var notDuplicate = false;
 		for (var i=0; i<$scope.selected.length; i++) {
 			if (selected[i].file.idFileUpload != s.file.idFileUpload) {

@@ -7,6 +7,10 @@ input::-webkit-inner-spin-button {
     -webkit-appearance: none;
 }
 
+table.inner-table thead tr {background-color: #EEF9FA}
+table.inner-table tbody tr:nth-child(even) {background-color: #EEF9FA}
+table.inner-table tbody tr:nth-child(odd) {background-color: #E4F4FC}
+
 
 
 .table-container
@@ -59,7 +63,7 @@ input::-webkit-inner-spin-button {
 }
 
 .modal-body {
-	overflow-y: auto;
+	overflow-y: visble;
 }
 
 .modal-body.text-info > h3 {
@@ -181,8 +185,6 @@ div.toolbar a {
 .left {
 	float: left !important;
 }
-
-
 
 
 .center {
@@ -548,7 +550,7 @@ body {
 	max-width:1px;
 }
 .nowrap {
-	white-space: nowrap; 
+	white-space: nowrap;
 }
 
 /* #test { */

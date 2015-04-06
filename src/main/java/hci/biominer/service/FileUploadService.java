@@ -46,4 +46,8 @@ public class FileUploadService {
 		return fileUploadDAO.getFileUploadByType(type, project);
 	}
 	
+	public List<FileUpload> getFileUploadByProject(Project project) {
+		return fileUploadDAO.getFileUploadByProject(project);
+	}
+	
 }

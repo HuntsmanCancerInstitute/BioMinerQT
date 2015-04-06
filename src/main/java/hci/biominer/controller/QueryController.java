@@ -268,7 +268,7 @@ public class QueryController {
     
     @RequestMapping(value="warnings",method=RequestMethod.GET)
     @ResponseBody
-    public String getWarnings() {
+    public String getWarnings() throws Exception{
     	//Get current active user
     	Subject currentUser = SecurityUtils.getSubject();
     	
@@ -552,7 +552,8 @@ public class QueryController {
     			parsed = this.getGeneIntervals(genes, genome, "TxBoundary",ob);
     		}
     	 
-    		if (parsed != null) {
+    		System.out.println("HEY THE SIZE IS:" + parsed.get(0).size());
+    		if (parsed != null && parsed.get(0).size() != 0) {
     			mappedNames = parsed.get(2); //This will be used for gene based filtering, if necessary
         		intervalsToCheck = ip.parseIntervals(this.convertListToString(parsed.get(0)), this.convertListToString(parsed.get(1)), geneMargins, genome);
     		} 
@@ -804,6 +805,10 @@ public class QueryController {
     		this.loadGeneDict(username);
     	}
     	
+    	if (!queryWarningsDict.containsKey(username)) {
+    		this.loadWarningsDict(username);
+    	}
+    	
     	//If settings are already loaded, simply return them
     	if (this.resultsDict.containsKey(username)) {
     		QueryResultContainer qrcSub = this.resultsDict.get(username).getQrcSubset(25, 0, "FDR");
@@ -849,6 +854,16 @@ public class QueryController {
     	}
     }
     
+    private void loadWarningsDict(String username) throws Exception {
+    	File resultsPath = new File(FileController.getQueryDirectory(),username + ".warnings.ser");
+    	if (resultsPath.exists()) {
+    		FileInputStream fin = new FileInputStream(resultsPath);
+    		ObjectInputStream ois = new ObjectInputStream(fin);
+    		StringBuilder warnings = (StringBuilder)ois.readObject();
+    		ois.close();
+    		this.queryWarningsDict.put(username, warnings);
+    	}
+    }
     
     
     public IgvSessionResult createIgvSessionFile(String username, File sessionsDirectory, String serverName) throws Exception {
@@ -2018,6 +2033,20 @@ public class QueryController {
 				}
 				
 				geneDict.remove(key);
+			}
+			
+			if (queryWarningsDict.containsKey(key)) {
+				try {
+					File resultsPath = new File(FileController.getQueryDirectory(),key + ".warnings.ser");
+					FileOutputStream fos = new FileOutputStream(resultsPath);
+					ObjectOutputStream oos = new ObjectOutputStream(fos);
+					oos.writeObject(queryWarningsDict.get(key));
+					oos.close();
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
+				
+				queryWarningsDict.remove(key);
 			}
     	}
     	

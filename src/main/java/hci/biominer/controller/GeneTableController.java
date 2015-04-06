@@ -96,7 +96,11 @@ public class GeneTableController {
 		}
 	}
 	
-	private void removeExistingAnnotation(OrganismBuild ob) throws Exception {
+	private void removeExistingAnnotation(OrganismBuild ob, boolean delay) throws Exception {
+		if (delay) {
+			Thread.sleep(60*1000);
+		}
+		
 		if (ob.getGeneIdFile() != null) {
 			File geneIdFile = new File(FileController.getGenomeDirectory(),ob.getGeneIdFile());
 			if (geneIdFile.exists()) {
@@ -185,6 +189,7 @@ public class GeneTableController {
 		}
 		return pm;
 	}
+	
 	
 	
 	
@@ -311,9 +316,9 @@ public class GeneTableController {
 	 ****************************************************/
 	@RequestMapping(value="/removeAnnotationsFromBuild",method=RequestMethod.DELETE)
 	public @ResponseBody
-	void removeAnnotationFile(@RequestParam("idOrganismBuild") Long idOrganismBuild) throws Exception {
+	void removeAnnotationFile(@RequestParam("idOrganismBuild") Long idOrganismBuild, @RequestParam("delay") boolean delay) throws Exception {
 		OrganismBuild ob = obService.getOrganismBuildById(idOrganismBuild);
-		this.removeExistingAnnotation(ob);
+		this.removeExistingAnnotation(ob, delay);
 	}
 	
 	/***************************************************
@@ -326,7 +331,7 @@ public class GeneTableController {
 		OrganismBuild ob = obService.getOrganismBuildById(idOrganismBuild);
 		this.removeExistingTranscript(ob);
 		this.removeExistingGenome(ob);
-		this.removeExistingAnnotation(ob);
+		this.removeExistingAnnotation(ob, false);
 		obService.deleteOrganismBuildById(idOrganismBuild);
 	}
 	 
@@ -362,7 +367,10 @@ public class GeneTableController {
 	@RequestMapping(value="/addOrganismBuild",method=RequestMethod.PUT)
 	public @ResponseBody
 	void addOrganismBuild(@RequestParam("idOrganism") Long idOrganism, @RequestParam("name") String name) {
-		Organism o = organismService.getOrganism(idOrganism);;
+		Organism o = organismService.getOrganism(idOrganism);
+		System.out.println(o.getCommon());
+		System.out.println(o.getBinomial());
+		System.out.println(o.getIdOrganism());
 		OrganismBuild ob = new OrganismBuild(o,name);
 		obService.addOrganismBuild(ob);
 	}
@@ -375,7 +383,7 @@ public class GeneTableController {
 	@RequestMapping(value="/modifyOrganismBuild",method=RequestMethod.PUT)
 	public @ResponseBody
 	void modifyOrganismBuild(@RequestParam("idOrganism") Long idOrganism, @RequestParam("name") String name, @RequestParam("idOrganismBuild") Long idOrganismBuild) {
-		Organism o = organismService.getOrganism(idOrganism);;
+		Organism o = organismService.getOrganism(idOrganism);
 		OrganismBuild ob = new OrganismBuild(o,name);
 		obService.updateOrganismBuild(idOrganismBuild, ob);
 	}
@@ -444,7 +452,7 @@ public class GeneTableController {
 			ParsedAnnotation pa = afp.run();
 			
 			//If parsing worked, update the organism build with new information
-			this.removeExistingAnnotation(ob);
+			this.removeExistingAnnotation(ob, false);
 			obService.updateGeneIdFile(idOrganismBuild, annotationFileName);
 			
 			bgService.addBiominerGenes(pa.getBiominerGenes());

@@ -14,7 +14,7 @@ import javax.persistence.GeneratedValue;
 @Table (name="Organism")
 public class Organism {
 	@Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="idOrganism")
 	private Long idOrganism;
 	

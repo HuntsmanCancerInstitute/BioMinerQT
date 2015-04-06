@@ -125,12 +125,17 @@ var filters = angular.module('filters', [])
 .filter('displayPhone', [
     function() {
     	return function(number) {
-    		var numberString = number.toString();
-    		var section1 = numberString.slice(0,3);
-    		var section2 = numberString.slice(3,6);
-    		var section3 = numberString.slice(6);
+    		if (number == null) {
+    			return ""
+    		} else {
+    			var numberString = number.toString();
+        		var section1 = numberString.slice(0,3);
+        		var section2 = numberString.slice(3,6);
+        		var section3 = numberString.slice(6);
+        		return "( " + section1 + " ) " + section2 + "-" + section3;
+    		}
     		
-    		return "( " + section1 + " ) " + section2 + "-" + section3;
+    		
     	};
     }
 ])
@@ -139,6 +144,7 @@ var filters = angular.module('filters', [])
   function() {
 	return function(bytes, precision) {
 		if (isNaN(parseFloat(bytes)) || !isFinite(bytes)) return '-';
+		if (bytes == 0) return "-";
 		if (typeof precision === 'undefined') precision = 1;
 		var units = ['bytes', 'kB', 'MB', 'GB', 'TB', 'PB'];
 		var	number = Math.floor(Math.log(bytes) / Math.log(1024));

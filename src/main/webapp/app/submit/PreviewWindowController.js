@@ -11,6 +11,7 @@ function ($scope, $modalInstance, filename, previewData, analysisType) {
 	$scope.alertHover = false;
 	 
 	$scope.analysisColumns = [];
+	$scope.analysisType = analysisType;
 	
 	if (analysisType.type == "ChIPSeq" || analysisType.type == "Methylation") {
 		

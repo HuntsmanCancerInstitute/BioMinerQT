@@ -13,7 +13,7 @@ import javax.persistence.JoinColumn;
 @Table(name="OrganismBuild")
 public class OrganismBuild {
 	@Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="idOrganismBuild")
 	Long idOrganismBuild;
 	

@@ -58,7 +58,7 @@ public class LabController {
 	@RequestMapping(value = "addlab", method=RequestMethod.PUT)
     @ResponseBody
     @RequiresPermissions("lab:create")
-    public void addLab(@RequestParam(value="first") String firstName, @RequestParam(value="last") String lastName, @RequestParam(value="email") String email, @RequestParam(value="phone") String phone) {
+    public void addLab(@RequestParam(value="first") String firstName, @RequestParam(value="last") String lastName, @RequestParam(value="email") String email, @RequestParam(value="phone") Long phone) {
     	Lab newLab = new Lab(firstName,lastName,email,phone);
     	labService.addLab(newLab);
     }
@@ -73,7 +73,7 @@ public class LabController {
     @RequestMapping(value = "modifylab", method=RequestMethod.PUT)
     @ResponseBody
     @RequiresPermissions("lab:modify")
-    public void modifyLab(@RequestParam(value="first") String firstName, @RequestParam(value="last") String lastName, @RequestParam(value="email") String email, @RequestParam(value="phone") String phone,
+    public void modifyLab(@RequestParam(value="first") String firstName, @RequestParam(value="last") String lastName, @RequestParam(value="email") String email, @RequestParam(value="phone") Long phone,
     		@RequestParam(value="idLab") Long idLab){
     	
     	//Create a new lab

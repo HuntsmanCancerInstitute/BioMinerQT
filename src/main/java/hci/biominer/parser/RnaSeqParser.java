@@ -250,8 +250,7 @@ public class RnaSeqParser {
 			
 			//Throw failure message or warning messages
 		    if (allTransformedFdrLessThanOne) {
-		    	this.warningMessage.append("WARNING: FDR formatting style was set as transformed, but all values were between 0 and 1.  Are you sure the FDR values were transformed?<br> "
-						+ "FDR values are transformed using the formula -10 * log10(FDR)");		
+		    	this.warningMessage.append("WARNING: FDR formatting style was set as transformed, but all values were between 0 and 1.  Are you sure the FDR values were transformed?<br>");		
 			} else if (allLog2RatioNeg) {
 				this.warningMessage.append("WARNING: All log2ratios were less than or equal to zero.  Are you sure the log2Ratios are formatted correctly?<br>");
 			} else if (allLog2RatioPos) {

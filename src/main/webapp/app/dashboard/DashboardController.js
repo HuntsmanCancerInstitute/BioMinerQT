@@ -330,7 +330,7 @@ function($rootScope, $scope, $http,$window) {
     
     $scope.refreshAll();
 
-    $rootScope.helpMessage = "<h2>Welcome to the Biominer beta!</h2>" 
+    $rootScope.helpMessage = "<h2>Welcome to Biominer!</h2>" 
     	+ "<p>BioMinerQT is a web-based tool that internalizes ChIPseq, RNAseq, "
     	+ "bisulfite, and variant analysis into a searchable database. The goal "
     	+ "of the BioMinerQT is to allow researchers to mine all the data that " 

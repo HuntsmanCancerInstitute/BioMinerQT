@@ -34,14 +34,14 @@ public class Lab {
 	private String email;
 	
 	@Column(name="phone")
-	private String phone;
+	private Long phone;
 	
 	
 	public Lab() {
 		
 	}
 	
-	public Lab(String first, String last, String email, String phone) {
+	public Lab(String first, String last, String email, Long phone) {
 		this.first = first;
 		this.last = last;
 		this.email = email;
@@ -61,7 +61,7 @@ public class Lab {
 		return this.email;
 	}	
 
-	public String getPhone() {
+	public Long getPhone() {
 		return this.phone;
 	}
 	
@@ -77,7 +77,7 @@ public class Lab {
 		this.email = email;
 	}
 
-	public void setPhone(String phone) {
+	public void setPhone(Long phone) {
 		this.phone = phone;
 	}
 	

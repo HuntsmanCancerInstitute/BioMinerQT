@@ -3,19 +3,55 @@
 	<div>
 		<span class="label label-default" ng-click="alertHover=!alertHover">Click for instructions..</span>
 	</div>
-	<div class="alert alert-info" ng-show="alertHover==true">
-		<p><b>Instructions!</b> Use the dropdowns above the preview columns to specify the locations of required information.  
-		Each element in the dropdown must be associated to one and only one column.  These instructions should be a lot more detailed and 
-		spell-checked, but I am too lazy to do it now.</p>
+	<div class="alert alert-info" ng-show="alertHover && analysisType.type == 'Methylation'">
+		<p><b>Instructions for Methylation:</b> Use the dropdown menus above the preview columns to select the locations of the required information. 
+		There are five pieces of required information to define a list of differentially methylated regions (DMRs):</p>
+		<ol>
+			<li><strong>Chromosome: </strong>Chromosome containing DMR.</li>
+			<li><strong>Start: </strong>Starting coordinate of the DMR.</li>
+			<li><strong>End: </strong>Ending coordinate of the DMR.</li>
+			<li><strong>Log2Ratio: </strong>DMR log2ratio (magnitude and direction of the DMR).</li>
+			<li><strong>FDR / -10*log10(FDR):</strong>Significance of DMR. The data can be listed as a standard FDR, where lower values are more significant or 
+			a phred-style score, which uses the transformation -10*log10(FDR). </li>
+		</ol> 
+		<p>Each of the five pieces of information must be set before the file can be parsed. If there are different formatting styles for the
+		sample piece of information, only one needs to be set.  The other styles will be disabled once one is set.</p>
+	</div>
+	<div class="alert alert-info" ng-show="alertHover && analysisType.type == 'ChIPSeq'">
+		<p><b>Instructions for ChIPSeq:</b> Use the dropdown menus above the preview columns to select the locations of the required information. 
+		There are five pieces of required information to define a list of ChIP peaks:</p>
+		<ol>
+			<li><strong>Chromosome: </strong>Chromosome containing peak.</li>
+			<li><strong>Start: </strong>Starting coordinate of the peak.</li>
+			<li><strong>End: </strong>Ending coordinate of the peak.</li>
+			<li><strong>Log2Ratio: </strong>DMR log2ratio (magnitude and direction of the peak).</li>
+			<li><strong>FDR / -10*log10(FDR): </strong>Significance of peak. The data can be listed as a standard FDR, where lower values are more significant or 
+			a phred-style score, which uses the transformation -10*log10(FDR). </li>
+		</ol> 
+		<p>Each of the five pieces of information must be set before the file can be parsed. If there are different formatting styles for the
+		sample piece of information, only one needs to be set.  The other styles will be disabled once one is set.</p>
+	</div>
+	<div class="alert alert-info" ng-show="alertHover && analysisType.type == 'RNASeq'">
+		<p><b>Instructions for RNASeq:</b> Use the dropdown menus above the preview columns to select the locations of the required information. 
+		There are three pieces of required information to define a list of differentially expressed genes:</p>
+		<ol>
+			<li><strong>Gene: </strong>Gene name.  Ensembl, Hugo and Refseq IDs are all accepted, but all are mapped back to Ensembl IDs in the database. 
+			If a gene can't be mapped, you will get a warning message once the parsing completes.</li>
+			<li><strong>Log2Ratio: </strong>DMR log2ratio (magnitude and direction of the peak).</li>
+			<li><strong>FDR / -10*log10(FDR): </strong>Significance of peak. The data can be listed as a standard FDR, where lower values are more significant or 
+			a phred-style score, which uses the transformation -10*log10(FDR). </li>
+		</ol> 
+		<p>Each of the five pieces of information must be set before the file can be parsed. If there are different formatting styles for the
+		sample piece of information, only one needs to be set.  The other styles will be disabled once one is set.</p>
 	</div>
 </div>
-<div class="modal-body" resize per="{{alertHover == true ? 60 : 70}}" ng-style="style()">
+<div class="modal-body" resize per="{{alertHover == true ? 40 : 70}}" ng-style="style()">
    <div class="table-container">
 		<table class="table table-condensed table-bordered">
 		    <thead>
 		        <tr>
 		            <th ng-repeat="h in header track by $index" class="td-container-selected">
-		            	<select class="form-control" ng-model="h.option" >
+		            	<select class="form-control input-sm" ng-model="h.option" >
 		            		<option ng-repeat="d in h.dropdown" ng-disabled="d.index != -1">{{d.name}}</option>
 		            	</select>
 		            </th>
@@ -24,7 +60,7 @@
 		    <tbody>
 		        <tr ng-repeat="row in previewData">
 		            <!--  Track by index to avoid duplicate rows -->
-		            <td ng-repeat="value in row track by $index" ng-class=" (showList.indexOf($index) != -1)  ? 'td-container-selected' : 'td-container-unselected' ">{{value}}</td>
+		            <td ng-repeat="value in row track by $index" ng-class=" (showList.indexOf($index) != -1)  ? 'td-container-selected' : 'td-container-unselected' "><span popover="{{value}}" popover-trigger="mouseenter" popover-popup-delay="1000">{{value | limitTo : 20}}</span></td>
 		        </tr>
 		    </tbody>
 		</table>
