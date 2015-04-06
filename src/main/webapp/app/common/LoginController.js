@@ -121,5 +121,15 @@ var login = angular.module("login",['services'])
 	        	}
 	    	});
 		};
+		
+		$rootScope.helpMessage = "" +
+			"<h1>Login Page / Report Issue</h1>" +
+			"<p>The login page can be used to gain access to Biominer.  Users that don't log in will be treated as guests and will only have access to public data. " +
+			"Guests also aren't allowed to submit new analyses.  The login page can also be used to reset passwords using the <strong>Reset Password</strong> link. New " +
+			"users can request account by clicking on the <strong>Sign up</strong> link at the top of the page.  New accounts can be approved by the Biominer team or " +
+			"the PI of the lab selected in the sign up form.</p>" +
+			"<p>If a user encounters a bug or wishes to request a feature, they can send a message to the Biominer Team using the <strong>Report Issue</strong> page. " +
+			"If the user is familiar with SourceForge and has a SourceForge account, they can submit tickets directly and can monitor the progress.</p>";
+			
 	}
 ]);

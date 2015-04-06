@@ -94,39 +94,66 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
 	 * 
 	 * *************************************
 	 ***************************************/
+    
+     $scope.helpPreamble = "" +
+        "<h1>Admin Page</h1>" + 
+        "<p>The admin page is used to add/edit users, labs and genome builds.  This page is only visible to administrators.</p>";
 	
-	 $scope.$watch('userTabOpen', function() {
-	    if ($scope.userTabOpen == true) {
-	    	$rootScope.helpMessage = "<p>Placeholder for user management help.</p>";
-	    }
-	 });
+	 $scope.helpUser = "" +
+	    "<h3>User Page</h3>" +
+	    "<p>The user page can be used to add new users to Biominer or edit existing users.  New users can be added by clicking on the <strong>Add User</strong> link " +
+	    "at the top of the page. Users can be deleted by clicking on the checkbox next to the user name and then clicking on the <strong>Delete User</strong> link. " +
+	    "Users can be edited by double clicking on the user row in the table. The table can be sorted by clicking on the column names at the top of the table.</p>" +
+	    "<ol>" +
+	    "<li><strong>First Name </strong><em>required</em>: First name of the user.</li>" +
+	    "<li><strong>Last Name</strong><em>required</em>: Last name of the user.</li>" +
+	    "<li><strong>Labs </strong><em>required</em>: List of labs associated with the user.</li>" +
+	    "<li><strong>Institutes </strong><em>required</em>: List of institutes associated with the user.</li>" +
+	    "<li><strong>Username </strong><em>required</em>: Username used to log in.</li>" +
+	    "<li><strong>Password </strong><em>required</em>: Password used to log in.</li>" +
+	    "<li><strong>Phone </strong><em>required</em>: User phone number.</li>" +
+	    "<li><strong>Email </strong><em>required</em>: User email address.</li> " +
+	    "<li><strong>Admin </strong>: Check this box if the person is an admin.  Admins have access to all user, lab and genome information.</li>" +
+	    "</ol>";
 	 
-	 $scope.$watch('labTabOpen', function() {
-	    if ($scope.labTabOpen == true) {
-	    	$rootScope.helpMessage = "<p>Placeholder for lab mangement help.</p>";
-	    }
-	 });
+	 $scope.helpLab = "" +
+	    "<h3>Lab Page</h3>" +
+	    "<p>The lab page can be used to add new labs to Biominer or edit existing labs.  New labs can be added by clicking on the <strong>Add Lab</strong> " +
+	    "link on the top of the page.  New users can be added by clicking on the <strong>Delete Lab</strong> link on the top of the page.  Labs can be " +
+	    "edited by double clicking on the lab entry in the table.  The table can be sorted by clicking on the column names at the top of the table.</p> " +
+	    "<ol>" +
+	    "<li><strong>First Name </strong><em>required</em>: First name of the lab PI.</li>" +
+	    "<li><strong>Last Name </strong><em>required</em>: Last name of the lab PI.</li>" +
+	    "<li><strong>Email </strong><em>required</em>: Email address of the PI. An email is sent to the PI when a user signs up for an account.</li>" +
+	    "<li><strong>Phone </strong><em>requierd</em>: Phone number of the PI.</li>" +
+	    "</ol>";
 	 
-	 $scope.$watch('genomeTabOpen', function() {
-		if ($scope.genomeTabOpen == true) {
-		   	$rootScope.helpMessage = "<p>The Genome page can be used to add new organisms/builds to Biominer or edit existing organisms/builds.</p>";
-		    $rootScope.helpMessage += "<p>New organisms can be added by clicking on the 'Add Organism' link above the organism build table. " +
-		    		"Existing organisms can be edited by double clicking on an organism name in the organism build table.  There currently isn't " +
-		    		"a way to delete existing organisms from the Biominer website</p>";
-		    $rootScope.helpMessage += "<p>New organism builds can be added by clicking on the 'Add Organism Build' link above the organism build table. " +
-		    		"Existing organisms builds can be edited by double clicking on an organism build name in the organism build table.  Organism builds can" +
-		    		"be deleted by selecting the checkbox to the left of the organism build name and then clickin on the 'Delete Organism Build link above " +
-		    		"the organism build table.  There will be a confirmation message before the build is deleted.</p>";
-		    $rootScope.helpMessage += "<p>Transcript, genome and annotation files are necessary for queries to work. These can be added " +
-		    		"to a organism build by clicking on the blue plus button next to the appropriate table entry. You can replace one of these files by selecting " +
-		    		"the orange refresh button next to the appropriate entry.  You can delete the file by selecting the red minus button next to the appropriate " +
-		    		"entry.</p>";
-		    $rootScope.helpMessage += "<p>The transcript file and genome files must be loaded for basic queries.  The annotation file must be loaded " +
-		    		"to search by gene. When the transcript and genome file are selected, Biominer will check to see if they are valid. If a genome can be " +
-		    		"used for basic queries, there will be an empty start next to its name.  If a build can be used for basic queries and gene name searches, " +
-		    		"there will be a filled in star next to its name.</p>";
-		 }
-	 });
+	 $scope.helpGenome = "" +
+	    "<h3>Genome Page</h3>" +
+	    "<p>The Genome page can be used to add new organisms/builds to Biominer or edit existing organisms/builds.</p>" +
+	    "<p>New organisms can be added by clicking on the <strong>Add Organism</strong> link above the organism build table. " +
+		"Existing organisms can be edited by double clicking on an organism name in the organism build table.  There currently isn't " +
+		"a way to delete existing organisms from the Biominer website.</p>" +
+	 	"<p>New organism builds can be added by clicking on the <strong>Add Organism Build</strong> link above the organism build table. " +
+		"Existing organisms builds can be edited by double clicking on an organism build name in the organism build table.  Organism builds can" +
+		"be deleted by selecting the checkbox to the left of the organism build name and then clickin on the <strong>Delete Organism Build</strong> link above " +
+		"the organism build table.  There will be a confirmation message before the build is deleted.</p>" +
+	 	"<p>Transcript, genome and annotation files are necessary for queries to work. These can be added " +
+		"to a organism build by clicking on the blue plus button next to the appropriate table entry. You can replace one of these files by selecting " +
+		"the orange refresh button next to the appropriate entry.  You can delete the file by selecting the red minus button next to the appropriate " +
+		"entry.</p>" +
+	 	"<p>The transcript file and genome files must be loaded for basic queries.  The annotation file must be loaded " +
+		"to search by gene. When the transcript and genome file are selected, Biominer will check to see if they are valid. If a genome can be " +
+		"used for basic queries, there will be an empty start next to its name.  If a build can be used for basic queries and gene name searches, " +
+		"there will be a filled in star next to its name.</p>";
+	 
+	 $rootScope.helpMessage = 
+		 $scope.helpPreamble +
+		 $scope.helpUser +
+		 $scope.helpLab +
+		 $scope.helpGenome; 
+		 
+		 
 
 	 /***************************************
 	 * *************************************

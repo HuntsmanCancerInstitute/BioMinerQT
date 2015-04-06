@@ -1448,6 +1448,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 		dialogs.notify(title, $scope.helpSample);
 	}
 	
+
 	$scope.helpSample = 
 		"<h3>Import Samples into Project</h3>" +
 		"<p>The samples page can be used to view or edit the samples used in the project. Once all of the required fields are filled out, the user " +
@@ -1477,12 +1478,82 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 		"changes, the <strong>Save</strong> button can be pushed to commit the changes to the database.  If the user decides against the edits, the " +
 		"<strong>Cancel</strong> button can be pushed.</p>";
 	
+	$scope.showHelpDatatrack = function() {
+		var title = "Help: Import IGV Files into Project";
+		dialogs.notify(title, $scope.helpDatatrack);
+	}
+	
+	$scope.helpDatatrack = 
+		"<h3>Import IGV Files into Project</h3>" +
+		"<p>IGV-compatable files, called <strong>Datatracks</strong> in Biominer, can be loaded from the <em>Import IGV File into Project page</em>.  Biominer currently supports " +
+		"bw, bb and vcf files. Loading these tracks isn't necessary, but allows you to view the query results in IGV.</p>" +
+		"<p>The datatrack upload process is started by clicking on the <strong>Upload</strong> button. Multiple datatracks can be selected at once.  The overall upload progress and the " +
+		"progress of each individual datatrack is shown on the page.  If there is a problem with the upload or the upload is interrupted, there will be a button next to the datatrack that " +
+		"contains an error message.  Once the user exits Biominer, moves to a different Biominer page (not tab) or starts a new upload, failed and incomplete datatracks will be removed " +
+		"from the system.  If the user stops an upload or leaves the page during an upload, all incomplete tracks will marked as incomplete and eventually removed. </p><p>Uploaded datatracks " +
+		"are displayed in a table at the bottom of the page. Users can view information about the datatracks, edit the datatracks using the <strong>Edit</strong> button or delete datatracks " +
+		"using the <strong>Delete</strong> button. Datatracks that are already assigned to an analysis can't be deleted until the analysis itself is deleted or the " +
+		"datatrack is removed from the </p>";
+	
+	$scope.showHelpFileUpload = function() {
+		var title ="Help: Import Processed Data into Project";
+		dialogs.notify(title, $scope.helpFileUpload);
+	}
+	
+	$scope.helpFileUpload = 
+		"<h3>Import Processed Data into Project</h3>" + 
+		"<p>Data files from differential expression, differential methylation, ChIP peak detection or variant calling analyses can be uploaded using the <em>" +
+		"Import Processed Data into Project</em> page.  The import process takes the vital information from the raw file and converts it to a searchable " +
+		"interval tree.  This data is the key component to each analysis, because it provides the intervals used in queries.</p> " +
+		"<p>The first step of the process is to upload the raw analysis file to the server.  Tab-delimited text files and VCF files are currently the only file " +
+		"types supported.  If there is interest, we may support xlsx file in the future.  Biominer will display the progress of the file upload as its going.  Like " +
+		"<strong>Datatracks</strong>, the upload process can be interrupted by pressing the <strong>Cancel</strong> button.  All incomplete uploads or failed uploads " +
+		"will be cleared out once the user leaves the page, exits Biominer or starts a new upload.  If there is a problem with the upload, there will a button displayed " +
+		"next to the file that can be pushed to get details.</p>" +
+		"<p>Once the file is uploaded, it can be imported into Biominer.  An import can be started by selecting uploads using the checkboxes and then pressing the " +
+		"<strong>Import</strong> button.  Multiple files can be imported at the same time if they have the same column layout.  If the column layout is different between files, " +
+		"the files need to be uploaded separately. VCF files are imported as-is.  Biominer uses a dynamic import system to handle tab-delimited files.  The user is presented with a list of column " +
+		"descriptions that are used to identify the necessary data. The import can't proceed until all of the necessary data is identified.  There are different requirements " +
+		"for RNASeq, methylation and ChIPSeq data, so please read the instructions contained on the import screen.  Once the import starts, there will be an animation " +
+		"to let the user know something is happening.  Files in the process of getting imported will have blue barber-pole animation next to it. Like <strong>Datatracks</strong>, " +
+		"incomplete or failed files will be deleted once the user exits Biominer, moves to a new page or starts a new upload/import.</p>" +
+		"<p>Finished files are displayed in the table below the entry controls.  The user can see the relationship between the upload and import from this table, delete " +
+		"files or view any warning or error messages.  Uploads can only be deleted if they are not linked to any import and imports can only be deleted if they haven't  " +
+		"been used in any <strong>Analysis</strong>.</p>";
+	
+	$scope.showHelpAnalysis = function() {
+		var title ="Help: Assemble Project Data into Analyses";
+		dialogs.notify(title, $scope.helpAnalysis);
+	}
+	
+	$scope.helpAnalysis = 
+		"<h3>Assemble Project Data into Analyses</h3>" + 
+		"<p>Once samples are defined the datatracks/analysis files are uploaded, they can be assembled into <strong>Analyses</strong>.  Each analysis is defined as a single analysis " +
+		"file and any number of samples and datatracks.  Once the an <strong>Analysis</strong> is definined, it can be searched in on the <strong>Query</strong> page.</p>" +
+		"<ol>" +
+		"<li><strong>Name </strong><em>required</em>: The name of the analysis. This should be descriptive so it's easy to pick out from the query page.</li>" +
+		"<li><strong>Description </strong>: A optional description of the analysis.</li>" +
+		"<li><strong>Date </strong><em>required</em>: Date of the analysis. This is not used by Biominer, but is useful for record keeping.</li>" +
+		"<li><strong>Analysis Type </strong><em>required</em>: The type of analysis.</li>" +
+		"<li><strong>Files </strong><em>required</em>: Analysis output file.  Only one file can be selected per analysis.  Files can only be used once, so they won't be " +
+		"listed once they are associated with an analysis.  The list of files is also restricted by analysis type.</li>" +
+		"<li><strong>Samples </strong><em>required</em>: A list of the samples used in the analysis.  Samples can be used in any number of analyses. </li>" +
+		"<li><strong>Datatracks </strong>: A list of datatracks associated with the analysis.  If the analysis is used in a query, these tracks will be pushed out to IGV " +
+		"if the <strong>Display in IGV</strong> button is pushed.</li>" +
+		"</ol>" +
+		"<p>Datatracks that have been imported into Biominer will be listed in the table below the entry controls.  Users can edit the analyses using the <strong>Edit</strong> " +
+		"button, delete the analyses using the <strong>Delete</strong> button and copy analyses using the <strong>Copy</strong> button.</p>";
+	
+	
 	$rootScope.helpMessage = 
 		
 	    "<h1>Submit Data Page</h1>" +
 	    $scope.helpPreamble +
 	    $scope.helpProject +
-	    $scope.helpSample;
+	    $scope.helpSample + 
+	    $scope.helpDatatrack +
+	    $scope.helpFileUpload + 
+	    $scope.helpAnalysis;
 	    
 }]);
 
