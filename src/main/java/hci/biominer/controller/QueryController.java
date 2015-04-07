@@ -862,7 +862,7 @@ public class QueryController {
     		StringBuilder warnings = (StringBuilder)ois.readObject();
     		ois.close();
     		this.queryWarningsDict.put(username, warnings);
-    	}
+    	} 
     }
     
     

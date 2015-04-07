@@ -181,6 +181,14 @@ public class RnaSeqParser {
 
 				//Parse chromsome, check to make sure it's recognizable
 				String geneName = parts[this.geneColumn];
+				if (geneName.startsWith("\"")) {
+					geneName = geneName.substring(1);
+				}
+				if (geneName.endsWith("\"")) {
+					geneName = geneName.substring(0,geneName.length()-1);
+				}
+				
+				//System.out.println(geneName);
 				
 				Gene geneObject = this.checkGene(geneName);
 				

@@ -78,6 +78,7 @@ public class FileController {
 	public static File generateFilePath(FileUpload fileUpload) throws Exception  {
 		checkProperties();
 		File localDirectory = new File(BiominerProperties.getProperty("filePath"));
+		
 		File subDirectory = new File(localDirectory,fileUpload.getDirectory());
 		File filePath = new File(subDirectory,fileUpload.getName());
 		return filePath;
@@ -185,10 +186,13 @@ public class FileController {
 					FileUpload fileUpload = this.fileUploadService.getFileUploadById(idFileUpload);
 					
 					if (ftype == 1) {
+						name = name + ".gz";
 						fileUpload.setName(name + ".gz");
-					} else {
-						fileUpload.setName(name);
+						
 					}
+					
+					fileUpload.setName(name);
+					
 				
 					
 					this.fileUploadService.updateFileUpload(idFileUpload, fileUpload);
@@ -196,6 +200,7 @@ public class FileController {
 					fm.setFinished(true);
 					fm.setState("SUCCESS");
 					fm.setMessage("");
+					fm.setName(name);
 				}					
 				
 			} catch (Exception ex) {
@@ -402,6 +407,9 @@ public class FileController {
 		 try {		
 		 	//response.setContentType(getFile.getFileType());
 		 	response.setHeader("Content-disposition", "attachment; filename=\""+fileUpload.getName()+"\"");
+		 	
+		 	
+		 	
 		 	
 		 	File localFile = generateFilePath(fileUpload);
 		 	BufferedInputStream bis = new BufferedInputStream(new FileInputStream(localFile));

@@ -277,6 +277,7 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 							$scope.files.uploadedFiles[index].state = data.state;
 							$scope.files.uploadedFiles[index].message = data.message;
 							$scope.files.uploadedFiles[index].selected = false;
+							$scope.files.uploadedFiles[index].name = data.name;
 							$http({
 								url : "submit/finalizeFileUpload",
 								method: "PUT",
