@@ -104,7 +104,7 @@
 			        </tr>
 			    </thead>
 			    <tbody>
-			        <tr ng-repeat="sample in samples" ng-mouseenter="showSampleControls(sample)" ng-mouseleave="hideSampleControls(sample)">
+			        <tr ng-repeat="sample in samples | orderBy: '-idSample'" ng-mouseenter="showSampleControls(sample)" ng-mouseleave="hideSampleControls(sample)">
 			            <td style="width: 25%;">{{sample.name}}</td>
 			            <td style="width: 10%;">{{sample.sampleType.idSampleType | lookupSampleType:sampleTypeList}}</td>
 			            <td style="width: 15%;">{{sample.samplePrep.idSamplePrep | lookupSamplePrep:samplePrepListAll}}</td>

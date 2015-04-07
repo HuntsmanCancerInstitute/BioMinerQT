@@ -849,13 +849,16 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 		 *  Delete all failed/incomplete on back end
 		 */
 		$scope.cleanUploadedFiles = function() {
-			return $http({
-				url: "submit/cleanUploadedFiles",
-				method: "DELETE",
-				params: {idProject: $scope.projectId}
-			}).success(function(data) {
-				updateFileList(data);
-			});
+			if ($scope.projectId != -1) {
+				return $http({
+					url: "submit/cleanUploadedFiles",
+					method: "DELETE",
+					params: {idProject: $scope.projectId}
+				}).success(function(data) {
+					updateFileList(data);
+				});
+			}
+			
 		}
 		
 		/****************
