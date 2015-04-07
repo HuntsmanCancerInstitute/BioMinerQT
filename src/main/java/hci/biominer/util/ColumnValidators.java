@@ -147,7 +147,7 @@ public class ColumnValidators {
 	    	if (tempFdr > 1) {
 	    		throw new Exception(String.format("[ColumnValidator] The FDR formatting style was set as 'untransformed', but the value is greater than 1: %f.",tempFdr));
 	    	}
-	    	tempFdr = (float)(-10 * Math.log(tempFdr));
+	    	
 	    }
 	    
 	
