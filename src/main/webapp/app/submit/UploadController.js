@@ -367,11 +367,8 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 						
 						var outname = "";
 						var inputname = $scope.files.uploadedFiles[i].name;
-						if (inputname.indexOf(".gz",inputname.length-3) !== -1) {
-							outname = inputname.substring(0,inputname.length-3) + ".PARSED.gz";
-						} else {
-							outname = inputname + ".PARSED";
-						}
+						var outname = inputname;
+						
 			
 						var sf = {file : $scope.files.uploadedFiles[i], outname: outname};
 						$scope.selectedFiles.push(sf);
