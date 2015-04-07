@@ -72,6 +72,11 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 	
 	//holds valid analyses
 	$scope.validFiles = [];
+	
+	$scope.sampleOrderByField = "idSample";
+	$scope.sampleReverseSort = true;
+	$scope.datatrackOrderByField = "idDataTrack";
+	$scope.datatrackReverseSort = true;
     
 	//Static dictionaries. These http calls are cached.
    
@@ -1472,7 +1477,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 		"the condition, they must click on the <strong>+</strong> button to add it to the database.  If the sample condition has not been used by anyone, it " +
 		"can be removed from the database using the <strong>-</strong> button.</li>" +
 		"</ol>" +
-		"<p>Samples in the database are listed in the table below the entry form. The table can't be sorted. Users can use the <strong>Controls</strong> column to delete samples, " +
+		"<p>Samples in the database are listed in the table below the entry form. The table can be sorted by any column. Users can use the <strong>Controls</strong> column to delete samples, " +
 		"edit samples, or copy sample information to the entry form. Samples cannot be deleted if they are included in an <strong>Analysis</strong>.</p>" +
 		"<p>If the <strong>Edit</strong> button is pushed, the sample information is displayed in the entry form.  Once the user is happy with the " +
 		"changes, the <strong>Save</strong> button can be pushed to commit the changes to the database.  If the user decides against the edits, the " +
@@ -1491,7 +1496,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 		"progress of each individual datatrack is shown on the page.  If there is a problem with the upload or the upload is interrupted, there will be a button next to the datatrack that " +
 		"contains an error message.  Once the user exits Biominer, moves to a different Biominer page (not tab) or starts a new upload, failed and incomplete datatracks will be removed " +
 		"from the system.  If the user stops an upload or leaves the page during an upload, all incomplete tracks will marked as incomplete and eventually removed. </p><p>Uploaded datatracks " +
-		"are displayed in a table at the bottom of the page. Users can view information about the datatracks, edit the datatracks using the <strong>Edit</strong> button or delete datatracks " +
+		"are displayed in a table at the bottom of the page. The table can be sorted by any column. Users can view information about the datatracks, edit the datatracks using the <strong>Edit</strong> button or delete datatracks " +
 		"using the <strong>Delete</strong> button. Datatracks that are already assigned to an analysis can't be deleted until the analysis itself is deleted or the " +
 		"datatrack is removed from the </p>";
 	

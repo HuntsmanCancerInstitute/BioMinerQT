@@ -95,16 +95,16 @@
 			<table class="table table-striped table-hover" >
 			    <thead>
 			        <tr>
-			            <th>Name</th>
-			            <th>Type</th>
-			            <th>Prep Method</th>
-			            <th>Source</th>
-			            <th>Condition</th>
+			            <th ng-click="sampleOrderByField='name';sampleReverseSort=!sampleReverseSort">Name</th>
+			            <th ng-click="sampleOrderByField='sampleType.type';sampleReverseSort=!sampleReverseSort">Type</th>
+			            <th ng-click="sampleOrderByField='samplePrep.description';sampleReverseSort=!sampleReverseSort">Prep Method</th>
+			            <th ng-click="sampleOrderByField='sampleSource.source';sampleReverseSort=!sampleReverseSort">Source</th>
+			            <th ng-click="sampleOrderByField='sampleCondition.cond';sampleReverseSort=!sampleReverseSort">Condition</th>
 			            <th>Controls</th>
 			        </tr>
 			    </thead>
 			    <tbody>
-			        <tr ng-repeat="sample in samples | orderBy: '-idSample'" ng-mouseenter="showSampleControls(sample)" ng-mouseleave="hideSampleControls(sample)">
+			        <tr ng-repeat="sample in samples | orderBy:sampleOrderByField:sampleReverseSort" ng-mouseenter="showSampleControls(sample)" ng-mouseleave="hideSampleControls(sample)">
 			            <td style="width: 25%;">{{sample.name}}</td>
 			            <td style="width: 10%;">{{sample.sampleType.idSampleType | lookupSampleType:sampleTypeList}}</td>
 			            <td style="width: 15%;">{{sample.samplePrep.idSamplePrep | lookupSamplePrep:samplePrepListAll}}</td>

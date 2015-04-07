@@ -69,14 +69,14 @@
 			<table class="table table-striped table-hover">
 			    <thead>
 			        <tr>
-			            <th>Display Name</th>
-			            <th>File Name</th>
+			            <th ng-click="datatrackOrderByField='name';datatrackReverseSort=!datatrackReverseSort">Display Name</th>
+			            <th ng-click="datatrackOrderByField='path';datatrackReverseSort=!datatrackReverseSort">File Name</th>
 			            <th width="15%" ng-show="dataTracksUploading">Upload Progress</th>
 			            <th>Controls</th>  
 			        </tr>
 			    </thead>
 			    <tbody>
-			        <tr ng-repeat="datatrack in datatracks" ng-mouseenter="showDatatrackControls(datatrack)" ng-mouseleave="hideDatatrackControls(datatrack)">
+			        <tr ng-repeat="datatrack in datatracks | orderBy:datatrackOrderByField:datatrackReverseSort" ng-mouseenter="showDatatrackControls(datatrack)" ng-mouseleave="hideDatatrackControls(datatrack)">
 			            <td>{{datatrack.name}}</td>
 			            <td>{{datatrack.path}}</td>
 			            <td width="15%" ng-show="dataTracksUploading">
