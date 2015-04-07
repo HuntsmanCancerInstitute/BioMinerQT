@@ -1033,6 +1033,10 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 		var idSampleSourceParams = $.map($scope.selectedSampleSources, function(ss){
 		    return ss.idSampleSource;
 		}).join(',');
+		
+		if ($scope.idOrganismBuild == null) {
+			$scope.idOrganismBuild = "";
+		}
 	
 		// Run the query on the server.
 		$http({
@@ -1073,6 +1077,10 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 		    return ss.idSampleSource;
 		}).join(',');
 	
+		if ($scope.idOrganismBuild == null) {
+			$scope.idOrganismBuild = "";
+		}
+		
 		// Run the query on the server.
 		$http({
 			url: "query/getQueryProjects",
@@ -1110,6 +1118,10 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 		var idSampleSourceParams = $.map($scope.selectedSampleSources, function(ss){
 		    return ss.idSampleSource;
 		}).join(',');
+		
+		if ($scope.idOrganismBuild == null) {
+			$scope.idOrganismBuild = "";
+		}
 	
 		// Run the query on the server.
 		$http({
@@ -1149,7 +1161,10 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 		    return analysis.idAnalysis;
 		}).join(',');
 		
-	
+		if ($scope.idOrganismBuild == null) {
+			$scope.idOrganismBuild = "";
+		}
+		
 		// Run the query on the server.
 		$http({
 			url: "query/getQuerySampleSource",
@@ -1190,6 +1205,9 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 		    return ss.idSampleSource;
 		}).join(',');
 		
+		if ($scope.idOrganismBuild == null) {
+			$scope.idOrganismBuild = "";
+		}
 	
 		// Run the query on the server.
 		$http({
@@ -1287,7 +1305,8 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 	});
 	
 	$scope.$watch("idOrganismBuild",function(newValue, oldValue) {
-		if (newValue != undefined && newValue != oldValue) {
+		
+		if (typeof newValue != 'undefined' && newValue != oldValue) {
 			$scope.loadLabs();
 			$scope.loadProjects();
 			$scope.loadAnalyses();
