@@ -95,12 +95,12 @@
 			<table class="table table-striped table-hover" >
 			    <thead>
 			        <tr>
-			            <th ng-click="sampleOrderByField='name';sampleReverseSort=!sampleReverseSort">Name</th>
-			            <th ng-click="sampleOrderByField='sampleType.type';sampleReverseSort=!sampleReverseSort">Type</th>
-			            <th ng-click="sampleOrderByField='samplePrep.description';sampleReverseSort=!sampleReverseSort">Prep Method</th>
-			            <th ng-click="sampleOrderByField='sampleSource.source';sampleReverseSort=!sampleReverseSort">Source</th>
-			            <th ng-click="sampleOrderByField='sampleCondition.cond';sampleReverseSort=!sampleReverseSort">Condition</th>
-			            <th>Controls</th>
+			            <th tooltip-append-to-body="true" tooltip-placement="left" tooltip="Sort by name" ng-click="sampleOrderByField='name';sampleReverseSort=!sampleReverseSort">Name</th>
+			            <th tooltip-append-to-body="true" tooltip-placement="left" tooltip="Sort by sample type" ng-click="sampleOrderByField='sampleType.type';sampleReverseSort=!sampleReverseSort">Type</th>
+			            <th tooltip-append-to-body="true" tooltip-placement="left" tooltip="Sort by sample description" ng-click="sampleOrderByField='samplePrep.description';sampleReverseSort=!sampleReverseSort">Prep Method</th>
+			            <th tooltip-append-to-body="true" tooltip-placement="left" tooltip="Sort by sample source" ng-click="sampleOrderByField='sampleSource.source';sampleReverseSort=!sampleReverseSort">Source</th>
+			            <th tooltip-append-to-body="true" tooltip-placement="left" tooltip="Sort by sample condition" ng-click="sampleOrderByField='sampleCondition.cond';sampleReverseSort=!sampleReverseSort">Condition</th>
+			            <th tooltip-append-to-body="true" tooltip-placement="left" tooltip="Sort by sample entry order" ng-click="sampleOrderByField='idSample';sampleReverseSort=!sampleReverseSort">Controls</th>
 			        </tr>
 			    </thead>
 			    <tbody>

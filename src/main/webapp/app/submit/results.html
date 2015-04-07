@@ -102,18 +102,18 @@
 			<table class="table table-striped table-hover">
 			    <thead>
 			        <tr>
-			            <th >Name</th>
-			            <th >Description</th>
-			            <th >Date</th>
-			            <th >Analysis Type</th>
-			            <th >Files</th>
+			            <th tooltip-append-to-body="true" tooltip-placement="left" tooltip="Sort by analysis name" ng-click="resultOrderByField='name';resultReverseSort=!resultReverseSort">Name</th>
+			            <th tooltip-append-to-body="true" tooltip-placement="left" tooltip="Sort by analysis description" ng-click="resultOrderByField='description';resultReverseSort=!resultReverseSort">Description</th>
+			            <th tooltip-append-to-body="true" tooltip-placement="left" tooltip="Sort by analysis date" ng-click="resultOrderByField='date';resultReverseSort=!resultReverseSort">Date</th>
+			            <th tooltip-append-to-body="true" tooltip-placement="left" tooltip="Sort by analysis type" ng-click="resultOrderByField='analysisType.type';resultReverseSort=!resultReverseSort">Analysis Type</th>
+			            <th tooltip-append-to-body="true" tooltip-placement="left" tooltip="Sort by analysis file name" ng-click="resultOrderByField='file.name';resultReverseSort=!resultReverseSort">Files</th>
 			            <th >Samples</th>
 			            <th >Data Tracks</th>
-			            <th style="width: 100px">Controls</th>
+			            <th tooltip-append-to-body="true" tooltip-placement="left" tooltip="Sort by analysis entry order" ng-click="resultOrderByField='idAnalysis';resultReverseSort=!resultReverseSort"style="width: 100px">Controls</th>
 			        </tr>
 			    </thead>
 			    <tbody>
-			        <tr ng-repeat="result in results | orderBy:'-idAnalysis'" ng-mouseenter="showResultControls(result)" ng-mouseleave="hideResultControls(result)">
+			        <tr ng-repeat="result in results | orderBy:resultOrderByField:resultReverseSort" ng-mouseenter="showResultControls(result)" ng-mouseleave="hideResultControls(result)">
 			            <td>{{result.name}}</td>
 			            <td>{{result.description}}</td>
 			            <td>{{result.date | date:'MM/dd/yyyy'}}</td>

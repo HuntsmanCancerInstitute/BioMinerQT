@@ -69,10 +69,10 @@
 			<table class="table table-striped table-hover">
 			    <thead>
 			        <tr>
-			            <th ng-click="datatrackOrderByField='name';datatrackReverseSort=!datatrackReverseSort">Display Name</th>
-			            <th ng-click="datatrackOrderByField='path';datatrackReverseSort=!datatrackReverseSort">File Name</th>
+			            <th tooltip-append-to-body="true" tooltip-placement="left" tooltip="Sort by datatrack name" ng-click="datatrackOrderByField='name';datatrackReverseSort=!datatrackReverseSort">Display Name</th>
+			            <th tooltip-append-to-body="true" tooltip-placement="left" tooltip="Sort by datatrack filename" ng-click="datatrackOrderByField='path';datatrackReverseSort=!datatrackReverseSort">File Name</th>
 			            <th width="15%" ng-show="dataTracksUploading">Upload Progress</th>
-			            <th>Controls</th>  
+			            <th tooltip-append-to-body="true" tooltip-placement="left" tooltip="Sort by datatrack entry order" ng-click="datatrackOrderByField='idDataTrack';datatrackReverseSort=!datatrackReverseSort">Controls</th>  
 			        </tr>
 			    </thead>
 			    <tbody>

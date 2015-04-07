@@ -77,6 +77,8 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 	$scope.sampleReverseSort = true;
 	$scope.datatrackOrderByField = "idDataTrack";
 	$scope.datatrackReverseSort = true;
+	$scope.resultOrderByField = "idAnalysis";
+	$scope.resultReverseSort = true;
     
 	//Static dictionaries. These http calls are cached.
    
