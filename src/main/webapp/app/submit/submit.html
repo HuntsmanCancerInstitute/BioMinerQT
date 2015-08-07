@@ -22,7 +22,7 @@
 				</div>
 	  	   
 				
-           	 	<div class="panel-body" cg-busy="{promise: dataTrackUploadPromise,message: 'Uploading'}">
+           	 	<div style="word-wrap:break-word;" class="panel-body" cg-busy="{promise: dataTrackUploadPromise,message: 'Uploading'}">
 					<ul>
 				 		<li class="list-group" ng-repeat="project in projects | orderBy: 'name'">
 				 			<a ng-class="project.cssClass" href="#/submit" ng-click="select(project.idProject)">

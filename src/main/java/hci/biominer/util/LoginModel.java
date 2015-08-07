@@ -7,7 +7,7 @@ public class LoginModel {
 	private String message;
 	private User user;
 	private String referring;
-	private String time;
+	private Long time;
 	private Long timeout;
 	
 	
@@ -17,11 +17,11 @@ public class LoginModel {
 	public void setTimeout(Long timeout) {
 		this.timeout = timeout;
 	}
-	public String getTime() {
+	public Long getTime() {
 		return time;
 	}
-	public void setTime(String time) {
-		this.time = time;
+	public void setTime(Long l) {
+		this.time = l;
 	}
 	public User getUser() {
 		return user;

@@ -233,7 +233,7 @@
 					</div>
 					
 					<!--  Thresholds -->
-           	 		<span class="section-header" ng-show="isThresholdBasedQuery" ng-hide="selectedAnalysisType != '' && selectedAnalysisType.type == 'Variant'">That Exceed these Thresholds <span class="glyphicon glyphicon-question-sign help-button" ng-click="showHelpThesholds()"></span></span>
+           	 		<span class="section-header" ng-show="isThresholdBasedQuery" ng-hide="selectedAnalysisType != '' && selectedAnalysisType.type == 'Variant'">That Exceed these Thresholds <span class="glyphicon glyphicon-question-sign help-button" ng-click="showHelpThresholds()"></span></span>
            	 		 
            	 		 <!-- FDR-->
 					<div class="form-group" ng-show="isThresholdBasedQuery" ng-hide="selectedAnalysisType != '' && selectedAnalysisType.type == 'Variant'">
@@ -243,7 +243,7 @@
 				  	  		<label class="btn btn-toggle" ng-model="codeThresholdFDRComparison" btn-radio="'LT'" >&lt;</label>
   					     	
    					  </div>
-					  <input id="textinput" class="col-md-3 form-control" style="display: inline; max-width: 120px" ng-model="thresholdFDR" name="textinput" placeholder=".05"  type="number" step="0.1">
+					  <input id="textinput" class="col-md-3 form-control" style="display: inline; max-width: 120px" ng-model="thresholdFDR" name="textinput"  type="number" step="0.1">
 					</div>        
 					
            	 		
@@ -256,7 +256,7 @@
         					<label class="btn btn-toggle" ng-model="codeThresholdLog2RatioComparison" btn-radio="'LT'"     >&lt;</label>
     					</div>
 					    
-						<input id="textinput" class="col-md-3 form-control"   style="display: inline; max-width: 120px" ng-model="thresholdLog2Ratio" name="textinput" placeholder="1.0"  type="number" step="0.1">
+						<input id="textinput" class="col-md-3 form-control"   style="display: inline; max-width: 120px" ng-model="thresholdLog2Ratio" name="textinput"  type="number" step="0.1">
 					</div>        
 
 					

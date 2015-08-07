@@ -73,6 +73,7 @@ import hci.biominer.util.Enumerated.AnalysisTypeEnum;
 import hci.biominer.util.GenomeBuilds;
 import hci.biominer.util.IntervalTrees;
 import hci.biominer.util.QuerySettings;
+import hci.biominer.util.SessionData;
 import hci.biominer.util.igv.IGVResource;
 import hci.biominer.util.igv.IGVSession;
 
@@ -120,11 +121,14 @@ public class QueryController {
     
     //private StringBuilder warnings = new StringBuilder("");
     
-    private HashMap<String,QueryResultContainer> resultsDict =  new HashMap<String,QueryResultContainer>();
-    private HashMap<String,StringBuilder> queryWarningsDict = new HashMap<String,StringBuilder>();
-    private HashMap<String,QuerySettings> settingsDict = new HashMap<String,QuerySettings>();
-    private HashMap<String,String> regionDict = new HashMap<String,String>();
-    private HashMap<String,String> geneDict = new HashMap<String,String>();
+    //private HashMap<String,QueryResultContainer> resultsDict =  new HashMap<String,QueryResultContainer>();
+    //private HashMap<String,StringBuilder> queryWarningsDict = new HashMap<String,StringBuilder>();
+    //private HashMap<String,QuerySettings> settingsDict = new HashMap<String,QuerySettings>();
+    //private HashMap<String,String> regionDict = new HashMap<String,String>();
+    //private HashMap<String,String> geneDict = new HashMap<String,String>();
+    
+    private HashMap<String,HashMap<String,SessionData>> currentSessions = new HashMap<String,HashMap<String,SessionData>>();
+    private HashMap<String,Subject> activeUsers = new HashMap<String,Subject>();
     
     
     private HashMap<String,File> fileDict = new HashMap<String,File>();
@@ -132,7 +136,7 @@ public class QueryController {
     private HashMap<String,ArrayList<Long>> nameLookupDict = new HashMap<String,ArrayList<Long>>();
     
     
-    private HashMap<String,Subject> activeUsers = new HashMap<String,Subject>();
+    
     
     private SessionCheckerTimer sct;
     private Date date = new Date();
@@ -268,7 +272,7 @@ public class QueryController {
     
     @RequestMapping(value="warnings",method=RequestMethod.GET)
     @ResponseBody
-    public String getWarnings() throws Exception{
+    public String getWarnings(@RequestParam("idTab") String idTab) throws Exception{
     	//Get current active user
     	Subject currentUser = SecurityUtils.getSubject();
     	
@@ -283,12 +287,21 @@ public class QueryController {
     	} else {
     		username = "guest";
     	}
-    	return queryWarningsDict.get(username).toString();
+    	
+    	String warnings = "";
+    	if (currentSessions.containsKey(username)) {
+    		if (currentSessions.get(username).containsKey(idTab)) {
+    			warnings = currentSessions.get(username).get(idTab).getQueryWarnings().toString();
+    		} else {
+    			warnings = fetchMostRecentSession(username).getQueryWarnings().toString();
+    		}
+    	}
+    	return warnings;
     }
     
     @RequestMapping(value="uploadGene",method=RequestMethod.POST)
     @ResponseBody
-    public RegionUpload parseGenes(@RequestParam("file") MultipartFile file) {
+    public RegionUpload parseGenes(@RequestParam("file") MultipartFile file, @RequestParam("idTab") String idTab) {
     	//Get current active user
     	Subject currentUser = SecurityUtils.getSubject();
     	
@@ -343,7 +356,19 @@ public class QueryController {
     			
     			if (ok) {
     				regions.setRegions(String.format("[Load genes from file: %s]",name));
-        			this.geneDict.put(username,geneString.toString());
+    				if (!currentSessions.containsKey(username)) {
+    					currentSessions.put(username, new HashMap<String,SessionData>());
+    					SessionData sd = new SessionData();
+    					sd.setGeneString(geneString.toString());
+    					currentSessions.get(username).put(idTab, sd);
+    				} else if (!currentSessions.get(username).containsKey(idTab)) {
+    					SessionData sd = new SessionData();
+    					sd.setGeneString(geneString.toString());
+    					currentSessions.get(username).put(idTab, sd);
+    				} else {
+    					currentSessions.get(username).get(idTab).setGeneString(geneString.toString());
+    				}
+    				
     			}
     			
     			br.close();
@@ -364,7 +389,7 @@ public class QueryController {
     
     @RequestMapping(value="upload",method=RequestMethod.POST)
     @ResponseBody
-    public RegionUpload parseRegions(@RequestParam("file") MultipartFile file) {
+    public RegionUpload parseRegions(@RequestParam("file") MultipartFile file, @RequestParam("idTab") String idTab) {
     	//Get current active user
     	Subject currentUser = SecurityUtils.getSubject();
     	
@@ -424,7 +449,18 @@ public class QueryController {
     			
     			if (ok) {
     				regions.setRegions(String.format("[Load regions from file: %s]",name));
-        			this.regionDict.put(username,regionString.toString());
+    				if (!currentSessions.containsKey(username)) {
+    					currentSessions.put(username, new HashMap<String,SessionData>());
+    					SessionData sd = new SessionData();
+    					sd.setGeneString(regionString.toString());
+    					currentSessions.get(username).put(idTab, sd);
+    				} else if (!currentSessions.get(username).containsKey(idTab)) {
+    					SessionData sd = new SessionData();
+    					sd.setGeneString(regionString.toString());
+    					currentSessions.get(username).put(idTab, sd);
+    				} else {
+    					currentSessions.get(username).get(idTab).setGeneString(regionString.toString());
+    				}
     			}
     			
     			br.close();
@@ -480,7 +516,8 @@ public class QueryController {
         @RequestParam(value="sortType") String sortType,
         @RequestParam(value="intersectionTarget") String target,
         @RequestParam(value="isReverse") boolean reverse,
-        @RequestParam(value="searchExisting") boolean searchExisting
+        @RequestParam(value="searchExisting") boolean searchExisting,
+        @RequestParam(value="idTab") String idTab
         ) throws Exception {
       
     	
@@ -506,8 +543,15 @@ public class QueryController {
     	}
     	
     	//Clear out warnings
-    	StringBuilder warnings = new StringBuilder("");
-    	queryWarningsDict.put(username, warnings);
+    	SessionData sessionData = null;
+    	if (!currentSessions.containsKey(username)) {
+			currentSessions.put(username, new HashMap<String,SessionData>());
+			sessionData = new SessionData();
+		} else if (!currentSessions.get(username).containsKey(idTab)) {
+			sessionData = new SessionData();
+		} else {
+			sessionData = currentSessions.get(username).get(idTab);
+		}
     	
     	//Get Organism Build
     	OrganismBuild ob = this.organismBuildService.getOrganismBuildById(idOrganismBuild);   	
@@ -534,43 +578,43 @@ public class QueryController {
     	} else if (codeResultType.equals("GENE") || (codeResultType.equals("REGION") && target.equals("GENE"))) {
     		List<List<String>> parsed = null;
     		if (genes.startsWith("[LOAD GENES FROM FILE: ")) {
-    			if (geneDict.containsKey(username)) {
-    				String loadedGenes = geneDict.get(username);
-        			parsed = this.getGeneIntervals(loadedGenes, genome, "TxBoundary",ob);
-    			} else {
-    				queryWarningsDict.get(username).append("Biominer expects genes loaded from file, but none could be found. Please try reloading your gene file.<br/>");
+    			if (sessionData.getGeneString() != null) {
+    				String loadedGenes = sessionData.getGeneString();
+        			parsed = this.getGeneIntervals(loadedGenes, genome, "TxBoundary",ob, idTab);
+    			}
+    		    else {
+    				sessionData.getQueryWarnings().append("Biominer expects genes loaded from file, but none could be found. Please try reloading your gene file.<br/>");
     			}
 
     		} else if (genes.equals("[ALL RESULT GENES]")) {
-    			if (geneDict.containsKey(username)) {
-    				String loadedGenes = geneDict.get(username);
-        			parsed = this.getGeneIntervals(loadedGenes, genome, "TxBoundary",ob);
+    			if (sessionData.getGeneString() != null) {
+    				String loadedGenes = sessionData.getGeneString();
+        			parsed = this.getGeneIntervals(loadedGenes, genome, "TxBoundary",ob, idTab);
     			} else {
-    				queryWarningsDict.get(username).append("Biominer expects genes copied from the previous query, but none could be found. Please submit a bug report.<br/>");
+    				sessionData.addWarning("Biominer expects genes copied from the previous query, but none could be found. Please submit a bug report.<br/>");
     			}
     		} else {
-    			parsed = this.getGeneIntervals(genes, genome, "TxBoundary",ob);
+    			parsed = this.getGeneIntervals(genes, genome, "TxBoundary",ob, idTab);
     		}
     	 
-    		System.out.println("HEY THE SIZE IS:" + parsed.get(0).size());
     		if (parsed != null && parsed.get(0).size() != 0) {
     			mappedNames = parsed.get(2); //This will be used for gene based filtering, if necessary
         		intervalsToCheck = ip.parseIntervals(this.convertListToString(parsed.get(0)), this.convertListToString(parsed.get(1)), geneMargins, genome);
     		} 
     	} else if (codeResultType.equals("REGION"))  {
     		if (regions.startsWith("[Load regions from file: ")) {
-    			if (regionDict.containsKey(username)) {
-    				String loadedRegions = regionDict.get(username);
+    			if (sessionData.getRegionString() != null) {
+    				String loadedRegions = sessionData.getRegionString();
         			intervalsToCheck = ip.parseIntervals(loadedRegions, loadedRegions, regionMargins, genome);
     			} else {
-    				queryWarningsDict.get(username).append("Biominer expects regions loaded from file, but none could be found. Please try reloading your gene file.<br/>");
+    				sessionData.addWarning("Biominer expects regions loaded from file, but none could be found. Please try reloading your gene file.<br/>");
     			}
     		} else if (regions.equals("[All result coordinates]")) {
-    			if (regionDict.containsKey(username)) {
-    				String loadedRegions = regionDict.get(username);
+    			if (sessionData.getRegionString() != null) {
+    				String loadedRegions = sessionData.getRegionString();
         			intervalsToCheck = ip.parseIntervals(loadedRegions, loadedRegions, regionMargins, genome);
     			} else {
-    				queryWarningsDict.get(username).append("Biominer expects regions copied from the previous query , but none could be found. Please submit a bug report.<br/>");
+    				sessionData.addWarning("Biominer expects regions copied from the previous query , but none could be found. Please submit a bug report.<br/>");
     			}
     		} else {
     			intervalsToCheck = ip.parseIntervals(regions, regions, regionMargins, genome);
@@ -578,7 +622,7 @@ public class QueryController {
     	}
     	
     	//Add IP warnings
-    	queryWarningsDict.get(username).append(ip.getWarnings());
+    	sessionData.addWarning(ip.getWarnings().toString());
     	
     	//Get analysis entries for the query
     	List<Analysis> analyses = new ArrayList<Analysis>();
@@ -614,21 +658,17 @@ public class QueryController {
     	//Run basic search
     	List<QueryResult> results;
     	if (searchExisting) {
-    		if (resultsDict.containsKey(username)) {
-    			HashMap<String,IntervalTree<QueryResult>> resultTree = this.createQueryResultIntervalTree(resultsDict.get(username).getResultList());
+    		if (sessionData.getResults() != null) {
+    			HashMap<String,IntervalTree<QueryResult>> resultTree = this.createQueryResultIntervalTree(currentSessions.get(username).get(idTab).getResults().getResultList());
     			results = this.getIntersectingRegionsExisting(resultTree, intervalsToCheck, reverse);
         	} else {
         		results = new ArrayList<QueryResult>();
-        		queryWarningsDict.get(username).append("Could not find any existing results, can't query existing results.<br/>");
+        		sessionData.addWarning("Could not find any existing results, can't query existing results.<br/>");
     		}
     	} else {
     		results = this.getIntersectingRegions(itList, analyses, intervalsToCheck, reverse);
-    		System.out.println(results.size());
     	}
-    	
-    	
-    	
- 
+
     	//Run thresholding if necessary
     	List<QueryResult> fullRegionResults = new ArrayList<QueryResult>();
     	if (FDR != null) {
@@ -644,10 +684,7 @@ public class QueryController {
     	}
     	
     	fullRegionResults.addAll(results);
-    	System.out.println(fullRegionResults.size());
-    	
-    	
-    	
+    	    	
     	//Determine how many analyses were used
     	List<Analysis> usedAnalyses = this.getUsedAnalyses(analyses, fullRegionResults);
     	HashMap<String,String> usedDataTracks = this.getDataTrackList(usedAnalyses);
@@ -658,13 +695,13 @@ public class QueryController {
     	QuerySettings qs = new QuerySettings(codeResultType, target, idOrganismBuild, idAnalysisTypes, idLabs, idProjects,
     			idAnalyses, idSampleSources, regions, regionMargins, genes, geneMargins, FDR, codeFDRComparison, log2Ratio, 
     			codeLog2RatioComparison,resultsPerPage, sortType, reverse, searchExisting);
-
-    	if (user != null) {
-    		this.resultsDict.put(username, qrc);
-    		this.settingsDict.put(username, qs);
-    	} else {
-    		this.resultsDict.put(username, qrc);
-    	}
+    	
+    	
+    	sessionData.setResults(qrc);
+    	sessionData.setSettings(qs);
+    	sessionData.setLastTouched(new Date());
+    	
+    	currentSessions.get(username).put(idTab,sessionData);
     	
     	System.out.println("Used analyses " + usedAnalyses.size());
     	System.out.println("Used data tracks " + usedDataTracks.keySet().size());
@@ -676,39 +713,39 @@ public class QueryController {
     	
     	//Create result object
     	QueryResultContainer qrcSub = qrc.getQrcSubset(resultsPerPage, 0, sortType);
+    	
     	return qrcSub;	
     }
     
     
     @RequestMapping(value="copyAllCoordinates",method=RequestMethod.POST)
     @ResponseBody
-    private void copyAllCoordinates(HttpServletResponse response) {
+    private void copyAllCoordinates(HttpServletResponse response, @RequestParam("idTab") String idTab) {
     	Subject currentUser = SecurityUtils.getSubject();
     	String username = "guest";
     	    	
-    	//If user isn't authenticated, return nothing
     	if (currentUser.isAuthenticated()) {
     		Long userId = (Long) currentUser.getPrincipal();
     		User user = userService.getUser(userId);
     		username = user.getUsername();
     	} 
     	
-    	if (this.resultsDict.containsKey(username)) {
+    	if (!currentSessions.containsKey(username) || !currentSessions.get(username).containsKey(idTab)) {
+    		response.setStatus(988);
+    	} else {
+    		SessionData sd = currentSessions.get(username).get(idTab);
+    		
     		StringBuilder intervals = new StringBuilder("");
-    		QueryResultContainer qrc = resultsDict.get(username);
-    		for (QueryResult qr: qrc.getResultList()) {
+    		for (QueryResult qr: sd.getResults().getResultList()) {
     			intervals.append(qr.getCoordinates() + "\n");
     		}
-    		this.regionDict.put(username, intervals.toString());
-    	} else {
-    		response.setStatus(998);
-    		this.regionDict.put(username, "");
+    		sd.setRegionString(intervals.toString());
     	}
     }
     
     @RequestMapping(value="copyAllGenes",method=RequestMethod.POST)
     @ResponseBody
-    private void copyAllGenes(HttpServletResponse response) {
+    private void copyAllGenes(HttpServletResponse response, @RequestParam("idTab") String idTab) {
     	Subject currentUser = SecurityUtils.getSubject();
     	String username = "guest";
     	    	
@@ -719,30 +756,26 @@ public class QueryController {
     		username = user.getUsername();
     	} 
     	
-    	if (this.resultsDict.containsKey(username)) {
+    	if (!currentSessions.containsKey(username) || !currentSessions.get(username).containsKey(idTab)) {
+    		response.setStatus(988);
+    	} else {
+    		SessionData sd = currentSessions.get(username).get(idTab);
+    		
     		StringBuilder intervals = new StringBuilder("");
-    		QueryResultContainer qrc = resultsDict.get(username);
-    		for (QueryResult qr: qrc.getResultList()) {
+    		for (QueryResult qr: sd.getResults().getResultList()) {
     			intervals.append(qr.getMappedName() + "\n");
     		}
-    		this.geneDict.put(username, intervals.toString());
-    		
-    	} else {
-    		response.setStatus(998);
-    		this.geneDict.put(username,"");
+    		sd.setGeneString(intervals.toString());
     	}
     }
     
     
     @RequestMapping(value="loadExistingSettings",method=RequestMethod.GET) 
     @ResponseBody
-    public QuerySettings getQuerySettings() throws Exception {
+    public QuerySettings getQuerySettings(@RequestParam("idTab") String idTab) throws Exception {
     	//Get current active user
     	Subject currentUser = SecurityUtils.getSubject();
     	User user = null;
-    	
-    	
-    	System.out.println("Subject");
     	
     	//If user isn't authenticated, return nothing
     	if (currentUser.isAuthenticated()) {
@@ -752,37 +785,28 @@ public class QueryController {
     		return null;
     	}
     	
-    	System.out.println("Authenicate");
-    	
     	String username = user.getUsername();
     	
-    	//If settings are already loaded, simply return them
-    	if (this.settingsDict.containsKey(username)) {
-    		return this.settingsDict.get(username);
+    	if (!currentSessions.containsKey(username)) {
+    		loadSessionDict(username);
     	}
     	
-    	System.out.println("No Hash");
-    	
-    	//If settings aren't loaded, check to see if they are serialized.
-    	File settingsPath = new File(FileController.getQueryDirectory(),username + ".settings.ser");
-    	if (settingsPath.exists()) {
-    		FileInputStream fin = new FileInputStream(settingsPath);
-    		ObjectInputStream ois = new ObjectInputStream(fin);
-    		QuerySettings qs = (QuerySettings)ois.readObject();
-    		ois.close();
-    		this.settingsDict.put(username, qs);
-    		System.out.println("Got Result");
-
+    	if (currentSessions.containsKey(username)) {
+    		QuerySettings qs = null;
+    		if (!currentSessions.get(username).containsKey(idTab)) {
+    			currentSessions.get(username).put(idTab, fetchMostRecentSession(username));
+    		}
+    		qs = currentSessions.get(username).get(idTab).getSettings();
     		return qs;
+    		
     	} else {
-    		System.out.println("No Result");
     		return null;
-    	}	
+    	}
     }
     
     @RequestMapping(value="loadExistingResults",method=RequestMethod.GET) 
     @ResponseBody
-    public QueryResultContainer getQueryResults() throws Exception {
+    public QueryResultContainer getQueryResults(@RequestParam("idTab") String idTab) throws Exception {
     	//Get current active user
     	Subject currentUser = SecurityUtils.getSubject();
     	User user = null;
@@ -797,76 +821,45 @@ public class QueryController {
     	
     	String username = user.getUsername();
     	
-    	if (!regionDict.containsKey(username)) {
-    		this.loadRegionDict(username);
+    	if (!currentSessions.containsKey(username)) {
+    		loadSessionDict(username);
     	}
     	
-    	if (!geneDict.containsKey(username)) {
-    		this.loadGeneDict(username);
-    	}
-    	
-    	if (!queryWarningsDict.containsKey(username)) {
-    		this.loadWarningsDict(username);
-    	}
-    	
-    	//If settings are already loaded, simply return them
-    	if (this.resultsDict.containsKey(username)) {
-    		QueryResultContainer qrcSub = this.resultsDict.get(username).getQrcSubset(25, 0, "FDR");
-    		return qrcSub;
-    	}
-    	
-    	//If settings aren't loaded, check to see if they are serialized.
-    	File resultsPath = new File(FileController.getQueryDirectory(),username + ".results.ser");
-    	if (resultsPath.exists()) {
-    		FileInputStream fin = new FileInputStream(resultsPath);
-    		ObjectInputStream ois = new ObjectInputStream(fin);
-    		QueryResultContainer qrc = (QueryResultContainer)ois.readObject();
-    		ois.close();
-    		this.resultsDict.put(username, qrc);		
+    	if (currentSessions.containsKey(username)) {
+    		QueryResultContainer qrcSub;
+    		if (!currentSessions.get(username).containsKey(idTab)) {
+    			currentSessions.get(username).put(idTab,fetchMostRecentSession(username));
+    			System.out.println("Can't find idTab");
+    		} 
     		
-    		QueryResultContainer qrcSub = qrc.getQrcSubset(25, 0, "FDR");
+    		for (String tab: currentSessions.get(username).keySet()) {
+    			System.out.println(tab);
+    		}
     		
+    		qrcSub = currentSessions.get(username).get(idTab).getResults().getQrcSubset(25, 0, "FDR");
     		return qrcSub;
+    		
     	} else {
     		return null;
-    	}	
-    }
-    
-    private void loadGeneDict(String username) throws Exception {
-    	File resultsPath = new File(FileController.getQueryDirectory(),username + ".genes.ser");
-    	if (resultsPath.exists()) {
-    		FileInputStream fin = new FileInputStream(resultsPath);
-    		ObjectInputStream ois = new ObjectInputStream(fin);
-    		String genes = (String)ois.readObject();
-    		ois.close();
-    		this.geneDict.put(username, genes);
     	}
     }
     
-    private void loadRegionDict(String username) throws Exception {
-    	File resultsPath = new File(FileController.getQueryDirectory(),username + ".regions.ser");
+    
+    private void loadSessionDict(String username) throws Exception {
+    	File resultsPath = new File(FileController.getQueryDirectory(),username + ".session.ser");
     	if (resultsPath.exists()) {
     		FileInputStream fin = new FileInputStream(resultsPath);
     		ObjectInputStream ois = new ObjectInputStream(fin);
-    		String regions = (String)ois.readObject();
+    		SessionData sd = (SessionData)ois.readObject();
     		ois.close();
-    		this.regionDict.put(username, regions);
+    		HashMap<String,SessionData> sdHash = new HashMap<String,SessionData>();
+    		sdHash.put(username, sd);
+    		currentSessions.put(username,sdHash);
     	}
     }
     
-    private void loadWarningsDict(String username) throws Exception {
-    	File resultsPath = new File(FileController.getQueryDirectory(),username + ".warnings.ser");
-    	if (resultsPath.exists()) {
-    		FileInputStream fin = new FileInputStream(resultsPath);
-    		ObjectInputStream ois = new ObjectInputStream(fin);
-    		StringBuilder warnings = (StringBuilder)ois.readObject();
-    		ois.close();
-    		this.queryWarningsDict.put(username, warnings);
-    	} 
-    }
     
-    
-    public IgvSessionResult createIgvSessionFile(String username, File sessionsDirectory, String serverName) throws Exception {
+    public IgvSessionResult createIgvSessionFile(String username, File sessionsDirectory, String serverName, String idTab) throws Exception {
     	//Make sure genome is loaded
     	
     	
@@ -893,12 +886,12 @@ public class QueryController {
     	List<Analysis> analyses = this.analysisService.getAllAnalyses();
     	QueryResultContainer results = null;
     	
-    	if (this.resultsDict.containsKey(username)) {
-    		results = this.resultsDict.get(username);
-    	} else {
+    	if (!currentSessions.containsKey(username) || !currentSessions.get(username).containsKey(idTab)) {
     		errors.append(String.format("This user %s doesn't appear to have any stored analyses, IGV session can't be created.",username));
     		igvSR.setError(errors.toString());
     		return igvSR;
+    	} else {
+    		results = currentSessions.get(username).get(idTab).getResults();
     	}
     	
     	//Get datatracks list
@@ -986,7 +979,7 @@ public class QueryController {
     
     @RequestMapping(value="startIgvSession",method=RequestMethod.GET)
     @ResponseBody
-    public IgvSessionResult startIgvSession(HttpServletResponse response, HttpServletRequest request) throws Exception {
+    public IgvSessionResult startIgvSession(HttpServletResponse response, HttpServletRequest request, @RequestParam("idTab") String idTab) throws Exception {
     	String serverName = request.getLocalName();
     	if (serverName.equals("localhost")) {
     		serverName = "127.0.0.1:8080";
@@ -1007,7 +1000,7 @@ public class QueryController {
     	String rootDirectory = request.getSession().getServletContext().getRealPath("/");
     	File sessionsDirectory = new File(rootDirectory,"../sessions");
     
-    	IgvSessionResult igr = this.createIgvSessionFile(username, sessionsDirectory, serverName);
+    	IgvSessionResult igr = this.createIgvSessionFile(username, sessionsDirectory, serverName, idTab);
     	if (igr.getError() != null) {
     		response.setStatus(405);
     	}
@@ -1071,7 +1064,7 @@ public class QueryController {
     
     
      @RequestMapping(value = "downloadAnalysis", method = RequestMethod.GET)
-	 public void downloadAnalysis(HttpServletRequest request, HttpServletResponse response, @RequestParam(value="codeResultType") String codeResultType) throws Exception{
+	 public void downloadAnalysis(HttpServletRequest request, HttpServletResponse response, @RequestParam(value="codeResultType") String codeResultType, @RequestParam(value="idTab") String idTab) throws Exception{
     	
     	//Get current active user
     	Subject currentUser = SecurityUtils.getSubject();
@@ -1088,8 +1081,8 @@ public class QueryController {
     		fileToDelete.delete();
     	}
     	
-    	if (this.resultsDict.containsKey(key)) {
-    		List<QueryResult> results = this.resultsDict.get(key).getResultList();
+    	if (currentSessions.containsKey(key) && currentSessions.get(key).containsKey(idTab)) {
+    		List<QueryResult> results = currentSessions.get(key).get(idTab).getResults().getResultList();
     		if (results.size() > 0) {
     			//Create results file
     			File localFile = new File(FileController.getDownloadDirectory(),key + ".query.xls.gz");
@@ -1114,7 +1107,7 @@ public class QueryController {
     			
     	    	String rootDirectory = request.getSession().getServletContext().getRealPath("/");
     	    	File sessionsDirectory = new File(rootDirectory,"../sessions");
-    			IgvSessionResult isr = this.createIgvSessionFile(key, sessionsDirectory, serverName);
+    			IgvSessionResult isr = createIgvSessionFile(key, sessionsDirectory, serverName, idTab);
     			boolean sessionOK = true;
     			if (isr.getError() != null) {
     				sessionOK = false;
@@ -1174,7 +1167,8 @@ public class QueryController {
     public QueryResultContainer changeTablePosition(
     		@RequestParam(value="resultsPerPage") Integer resultsPerPage,
     		@RequestParam(value="pageNum") Integer pageNum,
-    		@RequestParam(value="sortType") String sortType
+    		@RequestParam(value="sortType") String sortType,
+    		@RequestParam(value="idTab") String idTab
     ) {
     	//Get current active user
     	Subject currentUser = SecurityUtils.getSubject();
@@ -1186,20 +1180,13 @@ public class QueryController {
     		key = user.getUsername();
     	}
     	
-    	System.out.println(key);
 
     	QueryResultContainer qrc = null;
-    	if (this.resultsDict.containsKey(key)) {
-    		
-    		
-
-    		QueryResultContainer full = this.resultsDict.get(key);
+    	if (currentSessions.containsKey(key) && currentSessions.get(key).containsKey(idTab)) {
+    		QueryResultContainer full = currentSessions.get(key).get(idTab).getResults();
     		
     		qrc = full.getQrcSubset(resultsPerPage, pageNum, sortType);
-    	} else {
-    		queryWarningsDict.put(key, new StringBuilder(""));
-    		queryWarningsDict.get(key).append("There aren't any available results stored for this user<br/>");
-    	}
+    	} 
     	
     	return qrc;
     }
@@ -1376,7 +1363,7 @@ public class QueryController {
     }
  
     
-    private List<List<String>> getGeneIntervals(String names, Genome genome, String searchType, OrganismBuild ob) {
+    private List<List<String>> getGeneIntervals(String names, Genome genome, String searchType, OrganismBuild ob, String idTab) {
     	List<String> regions = new ArrayList<String>();
     	List<String> searches = new ArrayList<String>();
     	List<String> mapped = new ArrayList<String>();
@@ -1399,7 +1386,7 @@ public class QueryController {
     	String[] genes = names.split("\n");
     	List<String> cleanedGenes = new ArrayList<String>();
     	if (genes.length == 0) {
-    		this.queryWarningsDict.put(username, new StringBuilder("The gene list is empty!<br/>"));
+    		currentSessions.get(username).get(idTab).addWarning("The gene list is empty!<br/>");
     		return null;
     	}
     	
@@ -1433,20 +1420,17 @@ public class QueryController {
     			
     			//Warning if no ensembl names can be found
     			if (extIdFinalSet.size() == 0) {
-    				this.queryWarningsDict.get(username).append("Could not find an Ensembl identifier for gene: '" + name + "'<br/>");
+    				currentSessions.get(username).get(idTab).addWarning("Could not find an Ensembl identifier for gene: '" + name + "'<br/>");
 					continue;
     			}
     			
     		} else {
     			//Warning if no biominer genes can be found
     			missingGenes.add(name);
-    			this.queryWarningsDict.get(username).append("The gene '" + name + "' could not be found in our database<br/>");
+    			currentSessions.get(username).get(idTab).addWarning("The gene '" + name + "' could not be found in our database<br/>");
     			continue;
     		}
     		
-    		
-    		
-        
         	HashMap<String, Gene> geneNameGene = genome.getTranscriptomes()[0].getGeneNameGene();
        
         	for (String ensemblName: extIdFinalSet) {
@@ -1797,6 +1781,19 @@ public class QueryController {
     	return qrList;
     }
    
+    private SessionData fetchMostRecentSession(String username) {
+    	SessionData mostRecent = null;
+    	Date newestDate = new Date(0);
+    	for (SessionData sess : currentSessions.get(username).values()) {
+    		if (sess.getLastTouched().after(newestDate)) {
+    			mostRecent = sess;
+    			newestDate = sess.getLastTouched();
+    		}
+    	}
+    	
+    	return mostRecent;
+    }
+    
     
     private class IntervalParser {
     	private Pattern pattern1 = Pattern.compile("^(chr)*(.+?)(:|\\s+)(\\d+)(-|\\s+)(\\d+)$");
@@ -1905,7 +1902,6 @@ public class QueryController {
     	    			
     	    		} else {
     	    			warnings.append(String.format("The string %s does not match a region format.<br/>",region));
-    	    			
     	    		}
     			}
     		}
@@ -1975,79 +1971,18 @@ public class QueryController {
     	}
     	
     	public void writeData(String key) {
-    		if (settingsDict.containsKey(key)) {
-				//First write out serialized objects
-				try {
-					File settingsPath = new File(FileController.getQueryDirectory(), key + ".settings.ser");
-        			FileOutputStream fos = new FileOutputStream(settingsPath);
-        			ObjectOutputStream oos = new ObjectOutputStream(fos);
-        			oos.writeObject(settingsDict.get(key));
-        			oos.close();
-				} catch (Exception ex) {
-					ex.printStackTrace();
-				}
-    			
-    			//Remove settings from memory
-				settingsDict.remove(key);
-			}
-			
-			if (resultsDict.containsKey(key)) {
-				//First write out serialized objects
-				try {
-					File resultsPath = new File(FileController.getQueryDirectory(), key + ".results.ser");
-        			FileOutputStream fos = new FileOutputStream(resultsPath);
-        			ObjectOutputStream oos = new ObjectOutputStream(fos);
-        			oos.writeObject(resultsDict.get(key));
-        			oos.close();
-				} catch (Exception ex) {
-					ex.printStackTrace();
-				}
-    			
-    			//Remove settings from memory
-				resultsDict.remove(key);
-			}
-		
-			if (regionDict.containsKey(key)) {
-				try {
-					File resultsPath = new File(FileController.getQueryDirectory(),key + ".regions.ser");
-					FileOutputStream fos = new FileOutputStream(resultsPath);
-					ObjectOutputStream oos = new ObjectOutputStream(fos);
-					oos.writeObject(regionDict.get(key));
-					oos.close();
-				} catch (Exception ex) {
-					ex.printStackTrace();
-				}
-				
-				regionDict.remove(key);
-			}
-			
-			if (geneDict.containsKey(key)) {
-				try {
-					File resultsPath = new File(FileController.getQueryDirectory(),key + ".genes.ser");
-					FileOutputStream fos = new FileOutputStream(resultsPath);
-					ObjectOutputStream oos = new ObjectOutputStream(fos);
-					oos.writeObject(geneDict.get(key));
-					oos.close();
-				} catch (Exception ex) {
-					ex.printStackTrace();
-				}
-				
-				geneDict.remove(key);
-			}
-			
-			if (queryWarningsDict.containsKey(key)) {
-				try {
-					File resultsPath = new File(FileController.getQueryDirectory(),key + ".warnings.ser");
-					FileOutputStream fos = new FileOutputStream(resultsPath);
-					ObjectOutputStream oos = new ObjectOutputStream(fos);
-					oos.writeObject(queryWarningsDict.get(key));
-					oos.close();
-				} catch (Exception ex) {
-					ex.printStackTrace();
-				}
-				
-				queryWarningsDict.remove(key);
-			}
+    		if (currentSessions.containsKey(key)) {
+    			SessionData sd = fetchMostRecentSession(key);
+    			try {
+    				File sessionPath = new File(FileController.getQueryDirectory(), key + ".session.ser");
+    				FileOutputStream fos = new FileOutputStream(sessionPath);
+    				ObjectOutputStream oos = new ObjectOutputStream(fos);
+    				oos.writeObject(sd);
+    				oos.close();
+    			} catch (Exception ex) {
+    				ex.printStackTrace();
+    			}
+    		}
     	}
     	
     	private class SessionChecker extends TimerTask {
@@ -2056,6 +1991,7 @@ public class QueryController {
             	
             	for (String key: activeUsers.keySet()) {
             		Subject s = activeUsers.get(key);
+            		
             		
             		try {
             			s.getPrincipal();

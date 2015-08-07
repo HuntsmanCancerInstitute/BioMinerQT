@@ -104,7 +104,7 @@ public class SecurityController {
 		if (user != null) {
 			// got the user, see if active
 			if (user.getisActive() != null && user.getisActive().equalsIgnoreCase("n")) {
-				result = "Username is inactivate.";
+				result = "Username is inactive.";
 				return result;
 			}
 					
@@ -113,18 +113,19 @@ public class SecurityController {
 			result = "Instructions on how to reset your password have been emailed to you. (Check junk email if not received.)";
 			
 			String url = request.getLocalName();
+			
 	    	if (url.equals("127.0.0.1")) {
 	    		url += ":8080";
 	    	}
 			
-			//String url = "http://localhost:8080";
-			
 			// get the first part of the url
-			int ipos = theUrl.toLowerCase().indexOf("/biominer");
+			int ipos = theUrl.toLowerCase().lastIndexOf("/biominer");
 			if (ipos != -1) {
 				url = theUrl.substring(0, ipos);
 				//System.out.println ("[/resetpassword] url is " + url);
 			}
+			
+			System.out.println(url);
 			
 			long GUID_EXPIRATION = 1800000;  //30 minutes
             UUID uuid = UUID.randomUUID();
@@ -253,6 +254,8 @@ public class SecurityController {
 			Long id = (Long)SecurityUtils.getSubject().getPrincipal();
 			User user = userService.getUser(id);
 			lm.setUser(user);
+			lm.setTimeout(timeout);
+			lm.setTime(System.currentTimeMillis());
 		}
 		
 		

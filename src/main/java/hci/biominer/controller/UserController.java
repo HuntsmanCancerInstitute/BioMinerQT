@@ -375,7 +375,7 @@ public class UserController {
 		//String url = "http://localhost:8080";
 		
 		// get the first part of the url
-		int ipos = theUrl.toLowerCase().indexOf("/biominer");
+		int ipos = theUrl.toLowerCase().lastIndexOf("/biominer");
 		if (ipos != -1) {
 			url = theUrl.substring(0, ipos);
 			//System.out.println ("[newUserEmail] url is " + url);

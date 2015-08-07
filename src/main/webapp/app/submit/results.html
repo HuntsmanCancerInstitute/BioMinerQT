@@ -9,7 +9,7 @@
 		
 			<!-- Name -->	
 			<div class="form-group">
-				<label class="col-md-4 control-label" for="analysis_result_name">Name</label>  
+				<label class="col-md-4 control-label" for="analysis_result_name">Analysis Name</label>  
 				<div class="col-md-5">
 			  		<input name="analysis_name" id="analysis_result_name" ng-model="result.name" placeholder="name" class="form-control input-sm" type="text" ui-validate="{result_name_used: 'checkResultName($value)'}" required>
 				</div>
@@ -66,7 +66,7 @@
 			<div class="form-group">
 				<label class="col-md-4 control-label" for="applicable_samples">Samples</label>
 				<div class="col-md-5">
-				  	<select width="100" id="applicable_samples" data-placeholder="Select samples..." ng-model="result.samples" chosen multiple class="form-control chosen-select" ng-options="sample as sample.name for sample in samples track by sample.idSample" required> 
+				  	<select width="100" id="applicable_samples" data-placeholder="Select samples..." ng-model="result.samples" chosen multiple class="form-control chosen-select" ng-options="sample as sample.name + ' : ' + sample.sampleCondition.cond for sample in samples track by sample.idSample" required> 
 				    </select>
 				</div>	
 			</div> 

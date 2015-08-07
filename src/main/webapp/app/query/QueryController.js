@@ -98,6 +98,27 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 	
 	$scope.queryResults = [];
 	
+	/**
+	 * Generates a GUID string.
+	 * @returns {String} The generated GUID.
+	 * @example af8a8416-6e18-a307-bd9c-f2c947bbb3aa
+	 * @author Slavik Meltser (slavik@meltser.info).
+	 * @link http://slavik.meltser.info/?p=142
+	 */
+	function guid() {
+	    function _p8(s) {
+	        var p = (Math.random().toString(16)+"000000000").substr(2,8);
+	        return s ? "-" + p.substr(0,4) + "-" + p.substr(4,4) : p ;
+	    }
+	    return _p8() + _p8(true) + _p8(true) + _p8();
+	}
+	
+	if (!$window.sessionStorage.getItem("idTab")) {
+		$window.sessionStorage.setItem("idTab",guid());
+		console.log("Tab id now set");
+	} else {
+		console.log("Tab id ready set")
+	}
 	
 	//Static dictionaries.
     $scope.loadGenotypeList = function () {
@@ -291,6 +312,7 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
         	$scope.uploadCoordinatesPromise = $upload.upload({
         		url: "query/upload",
         		file: files[0],
+        		params: {idTab: $window.sessionStorage.getItem("idTab")},
         		timeout: $scope.regionUploadDeferred.promise,
         	}).success(function(data) {
         		$scope.regions = data.regions;
@@ -320,6 +342,7 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 	    	$scope.uploadGenesPromise = $upload.upload({
 	    		url: "query/uploadGene",
 	    		file: files[0],
+	    		params: {idTab: $window.sessionStorage.getItem("idTab")},
 	    		timeout: $scope.geneUploadDeferred.promise,
 	    	}).success(function(data) {
 	    		$scope.genes = data.regions;
@@ -804,12 +827,12 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 		}).join(',');
 		
 		var fdr = "";
-		if ($scope.thresholdFDR != "" && $scope.thresholdFDR != null) {
+		if ($scope.thresholdFDR !== "" && $scope.thresholdFDR != null) {
 			fdr = $scope.thresholdFDR;
 		}
 		
 		var log2ratio = "";
-		if ($scope.thresholdLog2Ratio != "" && $scope.thresholdLog2Ratio != null) {
+		if ($scope.thresholdLog2Ratio !== "" && $scope.thresholdLog2Ratio != null) {
 			log2ratio = $scope.thresholdLog2Ratio;
 		}
 		
@@ -850,6 +873,8 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 		$scope.returnedOrganismBuild = angular.copy($scope.idOrganismBuild);
 		$scope.totalResults = 0;
 		
+		
+		
 		// Run the query on the server.
 		$scope.runQueryPromise = $http({
 			url: "query/run",
@@ -873,7 +898,8 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 				     sortType:                $scope.sortType,
 				     intersectionTarget:	  $scope.intersectionTarget,
 				     isReverse:               $scope.isReverse,
-				     searchExisting: 		  $scope.searchExisting
+				     searchExisting: 		  $scope.searchExisting,
+				     idTab: 				  $window.sessionStorage.getItem("idTab"),
 				     },
 		    timeout: $scope.queryDeferred.promise,
 				     
@@ -891,6 +917,7 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 			$http({
 				url: "query/warnings",
 				method: "GET",
+				params: {idTab: $window.sessionStorage.getItem("idTab")},
 			}).success(function(data) {
 				if (data == "") {
 					$scope.warnings = "";
@@ -911,6 +938,8 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 			$scope.queryDeferred = null;
 		});
 		
+		
+		$window.sessionStorage.getItem("idTab");
 		$anchorScroll();
 
 	};
@@ -962,6 +991,7 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 			$http({
 				url: "query/warnings",
 				method: "GET",
+				params: {idTab: $window.sessionStorage.getItem("idTab")},
 			}).success(function(data) {
 				if (data == "") {
 					$scope.warnings = "";
@@ -1320,10 +1350,10 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 	});
 	
 	$scope.loadExistingResults = function() {
-		
 		$scope.loadExistingPromise = $http({
 			method: "GET",
-			url: "query/loadExistingResults"
+			url: "query/loadExistingResults",
+			params: {idTab: $window.sessionStorage.getItem("idTab")}
 		}).success(function(data) {
 			ngProgress.complete();
 			if (data != null && data != "") {
@@ -1337,6 +1367,7 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 			$http({
 				url: "query/warnings",
 				method: "GET",
+				params: {idTab: $window.sessionStorage.getItem("idTab")},
 			}).success(function(data) {
 				if (data == "") {
 					$scope.warnings = "";
@@ -1357,7 +1388,8 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 	$scope.loadExistingSettings = function() {
 		$http({
 			method: "GET",
-			url: "query/loadExistingSettings"
+			url: "query/loadExistingSettings",
+			params: {idTab: $window.sessionStorage.getItem("idTab")}
 		}).success(function(data) {
 			if (data != null && data != "") {
 				$scope.codeResultType = data.codeResultType;
