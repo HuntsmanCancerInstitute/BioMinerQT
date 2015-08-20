@@ -68,6 +68,16 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 	$scope.dataTrackUploadPromise = null;
 	$scope.dataTrackUploadDefer = null;
 	
+	$scope.loadSampleSheetDeferred = null;
+	$scope.loadSampleSheetRunning = false;
+	$scope.loadSampleSheetPromise = null;
+	
+	//Unused lists
+	$scope.unusedSampleConditions = [];
+	$scope.unusedSampleSources = [];
+	$scope.unusedSamplePreps = [];
+
+	
 	$scope.navigationOk = false;
 	
 	//holds valid analyses
@@ -81,7 +91,8 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 	$scope.resultReverseSort = true;
     
 	//Static dictionaries. These http calls are cached.
-   
+	
+  
     $scope.loadAnalysisTypeList = function () {
     	StaticDictionary.getAnalysisTypeList().success(function(data) {
     		$scope.analysisTypeList = data;
@@ -139,14 +150,140 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
     }
   
     //Load up all dictionaries
-	$scope.loadSampleConditions();
-	$scope.loadSampleSources();
-	$scope.loadSamplePreps();
-	$scope.loadOrganismBuildList();
-	$scope.loadAnalysisTypeList();
-	$scope.loadSampleTypeList();
-	$scope.loadOrganismBuildList();
+    $scope.loadAllDictionaries = function() {
+    	$scope.loadSampleConditions();
+    	$scope.loadSampleSources();
+    	$scope.loadSamplePreps();
+    	$scope.loadOrganismBuildList();
+    	$scope.loadAnalysisTypeList();
+    	$scope.loadSampleTypeList();
+    	$scope.loadOrganismBuildList();
+    	$scope.checkForUnusedSampleConditions();
+    	$scope.checkForUnusedSamplePreps();
+    	$scope.checkForUnusedSampleSources();
+    }
+    
+
+    //Bulk methods
+    
+    $scope.$watch('project.organismBuild',function() {
+    	$scope.checkForUnusedSampleConditions();
+    	$scope.checkForUnusedSamplePreps();
+    	$scope.checkForUnusedSampleSources();
+    });
+    
+    $scope.checkForUnusedSampleConditions = function() {
+    	if ($scope.project.organismBuild != null) {
+    		$http({
+        		url: "project/getUnusedSampleConditions",
+        		method: "GET",
+        		params: {idOrganismBuild: $scope.project.organismBuild.idOrganismBuild}
+        	}).success(function(data) {
+        		$scope.unusedSampleConditions = data;
+        	});
+    	} 
+    }
+    
+    $scope.checkForUnusedSampleSources = function() {
+    	if ($scope.project.organismBuild != null) {
+    		$http({
+        		url: "project/getUnusedSampleSources",
+        		method: "GET",
+        		params: {idOrganismBuild: $scope.project.organismBuild.idOrganismBuild}
+        	}).success(function(data) {
+        		$scope.unusedSampleSources = data;
+        	});
+    	}
+    }
+    
+    $scope.checkForUnusedSamplePreps = function() {
+		$http({
+    		url: "project/getUnusedSamplePreps",
+    		method: "GET",
+    	}).success(function(data) {
+    		$scope.unusedSamplePreps = data;
+    	});
+    }
+    
+    $scope.showDeleteUnusedSampleConditionDialog = function() {
+    	var message = "Do you want to delete the following unused sample conditions?<br><br><ul>";
+    	var ids = [];
+    	for (var i=0;i<$scope.unusedSampleConditions.length;i++) {
+    		ids.push($scope.unusedSampleConditions[i].idSampleCondition);
+    		message += "<li>" + $scope.unusedSampleConditions[i].cond + "</li>";
+    	}
+    	message += "</ul>";
+    	
+    	var dialog = dialogs.confirm("Delete Unused Sample Conditions",message);
+    	dialog.result.then(function() {
+    		$http({
+        		url: "project/deleteSampleConditions",
+        		method: "DELETE",
+        		params: {idList: ids},
+        	}).success(function() {
+        		$scope.loadAllDictionaries();
+        		dialogs.notify("Condition Deletion Success","Unused sample conditions were removed from the database");
+        		$scope.checkForUnusedSampleConditions();
+        	}).error(function() {
+        		dialogs.error("Deletion Error","Biominer failed to delete some or all of the unused sample conditions.  Please submit an error report.");
+        		$scope.checkForUnusedSampleConditions();
+        	});	
+    	});
+    }
+    
+    $scope.showDeleteUnusedSamplePrepDialog = function() {
+    	var message = "Do you want to delete the following unused sample preps?<br><br><ul>";
+    	var ids = [];
+    	for (var i=0;i<$scope.unusedSamplePreps.length;i++) {
+    		ids.push($scope.unusedSamplePreps[i].idSamplePrep);
+    		message += "<li>" + $scope.unusedSamplePreps[i].description + "</li>";
+    	}
+    	message += "</ul>";
+    	
+    	var dialog = dialogs.confirm("Delete Unused Sample Preps",message);
+    	dialog.result.then(function() {
+    		$http({
+        		url: "project/deleteSamplePreps",
+        		method: "DELETE",
+        		params: {idList: ids},
+        	}).success(function() {
+        		$scope.loadAllDictionaries();
+        		dialogs.notify("Prep Deletion Success","Unused sample preps were removed from the database");
+        		$scope.checkForUnusedSamplePreps();
+        	}).error(function() {
+        		dialogs.error("Deletion Error","Biominer failed to delete some or all of the unused sample preps.  Please submit an error report.");
+        		$scope.checkForUnusedSamplePreps();
+        	});	
+    	});
+    }
+    
+    $scope.showDeleteUnusedSampleSourceDialog = function() {
+    	var message = "Do you want to delete the following unused sample sources?<br><br><ul>";
+    	var ids = [];
+    	for (var i=0;i<$scope.unusedSampleSources.length;i++) {
+    		ids.push($scope.unusedSampleSources[i].idSampleSource);
+    		message += "<li>" + $scope.unusedSampleSources[i].source + "</li>";
+    	}
+    	message += "</ul>";
+    	
+    	var dialog = dialogs.confirm("Delete Unused Sample Source",message);
+    	dialog.result.then(function() {
+    		$http({
+        		url: "project/deleteSampleSources",
+        		method: "DELETE",
+        		params: {idList: ids},
+        	}).success(function() {
+        		$scope.loadAllDictionaries();
+        		dialogs.notify("Source Deletion Success","Unused sample sources were removed from the database");
+        		$scope.checkForUnusedSampleSources();
+        	}).error(function() {
+        		dialogs.error("Deletion Error","Biominer failed to delete some or all of the unused sample sources.  Please submit an error report.");
+        		$scope.checkForUnusedSampleSources();
+        	});	
+    	});
+    }
 	
+  
 	/********************* 
 	 * 
 	 * Filters
@@ -261,6 +398,23 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
     		$scope.stopDataTrackUpload();
     		$scope.cleanDataTracks();
     	}
+    	
+    	if ($scope.loadSampleSheetRunning) {
+    		event.preventDefault();
+    		var dialog = dialogs.confirm("Page Navigation","Sample sheet upload in progress, are you sure you want to leave this page?");
+    		dialog.result.then(function() {
+    			$timeout(function() {
+    				$scope.stopSampleSheetUpload();
+    				$scope.cleanSampleSheet();
+    				$location.path(next.substring($location.absUrl().length - $location.url().length));
+                    $scope.$apply();
+    			})
+    			$scope.navigationOk = true;
+    		});
+    	} else {
+    		$scope.stopSampleSheetUpload();
+    		$scope.cleanSampleSheet();
+    	}
     });
     
     $scope.$on('$routeChangeStart', function (event, next, current) {
@@ -270,6 +424,8 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
     window.onbeforeunload = function() {
     	$scope.stopDataTrackUpload();
     	$scope.cleanDataTracks();
+    	$scope.stopSampleSheetUpload();
+    	$scope.cleanSampleSheet();
     }
     
     /**********************
@@ -285,6 +441,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 			$scope.projectId = config.params.projectId;
 			$scope.projects = data;
 			$scope.setActiveProject();
+			$scope.loadAllDictionaries();
 		});
     	
     };
@@ -555,6 +712,93 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 		
 	};
 	
+	$scope.loadSampleSheet = function(files) {
+    	if (files.length > 0) {
+    		var file = files[0];
+    		if (file.size > 10000000) {
+    			var size = Math.round(file.size / 1000000);
+    			dialogs.error("File Upload Error","File size is greater than 10MB.<br> " + file.name + " : " + size + "MB.");
+    			return;
+    		}
+    		$scope.loadSampleSheetDeferred = $q.defer();
+    		$scope.loadSampleSheetRunning = true;
+        	$scope.loadSampleSheetPromise = $upload.upload({
+        		url: "submit/uploadSampleSheet",
+        		file: files[0],
+        		params: {idProject: $scope.projectId,name: files[0].name},
+        		timeout: $scope.loadSampleSheetDeferred.promise,
+        	}).success(function(data,status,headers,config) {
+        		console.log(data);
+        		var modalInstance = $modal.open({
+		    		templateUrl: 'app/submit/sampleUpload.html',
+		    		controller: 'SampleUploadController',
+		    		windowClass: 'preview-dialog',
+		    		resolve: {
+		    			filename: function() {			    			
+		    				return config.params.name;
+		    			},
+		    			previewData: function() {
+		    				return data.previewData;
+		    			},
+		    		}
+		    	});
+		    	
+		    	modalInstance.result.then(function (setColumns) {
+		    		var sampleNameIdx = null;
+		    		var sampleTypeIdx = null;
+		    		var sampleConditionIdx = [];
+		    		var sampleKitIdx = null;
+		    		var sampleSourceIdx = null;
+		    		for (var i=0;i<setColumns.length;i++) {
+		    			if (setColumns[i].name == "Sample Name") {
+		    				sampleNameIdx = setColumns[i].index;
+		    			} else if (setColumns[i].name == "Library Type") {
+		    				sampleTypeIdx = setColumns[i].index;
+		    			} else if (setColumns[i].name == "Prep Method") {
+		    				sampleKitIdx = setColumns[i].index;
+		    			} else if (setColumns[i].name == "Sample Source") {
+		    				sampleSourceIdx = setColumns[i].index;
+		    			} else if (setColumns[i].name == "Sample Condition") {
+		    				for (var j=0;j<setColumns[i].set.length;j++) {
+		    					sampleConditionIdx.push(setColumns[i].set[j]);
+		    				}
+		    			}
+		    		}
+		    		$scope.loadSampleSheetPromise = $http({
+		    			url: "project/parseSampleSheet",
+		    			method: "PUT",
+		    			params: {sampleNameIdx: sampleNameIdx, sampleTypeIdx: sampleTypeIdx, sampleConditionIdx: sampleConditionIdx, sampleKitIdx: sampleKitIdx,
+		    				sampleSourceIdx: sampleSourceIdx, idProject: $scope.project.idProject, idOrganismBuild: $scope.project.organismBuild.idOrganismBuild },
+		    			timeout: $scope.loadSampleSheetDeferred.promise,
+		    		}).success(function(data) {
+		    			if (data != null) {
+		    				dialogs.notify("Samples successfully created",data);
+		    			}
+		    			cleanupAfterSampleSheetUpload();
+		    		}).error(function(data, status, headers, config) {
+		    			if (data != null) {
+		    				dialogs.error("Error parsing sample sheet.", data);
+		    			}
+		    			
+		    			cleanupAfterSampleSheetUpload();
+		    		});
+			    },function() {
+			    	$scope.cleanSampleSheet();
+			    	cleanupAfterSampleSheetUpload();
+			    });
+        		
+        	}).error(function(data,status) {
+        	
+        		if (data != null) {
+        			dialogs.error("Error uploading sample sheet.", data.message);
+        		}
+          		
+        		cleanupAfterSampleSheetUpload();
+        	});
+    	}
+    	
+	};
+	
 	$scope.checkSampleName = function(name) {
 		if ($scope.sampleEditMode && $scope.originalSampleName == name) {
 			return true;
@@ -574,7 +818,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 			$http({
 				url: "project/isSamplePrepUsed",
 				method: "GET",
-				params: {"description": samplePrep.description}
+				params: {"description": samplePrep.description, "idSamplePrep": samplePrep.idSamplePrep}
 			}).success(function(data) {
 				$scope.samplePrepUsed = data.found;
 				
@@ -621,6 +865,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 			params: {"idSampleCondition" : idSampleCondition},
 		}).success(function(data) {
 			$scope.loadSampleConditions();
+			$scope.checkForUnusedSampleConditions();
 			$scope.sample.sampleCondition = null;
 			$scope.sampleConditionUsed = true;
 		});
@@ -633,6 +878,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 			params: {"idSampleSource" : idSampleSource},
 		}).success(function(data) {
 			$scope.loadSampleSources();
+			$scope.checkForUnusedSampleSources();
 			$scope.sample.sampleSource = null;
 			$scope.sampleSourceUsed = true;
 			
@@ -646,6 +892,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 			params: {"idSamplePrep": idSamplePrep},
 		}).success(function(data) {
 			$scope.loadSamplePreps();
+			$scope.checkForUnusedSamplePreps();
 			$scope.loadSamplePrepsBySampleType();
 			$scope.sample.samplePrep = null;
 			$scope.samplePrepUsed = true;
@@ -778,6 +1025,14 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 	}
 	
 	
+	var cleanupAfterSampleSheetUpload = function() {
+		$scope.loadSampleSheetRunning = false;
+		$scope.loadProjects($scope.projectId);
+		$scope.loadSampleSheetPromise = null;
+		$scope.loadSampleSheetDeferred = null;
+		$scope.loadAllDictionaries();
+	}
+	
 	var cleanupAfterDatatrackUpload = function() {
 		$scope.dataTracksUploading = false;
 		$scope.loadProjects($scope.projectId);
@@ -876,6 +1131,13 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 		}
 	};
 	
+	$scope.stopSampleSheetUpload = function() {
+		if ($scope.loadSampleSheetDeferred != null) {
+			$scope.loadSampleSheetDeferred.resolve();
+			$scope.cleanSampleSheet();
+		}
+	}
+	
 	$scope.cleanDataTracks = function() {
 		if ($scope.projectId != -1 && $scope.projectId != null) {
 			$http({
@@ -887,6 +1149,16 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 			});
 		} 
 	};
+	
+	$scope.cleanSampleSheet = function() {
+		if ($scope.projectId != -1 && $scope.projectId != null) {
+			$http({
+	    		url: "submit/deleteSampleSheet",
+	    		method: "DELETE",
+	    		params: {idProject: $scope.project.idProject}
+	    	});
+		}
+	}
 
 	
 	/**
@@ -1234,6 +1506,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 					$scope.loadSamplePrepsBySampleType();
 					$scope.sample.samplePrep = data;
 					$scope.checkSamplePrep($scope.sample.samplePrep);
+					$scope.checkForUnusedSamplePreps();
 				});
 			}
 			
@@ -1263,6 +1536,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 					$scope.loadSampleSources();
 					$scope.sample.sampleSource = data;
 					$scope.checkSampleSource($scope.sample.sampleSource);
+					$scope.checkForUnusedSampleSources();
 				});
 			}
 		});
@@ -1291,6 +1565,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 					$scope.loadSampleConditions();
 					$scope.sample.sampleCondition = data;
 					$scope.checkSampleCondition($scope.sample.sampleCondition);
+					$scope.checkForUnusedSampleConditions();
 				});
 			}
 		});
@@ -1450,15 +1725,53 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 		"their <strong>Lab</strong> or members of their <strong>Institution.</strong></li>" +
 		"</ol>";
 	
-	$scope.showHelpSample = function() {
-		var title = "Help: Import Samples into Project";
-		dialogs.notify(title, $scope.helpSample);
+	
+	$scope.showHelpSampleBulk = function() {
+		var title = "Help: Bulk Import Samples into Project";
+		dialogs.notify(title, $scope.helpSamplePreamble + $scope.helpSampleBulk);
 	}
 	
-
-	$scope.helpSample = 
-		"<h3>Import Samples into Project</h3>" +
-		"<p>The samples page can be used to view or edit the samples used in the project. Once all of the required fields are filled out, the user " +
+	$scope.showHelpSampleManual = function() {
+		var title = "Help: Manually Import Samples into Project";
+		dialogs.notify(title, $scope.helpSamplePreamble + $scope.helpSampleManual);
+	}
+	
+	$scope.helpSamplePreamble = 
+		"<h3>Sample Page</h3>" +
+		"<p>The samples page can be used to view or edit the samples used in the project.  Users have the option to upload a sample sheet with sample information " +
+		"or manually enter sample information in the form below.</p>" +
+		"<p>If there are unused sample sources, conditions or preps and the corresponding field is empty, a trash can icon will appear. Users can click on the trash can " +
+		"to view a list of the unused field and can then click <strong>Yes</strong> to remove them from the database.</p>" +
+		"<p>Samples in the database are listed in the table below the entry form. The table can be sorted by any column. Users can use the <strong>Controls</strong> column to delete samples, " +
+		"edit samples, or copy sample information to the entry form. Samples cannot be deleted if they are included in an <strong>Analysis</strong>.</p>" +
+		"<p>If the <strong>Edit</strong> button is pushed, the sample information is displayed in the entry form.  Once the user is happy with the " +
+		"changes, the <strong>Save</strong> button can be pushed to commit the changes to the database.  If the user decides against the edits, the " +
+		"<strong>Cancel</strong> button can be pushed.</p>";
+	
+	$scope.helpSampleBulk = 
+		"<h3>Bulk Import Samples into Project</h3>" +
+		"<p>Users can click on the <strong>Bulk Upload</strong> button to begin the process up uploading a sample sheet.  The sample sheet must be a tab-delimited " +
+		"text file and smaller than 50MB (zip/gzip ok).  Biominer will throw error messages if the file is binary, empty or contains ueven numbers " +
+		"of tab-delimited fields.</p>" +
+		"<p>Once the file is uploaded, the user is presented with a preview of the first 10 lines of the file.  Each tab-delimited field will be listed in it's " +
+		"own column.  If a column has any missing information, it will not be part of the preview. The dropdown lists at the top of each column can be used to " +
+		"link columns to the sample information fields. The <strong>Parse</strong> button won't be active until all fields are set.  The sample condition field " +
+		"can be specified more than once, all other fields can only be used once. Duplicate sample names in the file or in the project are not allowed. The " +
+		"sample type field must match of the fields in the sample type drop down menu, we are currenly not allowing new sample types to be created on the fly. " +
+		"If the sample source, type or prep is not recognized it will be added to the Biominer database during the import. The following fields must be set:" +
+		"<ol>" +
+		"<li><strong>Name </strong><em>required</em>: The name of the sample</li>" +
+		"<li><strong>Type </strong><em>required</em>: Sample type (i.e. RNA, DNA).</li>" +
+		"<li><strong>Prep Method </strong><em>required</em>: Kit used when prepping the sample for sequencing.</li>" +
+		"<li><strong>Source </strong><em>required</em>: The source of the sample, which is often the tissue or cell type.</li>" +
+		"<li><strong>Condition </strong><em>required</em>: The sample condition (i.e. Treatment, Control, H3K27me3, mutant, normal). " +
+		"If sample condition is specified more than once, the data will be separated by ':'.</li>" +
+		"</ol>";
+		
+	
+	$scope.helpSampleManual = 
+		"<h3>Manually Import Samples into Project</h3>" +
+		"<p>Once all of the required fields are filled out, the user " +
 		"can press the <strong>Add</strong> button to save the sample to the database. If the user is submitting multiple samples, they can use the " +
 		"<strong>Duplicate</strong> button to replicate the last entered sample. The sample name must be unique to the project, so the <strong>Add</strong> button will " +
 		"be disabled until the name is unique. If the user wants to start over with the sample entry, the user can click the <strong>Clear</strong> button. " +
@@ -1478,12 +1791,8 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 		"Users can add new sample conditions by selecting the <strong>Add New</strong> option from the dropdown. Once the user is finished typing out " +
 		"the condition, they must click on the <strong>+</strong> button to add it to the database.  If the sample condition has not been used by anyone, it " +
 		"can be removed from the database using the <strong>-</strong> button.</li>" +
-		"</ol>" +
-		"<p>Samples in the database are listed in the table below the entry form. The table can be sorted by any column. Users can use the <strong>Controls</strong> column to delete samples, " +
-		"edit samples, or copy sample information to the entry form. Samples cannot be deleted if they are included in an <strong>Analysis</strong>.</p>" +
-		"<p>If the <strong>Edit</strong> button is pushed, the sample information is displayed in the entry form.  Once the user is happy with the " +
-		"changes, the <strong>Save</strong> button can be pushed to commit the changes to the database.  If the user decides against the edits, the " +
-		"<strong>Cancel</strong> button can be pushed.</p>";
+		"</ol>";
+		
 	
 	$scope.showHelpDatatrack = function() {
 		var title = "Help: Import IGV Files into Project";
@@ -1557,7 +1866,9 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 	    "<h1>Submit Data Page</h1>" +
 	    $scope.helpPreamble +
 	    $scope.helpProject +
-	    $scope.helpSample + 
+	    $scope.helpSamplePreamble +
+	    $scope.helpSampleBulk +
+	    $scope.helpSampleManual +
 	    $scope.helpDatatrack +
 	    $scope.helpFileUpload + 
 	    $scope.helpAnalysis;

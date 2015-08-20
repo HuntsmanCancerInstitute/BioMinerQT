@@ -1,5 +1,6 @@
 package hci.biominer.controller;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,7 @@ import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
@@ -301,9 +303,11 @@ public class SubmitController {
     @RequestMapping(value="deleteSample",method=RequestMethod.DELETE)
     @ResponseBody
     public void deleteSample(@RequestParam(value="idSample") Long idSample) {
-    	this.sampleService.deleteSampleById(idSample);
+    	if (this.sampleService.getSampleById(idSample) != null) {
+    		this.sampleService.deleteSampleById(idSample);
+    	}
     }
-    
+    	
     /***************************************************
 	 * URL: /project/updateSample
 	 * updateSample(): update sample with new information
@@ -910,9 +914,9 @@ public class SubmitController {
 	
 	@RequestMapping(value="isSamplePrepUsed",method=RequestMethod.GET)
 	@ResponseBody
-	public BooleanModel isSamplePrepUsed(@RequestParam(value="description") String description) {
+	public BooleanModel isSamplePrepUsed(@RequestParam(value="description") String description, @RequestParam(value="idSamplePrep") Long idSamplePrep) {
 		BooleanModel bm = new BooleanModel();
-		boolean response = this.sampleService.isSamplePrepUsed(description);
+		boolean response = this.sampleService.isSamplePrepUsed(description, idSamplePrep);
 		bm.setFound(response);
 		return bm;
 	}
@@ -954,7 +958,7 @@ public class SubmitController {
 	
 	@RequestMapping(value="isSamplePrepNameUsed",method=RequestMethod.GET)
 	@ResponseBody
-	public BooleanModel isSampleConditionNameUsed(@RequestParam(value="prep") String prep) {
+	public BooleanModel isSamplePrepNameUsed(@RequestParam(value="prep") String prep) {
 		BooleanModel bm = new BooleanModel();
 		List<SamplePrep> spList = this.samplePrepService.getAllSamplePreps();
 		boolean found = false;
@@ -967,6 +971,58 @@ public class SubmitController {
 		}
 		bm.setFound(found);
 		return bm;
+	}
+	
+	@RequestMapping(value="getUnusedSampleConditions",method=RequestMethod.GET)
+	@ResponseBody
+	public List<SampleCondition> getUnusedSampleConditions(@RequestParam(value="idOrganismBuild") Long idOrganismBuild) {
+		try {
+			return sampleConditionService.getUnusedSampleConditions(idOrganismBuild);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			return null;
+		}	
+	}
+	
+	@RequestMapping(value="getUnusedSamplePreps",method=RequestMethod.GET)
+	@ResponseBody
+	public List<SamplePrep> getUnusedSamplePreps() {
+		try {
+			return samplePrepService.getUnusedSamplePreps();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			return null;
+		}	
+	}
+	
+	@RequestMapping(value="getUnusedSampleSources",method=RequestMethod.GET)
+	@ResponseBody
+	public List<SampleSource> getUnusedSampleSources(@RequestParam(value="idOrganismBuild") Long idOrganismBuild) {
+		try {
+			return sampleSourceService.getUnusedSampleSources(idOrganismBuild);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			return null;
+		}	
+	}
+	
+	
+	@RequestMapping(value="deleteSampleConditions",method=RequestMethod.DELETE)
+	@ResponseBody
+	public void deleteSampleConditions(@RequestParam(value="idList") List<Long> idList) {
+		sampleConditionService.deleteSampleConditions(idList);
+	}
+	
+	@RequestMapping(value="deleteSamplePreps",method=RequestMethod.DELETE)
+	@ResponseBody
+	public void deleteSamplePreps(@RequestParam(value="idList") List<Long> idList) {
+		samplePrepService.deleteSamplePreps(idList);
+	}
+	
+	@RequestMapping(value="deleteSampleSources",method=RequestMethod.DELETE)
+	@ResponseBody
+	public void deleteSampleSources(@RequestParam(value="idList") List<Long> idList) {
+		sampleSourceService.deleteSampleSources(idList);
 	}
 	
 	@RequestMapping(value="deleteSamplePrep",method=RequestMethod.DELETE)
@@ -986,6 +1042,244 @@ public class SubmitController {
 	public void deleteSampleSource(@RequestParam(value="idSampleSource") Long idSampleSource) {
 		this.sampleSourceService.deleteSampleSourceById(idSampleSource);
 	}
-    
-    
+	
+	/**
+	 * This method receives indexes of necessary data and then parses the sample sheet file. If certain dictionary entries don't exist,
+	 * they are created. The method simply returns method status and any error messages
+	 * @param response
+	 * @param sampleNameIdx
+	 */
+	@RequestMapping(value="parseSampleSheet",method=RequestMethod.PUT)
+	public @ResponseBody
+	String parseSampleSheet(HttpServletResponse response, @RequestParam("sampleNameIdx") Integer sampleNameIdx,@RequestParam("sampleTypeIdx") Integer sampleTypeIdx, 
+			@RequestParam("sampleConditionIdx") List<Integer> sampleConditionIdx, @RequestParam("sampleKitIdx") Integer sampleKitIdx, 
+			@RequestParam("sampleSourceIdx") Integer sampleSourceIdx, @RequestParam("idProject") Long idProject, @RequestParam("idOrganismBuild") Long idOrganismBuild) {
+
+		OrganismBuild ob = organismBuildService.getOrganismBuildById(idOrganismBuild);
+		Project project = projectService.getProjectById(idProject);
+		
+		Long idSampleSource = null;
+		Long idSampleCondition = null;
+		Long idSampleKit = null;
+		
+		int sampleCount = 0;
+
+		try {
+			//Load up parsed file
+			File directory = new File(FileController.getRawDirectory(),String.valueOf(idProject));
+			if (!directory.exists()) {
+				directory.mkdir();
+			}	
+			
+			File localFile = new File(directory, "sampleSheet.txt");
+			
+			BufferedReader br = ModelUtil.fetchBufferedReader(localFile);
+			
+			//Use header to check for column descrepancies
+			String[] header = br.readLine().split("\t");
+			
+			boolean failure = false;
+			StringBuffer errorMessage = new StringBuffer("");
+			
+			//Parse sample name
+			if (sampleNameIdx >= header.length) {
+				errorMessage.append("Error parsing sampleSheet: Index of 'Sample Name' greater than the number of columns.<br>");
+				failure = true;
+			} 
+			
+			//Parse sample prep kit
+			if (sampleKitIdx >= header.length) {
+				errorMessage.append("Error parsing sampleSheet: Index of 'Sample Prep Kit' greater than the number of columns.<br>");
+				failure = true;
+			}
+			
+			//Parse sample type
+			if (sampleTypeIdx >= header.length) {
+				errorMessage.append("Error parsing sampleSheet: Index of 'Sample Type' greater than the number of columns.<br>");
+				failure = true;
+			}
+			
+			//Parse sample source
+			if(sampleSourceIdx >= header.length) {
+				errorMessage.append("Error parsing sampleSheet: Index of 'Sample Source' greater than the number of columns.<br>");
+				failure = true;
+			}
+			
+			
+			for (int i=0;i<sampleConditionIdx.size();i++) {
+				if(sampleConditionIdx.get(i) >= header.length) {
+					errorMessage.append("Error parsing sampleSheet: Index of 'Sample Condition' greater than the number of columns.<br>");
+					failure = true;
+				}
+			}
+			if (failure) {
+				response.setStatus(500);
+				errorMessage.append("No samples were added to the database.<br>");
+				localFile.delete();
+				return errorMessage.toString();
+				
+			}
+			
+			
+			//Read through file and validate
+			String line = null;
+			HashSet<String> used = new HashSet<String>();
+			while ((line = br.readLine()) != null) {
+				String[] items = line.split("\t");
+				
+				String sampleName = items[sampleNameIdx];
+				if (sampleService.isSampleNameUsed(sampleName,idProject)) {
+					errorMessage.append("The sample name " + sampleName + "  is already in use for this project!<br>");
+					failure = true;
+				}
+				
+				if (used.contains(sampleName)) {
+					errorMessage.append("The sample name " + sampleName + " is used more than once in the sample sheet!<br>");
+					failure = true;
+				}
+				
+				
+				String type = items[sampleTypeIdx];
+				if (!sampleService.isSampleTypeUsed(type)) {
+					errorMessage.append("'Sample Type' is currently restricted to a set list that doesn't include " + type + ". Please look at the dropdown list for acceptable values.<br>");
+					failure = true;
+				}
+				used.add(sampleName);
+				
+			}
+			
+			br.close();
+			
+			if (failure) {
+				errorMessage.append("No samples were added to the database.<br>");
+				response.setStatus(500);
+				localFile.delete();
+				return errorMessage.toString();
+			}
+			
+			
+			br = ModelUtil.fetchBufferedReader(localFile);
+			br.readLine();
+			
+			while ((line = br.readLine()) != null) {
+				String[] items = line.split("\t");
+				
+				idSampleSource = null;
+				idSampleCondition = null;
+				idSampleKit = null;
+				
+				String sampleName = items[sampleNameIdx];
+				String type = items[sampleTypeIdx];
+				
+				SampleType sampleType = sampleTypeService.getSampleTypeByType(type);
+				if (sampleType == null) {
+					errorMessage.append("Error parsing 'Sample Type' column. Could not find/create entry, please file an error report!<br>");
+					failure = true;
+				}
+				
+				String description = items[sampleKitIdx];
+				
+				if (samplePrepService.getSamplePrepByDescription(description, sampleType.getIdSampleType()) == null) {
+					SamplePrep sp = new SamplePrep();
+					sp.setSampleType(sampleType);
+					sp.setDescription(description);
+					idSampleKit = samplePrepService.addSamplePrep(sp);
+				}
+				SamplePrep samplePrep = samplePrepService.getSamplePrepByDescription(description, sampleType.getIdSampleType());
+				if (samplePrep == null) {
+					errorMessage.append("Error parsing 'Sample Prep Kit' column.  Could not find/create entry, please file an error report!<br>");
+					failure = true;
+				}
+				
+				//Parse sample condition
+				String condition = "";
+				for (int i=0;i<sampleConditionIdx.size();i++) {
+					if(sampleConditionIdx.get(i) >= items.length) {
+						errorMessage.append("Error parsing sampleSheet: Index of 'Sample Condition' greater than the number of columns.<br>");
+						failure = true;
+						
+					}
+					 condition += ";" + items[sampleConditionIdx.get(i)];
+				}
+				condition = condition.substring(1,condition.length());
+				System.out.println(condition);
+				
+				
+				if (sampleConditionService.getSampleConditionByCondition(condition, idOrganismBuild) == null) {
+					SampleCondition sc = new SampleCondition();
+					sc.setOrganismBuild(ob);
+					sc.setCond(condition);
+					idSampleCondition = sampleConditionService.addSampleCondition(sc);
+				}
+				
+				SampleCondition sampleCondition = sampleConditionService.getSampleConditionByCondition(condition, idOrganismBuild);
+				if (sampleCondition == null) {
+					failure = true;
+					errorMessage.append("Error parsing 'Sample Condition' column. Could not find/create entry, please file an error report!<br>");
+				}
+				
+				String source = items[sampleSourceIdx];
+				
+				if (sampleSourceService.getSampleSourceBySource(source, idOrganismBuild) == null) {
+					SampleSource sc = new SampleSource();
+					sc.setOrganismBuild(ob);
+					sc.setSource(source);
+					idSampleSource = sampleSourceService.addSampleSource(sc);
+				}
+				
+				SampleSource sampleSource = sampleSourceService.getSampleSourceBySource(source, idOrganismBuild);
+				if (sampleSource == null) {
+					failure = true;
+					errorMessage.append("Error parsing 'Sample Source' column. Could not find/create entry, please file an error report!<br>");
+				}
+				
+				if (failure) {
+					response.setStatus(500);
+					errorMessage.append("Depending on when the error was encountered, there may be a partial file upload.<br>");
+					//Delete new entries
+					if (idSampleSource != null) {
+						sampleSourceService.deleteSampleSourceById(idSampleSource);
+					}
+					if (idSampleCondition != null) {
+						sampleConditionService.deleteSampleConditionById(idSampleCondition);
+					}
+					if (idSampleKit != null) {
+						samplePrepService.deleteSamplePrepById(idSampleKit);
+					}
+				}
+				
+				Sample sample = new Sample();
+				sample.setName(sampleName);
+				sample.setSampleCondition(sampleCondition);
+				sample.setSamplePrep(samplePrep);
+				sample.setSampleType(sampleType);
+				sample.setSampleSource(sampleSource);
+				sample.setProject(project);
+				sampleService.addSample(sample);
+				sampleCount += 1;
+			}
+			
+			localFile.delete();
+			
+		} catch (Exception ex) {
+			response.setStatus(500);
+			ex.printStackTrace();
+			
+			//Delete new entries
+			if (idSampleSource != null) {
+				sampleSourceService.deleteSampleSourceById(idSampleSource);
+			}
+			if (idSampleCondition != null) {
+				sampleConditionService.deleteSampleConditionById(idSampleCondition);
+			}
+			if (idSampleKit != null) {
+				samplePrepService.deleteSamplePrepById(idSampleKit);
+			}
+			
+			return "Error parsing sampleSheet:<br>" + ex.getMessage();
+		}
+		
+		
+		return sampleCount + " samples loaded.";		
+	}
 }

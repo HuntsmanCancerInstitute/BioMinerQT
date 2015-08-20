@@ -19,12 +19,16 @@ public class SampleConditionService {
 		return sampleConditionDAO.getSampleConditionById(idSampleCondition);
 	}
 	
+	public SampleCondition getSampleConditionByCondition(String condition, Long idOrganismBuild) {
+		return sampleConditionDAO.getSampleConditionByCondition(condition, idOrganismBuild);
+	}
+	
 	public List<SampleCondition> getAllSampleConditions() {
 		return sampleConditionDAO.getSampleConditions();
 	}
 	
-	public void addSampleCondition(SampleCondition sampleCondition) {
-		sampleConditionDAO.addSampleCondition(sampleCondition);		
+	public Long addSampleCondition(SampleCondition sampleCondition) {
+		return sampleConditionDAO.addSampleCondition(sampleCondition);		
 		
 	}
 
@@ -35,5 +39,13 @@ public class SampleConditionService {
 
 	public void updateSampleCondition(Long idSampleCondition, SampleCondition sampleCondition) {
         sampleConditionDAO.updateSampleCondition(idSampleCondition, sampleCondition);
+	}
+	
+	public List<SampleCondition> getUnusedSampleConditions(Long idOrganismBuild) {
+		return sampleConditionDAO.getUnusedSampleConditions(idOrganismBuild);
+	}
+	
+	public void deleteSampleConditions(List<Long> sampleConditionIdList) {
+		sampleConditionDAO.deleteSampleConditions(sampleConditionIdList);
 	}
 }

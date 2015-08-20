@@ -19,6 +19,10 @@ public class SampleTypeService {
 		return sampleTypeDAO.getSampleTypeById(idSampleType);
 	}
 	
+	public SampleType getSampleTypeByType(String type) {
+		return sampleTypeDAO.getSampleTypeByType(type);
+	}
+	
 	public List<SampleType> getAllSampleTypes() {
 		return sampleTypeDAO.getSampleTypes();
 	}
@@ -36,4 +40,6 @@ public class SampleTypeService {
 	public void updateSampleType(Long idSampleType, SampleType sampleType) {
         sampleTypeDAO.updateSampleType(idSampleType, sampleType);
 	}
+	
+	
 }

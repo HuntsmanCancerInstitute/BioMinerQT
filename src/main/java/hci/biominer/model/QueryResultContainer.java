@@ -17,9 +17,10 @@ public class QueryResultContainer implements Serializable {
 	private boolean reverse = true;
 	private int analysisNum;
 	private int dataTrackNum;
+	private long idOrganismBuild;
 	
 	
-	public QueryResultContainer(List<QueryResult> results, int resultsSize, int analysisNum, int dataTrackNum, int page, String sortType, boolean sortOnCreate) {
+	public QueryResultContainer(List<QueryResult> results, int resultsSize, int analysisNum, int dataTrackNum, int page, String sortType, boolean sortOnCreate, Long idOrganismBuild) {
 		this.resultList = results;
 		this.resultNum = resultsSize;
 		this.pages = page;
@@ -29,6 +30,7 @@ public class QueryResultContainer implements Serializable {
 		}
 		this.analysisNum = analysisNum;
 		this.dataTrackNum = dataTrackNum;
+		this.idOrganismBuild = idOrganismBuild;
 	}
 
 	public List<QueryResult> getResultList() {
@@ -55,6 +57,10 @@ public class QueryResultContainer implements Serializable {
 		return dataTrackNum;
 	}
 
+	public Long getIdOrganismBuild() {
+		return idOrganismBuild;
+	}
+	
 	public void setResultList(List<QueryResult> results) {
 		this.resultList = results;
 	}
@@ -104,7 +110,7 @@ public class QueryResultContainer implements Serializable {
 		
 		List<QueryResult> subset = this.resultList.subList(start, end);
 		
-		QueryResultContainer qrc = new QueryResultContainer(subset,this.resultNum, this.analysisNum, this.dataTrackNum, this.pages, sortType, false);
+		QueryResultContainer qrc = new QueryResultContainer(subset,this.resultNum, this.analysisNum, this.dataTrackNum, this.pages, sortType, false, idOrganismBuild);
 		return qrc;
 		
 	}

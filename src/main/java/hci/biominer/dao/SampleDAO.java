@@ -51,8 +51,7 @@ public class SampleDAO {
 			Hibernate.initialize(s.isAnalysisSet());
 		}
 		session.close();
-		return samples;
-		
+		return samples;	
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -107,9 +106,9 @@ public class SampleDAO {
 		Query query = session.createQuery("from Sample as s left join s.sampleCondition as sc where sc.cond = :cond and sc.organismBuild.idOrganismBuild = :idOrganismBuild");
 		query.setParameter("cond", cond);
 		query.setParameter("idOrganismBuild", idOrganismBuild);
-		List<SampleType> stList = query.list();
+		List<Sample> sampleList = query.list();
 		session.close();
-		if (stList.size() > 0) {
+		if (sampleList.size() > 0) {
 			return true;
 		} else {
 			return false;
@@ -117,14 +116,15 @@ public class SampleDAO {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public boolean isSamplePrepUsed(String description) {
+	public boolean isSamplePrepUsed(String description, Long idSamplePrep) {
 		Session session = getCurrentSession();
 		session.beginTransaction();
-		Query query = session.createQuery("select s from Sample as s left join s.samplePrep as sp where sp.description = :description");
+		Query query = session.createQuery("from Sample s left join s.samplePrep as sp where sp.description = :description and sp.idSamplePrep = :idSamplePrep");
 		query.setParameter("description", description);
-		List<AnalysisType> spList = query.list();
+		query.setParameter("idSamplePrep", idSamplePrep);
+		List<Sample> sampleList = query.list();
 		session.close();
-		if (spList.size() > 0) {
+		if (sampleList.size() > 0) {
 			return true;
 		} else {
 			return false;
@@ -132,15 +132,46 @@ public class SampleDAO {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public boolean isSampleSource(String source, Long idOrganismBuild) {
+	public boolean isSampleNameUsed(String name, Long idProject) {
+		Session session = getCurrentSession();
+		session.beginTransaction();
+		Query query = session.createQuery("from Sample where name = :name and idProject = :idProject");
+		query.setParameter("name", name);
+		query.setParameter("idProject",idProject);
+		List<Sample> sampleList = query.list();
+		session.close();
+		if (sampleList.size() > 0) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	public boolean isSampleSourceUsed(String source, Long idOrganismBuild) {
 		Session session = getCurrentSession();
 		session.beginTransaction();
 		Query query = session.createQuery("from Sample as s left join s.sampleSource as ss where ss.source = :source and ss.organismBuild.idOrganismBuild = :idOrganismBuild");
 		query.setParameter("source", source);
 		query.setParameter("idOrganismBuild",idOrganismBuild);
-		List<AnalysisType> ssList = query.list();
+		List<Sample> sampleList = query.list();
 		session.close();
-		if (ssList.size() > 0) {
+		if (sampleList.size() > 0) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	public boolean isSampleTypeUsed(String type) {
+		Session session = getCurrentSession();
+		session.beginTransaction();
+		Query query = session.createQuery("select s from Sample as s left join s.sampleType as st where st.type = :type");
+		query.setParameter("type", type);
+		List<Sample> sampleList = query.list();
+		session.close();
+		if (sampleList.size() > 0) {
 			return true;
 		} else {
 			return false;

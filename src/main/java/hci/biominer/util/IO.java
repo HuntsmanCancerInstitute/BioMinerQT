@@ -1,14 +1,31 @@
 package hci.biominer.util;
 import java.io.*;
-
 import java.util.zip.*;
 import java.net.*;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
 
 
 /**
  * Static methods for Input Output related tasks.
  */
 public class IO {
+	
+	public static boolean isASCII(String test) {
+    	byte[] byteArray = test.getBytes();
+    	CharsetDecoder decoder = Charset.forName("US-ASCII").newDecoder();
+        try {
+            CharBuffer buffer = decoder.decode(ByteBuffer.wrap(byteArray));
+            return true;
+ 
+
+        } catch (CharacterCodingException e) {
+            return false;
+        }
+    }
 
 
 	/**Fetches a BufferedReader from a url or file, zip/gz OK.*/

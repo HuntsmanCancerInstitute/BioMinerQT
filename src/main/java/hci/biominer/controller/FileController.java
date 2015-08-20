@@ -2,12 +2,15 @@ package hci.biominer.controller;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
@@ -45,6 +48,7 @@ import hci.biominer.util.Enumerated.FileStateEnum;
 import hci.biominer.util.Enumerated.FileTypeEnum;
 import hci.biominer.util.FileMeta;
 import hci.biominer.util.GenomeBuilds;
+import hci.biominer.util.IO;
 import hci.biominer.util.PreviewMap;
 import hci.biominer.util.ModelUtil;
 import hci.biominer.util.Enumerated.*;
@@ -68,6 +72,7 @@ public class FileController {
 	@Autowired
 	private AnalysisTypeService analysisTypeService;
 	
+
 	public static void checkProperties() throws Exception{
 		if (!BiominerProperties.isLoaded()) {
 			BiominerProperties.loadProperties();
@@ -138,9 +143,7 @@ public class FileController {
 			@RequestParam("idFileUpload") Long idFileUpload,
 			@RequestParam("name") String name,
 			HttpServletResponse response) throws Exception {
-		
-
-		
+	
 		FileMeta fm = new FileMeta();
 		
 		if (!file.isEmpty()) {
@@ -161,8 +164,6 @@ public class FileController {
 					localFile = new File(directory,name + ".gz");
 					ftype = 1;
 				}
-				
-				
 				
 				//If first file, set append flag to false and delete existing files with the same name.
 				boolean append = true;
@@ -889,6 +890,178 @@ public class FileController {
 		 }
 		 
 		 this.fileUploadService.deleteFileUploadById(idFileUpload);
+	}
+	
+	/**** 
+	 * uploadSampleSheet: Input is a file object that should represent a GNomEx sample sheet.  This method uploads the file,
+	 * parses the file to remove unused columns and then returns a preview of the file.
+	 * @param MultipartFile file: Sample sheet
+	 * @param Long idProject: project identifier
+	 * @return PreviewMap: Object that contains the first 20 lines of the file, with meaningless columns removed
+	 */
+	@RequestMapping(value="uploadSampleSheet", method=RequestMethod.POST)
+	public @ResponseBody
+	PreviewMap uploadSampleSheet(HttpServletResponse response, @RequestParam("file") MultipartFile file, @RequestParam("idProject") Long idProject) {
+		PreviewMap pm = new PreviewMap();
+		
+		File localFile = null;
+		
+		try {
+			//Create the project directory, if it doens't exist
+			File directory = new File(getRawDirectory(),String.valueOf(idProject));
+			if (!directory.exists()) {
+				directory.mkdir();
+			}
+			
+			//Copy the file to the server (file is restricted to 1GB, so no chunking is necessary
+			localFile = new File(directory, file.getName());
+			if (localFile.exists()) {
+				localFile.delete();
+			}
+			
+			FileCopyUtils.copy(file.getInputStream(),new FileOutputStream(localFile));
+
+			//Read through file and identify columns with missing data.
+			BufferedReader br = ModelUtil.fetchBufferedReader(localFile);
+
+			String headerLine = br.readLine();
+			if (headerLine == null) {
+				pm.setMessage("This file appears to be empty, are you sure you uploaded the correct file?");
+				response.setStatus(500);
+				if (localFile.exists()) {
+					localFile.delete();
+				}
+				return pm;
+			}
+			if (!IO.isASCII(headerLine)) {
+				pm.setMessage("This file appears to be in binary, are you sure you uploaded the correct file?");
+				response.setStatus(500);
+				if (localFile.exists()) {
+					localFile.delete();
+				}
+				return pm;
+			}
+
+			String[] header = headerLine.split("\t"); //Read in the header
+
+			boolean[] missingList = new boolean[header.length];
+			for (int i=0; i<missingList.length;i++) {
+				missingList[i] = false;
+			}
+
+			String line = null;
+			int lineCount = 1;
+
+			while ((line = br.readLine()) != null) {
+				String[] values = line.split("\t");
+				if (values.length != header.length) {
+					pm.setMessage("Line " + lineCount + " has a different number of tab-delimited fields than the header.");
+					if (localFile.exists()) {
+						localFile.delete();
+					}
+					response.setStatus(500);
+					return pm;
+				}
+
+				for (int i=0; i<values.length; i++) {
+					if (values[i].equals("")) {
+						missingList[i] = true;
+					}
+				}
+				lineCount++;
+			}
+
+			br.close();
+
+			boolean ok = false;
+			for (boolean b: missingList) {
+				if (!b) {
+					ok = true;
+				}
+			}
+			if (!ok) {
+				pm.setMessage("None of the columns are completed for all samples, please fix the file.");
+				if (localFile.exists()) {
+					localFile.delete();
+				}
+				response.setStatus(500);
+				return pm;
+			}
+
+			//Read through the file file and only write out meaningful columns
+			br = ModelUtil.fetchBufferedReader(localFile);
+			File parsedFile = new File(directory, "sampleSheet.txt");
+			if (parsedFile.exists()) {
+				parsedFile.delete();
+			}
+			BufferedWriter bw = new BufferedWriter(new FileWriter(parsedFile));
+
+			lineCount = 0;
+			while ((line = br.readLine()) != null) {
+				String[] values = line.split("\t");
+				StringBuffer sb = new StringBuffer("");
+				for (int i=0; i<values.length; i++) {
+					if (!missingList[i]) {
+						sb.append("\t" + values[i]);
+					}
+				}
+				String output = sb.toString().substring(1, sb.length());
+				bw.write(output + "\n");
+
+				if (lineCount < 10) {
+					pm.addPreviewData(output.split("\t"));
+				}
+				lineCount++;
+			}
+			bw.close();
+			br.close();
+
+			//delete original upload
+			if (localFile.exists()) {
+				localFile.delete();
+			}
+			
+		} catch (Exception ex) {
+			//update file upload
+			ex.printStackTrace();
+			pm.setMessage("Error uploading the sample sheet: " + ex.getMessage());
+			if (localFile != null && localFile.exists()) {
+				localFile.delete();
+			}
+			response.setStatus(500);
+		}
+		
+		return pm;
+	}
+	
+	/** 
+	 * This method deletes sampleSheet.txt if it exists. This should be called if someone cancels out of the preview.
+	 * @param response: If there is an error, this will return error code and message
+	 * @param Long idProject: project id, used to create sampleSheet directory
+	 * @return String message: Error message if failed, OK if success.
+	 */
+	@RequestMapping(value="deleteSampleSheet")
+	public @ResponseBody
+	String deleteSampleSheet(HttpServletResponse response, @RequestParam("idProject") Long idProject) {
+		try {
+			//Create the project directory, if it doens't exist
+			File directory = new File(getRawDirectory(),String.valueOf(idProject));
+			if (!directory.exists()) {
+				directory.mkdir();
+			}
+			
+			File localFile = new File(directory, "sampleSheet.txt");
+			
+			if (localFile.exists()) {
+				localFile.delete();
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			response.setStatus(500);
+			return "Problem deleting sample sheet: " + ex.getMessage();
+		}
+		return "OK";
+		
 	}
 	
 	

@@ -19,6 +19,10 @@ public class SamplePrepService {
 		return samplePrepDAO.getSamplePrepById(idSamplePrep);
 	}
 	
+	public SamplePrep getSamplePrepByDescription(String description, Long idSampleType) {
+		return samplePrepDAO.getSamplePrepByDescription(description, idSampleType);
+	}
+	
 	public List<SamplePrep> getSamplePrepBySampleType(Long idSampleType) {
 		return samplePrepDAO.getSamplePrepBySampleType(idSampleType);
 	}
@@ -27,8 +31,8 @@ public class SamplePrepService {
 		return samplePrepDAO.getSamplePreps();
 	}
 	
-	public void addSamplePrep(SamplePrep samplePrep) {
-		samplePrepDAO.addSamplePrep(samplePrep);		
+	public Long addSamplePrep(SamplePrep samplePrep) {
+		return samplePrepDAO.addSamplePrep(samplePrep);		
 		
 	}
 
@@ -40,5 +44,15 @@ public class SamplePrepService {
 	public void updateSamplePrep(Long idSamplePrep, SamplePrep samplePrep) {
         samplePrepDAO.updateSamplePrep(idSamplePrep, samplePrep);
 	}
+	
+	public void deleteSamplePreps(List<Long> samplePrepIdList) {
+		samplePrepDAO.deleteSamplePreps(samplePrepIdList);
+	}
+	
+	public List<SamplePrep> getUnusedSamplePreps() {
+		return samplePrepDAO.getUnusedSamplePreps();
+	}
+	
+	
 
 }

@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -14,6 +15,8 @@ import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+
+import org.springframework.web.multipart.MultipartFile;
 
 public class ModelUtil {
 	
@@ -78,6 +81,8 @@ public class ModelUtil {
 		else in = new BufferedReader (new FileReader (txtFile));
 		return in;
 	}
+	
+	
 
 	public static String arrayListToString(@SuppressWarnings("rawtypes") ArrayList al, String seporator) {
 		StringBuilder sb = new StringBuilder();

@@ -115,9 +115,9 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 	
 	if (!$window.sessionStorage.getItem("idTab")) {
 		$window.sessionStorage.setItem("idTab",guid());
-		console.log("Tab id now set");
+		$scope.idTab = $window.sessionStorage.getItem("idTab");
 	} else {
-		console.log("Tab id ready set")
+		$scope.idTab = $window.sessionStorage.getItem("idTab");
 	}
 	
 	//Static dictionaries.
@@ -227,8 +227,10 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
     		$http({
     			url: "query/copyAllCoordinates",
     			method: "POST",
-    		}).success(function() {
+    			params: {idTab : $scope.idTab},
+    		}).success(function(data) {
     			ngProgress.complete();
+    			dialogs.notify("Coordinate Copy Successful",data);
     			$scope.regions = "[All result coordinates]"; 
     		}).error(function(data,status) {
     			if (status == 998) {
@@ -252,10 +254,14 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
         	}
         	if (coordinateList.length == 0) {
         		dialogs.notify("No Results Selected","There are no results selected in the table.  Please select individual results or everything before trying to copy coordinates.");
+        	} else {
+        		var coordinateEntry = coordinateList.join("\n");
+            	$scope.regions = coordinateEntry;
+            	dialogs.notify("Coordinate Copy Successful",coordinateList.length + " coordinates were copied");
+            	ngProgress.complete();
         	}
-        	var coordinateEntry = coordinateList.join("\n");
-        	$scope.regions = coordinateEntry;
-        	ngProgress.complete();
+    	
+        	
     	}
     	
     	$scope.intersectionTarget = "REGION";
@@ -272,13 +278,14 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
     		$http({
     			url: "query/copyAllGenes",
     			method: "POST",
-    		}).success(function() {
+    			params: {idTab : $scope.idTab}
+    		}).success(function(data) {
     			ngProgress.complete();
+    			dialogs.notify("Gene Copy Successful",data);
     			$scope.genes = "[All result genes]"; 
     		}).error(function(data,status) {
     			if (status == 998) {
     				dialogs.error("Error Retrieving Results","The query results for this user could not be found.  Please submit a bug report.");
-    				
     			}
     			ngProgress.reset();
     			$scope.genes = ""; 
@@ -295,10 +302,13 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
         	}
         	if (geneList.length == 0) {
         		dialogs.notify("No Results Selected","There are no results selected in the table.  Please select individual results or everything before trying to copy genes.");
+        	} else {
+        		var geneEntry = geneList.join("\n");
+            	$scope.genes = geneEntry;
+            	ngProgress.complete();
+        		dialogs.notify("Gene Copy Successful",geneList.length + " genes were copied");
         	}
-        	var geneEntry = geneList.join("\n");
-        	$scope.genes = geneEntry;
-        	ngProgress.complete();
+        	
     	}
     	
     	$scope.intersectionTarget = "GENE";
@@ -316,18 +326,16 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
         		timeout: $scope.regionUploadDeferred.promise,
         	}).success(function(data) {
         		$scope.regions = data.regions;
-        		if (data.message == null) {
-        			$scope.regions = data.regions;
-        		} else {
-        			var message = data.message;
-        			var title = "Error Processing Region File";
-        			dialogs.error(title,message,null);
-            		
-        		}
+        		var title = "Successfully Processed Region File";
+        		var message = data.message;
+        		dialogs.notify(title,message,null);
+    
         		$scope.regionUploadDeferred = null;
         		$scope.regionUploadRunning = false;
         	}).error(function(data,status) {
-        		console.log("error loading genes");
+        		var message = data.message;
+    			var title = "Error Processing Region File";
+    			dialogs.error(title,message,null);
         		$scope.regionUploadDeferred = null;
         		$scope.regionUploadRunning = false;
         	});
@@ -346,19 +354,16 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 	    		timeout: $scope.geneUploadDeferred.promise,
 	    	}).success(function(data) {
 	    		$scope.genes = data.regions;
-	    		if (data.message == null) {
-	    			$scope.genes = data.regions;
-	    		} else {
-	    			var message = data.message;
-	    			var title = "Error Processing Gene File";
-	    			console.log(message);
-	    			dialogs.error(title,message,null);
-	        		
-	    		}
+	    		var title = "Successfully Processed Gene File";
+	    		var message = data.message;
+	    		dialogs.notify(title,message,null);
+	    		
 	    		$scope.geneUploadDeferred = null;
 	    		$scope.geneUploadRunning = false;
 	    	}).error(function(data,status) {
-	    		console.log("error loading genes");
+	    		var message = data.message;
+    			var title = "Error Processing Region File";
+    			dialogs.error(title,message,null);
 	    		$scope.geneUploadDeferred = null;
 	    		$scope.geneUploadRunning = false;
 	    	});
@@ -369,7 +374,8 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 		
 		$http({
 			url: "query/startIgvSession",
-			method: "GET"
+			method: "GET",
+			params : {idTab: $window.sessionStorage.getItem("idTab")}
 		}).success(function(data) {
 			if (data.warnings == "") {
 				$scope.igvWarnings = "";
@@ -537,7 +543,6 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 		$scope.queryForm.$setPristine();
 		
 		$scope.querySummary = [];
-		$scope.codeResultType = "";
 		$scope.isGeneBasedQuery = true;
 		$scope.idOrganismBuild = "";
 
@@ -870,7 +875,6 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 		
 		$scope.returnedResultType = $scope.codeResultType;
 		$scope.returnedAnalysisType = angular.copy($scope.selectedAnalysisType);
-		$scope.returnedOrganismBuild = angular.copy($scope.idOrganismBuild);
 		$scope.totalResults = 0;
 		
 		
@@ -910,6 +914,7 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 				$scope.totalResults = data.resultNum;
 				$scope.totalAnalyses = data.analysisNum;
 				$scope.totalDatatracks = data.dataTrackNum;
+				$scope.returnedOrganismBuild = data.idOrganismBuild;
 				$scope.hasResults = true;
 			}
 			
@@ -966,9 +971,12 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 	}
 	
 	$scope.downloadAnalysis = function() {
+		console.log($window.sessionStorage.getItem("idTab"));
 		$http({
 			url: "query/downloadAnalysis",
-			method: "GET"
+			method: "GET",
+			params: {idTab: $window.sessionStorage.getItem("idTab"), 
+				     codeResultType: $scope.returnedResultType}
 		});
 	};
 	
@@ -978,7 +986,8 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 			method: "GET",
 			params: {resultsPerPage:          $scope.resultsPerPage,
 				     pageNum:                 $scope.queryCurrentPage,
-				     sortType:                $scope.sortType},
+				     sortType:                $scope.sortType,
+				     idTab:					  $window.sessionStorage.getItem("idTab")},
 				     
 		}).success(function(data) {
 			if (data != null) {
@@ -1362,6 +1371,7 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 				$scope.totalResults = data.resultNum;
 				$scope.totalAnalyses = data.analysisNum;
 				$scope.totalDatatracks = data.dataTrackNum;
+				$scope.returnedOrganismBuild = data.idOrganismBuild;
 				$scope.hasResults = true;
 			}
 			$http({
@@ -1587,7 +1597,7 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 		"It's OK if there is information after the region info, but there can't be any information preceding. " +
 		"There can be only one region per line, any more will be skipped.  Regions can be in the format 'chr:start-end' or 'chr\\tstart\\tend', " +
 		"where \\t is a tab.</p>" +
-		"<p>Genes can be separated by commas or newlines.  Genes names are not checked against a database until the query " +
+		"<p>Gene names are expected at the beginning of each line. Everything after the first encountered space is ignored.  Genes names are not checked against a database until the query " +
 		"is run.</p>" +
 		"<p>Users can also opt to search for results that do not match a set of genes or regions by selecting the <strong>Does not intersect</strong> " +
 		"button.</p>" +

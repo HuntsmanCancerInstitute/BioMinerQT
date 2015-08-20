@@ -19,22 +19,33 @@ public class SampleSourceService {
 		return sampleSourceDAO.getSampleSourceById(idSampleSource);
 	}
 	
+	public SampleSource getSampleSourceBySource(String source, Long idOrganismBuild) {
+		return sampleSourceDAO.getSampleSourceBySource(source, idOrganismBuild);
+	}
+	
 	public List<SampleSource> getAllSampleSources() {
 		return sampleSourceDAO.getSampleSources();
 	}
 	
-	public void addSampleSource(SampleSource sampleSource) {
-		sampleSourceDAO.addSampleSource(sampleSource);		
+	public Long addSampleSource(SampleSource sampleSource) {
+		return sampleSourceDAO.addSampleSource(sampleSource);		
 		
 	}
 
 	public void deleteSampleSourceById(Long idSampleSource) {
         sampleSourceDAO.deleteSampleSource(idSampleSource);
-		
 	}
 
 	public void updateSampleSource(Long idSampleSource, SampleSource sampleSource) {
         sampleSourceDAO.updateSampleSource(idSampleSource, sampleSource);
+	}
+	
+	public void deleteSampleSources(List<Long> sampleSourceIdList) {
+		sampleSourceDAO.deleteSampleSources(sampleSourceIdList);
+	}
+	
+	public List<SampleSource> getUnusedSampleSources(Long idOrganismBuild) {
+		return sampleSourceDAO.getUnusedSampleSources(idOrganismBuild);
 	}
 	
 }

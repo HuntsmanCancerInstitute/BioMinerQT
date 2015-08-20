@@ -2,8 +2,11 @@ package hci.biominer.dao;
 
 import java.util.List;
 
+import hci.biominer.model.Sample;
 import hci.biominer.model.SampleType;
 
+import org.hibernate.Hibernate;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +34,20 @@ public class SampleTypeDAO {
 		SampleType sampleType = (SampleType)session.get(SampleType.class, idSampleType);
 		session.close();
 		return sampleType;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public SampleType getSampleTypeByType(String type) {
+		Session session = getCurrentSession();
+		Query query = session.createQuery("from SampleType as st where st.type = :type");
+		query.setParameter("type", type);
+		List<SampleType> sampleTypes = query.list();
+		session.close();
+		if (sampleTypes.isEmpty()) {
+			return null;
+		} else {
+			return sampleTypes.get(0);
+		}
 	}
 	
 	public void addSampleType(SampleType sampleType) {

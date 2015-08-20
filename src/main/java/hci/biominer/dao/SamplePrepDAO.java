@@ -2,7 +2,9 @@ package hci.biominer.dao;
 
 import java.util.List;
 
+import hci.biominer.model.SampleCondition;
 import hci.biominer.model.SamplePrep;
+import hci.biominer.model.SampleType;
 
 import org.hibernate.Query;
 import org.hibernate.Session;
@@ -44,12 +46,30 @@ public class SamplePrepDAO {
 		return samplePrep;
 	}
 	
-	public void addSamplePrep(SamplePrep samplePrep) {
+	@SuppressWarnings("unchecked")
+	public SamplePrep getSamplePrepByDescription(String description, Long idSampleType) {
+		Session session = getCurrentSession();
+		Query query = session.createQuery("from SamplePrep where description = :description and idSampleType = :idSampleType");
+		query.setParameter("description", description);
+		query.setParameter("idSampleType", idSampleType);
+		
+		List<SamplePrep> samplePreps = query.list();
+		
+		session.close();
+		if (samplePreps.size() == 0) {
+			return null;
+		} else {
+			return samplePreps.get(0);
+		}
+	}
+	
+	public Long addSamplePrep(SamplePrep samplePrep) {
 		Session session = getCurrentSession();
 		session.beginTransaction();
 		session.save(samplePrep);
 		session.getTransaction().commit();
 		session.close();
+		return samplePrep.getIdSamplePrep();
 	}
 	
 	public void updateSamplePrep(Long idSamplePrep, SamplePrep samplePrep) {
@@ -74,5 +94,21 @@ public class SamplePrepDAO {
 		session.getTransaction().commit();
 		session.close();
 	}
+	
+	public void deleteSamplePreps(List<Long> samplePrepIdList) {
+		for (Long id: samplePrepIdList) {
+			deleteSamplePrep(id);
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	public List<SamplePrep> getUnusedSamplePreps() {
+		Session session = getCurrentSession();
+		Query query = session.createQuery("select sp from Sample s right outer join s.samplePrep sp where s.idSample is null");
+		List<SamplePrep> samplePreps = query.list();
+		session.close();
+		return samplePreps;
+	}
+	
 	
 }

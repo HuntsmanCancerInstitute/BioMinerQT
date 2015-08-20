@@ -1,0 +1,44 @@
+<div class="modal-header">
+	<h4>Preview of {{filename}}</h4>
+	<div>
+		<span class="label label-default" ng-click="alertHover=!alertHover">Click for instructions..</span>
+	</div>
+	<div class="alert alert-info" ng-show="alertHover">
+		<p><b>Instructions for bulk sample upload:</b> Use the dropdown menus above the preview columns to select the locations of the required information. 
+		There are five pieces of required information to define a sample:</p>
+		<ol>
+			<li><strong>Sample Name: </strong>Name of the sample.</li>
+			<li><strong>Library Type: </strong>Type of library type.  Could be RNA, DNA, etc.</li>
+			<li><strong>Prep Method: </strong>Library preparation method, can be name of kit.</li>
+			<li><strong>Sample Source: </strong>Tissue type or cell line name.</li>
+			<li><strong>Sample Condition:</strong>Condition label: Control, KO, Treatment, etc. </li>
+		</ol> 
+		<p>Each of the five pieces of information must be set before the file can be parsed.  If sample condition is set more than once, the values will be concatenated 
+		with semi-colons.</p>
+	</div>
+</div>
+<div class="modal-body" resize per="{{alertHover == true ? 40 : 70}}" ng-style="style()">
+   <div class="table-container">
+		<table class="table table-condensed table-bordered">
+		    <thead>
+		        <tr>
+		            <th ng-repeat="h in header track by $index" class="td-container-selected">
+		            	<select class="form-control input-sm" ng-model="h.option" >
+		            		<option ng-repeat="d in h.dropdown" ng-disabled="d.index != -1">{{d.name}}</option>
+		            	</select>
+		            </th>
+		        </tr>
+		    </thead>
+		    <tbody>
+		        <tr ng-repeat="row in previewData">
+		            <!--  Track by index to avoid duplicate rows -->
+		            <td ng-repeat="value in row track by $index" ng-class=" (showList.indexOf($index) != -1)  ? 'td-container-selected' : 'td-container-unselected' "><span popover="{{value}}" popover-trigger="mouseenter" popover-popup-delay="1000">{{value | limitTo : 20}}</span></td>
+		        </tr>
+		    </tbody>
+		</table>
+	</div>
+</div>
+<div class="modal-footer">
+            <button class="btn btn-primary" ng-click="ok()" ng-disabled="!allSet" >Parse</button>
+            <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+</div>

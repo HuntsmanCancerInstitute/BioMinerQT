@@ -485,7 +485,7 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 				$scope.importFinished = false;
 				for (var i=0; i<$scope.selectedFiles.length;i++) {
 					
-					//Create paramter list.  Column defs + file names
+					//Create parameter list.  Column defs + file names
 					var params = {};
 					
 					//add columndefs to parameters.

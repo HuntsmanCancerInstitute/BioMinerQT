@@ -71,6 +71,7 @@ import hci.biominer.service.ExternalGeneService;
 import hci.biominer.util.BiominerProperties;
 import hci.biominer.util.Enumerated.AnalysisTypeEnum;
 import hci.biominer.util.GenomeBuilds;
+import hci.biominer.util.IO;
 import hci.biominer.util.IntervalTrees;
 import hci.biominer.util.QuerySettings;
 import hci.biominer.util.SessionData;
@@ -301,7 +302,7 @@ public class QueryController {
     
     @RequestMapping(value="uploadGene",method=RequestMethod.POST)
     @ResponseBody
-    public RegionUpload parseGenes(@RequestParam("file") MultipartFile file, @RequestParam("idTab") String idTab) {
+    public RegionUpload parseGenes(HttpServletResponse response, @RequestParam("file") MultipartFile file, @RequestParam("idTab") String idTab) {
     	//Get current active user
     	Subject currentUser = SecurityUtils.getSubject();
     	
@@ -317,6 +318,12 @@ public class QueryController {
     		username = "guest";
     	}
     	
+    	//gene count
+    	int geneCounter = 0;
+    	
+    	//failure flag
+    	boolean uploadFailed = false;
+    	StringBuilder first10 = new StringBuilder("");
     	
     	RegionUpload regions = new RegionUpload();
     	StringBuilder geneString = new StringBuilder("");
@@ -339,22 +346,27 @@ public class QueryController {
     
     			String temp;
     			
-    			boolean ok = true;
     			while ((temp = br.readLine()) != null) {
-    				if (!isASCII(temp)) {
+    				if (!IO.isASCII(temp)) {
 						regions.setMessage("The file appears to be binary.  Biominer accepts text files or bed files.  Can be gzipped or zipped.");
-						ok =false;
+						response.setStatus(500);
+						uploadFailed = true;
     				}
     				
     				
-    				String[] parts = temp.split(",\\s*");
+    				String[] parts = temp.split("\\s+");
     				for (String p: parts) {
     					geneString.append(p.toUpperCase() + "\n");
+    					if (geneCounter < 10) {
+    						first10.append(p + "<br>");
+    					}
+    					geneCounter += 1;
+    					break;
     				}
     				
     			}
     			
-    			if (ok) {
+    			if (!uploadFailed) {
     				regions.setRegions(String.format("[Load genes from file: %s]",name));
     				if (!currentSessions.containsKey(username)) {
     					currentSessions.put(username, new HashMap<String,SessionData>());
@@ -383,13 +395,19 @@ public class QueryController {
     		regions.setMessage("File is empty!");
     	}
     	
+    	if (uploadFailed) {
+    		response.setStatus(500);
+    	} else {
+    		regions.setMessage("Uploaded " + geneCounter + " genes, see below for an example of what was uploaded. <br><br>" + first10.toString());
+    	}
+    	
     	return regions;
     }
     
     
     @RequestMapping(value="upload",method=RequestMethod.POST)
     @ResponseBody
-    public RegionUpload parseRegions(@RequestParam("file") MultipartFile file, @RequestParam("idTab") String idTab) {
+    public RegionUpload parseRegions(HttpServletResponse response, @RequestParam("file") MultipartFile file, @RequestParam("idTab") String idTab) {
     	//Get current active user
     	Subject currentUser = SecurityUtils.getSubject();
     	
@@ -405,9 +423,16 @@ public class QueryController {
     		username = "guest";
     	}
     	
+    	//Count the number of regions uploaded
+    	int regionCounter = 0;
+    	StringBuilder first10 = new StringBuilder("");
+    	
+    	//flag if there was an error
+    	boolean uploadFailed = false;
     	
     	RegionUpload regions = new RegionUpload();
     	Pattern pattern1 = Pattern.compile("^(\\w+)(,|:|\\s+)(\\d+)(,|-|\\s+)(\\d+)(,|-|\\s+)*.*");
+    	
     	
     	if (!file.isEmpty()) {
     		try {
@@ -428,38 +453,43 @@ public class QueryController {
     
     			String temp;
     			StringBuilder regionString = new StringBuilder("");
-    			boolean ok = true;
+    			
+    			
     			while ((temp = br.readLine()) != null) {
     				Matcher m = pattern1.matcher(temp);
     				if (m.matches()) {
     					regionString.append(String.format("%s:%s-%s\n",m.group(1),m.group(3),m.group(5)));
+    					if (regionCounter < 10) {
+    						first10.append(String.format("%s:%s-%s\n",m.group(1),m.group(3),m.group(5)) + "<br>");
+    					}
+    					regionCounter += 1;
     				} else {
-    					if (isASCII(temp)) {
+    					if (IO.isASCII(temp)) {
     						regions.setMessage(String.format("Could not parse region line: %s. The first three columns must be chromsome, "
         							+ "start coordinate and stop coordinate.  Can be tab, space, comma delimited or in the format "
         							+ "chr:start-end",temp));
     					} else {
     						regions.setMessage("The file appears to be binary.  Biominer accepts text files or bed files.  Can be gzipped or zipped.");
     					}
-    					
-    					ok = false;
+    					uploadFailed = true;
     					break;
+    					
     				}
     			}
     			
-    			if (ok) {
+    			if (!uploadFailed) {
     				regions.setRegions(String.format("[Load regions from file: %s]",name));
     				if (!currentSessions.containsKey(username)) {
     					currentSessions.put(username, new HashMap<String,SessionData>());
     					SessionData sd = new SessionData();
-    					sd.setGeneString(regionString.toString());
+    					sd.setRegionString(regionString.toString());
     					currentSessions.get(username).put(idTab, sd);
     				} else if (!currentSessions.get(username).containsKey(idTab)) {
     					SessionData sd = new SessionData();
-    					sd.setGeneString(regionString.toString());
+    					sd.setRegionString(regionString.toString());
     					currentSessions.get(username).put(idTab, sd);
     				} else {
-    					currentSessions.get(username).get(idTab).setGeneString(regionString.toString());
+    					currentSessions.get(username).get(idTab).setRegionString(regionString.toString());
     				}
     			}
     			
@@ -467,31 +497,28 @@ public class QueryController {
     			
     			
     		} catch (IOException ioex) {
+    			uploadFailed = true;
     			regions.setMessage("Error reading file: " + ioex.getMessage());
     			ioex.printStackTrace();
     		}
     		
     		
     	} else {
+    		uploadFailed = true;
     		regions.setMessage("File is empty!");
+    	}
+    	
+    	if (uploadFailed) {
+    		response.setStatus(500);
+    	} else {
+    		regions.setMessage("Uploaded " + regionCounter + " regions, see below for an example of what was uploaded.<br><br>" + first10.toString());
     	}
     	
     	return regions;
     }
     
     
-    private boolean isASCII(String test) {
-    	byte[] byteArray = test.getBytes();
-    	CharsetDecoder decoder = Charset.forName("US-ASCII").newDecoder();
-        try {
-            CharBuffer buffer = decoder.decode(ByteBuffer.wrap(byteArray));
-            return true;
- 
-
-        } catch (CharacterCodingException e) {
-            return false;
-        }
-    }
+    
     
     @RequestMapping(value = "run", method=RequestMethod.GET)
     @ResponseBody
@@ -505,9 +532,9 @@ public class QueryController {
         @RequestParam(value="idAnalyses") List<Long> idAnalyses,
         @RequestParam(value="idSampleSources") List<Long> idSampleSources,
         @RequestParam(value="regions") String regions,
-        @RequestParam(value="regionMargins") Integer regionMargins,
+        @RequestParam(value="regionMargins",required=false) Integer regionMargins,
         @RequestParam(value="genes") String genes,
-        @RequestParam(value="geneMargins") Integer geneMargins,
+        @RequestParam(value="geneMargins",required=false) Integer geneMargins,
         @RequestParam(value="FDR",required=false) Float FDR,
         @RequestParam(value="codeFDRComparison") String codeFDRComparison,
         @RequestParam(value="log2Ratio",required=false) Float log2Ratio,
@@ -524,6 +551,14 @@ public class QueryController {
     	
     	if (genes != null) {
     		genes = genes.toUpperCase();
+    	}
+    	
+    	if (geneMargins == null) {
+    		geneMargins = 0;
+    	}
+    	
+    	if (regionMargins == null) {
+    		regionMargins = 0;
     	}
     	
     
@@ -551,6 +586,7 @@ public class QueryController {
 			sessionData = new SessionData();
 		} else {
 			sessionData = currentSessions.get(username).get(idTab);
+			sessionData.setQueryWarnings(new StringBuilder());
 		}
     	
     	//Get Organism Build
@@ -607,7 +643,7 @@ public class QueryController {
     				String loadedRegions = sessionData.getRegionString();
         			intervalsToCheck = ip.parseIntervals(loadedRegions, loadedRegions, regionMargins, genome);
     			} else {
-    				sessionData.addWarning("Biominer expects regions loaded from file, but none could be found. Please try reloading your gene file.<br/>");
+    				sessionData.addWarning("Biominer expects regions loaded from file, but none could be found. Please try reloading your region file.<br/>");
     			}
     		} else if (regions.equals("[All result coordinates]")) {
     			if (sessionData.getRegionString() != null) {
@@ -689,7 +725,7 @@ public class QueryController {
     	List<Analysis> usedAnalyses = this.getUsedAnalyses(analyses, fullRegionResults);
     	HashMap<String,String> usedDataTracks = this.getDataTrackList(usedAnalyses);
     	
-    	QueryResultContainer qrc = new QueryResultContainer(fullRegionResults, fullRegionResults.size(), usedAnalyses.size(), usedDataTracks.keySet().size(), 0, sortType, true);
+    	QueryResultContainer qrc = new QueryResultContainer(fullRegionResults, fullRegionResults.size(), usedAnalyses.size(), usedDataTracks.keySet().size(), 0, sortType, true, idOrganismBuild);
     	
     	//Create settings object
     	QuerySettings qs = new QuerySettings(codeResultType, target, idOrganismBuild, idAnalysisTypes, idLabs, idProjects,
@@ -720,7 +756,7 @@ public class QueryController {
     
     @RequestMapping(value="copyAllCoordinates",method=RequestMethod.POST)
     @ResponseBody
-    private void copyAllCoordinates(HttpServletResponse response, @RequestParam("idTab") String idTab) {
+    private String copyAllCoordinates(HttpServletResponse response, @RequestParam("idTab") String idTab) {
     	Subject currentUser = SecurityUtils.getSubject();
     	String username = "guest";
     	    	
@@ -730,22 +766,35 @@ public class QueryController {
     		username = user.getUsername();
     	} 
     	
+    	boolean failed = false;
+    	int coordinateCount = 0;
+    	
     	if (!currentSessions.containsKey(username) || !currentSessions.get(username).containsKey(idTab)) {
     		response.setStatus(988);
+    		failed = true;
     	} else {
     		SessionData sd = currentSessions.get(username).get(idTab);
+    		
+    		
     		
     		StringBuilder intervals = new StringBuilder("");
     		for (QueryResult qr: sd.getResults().getResultList()) {
     			intervals.append(qr.getCoordinates() + "\n");
+    			coordinateCount += 1;
     		}
     		sd.setRegionString(intervals.toString());
     	}
+    	
+    	String message = null;
+    	if (!failed) {
+    		message = coordinateCount + " coordinates were copied.";
+    	}
+    	return message;
     }
     
     @RequestMapping(value="copyAllGenes",method=RequestMethod.POST)
     @ResponseBody
-    private void copyAllGenes(HttpServletResponse response, @RequestParam("idTab") String idTab) {
+    private String copyAllGenes(HttpServletResponse response, @RequestParam("idTab") String idTab) {
     	Subject currentUser = SecurityUtils.getSubject();
     	String username = "guest";
     	    	
@@ -756,17 +805,28 @@ public class QueryController {
     		username = user.getUsername();
     	} 
     	
+    	boolean failed = false;
+    	int geneCount = 0;
+    	
     	if (!currentSessions.containsKey(username) || !currentSessions.get(username).containsKey(idTab)) {
     		response.setStatus(988);
+    		failed  = true;
     	} else {
     		SessionData sd = currentSessions.get(username).get(idTab);
     		
     		StringBuilder intervals = new StringBuilder("");
     		for (QueryResult qr: sd.getResults().getResultList()) {
     			intervals.append(qr.getMappedName() + "\n");
+    			geneCount += 1;
     		}
     		sd.setGeneString(intervals.toString());
     	}
+    	
+    	String message = null;
+    	if (!failed) {
+    		message = geneCount + " genes were copied.  ";
+    	} 
+    	return message;
     }
     
     
@@ -1144,7 +1204,8 @@ public class QueryController {
 
     			try {		
     			 	//response.setContentType(getFile.getFileType());
-    			 	response.setHeader("Content-disposition", "attachment; filename=\""+ key + ".results.zip"+"\"");
+    				response.setContentType("application/x-download");
+    			 	response.setHeader("Content-Disposition", "attachment; filename=\""+ key + ".results.zip"+"\"");
     			 	
     			 	BufferedInputStream bis = new BufferedInputStream(new FileInputStream(zipFile));
     			 	

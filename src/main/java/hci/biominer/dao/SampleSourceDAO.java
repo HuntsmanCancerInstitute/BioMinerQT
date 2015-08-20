@@ -2,8 +2,11 @@ package hci.biominer.dao;
 
 import java.util.List;
 
+import hci.biominer.model.SampleCondition;
+import hci.biominer.model.SamplePrep;
 import hci.biominer.model.SampleSource;
 
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,12 +36,28 @@ public class SampleSourceDAO {
 		return sampleSource;
 	}
 	
-	public void addSampleSource(SampleSource sampleSource) {
+	@SuppressWarnings("unchecked")
+	public SampleSource getSampleSourceBySource(String source, Long idOrganismBuild) {
+		Session session = getCurrentSession();
+		Query query = session.createQuery("from SampleSource where source = :source and idOrganismBuild = :idOrganismBuild");
+		query.setParameter("source", source);
+		query.setParameter("idOrganismBuild", idOrganismBuild);
+		List<SampleSource> sampleSource = query.list();
+		session.close();
+		if (sampleSource.isEmpty()) {
+			return null;
+		} else {
+			return sampleSource.get(0);
+		}
+	}
+	
+	public Long addSampleSource(SampleSource sampleSource) {
 		Session session = getCurrentSession();
 		session.beginTransaction();
 		session.save(sampleSource);
 		session.getTransaction().commit();
 		session.close();
+		return sampleSource.getIdSampleSource();
 	}
 	
 	public void updateSampleSource(Long idSampleSource, SampleSource sampleSource) {
@@ -62,4 +81,21 @@ public class SampleSourceDAO {
 		session.getTransaction().commit();
 		session.close();
 	}
+	
+	public void deleteSampleSources(List<Long> sampleSourceIdList) {
+		for (Long id: sampleSourceIdList) {
+			deleteSampleSource(id);
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	public List<SampleSource> getUnusedSampleSources(Long idOrganismBuild) {
+		Session session = getCurrentSession();
+		Query query = session.createQuery("select ss from Sample s right outer join s.sampleSource ss where s.idSample is null and idOrganismBuild = :idOrganismBuild");
+		query.setParameter("idOrganismBuild", idOrganismBuild);
+		List<SampleSource> sampleSources = query.list();
+		session.close();
+		return sampleSources; 
+	}
+	
 }

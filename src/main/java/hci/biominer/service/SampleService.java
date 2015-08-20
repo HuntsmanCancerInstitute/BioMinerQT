@@ -50,11 +50,19 @@ public class SampleService {
 	}
 	
 	public boolean isSampleSourceUsed(String source, Long idOrganismBuild) {
-		return sampleDAO.isSampleSource(source, idOrganismBuild);
+		return sampleDAO.isSampleSourceUsed(source, idOrganismBuild);
 	}
 	
-	public boolean isSamplePrepUsed(String description) {
-		return sampleDAO.isSamplePrepUsed(description);
+	public boolean isSamplePrepUsed(String description, Long idSamplePrep) {
+		return sampleDAO.isSamplePrepUsed(description, idSamplePrep);
+	}
+	
+	public boolean isSampleTypeUsed(String type) {
+		return sampleDAO.isSampleTypeUsed(type);
+	}
+	
+	public boolean isSampleNameUsed(String name, Long idProject) {
+		return sampleDAO.isSampleNameUsed(name, idProject);
 	}
 	
 }
