@@ -431,7 +431,7 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 	
 	$scope.startLaunchPing = function() {
 		$scope.stopLaunchPing();
-		$scope.checkLaunchIgv = $interval(function() {$scope.pingLaunchIGV();}, 10000);	
+		$scope.checkLaunchIgv = $interval(function() {$scope.pingLaunchIGV();}, 2000);	
 	}
 	
 	$scope.stopLaunchPing = function() {
@@ -442,7 +442,7 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 	$scope.startPing = function() {
 		$scope.stopPing();
 		$scope.launchCounter = 0;
-		$scope.checkIgv = $interval(function() {$scope.pingIGV();}, 10000);
+		$scope.checkIgv = $interval(function() {$scope.pingIGV();}, 2000);
 	};
 	
 	$scope.stopPing = function() {

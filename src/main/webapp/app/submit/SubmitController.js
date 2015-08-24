@@ -13,7 +13,8 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 	/**********************
 	 * Initialization!
 	 *********************/
-    $scope.disableElement = false;
+    
+    
 	//enums!
 	$scope.projectVisibilities = [{enum: "LAB",name: "Lab"},{enum: "INSTITUTE", name: "Institute"},{enum: "PUBLIC", name: "Public"}];
 	
@@ -166,6 +167,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 
     //Bulk methods
     
+    
     $scope.$watch('project.organismBuild',function() {
     	$scope.checkForUnusedSampleConditions();
     	$scope.checkForUnusedSamplePreps();
@@ -316,6 +318,8 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 	 * Watchers
 	 * 
 	 ********************/
+	
+	
     $scope.$watch('sample.sampleType',function() {
     	if ($scope.sample.sampleType == null) {
     		$scope.samplePrepList = null;
@@ -442,12 +446,14 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 			$scope.projects = data;
 			$scope.setActiveProject();
 			$scope.loadAllDictionaries();
+			$scope.disableElements();
 		});
     	
     };
     
     
     $scope.setActiveProject = function() {
+    	console.log("AHT");
     	$scope.project = {};
     	for (var i in $scope.projects) {
     		if($scope.projects[i].idProject == $scope.projectId) {
@@ -469,6 +475,11 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
             	$scope.projects[i].cssClass = "";
             }
     	}
+    	$scope.projectEditMode = false;
+    	$scope.sampleEditMode = false;
+    	$scope.dataTrackEditMode= false;
+    	$scope.resultEditMode = false;
+    	$scope.disableElements();
     };
     
     $scope.loadProjects($scope.projectId);
@@ -506,12 +517,14 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 	$scope.edit = function() {
 		$scope.editedProject = angular.copy($scope.project);
 		$scope.projectEditMode = true;
+		$scope.enableElements()
 	};
 	
 	$scope.cancel = function() {
 		$scope.editedProject = {};
     	$scope.projectEditMode = false;
-    	$scope.loadProjects($scope.projectId);
+    	$scope.disableElements();
+ 
     };
 	
 	//Update project
@@ -544,6 +557,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 		});
 		
 		$scope.projectEditMode = false;
+		$scope.disableElements();
     };
     
     
@@ -1652,9 +1666,17 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 	
 	$scope.sampleEditMode = false;
 
-	$timeout(function() {
-		$scope.disableElement = true;
-	},1000);
+	$scope.disableElements = function() {
+		$timeout(function() {
+			$scope.disableElement = true;
+		},1000);
+	}
+	
+	$scope.enableElements = function() {
+		$scope.disableElement = false;
+	}
+	
+	$scope.enableElements();
 	
 	/***************************************
 	 * *************************************
@@ -1872,6 +1894,8 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 	    $scope.helpDatatrack +
 	    $scope.helpFileUpload + 
 	    $scope.helpAnalysis;
+	
+	
 	    
 }]);
 
