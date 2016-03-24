@@ -67,6 +67,7 @@ import hci.biominer.model.SampleSource;
 import hci.biominer.model.FileUpload;
 import hci.biominer.model.AnalysisType;
 import hci.biominer.model.access.Institute;
+import hci.biominer.model.access.Role;
 import hci.biominer.model.access.User;
 import hci.biominer.model.access.Lab;
 import hci.biominer.model.genome.Genome;
@@ -143,7 +144,8 @@ public class SubmitController {
     		@RequestParam(value="visibility") ProjectVisibilityEnum visibility, 
     		@RequestParam(value="idLab") List<Long> idLab, 
     		@RequestParam(value="idOrganismBuild") Long idOrganismBuild,
-    		@RequestParam(value="idInstitute") List<Long> idInstitute) {
+    		@RequestParam(value="idInstitute") List<Long> idInstitute,
+    		@RequestParam(value="idOwner") List<Long> idOwner) {
     	
     	
     	Project project = new Project();
@@ -164,6 +166,13 @@ public class SubmitController {
 			institutes.add(this.instituteService.getInstituteById(id));
 		}
 		project.setInstitutes(institutes);
+		
+		//Create lab institutes and add to project
+		List<Lab> owners = new ArrayList<Lab>();
+		for (Long id: idOwner) {
+			owners.add(this.labService.getLab(id));
+		}
+		project.setOwners(owners);
     	
     	
     	//Create organismBuild object and add to project
@@ -193,7 +202,7 @@ public class SubmitController {
     public void updateProject(@RequestParam(value="name") String name, @RequestParam(value="description") String description,
     		@RequestParam(value="idLab",required=false) List<Long> idLab, @RequestParam(value="idOrganismBuild",required=false) Long idOrganismBuild,
     		@RequestParam(value="visibility") ProjectVisibilityEnum visibility, @RequestParam(value="idProject") Long idProject,
-    		@RequestParam(value="idInstitute",required=false) List<Long> idInstitute, @RequestParam(value="dataUrls", required=false) String dataUrls) {
+    		@RequestParam(value="idInstitute",required=false) List<Long> idInstitute, @RequestParam(value="idOwner") List<Long> idOwner, @RequestParam(value="dataUrls", required=false) String dataUrls) {
     	
     	//Update basic information
     	Project project = new Project();
@@ -220,6 +229,13 @@ public class SubmitController {
     		}
     		project.setInstitutes(institutes);
     	}
+    	
+    	//Create owner list and add to project
+		List<Lab> owners = new ArrayList<Lab>();
+		for (Long id: idOwner) {
+			owners.add(this.labService.getLab(id));
+		}
+		project.setOwners(owners);
     	
     	//Create organismBuild object and add to project
     	if (idOrganismBuild != null) {
@@ -256,10 +272,15 @@ public class SubmitController {
     	Subject currentUser = SecurityUtils.getSubject();
     	List<Project> projects;
     	if (currentUser.isAuthenticated()) {
-    		System.out.println("User is authenitcated");
+    		System.out.println("User is authenticated");
     		Long userId = (Long) currentUser.getPrincipal();
             User user = userService.getUser(userId);
         	projects = this.projectService.getProjectByVisibility(user);
+        	for (Role role: user.getRoles()) {
+        		if (role.getName().equals("admin")) {
+        			projects = this.projectService.getAllProjects();
+        		}
+        	}
     	} else {
     		System.out.println("User is anonymous");
     		projects = this.projectService.getPublicProjects();
@@ -1043,6 +1064,11 @@ public class SubmitController {
 		this.sampleSourceService.deleteSampleSourceById(idSampleSource);
 	}
 	
+	
+	
+	
+	
+	
 	/**
 	 * This method receives indexes of necessary data and then parses the sample sheet file. If certain dictionary entries don't exist,
 	 * they are created. The method simply returns method status and any error messages
@@ -1282,4 +1308,57 @@ public class SubmitController {
 		
 		return sampleCount + " samples loaded.";		
 	}
+	
+	/** 
+	 * This method attempts to autocreate an analysis.  If the RNASeq parser can identify potential condition names, this method is called.
+	 * If those conditions can be found in the list of imported samples belonging to the project, the analysis is auto-assembled
+	 */
+	public boolean autoCreateAnalysis(Long idProject, Long idFileUpload, Long idAnalysisType, String cond1, String cond2, String analysisName) {
+		List<Sample> sampleSet1 = sampleService.getSamplesByCondition(idProject, cond1);
+		List<Sample> sampleSet2 = sampleService.getSamplesByCondition(idProject, cond2);
+		
+		//If either sample list is empty bail!
+		if (sampleSet1.isEmpty() || sampleSet2.isEmpty()) {
+			return true;
+		}
+		
+		//Combine into one list
+		sampleSet1.addAll(sampleSet2);
+		sampleSet2 = null;
+		
+		//Get matching datatracks, if available
+		List<String> nameList = new ArrayList<String>();
+		for (Sample s: sampleSet1) {
+			nameList.add(s.getName());
+		}
+		
+		List<DataTrack> dtList = dataTrackService.getDataTrackByName(idProject, nameList);
+		
+		
+		
+		//Fetch Objects
+		Project project = projectService.getProjectById(idProject);
+		AnalysisType at = analysisTypeService.getAnalysisTypeById(idAnalysisType);
+		FileUpload file = fileUploadService.getFileUploadById(idFileUpload);
+		
+		//Create analysis
+		Analysis analysis = new Analysis();
+		analysis.setDate(new Date().getTime());
+		analysis.setName(analysisName);
+		analysis.setDescription(null);
+		analysis.setProject(project);
+		analysis.setAnalysisType(at);
+		analysis.setFile(file);
+		analysis.setSamples(sampleSet1);
+
+		if (dtList != null && !dtList.isEmpty()) {
+			analysis.setDataTracks(dtList);
+			
+		}
+		
+		
+		analysisService.addAnalysis(analysis);
+		return true;
+	}
+	
 }

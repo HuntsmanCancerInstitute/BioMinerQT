@@ -8,34 +8,34 @@
 			
 			<div class="form-group">
 				<label class="col-md-4 control-label" for="firstEntry">First Name</label>  
-				<input class="col-md-6" id="firstEntry" ng-model="user.first"  class="form-control input-md" required type="text">
+				<input maxlength="250" class="col-md-6" id="firstEntry" ng-model="user.first"  class="form-control input-md" required type="text">
 			</div>
 
 			<div class="form-group">
 				<label class="col-md-4 control-label" for="lastEntry">Last Name</label>                   
-				<input class="col-md-6" id="lastEntry" ng-model="user.last" class="form-control input-md" required type="text">
+				<input maxlength="250" class="col-md-6" id="lastEntry" ng-model="user.last" class="form-control input-md" required type="text">
 			</div>
 			
 			<div class="form-group" ng-show="showAll">
 				<label class="col-md-4 control-label" for="labEntry">Select Labs</label>
-				<select width="50" data-placeholder="Choose labs..." multiple class="chosen-select form-control" ng-model="user.labs" chosen ng-options="lab.last for lab in availLabs track by lab.idLab" required></select>
+				<select width="50" data-placeholder="Choose labs..." multiple class="chosen-select form-control" ng-model="user.labs" chosen ng-options="lab.last for lab in availLabs | orderBy: 'last' track by lab.idLab " required></select>
 			</div>
 			
 			<div class="form-group" ng-show="showAll">
 				<label class="col-md-4 control-label" for="instEntry">Institutes</label>
-				<select width="50" data-placeholder="Choose Institutes ..." multiple class="chosen-select form-control" ng-model="user.institutes" chosen ng-options="inst.name for inst in availInst track by inst.idInstitute" required ></select>
+				<select width="50" data-placeholder="Choose Institutes ..." multiple class="chosen-select form-control" ng-model="user.institutes" chosen ng-options="inst.name for inst in availInst | orderBy: 'name' track by inst.idInstitute " required ></select>
 			</div>
 			
 			<div class="form-group">
 				<label class="col-md-4 control-label" for="userEntry">Username</label>                   
-				<input class="col-md-6" id="userEntry" name="userInput" ng-model="user.username"  class="form-control input-md" required type="text"  ui-validate="{used: 'checkUsername($value)'}">
+				<input maxlength="250" class="col-md-6" id="userEntry" name="userInput" ng-model="user.username"  class="form-control input-md" required type="text"  ui-validate="{used: 'checkUsername($value)'}">
 				<span class="col-md-4"></span>
 				<span ng-show="newUserForm.userInput.$error.used" class="label label-danger col-md-6">username already in use</span>
 			</div>
 			
 			<div class="form-group">
 				<label class="col-md-4 control-label" for="passEntry">Password</label>                   
-				<input class="col-md-6" type="password" id="passEntry" ng-model="user.password" class="form-control input-md" required>
+				<input maxlength="250" class="col-md-6" type="password" id="passEntry" ng-model="user.password" class="form-control input-md" required>
 			</div>
 			
 			<div class = "form-group">
@@ -45,7 +45,7 @@
 			
 			<div class = "form-group">
 				<label class="col-md-4 control-label" for="emailEntry">Email</label>                  
-				<input class="col-md-6" id="emailEntry" ng-model="user.email" type="email" class="form-control input-md" required>
+				<input maxlength="250" class="col-md-6" id="emailEntry" ng-model="user.email" type="email" class="form-control input-md" required>
 			</div>
 			
 			<div class = "form-group" ng-show="showAll">

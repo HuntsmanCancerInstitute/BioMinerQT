@@ -331,6 +331,9 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 		 * object that allows the user to select the columns necessary for import.
 		 */
 		$scope.parse = function() {
+			//Counter
+			$scope.autoCreateCount = 0;
+			
 			//check to see if any of the files are invalid
 			var badFiles = [];
 			for (var i=0; i<$scope.files.uploadedFiles.length; i++) {
@@ -581,11 +584,17 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 									} else {
 										$scope.files.importedFiles[index].complete = 100;
 									}
+									
+									
 									$http({
 										url : "submit/finalizeFileUpload",
 										method: "PUT",
 										params: {idFileUpload: config.params["idFileUpload"], state: data.state},
 									})
+									
+									if (data.state != "FAILURE" && data.message == "AUTOCREATE") {
+										$scope.autoCreateCount += 1;
+									}
 								}).error(function(data,status,headers,config) {
 									if (data != null) {
 										$scope.files.importedFiles[index].message = data.message;
@@ -674,6 +683,11 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 			for (var i=0;i<$scope.files.importedFiles.length;i++) {
 				$scope.files.importedFiles[i].complete = null;
 			}
+			if ($scope.autoCreateCount > 0) {
+				dialogs.notify("Analysis Autodetect Successful","Biominer automatically created " + $scope.autoCreateCount + " analysis based on matching sample condition names.");
+			}
+			$scope.autoCreateCount = 0;
+			$scope.refreshResults($scope.projectId);
 		}
 		
 		/**

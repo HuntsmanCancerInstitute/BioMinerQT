@@ -68,7 +68,11 @@ public class ProjectDAO {
 		query.setParameter("vis2",ProjectVisibilityEnum.INSTITUTE);
 		query.setParameter("vis3", ProjectVisibilityEnum.PUBLIC);
 		List<Project> projects = query.list();
-		List<Project> initProjects = initializeProjects(projects);
+		List<Project> initProjects = new ArrayList<Project>();
+		for (Project p: projects) {
+			initProjects.add(getProjectById(p.getIdProject()));
+		}
+		
 		session.close();
 		return initProjects;
 	}
@@ -92,6 +96,9 @@ public class ProjectDAO {
 			Hibernate.initialize(p.getAnalyses());
 			Hibernate.initialize(p.getLabs());
 			Hibernate.initialize(p.getInstitutes());
+			if (p.getOwners().size() > 0) {
+				Hibernate.initialize(p.getOwners());
+			}
 			
 			for (Analysis a: p.getAnalyses()) {
 				Hibernate.initialize(a.getSamples());
@@ -134,6 +141,7 @@ public class ProjectDAO {
 		projectToUpdate.setVisibility(project.getVisibility());
 		projectToUpdate.setLabs(project.getLabs());
 		projectToUpdate.setInstitutes(project.getInstitutes());
+		projectToUpdate.setOwners(project.getOwners());
 		session.update(projectToUpdate);
 		session.getTransaction().commit();
 		session.close();
@@ -149,6 +157,10 @@ public class ProjectDAO {
 		Hibernate.initialize(project.getAnalyses());
 		Hibernate.initialize(project.getLabs());
 		Hibernate.initialize(project.getInstitutes());
+		if (project.getOwners().size() > 0) {
+			Hibernate.initialize(project.getOwners());
+		}
+		
 		
 		
 		for (Analysis a: project.getAnalyses()) {

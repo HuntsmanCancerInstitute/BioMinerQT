@@ -3,7 +3,7 @@
 		<span class="section-header">Import IGV Files into Project <span class="glyphicon glyphicon-question-sign help-button" ng-click="showHelpDatatrack()"></span></span>
 		<div class="row" style="padding-top: 10px; padding-bottom: 10px">
 				<div class="col-lg-6" ng-hide="dataTracksUploading">
-					<span class="btn btn-success fileinput-button btn-sm"  ng-class="{disabled: disabled}" ng-hide="datatrackEditMode">
+					<span class="btn btn-success fileinput-button btn-sm"  ng-class="{disabled: disabled}" ng-hide="datatrackEditMode" ng-disabled="!canEdit">
 				        <i class="glyphicon glyphicon-upload"></i>
 				        <input type="file" ng-file-select ng-file-change="addDataTracks($files)" multiple> Upload           
 				    </span>
@@ -52,7 +52,7 @@
 				</div> <!--  end row -->
 				<div class="row">
 					<div class="col-lg-6">
-						<div class="form-group">
+						<div class="form-group" >
 						  	<label class="control-label" for=""></label>  
 							<div class="animate-switch-container">
 							<button id="save_datatrack_button" class="animate-switch btn btn-primary btn-sm" ng-click="saveDataTrack()" ng-disabled="datatrack_form.$invalid">Save</button>
@@ -85,17 +85,17 @@
 		          			</div>
 			          	</td>
 			            <td style="width: 120px;">
-			                <div ng-show="datatrack.show || datatrack.state != 'SUCCESS' ">
+			                <div ng-show="datatrack.show || datatrack.state != 'SUCCESS'">
 			               		 <button class="btn btn-xs btn-warning table-button" ng-show="datatrack.state=='FAILURE'" ng-click="showErrorMessage('Upload Error','Error while uploading the file:  <strong>' + datatrack.name + '</strong>.  The upload failed with the message: <em>' + datatrack.message + '</em> The datatrack can be edited, or it will be deleted from the database once you exit the page.')">
 				                 	<span class="glyphicon glyphicon glyphicon-exclamation-sign"></span>
 				                 </button>
 				                 <button class="btn btn-xs btn-warning table-button" ng-show="datatrack.state=='INCOMPLETE' && !dataTracksUploading" ng-click="showErrorMessage('Missing File','There is no file on the server associated with this datatrack. The datatrack can be edited, or it will be deleted from the database once you exit the page.')">
 				                 	<span class="glyphicon glyphicon glyphicon-exclamation-sign"></span>
 				                 </button>
-				                 <button class="btn btn-xs btn-primary table-button" ng-hide="datatrack.state=='INCOMPLETE' && dataTracksUploading" ng-click="editDataTrack(datatrack)" data-toggle="tooltip" data-placement="top" title="edit">
+				                 <button class="btn btn-xs btn-primary table-button" ng-disabled="!canEdit" ng-hide="datatrack.state=='INCOMPLETE' && dataTracksUploading" ng-click="editDataTrack(datatrack)" data-toggle="tooltip" data-placement="top" title="edit">
 									<span class="glyphicon glyphicon-edit"></span>
 								 </button>
-				                 <button class="btn btn-xs btn-danger table-button"  ng-hide="datatrack.state=='INCOMPLETE' && dataTracksUploading" ng-click="removeDataTrack(datatrack)" data-toggle="tooltip" data-placement="top" title="remove">
+				                 <button class="btn btn-xs btn-danger table-button"  ng-disabled="!canEdit" ng-hide="datatrack.state=='INCOMPLETE' && dataTracksUploading" ng-click="removeDataTrack(datatrack)" data-toggle="tooltip" data-placement="top" title="remove">
 				                 	<span class="glyphicon glyphicon-trash"></span>
 				                 </button>
 			                </div>

@@ -43,6 +43,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
     $scope.result.analysisType = null;
     $scope.result.date = new Date();
     $scope.project = {};
+    $scope.editedProject = null;
     $scope.lastSample = null;
     $scope.lastResult = null;
     
@@ -77,8 +78,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 	$scope.unusedSampleConditions = [];
 	$scope.unusedSampleSources = [];
 	$scope.unusedSamplePreps = [];
-
-	
+    $scope.canEdit = false;
 	$scope.navigationOk = false;
 	
 	//holds valid analyses
@@ -90,6 +90,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 	$scope.datatrackReverseSort = true;
 	$scope.resultOrderByField = "idAnalysis";
 	$scope.resultReverseSort = true;
+	$scope.ownerList = [];
     
 	//Static dictionaries. These http calls are cached.
 	
@@ -330,11 +331,19 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
     
     $rootScope.$watch('loggedUser', function() {
     	if ($rootScope.loggedUser != null) {
-    		$scope.labList = $rootScope.loggedUser.labs;
-        	$scope.instituteList = $rootScope.loggedUser.institutes;
+    		StaticDictionary.getInstituteList().success(function(data) {
+	    		$scope.instituteList = data;
+	    	});
+			StaticDictionary.getLabList().success(function(data) {
+				$scope.labList = data;
+			
+			});
+			
+			$scope.ownerList = $rootScope.loggedUser.labs;
+			
     	}
-    	
     });
+    
     
     $scope.$watch("files.importedFiles",function() {
     	$scope.checkFileStatus();
@@ -359,6 +368,32 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 		
 		$scope.checkFileStatus();
 	});
+    
+    $scope.$watch("editedProject.owners",function() {
+    	if ($scope.editedProject != null && $scope.editedProject.owners != undefined) {
+    		for (var i=0; i<$scope.editedProject.owners.length;i++) {
+        		var found = false;
+        		var owner = $scope.editedProject.owners[i];
+        		if ($scope.editedProject.labs == undefined) {
+        			$scope.editedProject.labs = [];
+        			$scope.editedProject.labs.push(owner);
+        		} else {
+        			for (var j=0; j<$scope.editedProject.labs.length; j++) {
+            			var lab = $scope.editedProject.labs[j];
+            			if (owner.idLab == lab.idLab) {
+            				found = true;
+            				break;
+            			}
+            		}
+            		if (!found) {
+            			$scope.editedProject.labs.push(owner);
+            		}
+        		}
+        		
+        	}
+    	}
+    	
+    });
     
 
     $scope.checkFileStatus = function() {
@@ -453,7 +488,6 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
     
     
     $scope.setActiveProject = function() {
-    	console.log("AHT");
     	$scope.project = {};
     	for (var i in $scope.projects) {
     		if($scope.projects[i].idProject == $scope.projectId) {
@@ -471,6 +505,19 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
             			$scope.files.uploadedFiles.push($scope.projects[i].files[x]);
             		}
             	}	
+            	$scope.canEdit = false;
+            	for (var j in $scope.project.owners) {
+            		for (var z in $scope.ownerList) {
+            			if ($scope.project.owners[j].idLab == $scope.ownerList[z].idLab) {
+            				$scope.canEdit = true;
+            			}
+            		}
+            	}
+            	if ($rootScope.admin) {
+            		$scope.canEdit = true;
+            	}
+            	
+      
             } else {
             	$scope.projects[i].cssClass = "";
             }
@@ -489,6 +536,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
     	
     	var lids = [];
 		var iids = [];
+		var oids = [];
 		
 		for (var idx=0; idx<project.labs.length;idx++) {
 			lids.push(project.labs[idx].idLab);
@@ -496,6 +544,19 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 		
 		for (var idx=0; idx<project.institutes.length;idx++) {
 			iids.push(project.institutes[idx].idInstitute);
+		}
+		
+		for (var idx=0; idx<project.owners.length; idx++) {
+			oids.push(project.owners[idx].idLab);
+			var found = false;
+			for (var j=0;j<lids.length;j++) {
+				if (project.owners[idx].idLab == lids[j]) {
+					found = true;
+				}
+			}
+			if (!found) {
+				lids.push(project.owners[idx].idLab);
+			}
 		}
 		
 		var buildId = -1;
@@ -507,7 +568,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 			url: "project/createProject",
 			method: "PUT",
 			params: {name: project.name, description: project.description, idLab: lids, idOrganismBuild: buildId,
-				idInstitute: iids, visibility: "PUBLIC"},
+				idInstitute: iids, idOwner: oids, visibility: "PUBLIC"},
 		}).success(function(data) {
 			$scope.loadProjects(data);
 			$scope.editedProject = {};
@@ -532,6 +593,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 		$scope.project = $scope.editedProject;
 		var lids = [];
 		var iids = [];
+		var oids = [];
 		
 		for (var idx=0; idx<$scope.project.labs.length;idx++) {
 			lids.push($scope.project.labs[idx].idLab);
@@ -539,6 +601,19 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 		
 		for (var idx=0; idx<$scope.project.institutes.length;idx++) {
 			iids.push($scope.project.institutes[idx].idInstitute);
+		}
+		
+		for (var idx=0; idx<$scope.project.owners.length; idx++) {
+			oids.push($scope.project.owners[idx].idLab);
+			var found = false;
+			for (var j=0;j<lids.length;j++) {
+				if ($scope.project.owners[idx].idLab == lids[j]) {
+					found = true;
+				}
+			}
+			if (!found) {
+				lids.push($scope.project.owners[idx].idLab);
+			}
 		}
 		
 		var buildId = -1;
@@ -551,7 +626,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 			method: "PUT",
 			params: {name: $scope.project.name, description: $scope.project.description,
 				idLab: lids, idOrganismBuild: buildId, idProject: $scope.projectId,
-				visibility: $scope.project.visibility, idInstitute: iids, dataUrls: $scope.project.dataUrls},
+				visibility: $scope.project.visibility, idInstitute: iids, idOwner: oids, dataUrls: $scope.project.dataUrls},
 		}).success(function(data) {
 			$scope.loadProjects($scope.projectId);
 		});
@@ -575,7 +650,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
     	if ($scope.results.length > 0 || $scope.samples.length > 0 || $scope.datatracks.length > 0 || $scope.files.uploadedFiles.length > 0 || 
     			$scope.files.importedFiles.length > 0) {
     		dialogs.error("Can't Delete Selected Project","All samples, datatracks, files and analyses associated with project must be deleted first.",null);
-    	} else if ($scope.idProject != -1) {
+    	} else if ($scope.projectId != -1) {
     		$http({
     			url: "project/deleteProject",
     			method: "DELETE",
@@ -589,8 +664,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
     
     //clear out selected project
     $scope.refresh = function() {
-    	$scope.projectId = -1;
-    	$scope.sample = {sampleType: null};
+    	$scope.loadProjects($scope.projectId);
     };
     
     
@@ -599,7 +673,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 	    var modalInstance = $modal.open({
 	      templateUrl: 'app/submit/newProjectWindow.html',
 	      controller: 'ProjectWindowController',
-	      
+	        
 	      resolve: {
   			labList: function() {
   				return $scope.labList;
@@ -609,6 +683,9 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
   			},
   			organismBuildList: function() {
   				return $scope.organismBuildList;
+  			},
+  			ownerList: function() {
+  				return $scope.ownerList;
   			}
   		  }
 	      
@@ -742,7 +819,6 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
         		params: {idProject: $scope.projectId,name: files[0].name},
         		timeout: $scope.loadSampleSheetDeferred.promise,
         	}).success(function(data,status,headers,config) {
-        		console.log(data);
         		var modalInstance = $modal.open({
 		    		templateUrl: 'app/submit/sampleUpload.html',
 		    		controller: 'SampleUploadController',
@@ -1365,6 +1441,28 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 	 * Analysis Management
 	 *********************/
 	
+	$scope.refreshResults = function(idProjectLocal) {
+		$http({
+			url: "project/getAnalysisByProject",
+			method: "GET",
+			params : {idProject: idProjectLocal},
+		}).success(function(data, status, headers, config, statusText) {
+			for (var i=0;i<$scope.projects.length;i++) {
+				if ($scope.projects[i].idProject == config.params.idProject) {
+					$scope.projects[i].analyses = data;
+					if (config.params.idProject == $scope.projectId) {
+						$scope.results = data;
+						$scope.project = $scope.projects[i];
+					}
+				}
+			}
+			
+		}).error(function(data, status, headers, config, statusText) {
+			console.log(config.params);
+			console.log("Error refreshing the results page: " + statusText);
+		}) 
+	};
+	
 	$scope.clearResult = function() {
 		$scope.result = {};
 		$scope.result.date = new Date();
@@ -1398,9 +1496,8 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 			method: "PUT",
 			params: {idAnalysis: result.idAnalysis, name: result.name, description: result.description, date: result.date.getTime(), idProject: $scope.projectId, 
 				idSampleList: sampleList, idDataTrackList: dataTrackList, idFileUpload: result.file.idFileUpload, idAnalysisType: result.analysisType.idAnalysisType}
-		}).success(function(data) {
-			$scope.loadProjects($scope.projectId);
-			$scope.resetResult();
+		}).success(function(data, status, headers, config, statusText) {
+			$scope.refreshResults(config.params.idProject);
 			$scope.originalResultName = null;
 		}).error(function(data) {
 			console.log("Could not update analysis.");
@@ -1412,9 +1509,9 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 		$http({
 			url: "project/deleteAnalysis",
 			method: "DELETE",
-			params: {idAnalysis: result.idAnalysis}
-		}).success(function(data) {
-			$scope.loadProjects($scope.projectId);
+			params: {idAnalysis: result.idAnalysis, idProject: $scope.projectId}
+		}).success(function(data, status, headers, config, statusText) {
+			$scope.refreshResults(config.params.idProject);
 		}).error(function(data) {
 			console.log("Error deleting analysis");
 		});
@@ -1437,8 +1534,8 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 			method: "PUT",
 			params: {name: result.name, description: result.description, date: result.date.getTime(), idProject: $scope.projectId, 
 				idSampleList: sampleList, idDataTrackList: dataTrackList, idFileUpload: result.file.idFileUpload, idAnalysisType: result.analysisType.idAnalysisType}
-		}).success(function(data) {
-			$scope.loadProjects($scope.projectId);
+		}).success(function(data, status, headers, config, statusText) {
+			$scope.refreshResults(config.params.idProject);
 			$scope.lastResult = $scope.result;
 			$scope.lastResult.file = null;
 			$scope.originalResultName = null;
@@ -1447,6 +1544,10 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 			console.log("Could not create analysis.");
 		});
 	};
+	
+	$scope.refreshResult = function() {
+		
+	}
 	
 	$scope.duplicateResult = function() {
 		$scope.originalResultName = null;

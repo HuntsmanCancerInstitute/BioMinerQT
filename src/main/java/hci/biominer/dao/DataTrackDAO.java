@@ -110,4 +110,15 @@ public class DataTrackDAO {
 		session.close();
 	}
 	
+	@SuppressWarnings("unchecked")
+	public List<DataTrack> getDataTrackByName(Long idProject, List<String> nameList) {
+		Session session = getCurrentSession();
+		Query query = session.createQuery("select dt from DataTrack as dt left join dt.project as p where p.idProject = :idProject and dt.name in (:nameList)");
+		query.setParameter("idProject", idProject);
+		query.setParameterList("nameList", nameList);
+		List<DataTrack> dtList = query.list();
+		session.close();
+		return dtList;
+	}
+	
 }

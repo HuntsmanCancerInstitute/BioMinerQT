@@ -65,4 +65,8 @@ public class SampleService {
 		return sampleDAO.isSampleNameUsed(name, idProject);
 	}
 	
+	public List<Sample> getSamplesByCondition(Long idProject, String condition) {
+		return sampleDAO.getSamplesByCondition(idProject, condition);
+	}
+	
 }

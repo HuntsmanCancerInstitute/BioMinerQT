@@ -14,7 +14,7 @@ import javax.persistence.JoinColumn;
 public class OrganismBuild {
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name="idOrganismBuild")
+	@Column(name="idOrganismBuild",columnDefinition="bigint(20)")
 	Long idOrganismBuild;
 	
 	@OneToOne()
@@ -32,6 +32,9 @@ public class OrganismBuild {
 	
 	@Column(name="TranscriptFile")
 	String transcriptFile;
+	
+	@Column(name="ensemblCode")
+	String ensemblCode;
 
 
 	public OrganismBuild() {
@@ -90,6 +93,15 @@ public class OrganismBuild {
 	public void setTranscriptFile(String transcriptFile) {
 		this.transcriptFile = transcriptFile;
 	}
+
+	public String getEnsemblCode() {
+		return ensemblCode;
+	}
+
+	public void setEnsemblCode(String ensemblCode) {
+		this.ensemblCode = ensemblCode;
+	}
+	
 	
 	
 	

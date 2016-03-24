@@ -54,6 +54,9 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 	
 	$scope.hugoList = [];
 	
+	$scope.queryPanelHide = false;
+	$scope.resultPanelClass='col-sm-12 col-md-12 col-lg-8';
+	
 	//Pagination
 	$scope.queryCurrentPage = 0;
 	$scope.resultPages = 0;
@@ -78,8 +81,11 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 	
 	//Copy and pase
 	$scope.selectAll = false;
-	
 	$scope.showValidation = false;
+	
+	//Hyperlinks
+	$scope.returnedEnsemblCode;
+	
 	
 	
 	
@@ -258,10 +264,10 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
         		var coordinateEntry = coordinateList.join("\n");
             	$scope.regions = coordinateEntry;
             	dialogs.notify("Coordinate Copy Successful",coordinateList.length + " coordinates were copied");
-            	ngProgress.complete();
+            	
         	}
     	
-        	
+        	ngProgress.complete();
     	}
     	
     	$scope.intersectionTarget = "REGION";
@@ -305,10 +311,11 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
         	} else {
         		var geneEntry = geneList.join("\n");
             	$scope.genes = geneEntry;
-            	ngProgress.complete();
+            	
         		dialogs.notify("Gene Copy Successful",geneList.length + " genes were copied");
         	}
         	
+        	ngProgress.complete();
     	}
     	
     	$scope.intersectionTarget = "GENE";
@@ -425,7 +432,13 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 		}).error(function(data) {
 			$scope.igvLoaded = false;
 		});
-		
+	};
+	
+	$scope.hyperlink = function(url) {
+		if ($scope.returnedEnsemblCode != null) {
+			var win = window.open("http://" + $scope.returnedEnsemblCode + ".archive.ensembl.org/id/" + url, '_blank');
+			win.focus();
+		}
 		
 	};
 	
@@ -915,6 +928,7 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 				$scope.totalAnalyses = data.analysisNum;
 				$scope.totalDatatracks = data.dataTrackNum;
 				$scope.returnedOrganismBuild = data.idOrganismBuild;
+				$scope.returnedEnsemblCode = data.returnedEnsemblCode;
 				$scope.hasResults = true;
 			}
 			
@@ -1372,6 +1386,7 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 				$scope.totalAnalyses = data.analysisNum;
 				$scope.totalDatatracks = data.dataTrackNum;
 				$scope.returnedOrganismBuild = data.idOrganismBuild;
+				$scope.returnedEnsemblCode = data.returnedEnsemblCode;
 				$scope.hasResults = true;
 			}
 			$http({

@@ -12,7 +12,7 @@
 	<div class="col-lg-3">
 		<div class="panel panel-primary">
 		  <div class="panel-heading">
-		    <div class="panel-title">RNA Seq Experiments {{getCount.data[0]}}</div>
+		    <div class="panel-title">RNA Seq Experiments: {{rnaseqCount}}</div>
 		  </div>
 		  <div class="panel-body" >
 			 <nvd3 options="rnaOptions" data="rnaseq" api="api1"></nvd3>
@@ -24,7 +24,7 @@
 	<div class="col-lg-3">
 		<div class="panel panel-primary">
 		  <div class="panel-heading">
-		    <div class="panel-title">Chip Seq Experiments {{getCount.data[0]}}</div>
+		    <div class="panel-title">Chip Seq Experiments: {{chipseqCount}}</div>
 		  </div>
 		  <div class="panel-body">
 		  	<nvd3 options="chipOptions" data="chipseq" api="api2"></nvd3>
@@ -35,7 +35,7 @@
 	<div class="col-lg-3">
 		<div class="panel panel-primary">
 		  <div class="panel-heading">
-		    <div class="panel-title">Bisulfite Seq Experiments {{getCount.data[0]}}</div>
+		    <div class="panel-title">Bisulfite Seq Experiments: {{bisseqCount}}</div>
 		  </div >
 		  <div class="panel-body">
 		  	<nvd3 options="bisOptions" data="bisseq" api="api3"></nvd3>
@@ -46,7 +46,7 @@
 	<div class="col-lg-3">
 		<div class="panel panel-primary">
 		  <div class="panel-heading">
-		    <div class="panel-title">Variant Experiments {{getCount.data[0]}}</div>
+		    <div class="panel-title">Variant Experiments: {{variantCount}}</div>
 		  </div>
 		  <div class="panel-body">
 		    <nvd3 options="varOptions" data="variant" api="api4"></nvd3>

@@ -11,7 +11,7 @@
 			<div class="form-group">
 				<label class="col-md-4 control-label" for="analysis_result_name">Analysis Name</label>  
 				<div class="col-md-5">
-			  		<input name="analysis_name" id="analysis_result_name" ng-model="result.name" placeholder="name" class="form-control input-sm" type="text" ui-validate="{result_name_used: 'checkResultName($value)'}" required>
+			  		<input maxlength="255" name="analysis_name" id="analysis_result_name" ng-model="result.name" placeholder="name" class="form-control input-sm" type="text" ui-validate="{result_name_used: 'checkResultName($value)'}" required>
 				</div>
 				
 				<div class="col-md-5 col-md-offset-4">
@@ -24,7 +24,7 @@
 			<div class="form-group">
 				<label class="col-md-4 control-label" for="analysis_description">Description</label>
 				<div class="col-md-5">
-			  		<textarea class="form-control input-sm" placeholder="method / description" ng-model="result.description" id="analysis_description"></textarea>
+			  		<textarea maxlength="255"  class="form-control input-sm" placeholder="method / description" ng-model="result.description" id="analysis_description"></textarea>
 				</div>
 			</div> 
 			
@@ -85,10 +85,10 @@
 			<div class="form-group">
 			  	<label class="col-md-4 control-label" for=""></label>  
 				<div class="col-md-5 animate-switch-container" ng-switch on="resultEditMode">
-					<button id="add_result_button"  class="animate-switch btn btn-primary btn-sm" ng-switch-when="false" ng-click="addResult(result)" ng-disabled="resultForm.$invalid">Add</button>
-					<button id="save_result_button" class="animate-switch btn btn-primary btn-sm" ng-switch-when="true" ng-click="saveResult(result)" ng-disabled="resultForm.$invalid">Save</button>
-					<button id="save_sample_button" class="animate-switch btn btn-warning btn-sm" ng-click="clearResult()">Clear</button>
-					<button id="duplicate_result_button" class="animate-switch btn btn-success btn-sm" tooltip="Duplicate last entered result to a new entry" ng-hide="lastResult==null || resultEditMode" ng-click="duplicateResult()">Duplicate</button>					
+					<button id="add_result_button" ng-disabled="!canEdit" class="animate-switch btn btn-primary btn-sm" ng-switch-when="false" ng-click="addResult(result)" ng-disabled="resultForm.$invalid">Add</button>
+					<button id="save_result_button" ng-disabled="!canEdit" class="animate-switch btn btn-primary btn-sm" ng-switch-when="true" ng-click="saveResult(result)" ng-disabled="resultForm.$invalid">Save</button>
+					<button id="save_sample_button" ng-disabled="!canEdit" class="animate-switch btn btn-warning btn-sm" ng-click="clearResult()">Clear</button>
+					<button id="duplicate_result_button" ng-disabled="!canEdit" class="animate-switch btn btn-success btn-sm" tooltip="Duplicate last entered result to a new entry" ng-hide="lastResult==null || resultEditMode" ng-click="duplicateResult()">Duplicate</button>					
 				</div>
 			</div>
 		</div> <!--  end row -->
@@ -121,15 +121,15 @@
 			            <td>{{result.file.name}}</div></td>
 			            <td><div ng-repeat="sample in result.samples">{{sample.name}}<br></div></td>
 			            <td><div ng-repeat="dt in result.dataTracks">{{dt.name}}<br></div></td>
-			            <td>
+			            <td >
 				            <div ng-show="result.show">
-				            	<button class="btn btn-xs btn-primary" ng-click="editResult(result)"  data-toggle="tooltip" tooltip="edit analysis" title="edit">
+				            	<button class="btn btn-xs btn-primary" ng-disabled="!canEdit" ng-click="editResult(result)"  data-toggle="tooltip" tooltip="edit analysis" title="edit">
 					        		<span class="glyphicon glyphicon-edit"></span>
 				                </button>
-				                <button class="btn btn-xs btn-success" ng-click="copyResult(result)"  data-toggle="tooltip" tooltip="copy to entry form" title="copy">
+				                <button class="btn btn-xs btn-success" ng-disabled="!canEdit" ng-click="copyResult(result)"  data-toggle="tooltip" tooltip="copy to entry form" title="copy">
 					        		<span class="glyphicon glyphicon-share"></span>
 				                </button>
-				                <button class="btn btn-xs btn-danger" ng-click="removeResult(result)" data-toggle="tooltip" tooltip="delete analysis" title="remove">
+				                <button class="btn btn-xs btn-danger" ng-disabled="!canEdit" ng-click="removeResult(result)" data-toggle="tooltip" tooltip="delete analysis" title="remove">
 				                 	<span class="glyphicon glyphicon-trash"></span>
 				                </button>
 				            </div>

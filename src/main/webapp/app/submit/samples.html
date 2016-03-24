@@ -3,7 +3,7 @@
 	    <span class="section-header">Bulk Import Samples into Project <span class="glyphicon glyphicon-question-sign help-button" ng-click="showHelpSampleBulk()"></span></span>
 	    <button id="halt_upload_button"  class="btn btn-danger" ng-click="stopSampleSheetUpload()" ng-show="loadSampleSheetRunning">Cancel Upload</button>
     	<div ng-show="!loadSampleSheetRunning">
-    		<span class="btn btn-primary fileinput-button btn-sm" >
+    		<span class="btn btn-primary fileinput-button btn-sm" ng-disabled="!canEdit">
 			<i class="glyphicon glyphicon-upload"></i>
 		    <span>Load Sample Sheet</span>
 				<input type="file" ng-file-select ng-file-change="loadSampleSheet($files)">            
@@ -18,7 +18,7 @@
 					<div class="col-lg-2">
 						<div class="form-group">
 							<label class="control-label" for="sample_name">Name</label>  
-							<input required id="sample_name" ng-model="sample.name" name="sample_name" placeholder="Sample name..." class="form-control input-sm" required="" type="text" ui-validate="{sample_name_used: 'checkSampleName($value)'}">
+							<input maxlength="255" required id="sample_name" ng-model="sample.name" name="sample_name" placeholder="Sample name..." class="form-control input-sm" required="" type="text" ui-validate="{sample_name_used: 'checkSampleName($value)'}">
 							<span ng-show="sample_form.sample_name.$error.sample_name_used" class="label label-danger">Name already used</span>
 						</div>
 					</div> <!-- end col -->
@@ -39,7 +39,7 @@
 							<a ng-click="sample.samplePrep = null; newSamplePrep.description = ''" ng-show="sample.samplePrep.description == 'Add New'" tooltip="cancel"><span class="glyphicon glyphicon-remove"></span>  </a>
 							<a ng-click="deleteSamplePrep(sample.samplePrep.idSamplePrep)" ng-show="!samplePrepUsed && sample.samplePrep.description != 'Add New' && sample.samplePrep.description != null" tooltip="remove unused sample prep"><span class="glyphicon glyphicon-minus"></span></a>
 							<a ng-click="showDeleteUnusedSamplePrepDialog()" ng-show="unusedSamplePreps.length > 0 && sample.samplePrep == null" tooltip="display/remove unused sample preps"><span class="glyphicon glyphicon-trash"></span></a>
-							<input style="background-color: LightGreen;" type="text" placeholder="Type in new sample prep description" ng-show="sample.samplePrep.description == 'Add New'" class="form-control input-sm" ng-model="newSamplePrep.description"/>
+							<input maxlength="255" style="background-color: LightGreen;" type="text" placeholder="Type in new sample prep description" ng-show="sample.samplePrep.description == 'Add New'" class="form-control input-sm" ng-model="newSamplePrep.description"/>
 							<div ng-hide="sample.samplePrep.description == 'Add New'">
 								<select width="100" chosen data-placeholder="Select prep method..." required id="sample_prep" ng-model="sample.samplePrep" ng-disabled="!sample.sampleType.idSampleType" 
 								ng-options="sp as sp.description for sp in samplePrepList track by sp.idSamplePrep" class="form-control chosen-select" ng-change="checkSamplePrep(sample.samplePrep)">
@@ -58,7 +58,7 @@
 							<a ng-click="sample.sampleSource = null; newSampleSource.source = ''" ng-show="sample.sampleSource.source == 'Add New'" tooltip="cancel"><span class="glyphicon glyphicon-remove"></span>  </a>
 							<a ng-click="deleteSampleSource(sample.sampleSource.idSampleSource)" ng-show="!sampleSourceUsed && sample.sampleSource.source != 'Add New' && sample.sampleSource.source != null" tooltip="remove unused sample source"><span class="glyphicon glyphicon-minus"></span></a>
 							<a ng-click="showDeleteUnusedSampleSourceDialog()" ng-show="unusedSampleSources.length > 0 && sample.sampleSource == null" tooltip="display/remove unused sample sources"><span class="glyphicon glyphicon-trash"></span></a>
-							<input style="background-color: LightGreen;" type="text" placeholder="Type in new sample source" ng-show="sample.sampleSource.source == 'Add New'" class="form-control input-sm" ng-model="newSampleSource.source"/>
+							<input maxlength="255"  style="background-color: LightGreen;" type="text" placeholder="Type in new sample source" ng-show="sample.sampleSource.source == 'Add New'" class="form-control input-sm" ng-model="newSampleSource.source"/>
 							<div ng-hide="sample.sampleSource.source == 'Add New'">
 								<select width="100" chosen data-placeholder="Select source..." required id="site" ng-model="sample.sampleSource" 
 							 	ng-options="source as source.source for source in sampleSourceList  | filter:filterSampleSource() | orderBy: ['first','source'] track by source.idSampleSource" class="form-control chosen-select" ng-change="checkSampleSource(sample.sampleSource)">
@@ -75,7 +75,7 @@
 							<a ng-click="sample.sampleCondition = null; newSampleCond.cond = ''" ng-show="sample.sampleCondition.cond == 'Add New'" tooltip="cancel"><span class="glyphicon glyphicon-remove"></span>  </a>
 							<a ng-click="deleteSampleCondition(sample.sampleCondition.idSampleCondition)" ng-show="!sampleConditionUsed && sample.sampleCondition.cond != 'Add New' && sample.sampleCondition.cond != null" tooltip="remove unused sample condition"><span class="glyphicon glyphicon-minus"></span></a>
 							<a ng-click="showDeleteUnusedSampleConditionDialog()" ng-show="unusedSampleConditions.length > 0 && sample.sampleCondition == null" tooltip="display/remove unused sample conditions"><span class="glyphicon glyphicon-trash"></span></a>
-							<input style="background-color: LightGreen;" type="text" placeholder="Type in new sample condition" ng-show="sample.sampleCondition.cond == 'Add New'" class="form-control input-sm" ng-model="newSampleCond.cond"/> 
+							<input maxlength="255" style="background-color: LightGreen;" type="text" placeholder="Type in new sample condition" ng-show="sample.sampleCondition.cond == 'Add New'" class="form-control input-sm" ng-model="newSampleCond.cond"/> 
 							<div ng-hide="sample.sampleCondition.cond == 'Add New'">
 								<select chosen width="100" data-placeholder="Select condition..." ng-hide="sample.sampleCondition.cond == 'Add New'" required id="sample_group" ng-model="sample.sampleCondition" 
 								ng-options="cond as cond.cond for cond in sampleConditionList | filter:filterSampleCondition() | orderBy: ['first','cond'] track by cond.idSampleCondition " class="form-control chosen-select" ng-change="checkSampleCondition(sample.sampleCondition)">
@@ -91,9 +91,9 @@
 				<div class="form-group">
 				  	<label class="control-label" for=""></label>  
 					<div class="animate-switch-container" ng-switch on="sampleEditMode">
-						<button id="add_sample_button"  class="animate-switch btn btn-primary btn-sm" ng-switch-when="false" ng-click="addSample(sample)" ng-disabled="sample_form.$invalid || sample.sampleSource.source == 'Add New' || sample.sampleCondition.cond == 'Add New' || sample.samplePrep.description == 'Add New'">Add</button>
-						<button id="save_sample_button" class="animate-switch btn btn-primary btn-sm" ng-switch-when="true" ng-click="saveSample(sample)" ng-disabled="sample_form.$invalid || sample.sampleSource.source == 'Add New' || sample.sampleCondition.cond == 'Add New' || sample.samplePrep.description == 'Add New'">Save</button>
-						<button id="clear_sample_button" class="animate-switch btn btn-warning btn-sm" ng-switch-when="false" ng-click="clearSample()">Clear</button>
+						<button id="add_sample_button"  class="animate-switch btn btn-primary btn-sm" ng-switch-when="false" ng-click="addSample(sample)" ng-disabled="sample_form.$invalid || sample.sampleSource.source == 'Add New' || sample.sampleCondition.cond == 'Add New' || sample.samplePrep.description == 'Add New' || !canEdit">Add</button>
+						<button id="save_sample_button" class="animate-switch btn btn-primary btn-sm" ng-switch-when="true" ng-click="saveSample(sample)" ng-disabled="sample_form.$invalid || sample.sampleSource.source == 'Add New' || sample.sampleCondition.cond == 'Add New' || sample.samplePrep.description == 'Add New' || !canEdit">Save</button>
+						<button id="clear_sample_button" class="animate-switch btn btn-warning btn-sm" ng-switch-when="false" ng-click="clearSample()" ng-disabled="!canEdit" >Clear</button>
 						<button id="cancel_sample_button" class="animate-switch btn btn-danger btn-sm" ng-switch-when="true" ng-click="clearSample()">Cancel</button>
 						<button id="duplicate_sample_button" class="animate-switch btn btn-success btn-sm" tooltip="Duplicate last entered sample to a new entry" ng-hide="lastSample==null || sampleEditMode" ng-click="duplicateSample()">Duplicate</button>					
 					</div>
@@ -125,13 +125,13 @@
 			            <td style="width: 15%;">{{sample.sampleCondition.idSampleCondition | lookupSampleCondition:sampleConditionList}}</td>
 			            <td style="width: 100px;">
 			               <div ng-show="sample.show">
-				               <button class="btn btn-xs btn-primary table-button" ng-click="editSample(sample)" tooltip="edit sample" data-toggle="tooltip" data-placement="top" title="edit">
+				               <button class="btn btn-xs btn-primary table-button" ng-disabled="!canEdit" ng-click="editSample(sample)" tooltip="edit sample" data-toggle="tooltip" data-placement="top" title="edit">
 									<span class="glyphicon glyphicon-edit"></span>
 								</button>
-								<button class="btn btn-xs btn-success table-button" ng-click="copySample(sample)" tooltip="copy sample" data-toggle="tooltip" data-placement="top" title="copy">
+								<button class="btn btn-xs btn-success table-button" ng-disabled="!canEdit" ng-click="copySample(sample)" tooltip="copy sample" data-toggle="tooltip" data-placement="top" title="copy">
 				                 	<span class="glyphicon glyphicon-share"></span>
 				                </button>
-				                <button class="btn btn-xs btn-danger table-button" ng-click="removeSample(sample)" tooltip="delete sample" data-toggle="tooltip" data-placement="top" title="remove">
+				                <button class="btn btn-xs btn-danger table-button" ng-disabled="!canEdit" ng-click="removeSample(sample)" tooltip="delete sample" data-toggle="tooltip" data-placement="top" title="remove">
 				                 	<span class="glyphicon glyphicon-trash"></span>
 				                </button>
 				                

@@ -18,6 +18,7 @@ import hci.biominer.model.Sample;
 import hci.biominer.model.SampleSource;
 import hci.biominer.model.access.Institute;
 import hci.biominer.model.access.Lab;
+import hci.biominer.model.access.Role;
 import hci.biominer.model.access.User;
 import hci.biominer.util.Enumerated.AnalysisTypeEnum;
 import hci.biominer.util.Enumerated.ProjectVisibilityEnum;
@@ -472,7 +473,7 @@ public class AnalysisDAO {
 	public ArrayList<DashboardModel> getDashboard(AnalysisTypeEnum type) {
 		ArrayList<DashboardModel> dmList = new ArrayList<DashboardModel>();
 		Session session = this.getCurrentSession();
-		Query query = session.createQuery("select ob.name from OrganismBuild ob");
+		Query query = session.createQuery("select distinct ob.name from Analysis as a left join a.project as p left join p.organismBuild as ob");
 		List<String> obNames = query.list();
 		
 		for (String name: obNames) {
@@ -489,10 +490,10 @@ public class AnalysisDAO {
 			
 			int size = qList.size();
 			
-			if (size > 0) {
-				DashboardModel dm = new DashboardModel(size,name);
-				dmList.add(dm);
-			}
+			
+			DashboardModel dm = new DashboardModel(size,name);
+			dmList.add(dm);
+			
 		}
 		session.close();
 		
@@ -606,6 +607,9 @@ public class AnalysisDAO {
 		Hibernate.initialize(p.getAnalyses());
 		Hibernate.initialize(p.getLabs());
 		Hibernate.initialize(p.getInstitutes());
+		if (p.getOwners().size() > 0) {
+			Hibernate.initialize(p.getOwners());
+		}
 
 		for (Analysis a: p.getAnalyses()) {
 			Hibernate.initialize(a.getSamples());
@@ -646,41 +650,57 @@ public class AnalysisDAO {
 		    
 			whereString = new StringBuilder("");
 			
-			//public visibility
+			//Start where string
 			whereString.append(" where ");
-			whereString.append(" ( p.visibility = :pubVisibility ");
-			parameterMap.put("pubVisibility", ProjectVisibilityEnum.PUBLIC);
-		    
-		    //If user logged in, add additional visibility permissions
-		    if (user != null) {
-		    	List<Long> labList = new ArrayList<Long>();
-			    List<Long> instituteList = new ArrayList<Long>();
-			    HashSet<Long> instituteSet = new HashSet<Long>();
-			   
-			    for (Lab l: user.getLabs()) {
-			      labList.add(l.getIdLab());
-			    }
-			    
-			    for (Institute i: user.getInstitutes()) {
-			      instituteList.add(i.getIdInstitute());
-			    }
-			    instituteList.addAll(instituteSet);
-			    
-			    whereString.append(" or (l.idLab in (:userLabs) and p.visibility = :labVisibility) ");
-			    whereString.append(" or (i.idInstitute in (:userInstitute) and p.visibility = :instVisibility) ");
-			    
-			    parameterListMap.put("userLabs", labList);
-			    parameterListMap.put("userInstitute",instituteList);
-			    parameterMap.put("labVisibility", ProjectVisibilityEnum.LAB);
-			    parameterMap.put("instVisibility", ProjectVisibilityEnum.INSTITUTE);
-			    
-		    }
-		    
-		    //Separate out visibilty part of the 'where' clause
-		    whereString.append(" ) ");
 			
+		    
+		    
+			
+			if (user == null) {
+				whereString.append(" ( p.visibility = :pubVisibility ) and");
+				parameterMap.put("pubVisibility", ProjectVisibilityEnum.PUBLIC);
+			} else {
+				//If user logged in, add additional visibility permissions
+				boolean isAdmin = false;
+				for (Role role: user.getRoles()) {
+	        		if (role.getName().equals("admin")) {
+	        			isAdmin = true;
+	        		}
+	        	}
+				
+				if (isAdmin) {
+					
+				} else {
+			    	List<Long> labList = new ArrayList<Long>();
+				    List<Long> instituteList = new ArrayList<Long>();
+				    HashSet<Long> instituteSet = new HashSet<Long>();
+				   
+				    for (Lab l: user.getLabs()) {
+				      labList.add(l.getIdLab());
+				    }
+				    
+				    for (Institute i: user.getInstitutes()) {
+				      instituteList.add(i.getIdInstitute());
+				    }
+				    
+				    instituteList.addAll(instituteSet);
+				    
+				    whereString.append(" (( p.visibility = :pubVisibility ) ");
+				    whereString.append(" or (l.idLab in (:userLabs) and p.visibility = :labVisibility) ");
+				    whereString.append(" or (i.idInstitute in (:userInstitute) and p.visibility = :instVisibility) ) and");
+				    
+				    parameterMap.put("pubVisibility", ProjectVisibilityEnum.PUBLIC);
+				    parameterListMap.put("userLabs", labList);
+				    parameterListMap.put("userInstitute",instituteList);
+				    parameterMap.put("labVisibility", ProjectVisibilityEnum.LAB);
+				    parameterMap.put("instVisibility", ProjectVisibilityEnum.INSTITUTE);
+				    
+			    }
+			}
+			
+		  
 		    //Only return analyses that can be converted into interval trees
-			whereString.append(" and (ob.genomeFile IS NOT NULL) ");
+			whereString.append(" (ob.genomeFile IS NOT NULL) ");
 		    whereString.append(" and (a.file IS NOT NULL) ");
 			
 			

@@ -26,7 +26,7 @@
 					<ul>
 				 		<li class="list-group" ng-repeat="project in projects | orderBy: 'name'">
 				 			<a ng-class="project.cssClass" href="#/submit" ng-click="select(project.idProject)">
-				 			   <span class="glyphicon glyphicon-triangle-right"></span>{{project.name}}</a>
+				 			   <span class="glyphicon glyphicon-triangle-right"></span>> {{project.name}}</a>
 					    </li>
 				
 					</ul>
@@ -40,8 +40,13 @@
 			
 			<div class=" panel panel-default">
 			
-				<div class="panel-heading">
-					<div class="panel-title">{{project.name}}</div>
+				<div class="panel-heading" ng-if="canEdit">
+				    <div ng-if="canEdit">{{project.name}}</div>
+					
+				</div>
+				<div class="panel-heading" ng-if="!canEdit" style="background-color: #99FF33">
+					<div ng-if="!canEdit">{{project.name}} <b>VIEW ONLY</b></div>
+				
 				</div>
 				
 				

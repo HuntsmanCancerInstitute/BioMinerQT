@@ -10,12 +10,14 @@ import hci.biominer.model.SamplePrep;
 import hci.biominer.model.SampleSource;
 import hci.biominer.model.SampleType;
 import hci.biominer.model.access.Institute;
+import hci.biominer.model.access.Lab;
 import hci.biominer.model.access.User;
 import hci.biominer.service.AnalysisTypeService;
 import hci.biominer.service.DashboardService;
 import hci.biominer.service.GeneAnnotationService;
 import hci.biominer.service.GenotypeService;
 import hci.biominer.service.InstituteService;
+import hci.biominer.service.LabService;
 import hci.biominer.service.OrganismBuildService;
 import hci.biominer.service.OrganismService;
 import hci.biominer.service.SampleConditionService;
@@ -78,12 +80,21 @@ public class SharedController {
     
     @Autowired
 	private DashboardService dashboardService;
+    
+    @Autowired
+    private LabService labService;
 
 
 	@RequestMapping(value="getAllInstitutes",method=RequestMethod.GET)
 	@ResponseBody
 	public List<Institute> getInstituteList() {
 		return instituteService.getAllInstitutes();
+	}
+	
+	@RequestMapping(value="getAllLabs",method=RequestMethod.GET)
+	@ResponseBody
+	public List<Lab> getLabList() {
+		return labService.getAllLabs();
 	}
 	
 	@RequestMapping(value="getAllOrganisms",method=RequestMethod.GET)

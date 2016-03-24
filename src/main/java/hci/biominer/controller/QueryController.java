@@ -135,6 +135,7 @@ public class QueryController {
     private HashMap<String,File> fileDict = new HashMap<String,File>();
     private HashMap<Long,List<GeneNameModel>> searchDict = new HashMap<Long,List<GeneNameModel>>();
     private HashMap<String,ArrayList<Long>> nameLookupDict = new HashMap<String,ArrayList<Long>>();
+    private HashMap<String,String> ensembl2NameDict = new HashMap<String,String>();
     
     
     
@@ -226,36 +227,48 @@ public class QueryController {
     private void loadGeneNames(OrganismBuild ob) {
     	System.out.println("Loading common names for: " + ob.getName());
     	List<ExternalGene> egList = this.externalGeneService.getExternalGenesByOrganismBuild(ob);
+    	System.out.println("Finished loading names");
     	
-    	
+    	//Iterate through external genes and extract information on associated gene name and ensembl name
     	HashSet<String> uniqueNamesHash = new HashSet<String>();
-    	List<String> uniqueNamesSort = new ArrayList<String>();
+    	HashMap<Long,String> associatedLink = new HashMap<Long,String>();
+    	HashMap<Long,String> ensemblLink = new HashMap<Long,String>();
     	for (ExternalGene eg: egList) {
     		String name = eg.getExternalGeneName();
     		String source = eg.getExternalGeneSource();
     		if (source.equals("hugo")) {
     			uniqueNamesHash.add(name);
-    		}
-    		if (!nameLookupDict.containsKey(name)) {
+    			associatedLink.put(eg.getIdBiominerGene(), name);
+    		} else if (source.equals("ensembl")) {
+    			ensemblLink.put(eg.getIdBiominerGene(), name);
+    		} if (!nameLookupDict.containsKey(name)) {
     			nameLookupDict.put(name, new ArrayList<Long>());
     		}
-    		nameLookupDict.get(name).add(eg.getIdExternalGene());
-    		
+    		nameLookupDict.get(name).add(eg.getIdExternalGene());	
     	}
-    	egList.clear();
+    	egList = null;
     	
+    	//Sort associated gene names and store in a list for angular.
+    	List<String> uniqueNamesSort = new ArrayList<String>();
     	uniqueNamesSort.addAll(uniqueNamesHash);
     	Collections.sort(uniqueNamesSort);
+    	uniqueNamesHash = null;
     	
     	List<GeneNameModel> uniqueNamesList = new ArrayList<GeneNameModel>();
     	for (String name: uniqueNamesSort) {
     		GeneNameModel gnm = new GeneNameModel(name);
     		uniqueNamesList.add(gnm);
     	}
-    	uniqueNamesSort.clear();
+    	uniqueNamesSort = null;
     	searchDict.put(ob.getIdOrganismBuild(), uniqueNamesList);
     	
-  
+    	//Create lookup table ensembl to hugo
+    	for (Long id: ensemblLink.keySet()) {
+    		if (associatedLink.containsKey(id)) {
+    			ensembl2NameDict.put(ensemblLink.get(id),associatedLink.get(id));
+    		}
+    	}
+
     }
   
     @RequestMapping(value="/clearNames",method=RequestMethod.POST)
@@ -725,7 +738,7 @@ public class QueryController {
     	List<Analysis> usedAnalyses = this.getUsedAnalyses(analyses, fullRegionResults);
     	HashMap<String,String> usedDataTracks = this.getDataTrackList(usedAnalyses);
     	
-    	QueryResultContainer qrc = new QueryResultContainer(fullRegionResults, fullRegionResults.size(), usedAnalyses.size(), usedDataTracks.keySet().size(), 0, sortType, true, idOrganismBuild);
+    	QueryResultContainer qrc = new QueryResultContainer(fullRegionResults, fullRegionResults.size(), usedAnalyses.size(), usedDataTracks.keySet().size(), 0, sortType, true, idOrganismBuild, ob.getEnsemblCode());
     	
     	//Create settings object
     	QuerySettings qs = new QuerySettings(codeResultType, target, idOrganismBuild, idAnalysisTypes, idLabs, idProjects,
@@ -855,7 +868,12 @@ public class QueryController {
     		QuerySettings qs = null;
     		if (!currentSessions.get(username).containsKey(idTab)) {
     			currentSessions.get(username).put(idTab, fetchMostRecentSession(username));
+    			System.out.println("Loading session info");
     		}
+    		if (!currentSessions.get(username).containsKey(idTab)) {
+    			System.out.println("NOPE!");
+    		}
+    		System.out.println(currentSessions.get(username).get(idTab).getSettings());
     		qs = currentSessions.get(username).get(idTab).getSettings();
     		return qs;
     		
@@ -1827,7 +1845,14 @@ public class QueryController {
     		result.setCoordinates(coordinate);
     		result.setFDR(gr.getTransFDR());
     		result.setLog2Ratio(gr.getLog2Rto());
-    		result.setMappedName(gr.getMappedName());
+    		String mappedName = gr.getMappedName();
+    		result.setEnsemblName(mappedName);
+    		if (ensembl2NameDict.containsKey(mappedName)) {
+    			result.setMappedName(ensembl2NameDict.get(mappedName));
+    		} else {
+    			result.setMappedName(mappedName);
+    		}
+    		
     		
     		//If interval list is set ( shouldn't be for does not match), set search parameter
     		if (intervalList == null) {

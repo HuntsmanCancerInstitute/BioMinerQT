@@ -18,9 +18,10 @@ public class QueryResultContainer implements Serializable {
 	private int analysisNum;
 	private int dataTrackNum;
 	private long idOrganismBuild;
+	private String returnedEnsemblCode;
 	
 	
-	public QueryResultContainer(List<QueryResult> results, int resultsSize, int analysisNum, int dataTrackNum, int page, String sortType, boolean sortOnCreate, Long idOrganismBuild) {
+	public QueryResultContainer(List<QueryResult> results, int resultsSize, int analysisNum, int dataTrackNum, int page, String sortType, boolean sortOnCreate, Long idOrganismBuild, String returnedEnsemblCode) {
 		this.resultList = results;
 		this.resultNum = resultsSize;
 		this.pages = page;
@@ -31,6 +32,7 @@ public class QueryResultContainer implements Serializable {
 		this.analysisNum = analysisNum;
 		this.dataTrackNum = dataTrackNum;
 		this.idOrganismBuild = idOrganismBuild;
+		this.returnedEnsemblCode = returnedEnsemblCode;
 	}
 
 	public List<QueryResult> getResultList() {
@@ -65,6 +67,15 @@ public class QueryResultContainer implements Serializable {
 		this.resultList = results;
 	}
 	
+	
+	public String getReturnedEnsemblCode() {
+		return returnedEnsemblCode;
+	}
+
+	public void setReturnedEnsemblCode(String returnedEnsemblCode) {
+		this.returnedEnsemblCode = returnedEnsemblCode;
+	}
+
 	private int calcPages(List<QueryResult> results, int queriesPerPage) {
 		if (results.size() % queriesPerPage == 0) {
 			return results.size() / queriesPerPage;
@@ -110,7 +121,7 @@ public class QueryResultContainer implements Serializable {
 		
 		List<QueryResult> subset = this.resultList.subList(start, end);
 		
-		QueryResultContainer qrc = new QueryResultContainer(subset,this.resultNum, this.analysisNum, this.dataTrackNum, this.pages, sortType, false, idOrganismBuild);
+		QueryResultContainer qrc = new QueryResultContainer(subset,this.resultNum, this.analysisNum, this.dataTrackNum, this.pages, sortType, false, idOrganismBuild, returnedEnsemblCode);
 		return qrc;
 		
 	}

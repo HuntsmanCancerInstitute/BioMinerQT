@@ -117,6 +117,14 @@ var services = angular.module('services', ['ngResource','ui.bootstrap'])
 			});
 		};
 		
+		dict.getLabList = function() {
+			return $http({
+				method: 'GET',
+				url: 'shared/getAllLabs',
+				cache: true,
+			});
+		};
+		
 		dict.getGenotypeList = function() {
 			return $http({
 				method: 'GET',

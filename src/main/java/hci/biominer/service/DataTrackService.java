@@ -49,5 +49,9 @@ public class DataTrackService {
 	public void finalizeDataTrack(Long idDataTrack, FileStateEnum fs, String message) {
 		dataTrackDAO.finalizeDataTrack(idDataTrack, fs, message);
 	}
+	
+	public List<DataTrack> getDataTrackByName(Long idProject, List<String> nameList) {
+		return dataTrackDAO.getDataTrackByName(idProject, nameList);
+	}
 
 }

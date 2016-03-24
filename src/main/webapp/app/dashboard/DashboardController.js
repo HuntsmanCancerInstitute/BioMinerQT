@@ -43,7 +43,7 @@ function($rootScope, $scope, $http,$window) {
                 }
             }
         }
-    }
+    };
     
     //Setup rnaSeq options
     $scope.rnaOptionsTemp = angular.copy($scope.options);
@@ -114,7 +114,6 @@ function($rootScope, $scope, $http,$window) {
     $scope.$on('$locationChangeStart', function(event, next, current) {
     	nv.render.queue = [];
     	nv.utils.clearAllListeners();
-    	console.log("DESTROY");
     });
     
     $scope.getCrashCount = function() {
@@ -260,6 +259,12 @@ function($rootScope, $scope, $http,$window) {
     		params: {type: "ChIPSeq"}
     	}).success(function(data) {
     		$scope.chipseq = data;
+    		$scope.chipseqCount = 0;
+
+    		for (var i=0; i<data.length;i++) {
+    			$scope.chipseqCount += data[i].y;
+    		}
+    		
     	});
     };
 
@@ -269,7 +274,13 @@ function($rootScope, $scope, $http,$window) {
     		method: "POST",
     		params: {type: "RNASeq"}
     	}).success(function(data) {
+    		$scope.rnaseqCount = 0;
     		$scope.rnaseq = data;
+
+    		for (var i=0; i<data.length;i++) {
+    			$scope.rnaseqCount += data[i].y;
+    		}
+    		
     	});
     };
     
@@ -280,6 +291,12 @@ function($rootScope, $scope, $http,$window) {
     		params: {type: "Methylation"}
     	}).success(function(data) {
     		$scope.bisseq = data;
+    		$scope.bisseqCount = 0;
+    		
+    		for (var i=0; i<data.length;i++) {
+    			$scope.bisseqCount += data[i].y;
+    		}
+    		
     	});
     };
     
@@ -289,15 +306,24 @@ function($rootScope, $scope, $http,$window) {
     		method: "POST",
     		params: {type: "Variant"}
     	}).success(function(data) {
+    		$scope.variantCount = 0;
     		$scope.variant = data;
+    		
+    		for (var i=0; i<data.length;i++) {
+    			$scope.variantCount += data[i].y;
+    		}
+    		
     	});
     }
     
-    $scope.refreshStandard = function() {
+    $scope.refreshCharts = function() {
     	$scope.getChipSeq();
     	$scope.getRnaSeq();
     	$scope.getBisSeq();
     	$scope.getVariant();
+    };
+    
+    $scope.refreshCounts = function() {
     	$scope.getUploadedSize();
     	$scope.getParsedSize();
     	$scope.getUserCount();
@@ -321,7 +347,8 @@ function($rootScope, $scope, $http,$window) {
     	if ($rootScope.admin) {
     		$scope.refreshAmin();
     	}
-    	$scope.refreshStandard();
+    	$scope.refreshCharts();
+    	$scope.refreshCounts();
     	nv.render.queue = [];
     	nv.utils.clearAllListeners();
     }

@@ -9,8 +9,8 @@
 				<div class="form-group">
 				  <label class="col-md-4 control-label" for="project_name">Name</label>  
 				  <div class="col-md-5">
-					  <input ng-show="projectEditMode" id="project_name" ng-model="editedProject.name" name="project_name" placeholder="name" class="form-control input-sm" required="" type="text">
-					  <input ng-hide="projectEditMode" ng-readonly="true" id="project_name2" ng-model="project.name" name="project_name" placeholder="name" class="form-control input-sm" type="text">
+					  <input maxlength="255" ng-show="projectEditMode" id="project_name" ng-model="editedProject.name" name="project_name" placeholder="name" class="form-control input-sm" required="" type="text">
+					  <input maxlength="255" ng-hide="projectEditMode" ng-readonly="true" id="project_name2" ng-model="project.name" name="project_name" placeholder="name" class="form-control input-sm" type="text">
 				  </div>
 				</div>
 				
@@ -18,16 +18,16 @@
 				<div class="form-group">
 				  <label class="col-md-4 control-label" for="project_description">Description</label>
 				  <div class="col-md-5">                     
-				    <textarea ng-show="projectEditMode" class="form-control input-sm" id="project_description" ng-model="editedProject.description" name="project_description"></textarea>
-				  	<textarea ng-hide="projectEditMode" ng-readonly="true" class="form-control  input-sm" id="project_description2" ng-model="project.description" name="project_description"></textarea>
+				    <textarea maxlength="1000" ng-show="projectEditMode" class="form-control input-sm" id="project_description" ng-model="editedProject.description" name="project_description"></textarea>
+				  	<textarea maxlength="1000" ng-hide="projectEditMode" ng-readonly="true" class="form-control  input-sm" id="project_description2" ng-model="project.description" name="project_description"></textarea>
 				  </div>
 				</div>
 				
 				<div class="form-group">
 				  <label class="col-md-4 control-label" for="project_urls">Data URLs</label>
 				  <div class="col-md-5">                     
-				    <textarea ng-show="projectEditMode" class="form-control  input-sm" id="project_urls" ng-model="editedProject.dataUrls" name="project_urls"></textarea>
-				    <textarea ng-hide="projectEditMode" ng-readonly="true" class="form-control  input-sm" id="project_urls2" ng-model="project.dataUrls" name="project_urls"></textarea>
+				    <textarea maxlength="1000" ng-show="projectEditMode" class="form-control  input-sm" id="project_urls" ng-model="editedProject.dataUrls" name="project_urls"></textarea>
+				    <textarea maxlength="1000" ng-hide="projectEditMode" ng-readonly="true" class="form-control  input-sm" id="project_urls2" ng-model="project.dataUrls" name="project_urls"></textarea>
 				  </div>
 				</div>
 				
@@ -51,10 +51,21 @@
 				<div class="form-group">
 				  <label class="col-md-4 control-label" for="lab">Lab</label>
 				  	<div class="col-md-5" ng-show="projectEditMode">
-		  		    	<select width="100" data-placeholder="Choose labs..." ng-model="editedProject.labs" multiple chosen class="form-control chosen-select" ng-options="lab as (lab.first + ' ' + lab.last + ' lab' ) for lab in labList track by lab.idLab" required/>				  	
+		  		    	<select width="100" data-placeholder="Choose labs..." ng-model="editedProject.labs" multiple chosen class="form-control chosen-select" ng-options="lab as (lab.last + ' lab' ) for lab in labList | orderBy: 'last' track by lab.idLab" required/>				  	
 				    </div>
 				    <fieldset class="col-md-5" ng-hide="projectEditMode" disabled="true">
-		  		    	<select width="100" ng-disabled="disableElement" data-placeholder="Choose labs..." ng-model="project.labs" multiple chosen class="form-control chosen-select" ng-options="lab as (lab.first + ' ' + lab.last + ' lab' ) for lab in labList track by lab.idLab"/>
+		  		    	<select width="100" ng-disabled="disableElement" data-placeholder="Choose labs..." ng-model="project.labs" multiple chosen class="form-control chosen-select" ng-options="lab as (lab.last + ' lab' ) for lab in labList | orderBy: 'last' track by lab.idLab"/>
+				    </fieldset>
+				</div>
+				
+				<!-- Select Basic -->
+				<div class="form-group">
+				  <label class="col-md-4 control-label" for="owner">Owner</label>
+				  	<div class="col-md-5" ng-show="projectEditMode">
+		  		    	<select width="100" data-placeholder="Choose owners..." ng-model="editedProject.owners" multiple chosen class="form-control chosen-select" ng-options="lab as (lab.last + ' lab' ) for lab in labList track by lab.idLab" required/>				  	
+				    </div>
+				    <fieldset class="col-md-5" ng-hide="projectEditMode" disabled="true">
+		  		    	<select width="100" ng-disabled="disableElement" data-placeholder="Choose owners..." ng-model="project.owners" multiple chosen class="form-control chosen-select" ng-options="lab as (lab.last + ' lab' ) for lab in labList track by lab.idLab"/>
 				    </fieldset>
 				</div>
 				
@@ -62,10 +73,10 @@
 				<div class="form-group">
 				  <label class="col-md-4 control-label" for="institute">Institute</label>
 				  	<div class="col-md-5" ng-show="projectEditMode">
-		  		    	<select width="100" data-placeholder="Choose institutes..." ng-model="editedProject.institutes" multiple chosen class="form-control chosen-select" ng-options="inst as inst.name for inst in instituteList track by inst.idInstitute" required/>
+		  		    	<select width="100" data-placeholder="Choose institutes..." ng-model="editedProject.institutes" multiple chosen class="form-control chosen-select" ng-options="inst as inst.name for inst in instituteList | orderBy: 'name' track by inst.idInstitute" required/>
 				    </div>
 				    <fieldset class="col-md-5" ng-hide="projectEditMode" disabled="true">
-		  		    	<select width="100" ng-disabled="disableElement" data-placeholder="Choose institutes..." ng-model="project.institutes" multiple chosen class="form-control chosen-select" ng-options="inst as inst.name for inst in instituteList track by inst.idInstitute"/>
+		  		    	<select width="100" ng-disabled="disableElement" data-placeholder="Choose institutes..." ng-model="project.institutes" multiple chosen class="form-control chosen-select" ng-options="inst as inst.name for inst in instituteList | orderBy: 'name' track by inst.idInstitute"/>
 				    </fieldset>
 				</div>
 				
@@ -91,7 +102,7 @@
 				  <label class="col-md-4 control-label"></label>
 				  <div class="col-md-5" >
 				    <button id="save_analysis_project_button" name="save_analysis_project_button" class="btn btn-primary btn-sm" ng-click="save()" ng-hide="!projectEditMode" ng-disabled="editProjectForm.$invalid">Save</button>
-				    <button id="edit_analysis_project_button" name="edit_analysis_project_button" class="btn btn-primary btn-sm" ng-click="edit()" ng-hide="projectEditMode">Edit</button>
+				    <button id="edit_analysis_project_button" name="edit_analysis_project_button" class="btn btn-primary btn-sm" ng-click="edit()" ng-disabled="!canEdit" ng-hide="projectEditMode">Edit</button>
 				    <button id="cancel_analysis_project_button" name="cancel_analysis_project_button" class="btn btn-danger btn-sm" ng-click="cancel()" ng-hide="!projectEditMode">Cancel</button>
 				  </div>
 				</div>

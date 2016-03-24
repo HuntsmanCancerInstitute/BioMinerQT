@@ -21,7 +21,7 @@ import hci.biominer.util.Enumerated.*;
 @Table(name="FileUpload")
 public class FileUpload {
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name="idFileUpload")
 	Long idFileUpload;
 	

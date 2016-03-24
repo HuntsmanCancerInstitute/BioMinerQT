@@ -63,10 +63,6 @@ public class Dashboard {
 		this.lastCrashDate = lastCrashDate;
 	}
 
-  
-    
-	
-
 	public Long getLastReportDate() {
 		return lastReportDate;
 	}

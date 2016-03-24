@@ -66,6 +66,13 @@ public class Project {
     List<Lab> labs;
 	
 	@ManyToMany()
+	@JoinTable(name="ProjectOwner",
+				joinColumns={@JoinColumn(name="idProject")},
+				inverseJoinColumns={@JoinColumn(name="idLab")})
+	@IndexColumn(name="ownerOrder")
+	List<Lab> owners;
+	
+	@ManyToMany()
 	@JoinTable(name="ProjectInstitute",
 			joinColumns={@JoinColumn(name="idProject")},
 			inverseJoinColumns={@JoinColumn(name="idInstitute")})
@@ -78,6 +85,15 @@ public class Project {
 		
 	}
 	
+		
+	public List<Lab> getOwners() {
+		return owners;
+	}
+
+	public void setOwners(List<Lab> owners) {
+		this.owners = owners;
+	}
+
 	public Long getIdProject() {
 		return idProject;
 	}

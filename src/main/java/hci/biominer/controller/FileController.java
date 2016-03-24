@@ -6,16 +6,20 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.GZIPOutputStream;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -72,13 +76,15 @@ public class FileController {
 	@Autowired
 	private AnalysisTypeService analysisTypeService;
 	
+	@Autowired
+	private SubmitController submitController;
+	
 
 	public static void checkProperties() throws Exception{
 		if (!BiominerProperties.isLoaded()) {
 			BiominerProperties.loadProperties();
 		}
 	}
-	
 	
 	public static File generateFilePath(FileUpload fileUpload) throws Exception  {
 		checkProperties();
@@ -599,6 +605,9 @@ public class FileController {
 				fileUpload.setState(FileStateEnum.WARNING);
 			}
 			
+			
+			
+			
 		} catch (Exception ioex) {
 			fileUpload.setState(FileStateEnum.FAILURE);
 			fileUpload.setMessage(ioex.getMessage());
@@ -660,7 +669,6 @@ public class FileController {
 			if (!parseDir.exists()) {
 				parseDir.mkdir();
 			}
-			File parseStub = new File("/parsed/",id);
 			File inputFile = new File(importDir, input);
 			File outputFile = new File(parseDir, output);
 			
@@ -699,6 +707,25 @@ public class FileController {
 			} else {
 				fileUpload.setState(FileStateEnum.WARNING);
 			}
+			
+			//Read in header and try to parse condition information
+			BufferedReader br = IO.fetchBufferedReader(inputFile);
+			String[] header = br.readLine().split("\t");
+			
+			br.close();
+			String log2FC = header[log];
+			Pattern p = Pattern.compile("(.+):(.+)\\s+.+");
+			Matcher m = p.matcher(log2FC);
+			if (m.matches()) {
+				String cond1 = m.group(1);
+				String cond2 = m.group(2);
+				String name = FilenameUtils.getBaseName(outputFile.getName());
+				boolean success = submitController.autoCreateAnalysis(Long.parseLong(id), idFileUpload, idAnalysisType, cond1, cond2, name);
+				if (success) {
+					fileUpload.setMessage("AUTOCREATE");
+				}
+				
+			} 
 			
 		} catch (Exception ioex) {
 			ioex.printStackTrace();
@@ -1063,6 +1090,7 @@ public class FileController {
 		return "OK";
 		
 	}
+	
 	
 	
 	

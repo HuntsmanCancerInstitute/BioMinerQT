@@ -12,7 +12,6 @@ table.inner-table tbody tr:nth-child(even) {background-color: #EEF9FA}
 table.inner-table tbody tr:nth-child(odd) {background-color: #E4F4FC}
 
 
-
 .table-container
 {
 	width: 100%;
@@ -355,6 +354,11 @@ body {
 .nvd3 text {
 	font-family:  'Muli', Helvetica, Arial, sans-serif!important;
 	font: 400 11px Arial;
+}
+
+.nvd3.multichart .axis .nv-axis line {
+	stroke: none;
+	fill:none;
 }
 
 .badge {

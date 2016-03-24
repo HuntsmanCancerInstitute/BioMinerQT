@@ -2,6 +2,7 @@ package hci.biominer.model;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -14,17 +15,18 @@ import javax.persistence.Table;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
+import org.hibernate.annotations.Index;
+import org.springframework.context.annotation.Lazy;
 
 @Entity
 @Table(name="ExternalGene")
-
 public class ExternalGene {
 	@Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	@Column(name="idExternalGene")
 	Long idExternalGene;
 	
-	@ManyToOne()
+	@ManyToOne(fetch=FetchType.LAZY)
 	@JoinColumn(name="idBiominerGene")
 	@JsonIgnore
 	BiominerGene biominerGene;
@@ -39,6 +41,11 @@ public class ExternalGene {
 	@JoinColumn(name="idOrganismBuild")
 	OrganismBuild organismBuild;
 	
+	
+	@Column(name="idBiominerGene",updatable=false,insertable=false)
+	Long idBiominerGene;
+	
+
 	public ExternalGene(BiominerGene bg, OrganismBuild ob, String ExternalGeneName, String ExternalGeneSource) {
 		this.biominerGene = bg;
 		this.organismBuild = ob;
@@ -89,6 +96,14 @@ public class ExternalGene {
 
 	public void setExternalGeneSource(String externalGeneSource) {
 		ExternalGeneSource = externalGeneSource;
+	}
+	
+	public Long getIdBiominerGene() {
+		return idBiominerGene;
+	}
+
+	public void setIdBiominerGene(Long idBiominerGene) {
+		this.idBiominerGene = idBiominerGene;
 	}
 	
 	

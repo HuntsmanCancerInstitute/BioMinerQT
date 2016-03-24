@@ -102,7 +102,6 @@ public class SampleDAO {
 	@SuppressWarnings("unchecked")
 	public boolean isSampleConditionUsed(String cond, Long idOrganismBuild) {
 		Session session = getCurrentSession();
-		session.beginTransaction();
 		Query query = session.createQuery("from Sample as s left join s.sampleCondition as sc where sc.cond = :cond and sc.organismBuild.idOrganismBuild = :idOrganismBuild");
 		query.setParameter("cond", cond);
 		query.setParameter("idOrganismBuild", idOrganismBuild);
@@ -118,7 +117,6 @@ public class SampleDAO {
 	@SuppressWarnings("unchecked")
 	public boolean isSamplePrepUsed(String description, Long idSamplePrep) {
 		Session session = getCurrentSession();
-		session.beginTransaction();
 		Query query = session.createQuery("from Sample s left join s.samplePrep as sp where sp.description = :description and sp.idSamplePrep = :idSamplePrep");
 		query.setParameter("description", description);
 		query.setParameter("idSamplePrep", idSamplePrep);
@@ -134,7 +132,6 @@ public class SampleDAO {
 	@SuppressWarnings("unchecked")
 	public boolean isSampleNameUsed(String name, Long idProject) {
 		Session session = getCurrentSession();
-		session.beginTransaction();
 		Query query = session.createQuery("from Sample where name = :name and idProject = :idProject");
 		query.setParameter("name", name);
 		query.setParameter("idProject",idProject);
@@ -150,7 +147,6 @@ public class SampleDAO {
 	@SuppressWarnings("unchecked")
 	public boolean isSampleSourceUsed(String source, Long idOrganismBuild) {
 		Session session = getCurrentSession();
-		session.beginTransaction();
 		Query query = session.createQuery("from Sample as s left join s.sampleSource as ss where ss.source = :source and ss.organismBuild.idOrganismBuild = :idOrganismBuild");
 		query.setParameter("source", source);
 		query.setParameter("idOrganismBuild",idOrganismBuild);
@@ -166,7 +162,6 @@ public class SampleDAO {
 	@SuppressWarnings("unchecked")
 	public boolean isSampleTypeUsed(String type) {
 		Session session = getCurrentSession();
-		session.beginTransaction();
 		Query query = session.createQuery("select s from Sample as s left join s.sampleType as st where st.type = :type");
 		query.setParameter("type", type);
 		List<Sample> sampleList = query.list();
@@ -178,6 +173,16 @@ public class SampleDAO {
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
+	public List<Sample> getSamplesByCondition(Long idProject, String condition) {
+		Session session = getCurrentSession();
+		Query query = session.createQuery("select s from Sample as s left join s.project as p left join s.sampleCondition as sc where p.idProject = :idProject and sc.cond = :condition");
+		query.setParameter("idProject", idProject);
+		query.setParameter("condition",condition);
+		List<Sample> sampleList = query.list();
+		session.close();
+		return sampleList;
+	}
 	
 	
 	

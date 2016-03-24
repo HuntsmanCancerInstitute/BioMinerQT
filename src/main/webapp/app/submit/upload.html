@@ -48,7 +48,7 @@
 	    <span class="section-header">Import Processed Data into Project</span>
 	    <div class="row" style="padding-top: 10px; padding-bottom: 10px">
 			<div class="col-lg-4">
-				<span class="btn btn-primary fileinput-button btn-sm"  ng-class="{disabled: disabled}" ng-hide="uploadingFiles || importingFiles">
+				<span class="btn btn-primary fileinput-button btn-sm"  ng-class="{disabled: disabled}" ng-hide="uploadingFiles || importingFiles" ng-disabled="!canEdit">
 			        <i class="glyphicon glyphicon-upload"></i>
 			        <span>Upload</span>
 			        <input type="file" ng-file-select ng-file-change="onFileSelect($files)" multiple>            
@@ -62,7 +62,7 @@
 						<option value="">Select Analysis Type</option>
 					</select>
 			    </span>
-				<button class="btn btn-primary btn-sm" tootip="Select files you want to import from the upload section and select analysis type" data-ng-click="parse()" ng-disabled="selectedAnalysisType==null || !uploadSelected" ng-hide="importingFiles || uploadingFiles">
+				<button class="btn btn-primary btn-sm" tootip="Select files you want to import from the upload section and select analysis type" data-ng-click="parse()" ng-disabled="selectedAnalysisType==null || !uploadSelected || !canEdit" ng-hide="importingFiles || uploadingFiles">
 				     <span class="glyphicon glyphicon-tasks"></span> Import
 			    </button>
 			    <span class="btn btn-danger fileinput-button btn-sm"  ng-class="{disabled: disabled}" ng-show="importingFiles" ng-click="cancelImport()">
@@ -98,27 +98,27 @@
 			            <td ><a target="_self" ng-href="submit/upload/get?file={{file.name}}&type=UPLOADED&idProject={{projectId}}">{{file.name}}</a></td>
 			            <td >{{file.size | bytes}}</td>
 			            <td >
-			            	<div ng-show="file.show || file.state != 'SUCCESS' ">
-			               		 <button class="btn btn-xs btn-warning table-button" ng-show="file.state=='FAILURE'" 
+			            	<div ng-show="file.show || file.state != 'SUCCESS'">
+			               		 <button class="btn btn-xs btn-warning table-button" ng-disabled="!canEdit" ng-show="file.state=='FAILURE'" 
 			               		 ng-click="showErrorMessage('Upload Error','<p>Error while uploading the file:  <strong>' + file.name + '</strong>. 
 			               		 The upload failed with the message(s):</p><p><strong>' + file.message + '</strong></p>
 			               		 <p>If you do not delete the upload now, it will be deleted for you when you exit the page, start a new upload/import or exit Biominer.  
 			               		 Please note that the file cannot be imported into Biominer in this state.</p>')">
 				                 	<span class="glyphicon glyphicon glyphicon-exclamation-sign"></span>
 				                 </button>
-				                 <button class="btn btn-xs btn-warning table-button" ng-show="file.state=='WARNING'" 
+				                 <button class="btn btn-xs btn-warning table-button" ng-disabled="!canEdit" ng-show="file.state=='WARNING'" 
 				                 ng-click="showWarningMessage('Upload Warning','<p>Warning while uploading the file:  <strong>' + file.name + '</strong>.  
 				                 The upload exited with the message(s): </p><p><strong>' + file.message + '</strong></p>')">
 				                 	<span class="glyphicon glyphicon glyphicon-question-sign"></span>
 				                 </button>
-				                 <button class="btn btn-xs btn-warning table-button" ng-show="file.state=='INCOMPLETE' && !uploadingFiles" 
+				                 <button class="btn btn-xs btn-warning table-button" ng-disabled="!canEdit" ng-show="file.state=='INCOMPLETE' && !uploadingFiles" 
 				                 ng-click="showErrorMessage('Missing File','<p>There is no file on the server associated with this database entry. 
 				                 If you do not delete the upload now, it will be deleted for you when you exit the page, start a new upload/import or exit Biominer.  
 				                 Please note that the file cannot be imported into Biominer in this state.</p>')">
 				                 	<span class="glyphicon glyphicon glyphicon-exclamation-sign"></span>
 				                 </button>
 				         
-				                 <button class="btn btn-xs btn-danger table-button" ng-hide="file.state=='INCOMPLETE' && uploadingFiles" ng-click="deleteFileUpload(file)" data-toggle="tooltip" data-placement="top" title="remove">
+				                 <button class="btn btn-xs btn-danger table-button" ng-disabled="!canEdit" ng-hide="file.state=='INCOMPLETE' && uploadingFiles" ng-click="deleteFileUpload(file)" data-toggle="tooltip" data-placement="top" title="remove">
 				                 	<span class="glyphicon glyphicon-trash"></span>
 				                 </button>
 			                </div>
@@ -143,26 +143,26 @@
 							            <td>{{ifile.size | bytes}}</td>
 							            <td >
 								          	<div ng-show="ifile.show || ifile.state == 'INCOMPLETE' || ifile.state == 'FAILURE'">
-					               		 		 <button class="btn btn-xs btn-warning table-button" ng-show="ifile.state=='FAILURE' && !importingFiles" 
+					               		 		 <button class="btn btn-xs btn-warning table-button" ng-disabled="!canEdit" ng-show="ifile.state=='FAILURE' && !importingFiles" 
 					               		 		 ng-click="showErrorMessage('Import Error','<p>Error while importing the file:  <strong>' + ifile.name + '</strong>. 
 					               		 		 The import failed with the message(s): </p><p><strong>' + ifile.message + '</strong></p><p>
 					               		 		 If you do not delete the import now, it will be deleted for you when you exit the page, start a new upload/import or exit Biominer.  
 					               		 		 Please note that the file cannot be assigned to an analysis in this state.</p>')">
 								                 	<span class="glyphicon glyphicon glyphicon-exclamation-sign"></span>
 								                 </button>
-								                 <button class="btn btn-xs btn-warning table-button" ng-show="ifile.state=='WARNING' && !importingFiles" ng-click="showWarningMessage('Import Warning',
+								                 <button class="btn btn-xs btn-warning table-button" ng-disabled="!canEdit" ng-show="ifile.state=='WARNING' && !importingFiles" ng-click="showWarningMessage('Import Warning',
 								                 '<p>Warning while importing the file:  <strong>' + ifile.name + '</strong>.  The upload exited with the message: </p>
 								                 <p><strong>' + ifile.message + '</strong></p>')">
 								                 	<span class="glyphicon glyphicon glyphicon-question-sign"></span>
 								                 </button>
-								                 <button class="btn btn-xs btn-warning table-button" ng-show="ifile.state=='INCOMPLETE' && !importingFiles" 
+								                 <button class="btn btn-xs btn-warning table-button" ng-disabled="!canEdit" ng-show="ifile.state=='INCOMPLETE' && !importingFiles" 
 								                 ng-click="showErrorMessage('Missing File','There is no file on the server associated with this database entry. 
 								                 If you do not delete the import now, it will be deleted for you when you exit the page, start a new upload/import or exit Biominer.  
 								                 Please note that the file cannot be assigned to an analysis in this state.')">
 								                 	<span class="glyphicon glyphicon glyphicon-exclamation-sign"></span>
 								                 </button>
 								         
-								                 <button class="btn btn-xs btn-danger table-button" ng-show="!importingFiles" ng-click="deleteFileUpload(ifile)" data-toggle="tooltip" data-placement="top" title="remove">
+								                 <button class="btn btn-xs btn-danger table-button" ng-disabled="!canEdit" ng-show="!importingFiles" ng-click="deleteFileUpload(ifile)" data-toggle="tooltip" data-placement="top" title="remove">
 								                 	<span class="glyphicon glyphicon-trash"></span>
 								                 </button>
 				                			</div>

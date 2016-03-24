@@ -20,6 +20,7 @@ public class QueryResult implements Serializable {
 	private Float log2Ratio;
 	private String FDR; 
 	private String search;
+	private String ensemblName = "NA";
 	private String mappedName = "NA";
 	private Long idAnalysis;
 	private String chrom;
@@ -169,7 +170,7 @@ public class QueryResult implements Serializable {
 	}
 	
 	public String writeGeneHeader() {
-		String header = "Index\tProjectName\tAnalysisType\tAnalysisName\tSampleConditions\tSearch\tGene\tCoordinates\tLog2Ratio\tFDR\n";
+		String header = "Index\tProjectName\tAnalysisType\tAnalysisName\tSampleConditions\tSearch\tEnsemblID\tCommonName\tCoordinates\tLog2Ratio\tFDR\n";
 		return header;
 	}
 
@@ -183,9 +184,21 @@ public class QueryResult implements Serializable {
 
 	public String writeGene() {
 		String coordinate = "=HYPERLINK(\"http://127.0.0.1:60151/goto?locus=" + this.coordinates + "\",\"" + this.coordinates + "\")";
-		String outline = String.format("%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%f\t%s\n", index, projectName, analysisType, analysisName, sampleConditions, search, mappedName, coordinate, log2Ratio, FDR);
+		String outline = String.format("%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%f\t%s\n", index, projectName, analysisType, analysisName, sampleConditions, search, ensemblName, mappedName, coordinate, log2Ratio, FDR);
 		return outline;
 	}
+
+
+	public String getEnsemblName() {
+		return ensemblName;
+	}
+
+
+	public void setEnsemblName(String ensemblName) {
+		this.ensemblName = ensemblName;
+	}
+	
+	
 
 
 }

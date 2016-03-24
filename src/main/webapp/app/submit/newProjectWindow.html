@@ -10,14 +10,14 @@
 						<div class="form-group">
   							<label class="col-md-2 control-label" for="">Name</label>  
   							<div class="col-md-6">
-  								<input id=""  ng-model="project.name" placeholder="name" class="form-control input-sm" required="" type="text">
+  								<input id="" maxlength="255" ng-model="project.name" placeholder="name" class="form-control input-sm" required="" type="text">
   							</div>
 						</div>
 
 						<div class="form-group">
   							<label class="col-md-2 control-label" for="">Description</label>  
   							<div class="col-md-10">                     
-    							<textarea ng-model="project.description" placeholder="description" class="form-control input-sm"></textarea>
+    							<textarea maxlength="1000" ng-model="project.description" placeholder="description" class="form-control input-sm"></textarea>
   							</div>
 						</div>
 						
@@ -33,9 +33,18 @@
 						
 						<!-- Select Basic -->
 						<div class="form-group">
+						  <label class="col-md-2 control-label" for="owner">Owner</label>
+						  	<div class="col-md-10">
+				  		    	<select width="100" data-placeholder="Select owners..." ng-model="project.owners" multiple chosen class="form-control chosen-select " ng-options="lab as (lab.last + ' lab' ) for lab in labList track by lab.idLab" required></select> 
+						    	<option value=""></option>
+						    </div>
+						</div>
+						
+						<!-- Select Basic -->
+						<div class="form-group">
 						  <label class="col-md-2 control-label" for="lab">Lab</label>
 						  	<div class="col-md-10">
-				  		    	<select width="100" data-placeholder="Select labs..." ng-model="project.labs" multiple chosen class="form-control chosen-select " ng-options="lab as (lab.first + ' ' + lab.last + ' lab' ) for lab in labList track by lab.idLab" required></select> 
+				  		    	<select width="100" data-placeholder="Select labs..." ng-model="project.labs" multiple chosen class="form-control chosen-select " ng-options="lab as (lab.last + ' lab' ) for lab in labList track by lab.idLab" required></select> 
 						    	<option value=""></option>
 						    </div>
 						</div>
