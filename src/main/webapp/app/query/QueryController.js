@@ -31,6 +31,7 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 	$scope.selectedSampleSources = [];
 	
 	$scope.analysisList = [];
+	$scope.tfList = [];
 	
 	$scope.intersectionTarget = "EVERYTHING";
 	$scope.regions = "";
@@ -38,6 +39,8 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 	$scope.genes = "";
 	$scope.searchGenes = null;
 	$scope.geneMargins = "1000";
+	$scope.selectedTF = null;
+	$scope.tfMargins = 0;
 	
 	$scope.isThresholdBasedQuery = true;
 	$scope.thresholdFDR = "";
@@ -72,12 +75,25 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 	$scope.geneUploadRunning = false;
 	$scope.regionUploadDeferred = null;
 	$scope.regionUploadRunning = false;
+	$scope.jbrowseRepoRunning = false;
 	
 	$scope.isReverse = false;
 	$scope.searchExisting = false;
 	
+	//JBrowse
+	$scope.showJBrowse = false;
+	$scope.pathJBrowse = "";
+	$scope.finalPathJBrowse = "";
+	$scope.lastPathJBrowse = "";
+	$scope.fullJBrowse = false;
+	$scope.sizeJBrowse = 50;
+	$scope.trackList = "&tracklist=0";
+	$scope.trackLoc = "";
+
+	
 	//Sorting
 	$scope.sortType = "FDR";
+	$scope.sortReverse = true;
 	
 	//Copy and pase
 	$scope.selectAll = false;
@@ -152,8 +168,9 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
     	});
     };
     
-    
+  
     $scope.$watch("idOrganismBuild",function() {
+    	
     	if ($scope.idOrganismBuild != null && $scope.idOrganismBuild != "") {
     		$scope.hugoList = [];
     		$http({
@@ -163,8 +180,15 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
         	}).success(function(data) {
         		$scope.hugoList = data;
         	});
+    		$scope.tfList = [];
+    		$http({
+    			url: "transFactor/getTfByGenomeBuild",
+    			method: "GET",
+    			params: {idOrganismBuild: $scope.idOrganismBuild}
+        	}).success(function(data) {
+        		$scope.tfList = data;
+        	});
     	}
-    	
     });
     
     $scope.$watch("selectAll",function() {
@@ -219,6 +243,110 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
     	$scope.abortGeneUpload();
     	$scope.abortGeneUpload();
     }
+    
+   /************************************
+    * 
+    * JBrowse Functions
+    * 
+    ***********************************/
+    
+    $scope.closeJBrowse = function() {
+    	$scope.lastPathJBrowse = $scope.pathJBrowse;
+    	$scope.pathJBrowse = "";
+    	$scope.showJBrowse=false;
+    	$scope.fullJBrowse=false;
+    	$scope.sizeJBrowse=50;
+    	$scope.resultPanelClass='col-sm-12 col-md-12 col-lg-8';
+    }
+    
+    $scope.openJBrowse = function() {
+    	if ($scope.pathJBrowse != null && $scope.pathJBrowse.length > 0) {
+    		console.log("Skipping");
+    		
+    		return;
+    	} else if ($scope.lastPathJBrowse == null || $scope.lastPathJBrowse.length === 0) {
+    		$scope.showJBrowse=true;
+    		$scope.jbrowseRepoRunning = $http({
+    			url: "query/startJBrowseSession",
+    			method: "GET",
+    			params : {idTab: $window.sessionStorage.getItem("idTab")}
+    		}).success(function(data) {
+    			if (data.errorMessage != null && data.errorMessage.length > 0) {
+    				dialogs.error("JBrowse Session Creation Error",data.errorMessage,null);
+    				
+    			} else  {
+    				if (data.warningMessage != null && data.errorMessage.length > 0) {
+    					dialogs.error("JBrowse Session Creation Warning",data.warningMessage,null);
+    				}
+    				if (data.dataToDisplay > 0) {
+    					$scope.pathJBrowse = data.pathToRepo 
+    					$scope.finalPathJBrowse = $scope.pathJBrowse + $scope.trackList;
+    					console.log($scope.pathJBrowse);
+    				} 
+    			}
+ 
+    		}).error(function(data) {
+    			dialogs.error("JBrowse Session Creation Error",data.errorMessage,null);
+    		}); 
+    	} else {
+    		console.log("OLD " + $scope.lastPathJBrowse );
+    		$scope.pathJBrowse = $scope.lastPathJBrowse;
+    		$scope.finalPathJBrowse = $scope.pathJBrowse + $scope.trackList + "&loc=1";
+    		$scope.showJBrowse = true;
+    	}
+    }
+    
+    $scope.maxJBrowse = function() {
+    	$scope.fullJBrowse=true;
+    	$scope.sizeJBrowse=100;
+    	$scope.resultPanelClass='col-sm-12 col-md-12 col-lg-12';
+    }
+    
+    $scope.minJBrowse = function() {
+    	$scope.fullJBrowse = false;
+    	$scope.sizeJBrowse=50;
+    	$scope.resultPanelClass='col-sm-12 col-md-12 col-lg-8';
+    }
+    
+    $scope.navJBrowse = function(queryResult) {
+    	if ($scope.showJBrowse == false) {
+    		return;
+    	}
+		var coord1 = queryResult.coordinates.split(":");
+		var coord2 = coord1[1].split("-");
+		var start = parseInt(coord2[0]);
+		var end = parseInt(coord2[1]);
+		
+		if (queryResult.analysisType == "Variant") {
+			start = start - 50;
+			end = end + 50;
+		} else {
+			start = start - 1000;
+			end = end + 1000;
+		}
+		
+		$scope.trackLoc = "&loc=" + coord1[0] + ":" + start + ".." + end;
+		
+		$anchorScroll();
+		$scope.finalPathJBrowse = $scope.pathJBrowse + $scope.trackLoc + $scope.trackList;
+	
+	};
+	
+	$scope.toggleTrackList = function() {
+		if ($scope.trackList == "&tracklist=0") {
+			console.log("YUP");
+			$scope.trackList = "";
+		} else {
+			console.log("NOPE");
+			$scope.trackList = "&tracklist=0";
+			
+		}
+		
+		$scope.finalPathJBrowse = $scope.pathJBrowse + $scope.trackLoc + $scope.trackList;
+		
+	};
+    
+    
     
     
     $scope.copyCoordinates = function() {
@@ -434,12 +562,23 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 		});
 	};
 	
+	$scope.genomeChanged = function() {
+		$scope.selectedLabs.length = 0;
+		$scope.selectedProjects.length = 0;
+		$scope.selectedAnalyses.length = 0;
+		$scope.selectedSampleSources.length = 0;
+		$scope.selectedAnalysisType = "";
+		$scope.regions = "";
+		$scope.genes = "";
+		$scope.intersectionTarget = "EVERYTHING";
+		$scope.selectAll = false;
+	}
+	
 	$scope.hyperlink = function(url) {
 		if ($scope.returnedEnsemblCode != null) {
-			var win = window.open("http://" + $scope.returnedEnsemblCode + ".archive.ensembl.org/id/" + url, '_blank');
+			var win = window.open("http://" + $scope.returnedEnsemblCode + ".archive.ensembl.org/" + $scope.returnedOrganismName + "/Gene/Summary?g=" + url, '_blank');
 			win.focus();
 		}
-		
 	};
 	
 	$scope.startLaunchPing = function() {
@@ -563,6 +702,8 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 		$scope.selectedProjects.length = 0;
 		$scope.selectedAnalyses.length = 0;
 		$scope.selectedSampleSources.length = 0;
+		$scope.selectedAnalysisType = "";
+		$scope.selectedTF = null;
 		
 		$scope.intersectionTarget = "";
 		$scope.regions = "";
@@ -587,7 +728,7 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 		$scope.totalAnalyses = 0;
 		$scope.totalDatatracks = 0;
 		
-		$scope.selectedAnalysisType = "";
+		
 		$scope.searchExisting = false;
 		$scope.isReverse = false;
 		
@@ -721,7 +862,12 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 					$scope.querySummary.push(intersectSummary + "GENES   " + $scope.genes + " +/- " + $scope.geneMargins);	
 				}
 				
-			} else {
+			}  else if ($scope.intersectionTarget == 'TF') {
+				var tfUsed = $scope.lookup($scope.tfList, 'idTransFactor', $scope.selectedTF);
+				$scope.querySummary.push("TF  " + tfUsed.name + " +/- " + $scope.tfMargins);
+				
+			}	else {
+			
 				$scope.querySummary.push(intersectSummary + " anything ");
 			}
 		}
@@ -805,6 +951,12 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 		}
 		
 		
+		//Clear out jbrowse
+		$scope.lastPathJBrowse = "";
+    	$scope.finalPathJBrowse = "";
+    	$scope.pathJBrowse = "";
+		$scope.closeJBrowse();
+		
 		$scope.selectAll = false;
 		
 		$scope.warnings = "";
@@ -885,10 +1037,22 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 			geneMargins = $scope.geneMargins;
 		}
 		
+		var tfMargins = "";
+		if ($scope.tfMargins != null && $scope.tfMargins != "") {
+			tfMargins = $scope.tfMargins;
+		}
+		
+		var idTransFactor = null;
+		if ($scope.selectedTF != null && $scope.selectedTF != "" ) {
+			idTransFactor = $scope.selectedTF;
+		}
 		
 		$scope.returnedResultType = $scope.codeResultType;
+		$scope.returnedIntersectionTarget = angular.copy($scope.intersectionTarget);
 		$scope.returnedAnalysisType = angular.copy($scope.selectedAnalysisType);
 		$scope.totalResults = 0;
+		
+		
 		
 		
 		
@@ -907,6 +1071,8 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 				     regionMargins:           regionMargins,
 				     genes:                   genes,
 				     geneMargins:             geneMargins,
+				     idTransFactor: 		  idTransFactor,
+				     tfMargins:               tfMargins,
 				     FDR:                     fdr,
 				     codeFDRComparison:       $scope.codeThresholdFDRComparison,
 				     log2Ratio:               log2ratio,
@@ -917,6 +1083,7 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 				     isReverse:               $scope.isReverse,
 				     searchExisting: 		  $scope.searchExisting,
 				     idTab: 				  $window.sessionStorage.getItem("idTab"),
+				     sortReverse:             $scope.sortReverse,
 				     },
 		    timeout: $scope.queryDeferred.promise,
 				     
@@ -929,6 +1096,7 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 				$scope.totalDatatracks = data.dataTrackNum;
 				$scope.returnedOrganismBuild = data.idOrganismBuild;
 				$scope.returnedEnsemblCode = data.returnedEnsemblCode;
+				$scope.returnedOrganismName = data.returnedOrganismName;
 				$scope.hasResults = true;
 			}
 			
@@ -1001,7 +1169,8 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 			params: {resultsPerPage:          $scope.resultsPerPage,
 				     pageNum:                 $scope.queryCurrentPage,
 				     sortType:                $scope.sortType,
-				     idTab:					  $window.sessionStorage.getItem("idTab")},
+				     idTab:					  $window.sessionStorage.getItem("idTab"),
+				     sortReverse:		      $scope.sortReverse},
 				     
 		}).success(function(data) {
 			if (data != null) {
@@ -1358,19 +1527,17 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 	});
 	
 	$scope.$watch("idOrganismBuild",function(newValue, oldValue) {
-		
 		if (typeof newValue != 'undefined' && newValue != oldValue) {
 			$scope.loadLabs();
 			$scope.loadProjects();
 			$scope.loadAnalyses();
 			$scope.loadSampleSources();
 			$scope.loadAnalysisTypes();
-			$scope.regions = "";
-			$scope.genes = "";
-			$scope.intersectionTarget = "EVERYTHING";
-			$scope.selectAll = false;
+			
 		}
 	});
+	
+	
 	
 	$scope.loadExistingResults = function() {
 		$scope.loadExistingPromise = $http({
@@ -1417,13 +1584,13 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 			params: {idTab: $window.sessionStorage.getItem("idTab")}
 		}).success(function(data) {
 			if (data != null && data != "") {
+				$scope.idOrganismBuild = data.idOrganismBuild;
 				$scope.codeResultType = data.codeResultType;
 				$scope.returnedResultType = data.codeResultType;
 				$scope.intersectionTarget = data.target;
+				$scope.returnedIntersectionTarget = data.target;
 				
 				
-				$scope.idOrganismBuild = data.idOrganismBuild;
-
 				for (var i=0;i<$scope.analysisTypeCheckedList.length;i++) {
 					for (var j=0;j<data.idAnalysisTypes.length;j++) {
 						if ($scope.analysisTypeCheckedList[i].idAnalysisType == data.idAnalysisTypes[j]) {
@@ -1465,10 +1632,14 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 					}
 				}
 				
+				
+				console.log($scope.intersectionTarget);
 				$scope.regions = data.regions;
 				$scope.regionMargins = data.regionMargins;
 				$scope.genes = data.genes;
 				$scope.geneMargins = data.geneMargins;
+				$scope.selectedTF = data.idTransFactor;
+				$scope.tfMargins = data.tfMargins;
 				
 				if (data.fdr == null) {
 					$scope.thresholdFDR = "";

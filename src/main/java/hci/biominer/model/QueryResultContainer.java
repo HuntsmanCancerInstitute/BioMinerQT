@@ -14,27 +14,30 @@ public class QueryResultContainer implements Serializable {
 	private int resultNum;
 	private int pages;
 	private String sortType;
-	private boolean reverse = true;
 	private int analysisNum;
 	private int dataTrackNum;
 	private long idOrganismBuild;
 	private String returnedEnsemblCode;
+	private String returnedOrganismName;
 	
 	
-	public QueryResultContainer(List<QueryResult> results, int resultsSize, int analysisNum, int dataTrackNum, int page, String sortType, boolean sortOnCreate, Long idOrganismBuild, String returnedEnsemblCode) {
+	public QueryResultContainer(List<QueryResult> results, int resultsSize, int analysisNum, int dataTrackNum, int page, String sortType, boolean sortOnCreate, 
+			Long idOrganismBuild, String returnedEnsemblCode, String returnedOrganismName, boolean reverse) {
 		this.resultList = results;
 		this.resultNum = resultsSize;
 		this.pages = page;
 		this.sortType = sortType;
 		if (sortOnCreate) {
-			sortResults(sortType);
+			sortResults(sortType, reverse);
 		}
 		this.analysisNum = analysisNum;
 		this.dataTrackNum = dataTrackNum;
 		this.idOrganismBuild = idOrganismBuild;
 		this.returnedEnsemblCode = returnedEnsemblCode;
+		this.returnedOrganismName = returnedOrganismName;
 	}
 
+	
 	public List<QueryResult> getResultList() {
 		return resultList;
 	}
@@ -68,6 +71,18 @@ public class QueryResultContainer implements Serializable {
 	}
 	
 	
+	
+	
+	public String getReturnedOrganismName() {
+		return returnedOrganismName;
+	}
+
+
+	public void setReturnedOrganismName(String returnedOrganismName) {
+		this.returnedOrganismName = returnedOrganismName;
+	}
+
+
 	public String getReturnedEnsemblCode() {
 		return returnedEnsemblCode;
 	}
@@ -84,7 +99,7 @@ public class QueryResultContainer implements Serializable {
 		}
 	}
 	
-	private void sortResults(String sortType) {
+	private void sortResults(String sortType, boolean reverse) {
 		if (sortType.equals("FDR")) {
 			Collections.sort(this.resultList,new QueryResultComparatorFDR());
 		} else if (sortType.equals("Log2Ratio")) {
@@ -93,12 +108,9 @@ public class QueryResultContainer implements Serializable {
 			Collections.sort(this.resultList,new QueryResultComparatorCoordinate());
 		}
 		
-		if (this.reverse) {
+		if (reverse) {
 			Collections.reverse(this.resultList);
-			this.reverse = false;
-		} else {
-			this.reverse = true;
-		}
+		} 
 		
 		for (int i=0;i<this.resultList.size();i++) {
 			this.resultList.get(i).setIndex(i+1);
@@ -106,8 +118,8 @@ public class QueryResultContainer implements Serializable {
 	}
 	
 	@JsonIgnore
-	public QueryResultContainer getQrcSubset(int queriesPerPage, int page, String sortType) {
-		sortResults(sortType);
+	public QueryResultContainer getQrcSubset(int queriesPerPage, int page, String sortType, boolean reverse) {
+		sortResults(sortType, reverse);
 		this.sortType = sortType;
 		
 		int start = page * queriesPerPage;
@@ -121,7 +133,7 @@ public class QueryResultContainer implements Serializable {
 		
 		List<QueryResult> subset = this.resultList.subList(start, end);
 		
-		QueryResultContainer qrc = new QueryResultContainer(subset,this.resultNum, this.analysisNum, this.dataTrackNum, this.pages, sortType, false, idOrganismBuild, returnedEnsemblCode);
+		QueryResultContainer qrc = new QueryResultContainer(subset,this.resultNum, this.analysisNum, this.dataTrackNum, this.pages, sortType, false, idOrganismBuild, returnedEnsemblCode, returnedOrganismName, reverse);
 		return qrc;
 		
 	}

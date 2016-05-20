@@ -32,6 +32,7 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
 	$scope.userTabOpen = true;
 	$scope.labTabOpen = false;
 	$scope.genomeTabOpen = false;
+	$scope.tfTabOpen=true;
 
 	//Model data
 	$scope.labs = [];
@@ -39,6 +40,10 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
 	$scope.organismList = [];
 	$scope.selectedUsers = [];
 	$scope.selectedLab;
+
+	$scope.selectedTf;
+	$scope.tfList = [];
+	$scope.tfEditMode = false;
 	
 	//Select all users
 	$scope.selectAllUsers = false;
@@ -49,10 +54,11 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
 	$scope.uploadAnnotationPromise = null;
 	$scope.parseAnnotationPromise = null;
 	$scope.deletePromise = null;
+	$scope.uploadTfPromise = null;
+	$scope.addTfPromise = null;
 	
 	$scope.columnDefs = null;
 	
-	//console.log("In UserAdminController.js at the top");
 	
 	/***************************************
 	 * *************************************
@@ -188,6 +194,14 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
 			$scope.organismBuildList = data;
 		});
 	};
+	
+	$scope.loadTfData = function() {
+		DynamicDictionary.loadTfs().success(function(data,status) {
+			$scope.tfList = data;
+		});
+	};
+	
+	$scope.loadTfData();
 	
 	
 	/***************************************
@@ -388,8 +402,117 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
     	});
 	};
 	
+	/***************************************
+	 * *************************************
+	 * 
+	 *     Transcription factor methods
+	 * 
+	 * *************************************
+	 ***************************************/
+	$scope.$watch('tfTabOpen', function() {
+		if ($scope.tfTabOpen) {
+			$scope.loadTfData();
+		}
+    	
+    });
 	
-	 
+	$scope.showTfControls = function(tf) {
+		tf.show = true;
+	}
+	
+	$scope.hideTfControls = function(tf) {
+		tf.show = false;
+	}
+	
+	$scope.stopParse = function() {
+		$scope.tfDeferred.resolve();
+		$scope.tfRunning = false;
+	}
+	
+	$scope.deleteTf = function(tf) {
+		$http({
+			url: "transFactor/deleteTf",
+			method: "DELETE",
+			params: {idTransFactor : tf.idTransFactor},
+		}).success(function(){
+			console.log("Deleted tf");
+			$scope.loadTfData();
+		}).error(function() {
+			console.log("Failed to delete tf");
+			$scope.loadTfData();
+		});
+	}
+	
+	$scope.addTfFile = function(file,ob) {
+		var modalInstance = $modal.open({
+    		templateUrl: 'app/useradmin/tfUploadWindow.html',
+    		controller: 'TfUploadWindowController',
+    		resolve: {
+    			organismBuildList: function() {
+    				return $scope.organismBuildList;
+    			}
+    		}
+    	});
+    	
+    	modalInstance.result.then(function (tf) {
+    		$scope.selectedTf = tf;
+    		$scope.tfDeferred = $q.defer();
+    		$scope.tfRunning = true;
+    		$scope.parseTfPromise = null;
+    		$scope.uploadTfPromise =  $upload.upload({
+				url: "transFactor/parseTfFile",
+				file: $scope.selectedTf.path[0],
+				params : {idOrganismBuild: $scope.selectedTf.organismBuild.idOrganismBuild, isConverted: $scope.selectedTf.transformed},
+				timeout: $scope.tfDeferred.promise,
+			}).success(function(data) {
+
+				(function(data) {
+					$scope.addTfPromise = $http({
+						url: "transFactor/addTf",
+						method: "POST",
+						params: {name : $scope.selectedTf.name, description: $scope.selectedTf.description, 
+							idOrganismBuild : $scope.selectedTf.organismBuild.idOrganismBuild,filename: data.name},
+					}).then(function(data) {
+						$scope.loadTfData();
+						$scope.tfRunning = false;
+						$scope.selectedTf = null;
+					},function(data) {
+						$scope.loadTfData();
+						$scope.tfRunning = false;
+						dialogs.error("TF Upload Error","Error creating transcription factor database entry");
+						(function(data) {
+							$http({
+								url: "transFactor/deleteTfFile",
+								method: "DELETE",
+								params: {name : data.name},
+							}).success(function(){
+								$scope.selectedTf = null;
+							}).error(function() {
+								$scope.selectedTf = null;
+							});
+						}(data));
+					});
+				}(data));
+			}).error(function(data) {
+				$scope.tfRunning = false;
+				dialogs.error("TF Upload Error","Error parsing bed file : " + data.message);
+				(function(data) {
+					console.log(data);
+					$http({
+						url: "transFactor/deleteTfFile",
+						method: "DELETE",
+						params: {name : data.name},
+					}).success(function(){
+						$scope.selectedTf = null;
+					}).error(function() {
+						$scope.selectedTf = null;
+					});
+				}(data));
+			});
+	    });
+		
+	};
+	
 	
 	/***************************************
 	 * *************************************

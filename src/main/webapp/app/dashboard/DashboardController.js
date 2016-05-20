@@ -4,97 +4,24 @@
  * DashboardController
  * @constructor
  */
-var dashboard = angular.module('dashboard', ['services','error','nvd3']);
+var dashboard = angular.module('dashboard', ['services','error','chart.js']);
 
 angular.module('dashboard')
 
 .controller('DashboardController', 
 [ '$rootScope','$scope','$http','$window',
               
-function($rootScope, $scope, $http,$window) {
+function($rootScope, $scope, $http, $window) {
 
-    $scope.rnaseq = [];
-    $scope.chipseq = [];
-    $scope.bisseq = [];
-    $scope.variant = [];
-    
-   
-      
-    $scope.options = {
-        chart: {
-            type: 'pieChart',
-            height: 300,
-            donut: false,
-            x: function(d){return d.key;},
-            y: function(d){return d.y;},
-            showLabels: false,
-            donutLabelsOutside: false,
-            tooltips: true,
-            donutRatio: 0.5,
-            transitionDuration: 500,
-            labelThreshold: 0.01,
-            legend: {
-            	rightAlign: false,
-                margin: {
-                    top: 5,
-                    right: 35,
-                    bottom: 5,
-                    left: 0
-                }
-            }
-        }
-    };
-    
-    //Setup rnaSeq options
-    $scope.rnaOptionsTemp = angular.copy($scope.options);
-    $scope.rnaOptionsTemp.chart.tooltipContent = function(key, y, e, graph) {
-    	var total = 0;
-    	$scope.rnaseq.forEach(function (d) {
-    	    total = total + d.y;
-    	});
-       	return '<h3 style="background-color: '
-            + e.color + '">' + key + '</h3>'
-            + '<p>' +  Math.trunc(y) + ' ( ' + Math.round(y/total*100,2) + '% )</p>';
-   	};
-    $scope.rnaOptions = angular.copy($scope.rnaOptionsTemp);
-   
-   	
-   	//Setup chip options
-    $scope.chipOptions = angular.copy($scope.options);
-   	$scope.chipOptions.chart.tooltipContent = function(key, y, e, graph) {
-    	var total = 0;
-    	$scope.chipseq.forEach(function (d) {
-    	    total = total + d.y;
-    	});
-       	return '<h3 style="background-color: '
-            + e.color + '">' + key + '</h3>'
-            + '<p>' +  Math.trunc(y) + ' ( ' + Math.round(y/total*100,2) + '% )</p>';
-   	};
-   	
-   	//setup bisseq options
-    $scope.bisOptions = angular.copy($scope.options);
-    $scope.bisOptions.chart.tooltipContent = function(key, y, e, graph) {
-    	var total = 0;
-    	$scope.bisseq.forEach(function (d) {
-    	    total = total + d.y;
-    	});
-       	return '<h3 style="background-color: '
-            + e.color + '">' + key + '</h3>'
-            + '<p>' +  Math.trunc(y) + ' ( ' + Math.round(y/total*100,2) + '% )</p>';
-   	};
-   	
-   	//setup var options
-    $scope.varOptions = angular.copy($scope.options);
-    $scope.varOptions.chart.tooltipContent = function(key, y, e, graph) {
-    	var total = 0;
-    	$scope.variant.forEach(function (d) {
-    	    total = total + d.y;
-    	});
-       	return '<h3 style="background-color: '
-            + e.color + '">' + key + '</h3>'
-            + '<p>' +  Math.trunc(y) + ' ( ' + Math.round(y/total*100,2) + '% )</p>';
-   	};
-     
+    $scope.chipData = [[]];
+    $scope.chipLabels = [];
+    $scope.rnaData = [[]];
+    $scope.rnaLabels = [];
+    $scope.varData = [[]];
+    $scope.varLabels = [];
+    $scope.bisData = [[]];
+    $scope.bisLabels = [];
+  
     $scope.uploadSize = null;
     $scope.parsedSize = null;
     $scope.totalUsers = null;
@@ -112,8 +39,8 @@ function($rootScope, $scope, $http,$window) {
     $scope.reportCount = null;
     
     $scope.$on('$locationChangeStart', function(event, next, current) {
-    	nv.render.queue = [];
-    	nv.utils.clearAllListeners();
+    	//nv.render.queue = [];
+    	//nv.utils.clearAllListeners();
     });
     
     $scope.getCrashCount = function() {
@@ -258,13 +185,19 @@ function($rootScope, $scope, $http,$window) {
     		method: "POST",
     		params: {type: "ChIPSeq"}
     	}).success(function(data) {
-    		$scope.chipseq = data;
     		$scope.chipseqCount = 0;
-
-    		for (var i=0; i<data.length;i++) {
-    			$scope.chipseqCount += data[i].y;
-    		}
     		
+			var chipData = [];
+			var chipLabels = [];
+			for (var i=0; i<data.length;i++) {
+    			$scope.chipseqCount += data[i].y;
+    			chipData.push(data[i].y);
+    			chipLabels.push(data[i].key);
+    		}
+    		$scope.chipData = []
+    		$scope.chipData.push(chipData);
+    		$scope.chipLabels = chipLabels;
+
     	});
     };
 
@@ -275,12 +208,17 @@ function($rootScope, $scope, $http,$window) {
     		params: {type: "RNASeq"}
     	}).success(function(data) {
     		$scope.rnaseqCount = 0;
-    		$scope.rnaseq = data;
-
-    		for (var i=0; i<data.length;i++) {
-    			$scope.rnaseqCount += data[i].y;
-    		}
     		
+			var rnaData = [];
+			var rnaLabels = [];
+			for (var i=0; i<data.length;i++) {
+    			$scope.rnaseqCount += data[i].y;
+    			rnaData.push(data[i].y);
+    			rnaLabels.push(data[i].key);
+    		}
+			$scope.rnaData = []
+			$scope.rnaData.push(rnaData);
+    		$scope.rnaLabels = rnaLabels;
     	});
     };
     
@@ -290,13 +228,19 @@ function($rootScope, $scope, $http,$window) {
     		method: "POST",
     		params: {type: "Methylation"}
     	}).success(function(data) {
-    		$scope.bisseq = data;
     		$scope.bisseqCount = 0;
     		
-    		for (var i=0; i<data.length;i++) {
+			var bisData = [];
+			var bisLabels = [];
+			for (var i=0; i<data.length;i++) {
     			$scope.bisseqCount += data[i].y;
+    			bisData.push(data[i].y);
+    			bisLabels.push(data[i].key);
     		}
-    		
+			$scope.bisData = []
+    		$scope.bisData.push(bisData);
+    		$scope.bisLabels = bisLabels;
+
     	});
     };
     
@@ -307,20 +251,48 @@ function($rootScope, $scope, $http,$window) {
     		params: {type: "Variant"}
     	}).success(function(data) {
     		$scope.variantCount = 0;
-    		$scope.variant = data;
     		
-    		for (var i=0; i<data.length;i++) {
+			var varData = [];
+			var varLabels = [];
+			for (var i=0; i<data.length;i++) {
     			$scope.variantCount += data[i].y;
+    			varData.push(data[i].y);
+    			varLabels.push(data[i].key);
     		}
-    		
+			$scope.varData = []
+    		$scope.varData.push(varData);
+    		$scope.varLabels = varLabels;	
+
     	});
     }
     
     $scope.refreshCharts = function() {
-    	$scope.getChipSeq();
-    	$scope.getRnaSeq();
-    	$scope.getBisSeq();
-    	$scope.getVariant();
+    	for (var i=0;i<$scope.rnaData[0].length;i++) {
+			$scope.rnaData[0][i] = 0;
+		}
+    	for (var i=0;i<$scope.chipData[0].length;i++) {
+			$scope.chipData[0][i] = 0;
+		}
+    	for (var i=0;i<$scope.rnaData[0].length;i++) {
+			$scope.bisData[0][i] = 0;
+		}
+    	for (var i=0;i<$scope.rnaData[0].length;i++) {
+			$scope.varData[0][i] = 0;
+		}
+    	
+    	setTimeout(function() {
+    		$scope.getRnaSeq();
+    	},500);
+    	
+    	setTimeout(function() {
+    		$scope.getChipSeq();
+    	},1000);
+    	setTimeout(function() {
+    		$scope.getBisSeq();
+    	},1500);
+    	setTimeout(function() {
+    		$scope.getVariant();
+    	},2000);
     };
     
     $scope.refreshCounts = function() {
@@ -349,8 +321,8 @@ function($rootScope, $scope, $http,$window) {
     	}
     	$scope.refreshCharts();
     	$scope.refreshCounts();
-    	nv.render.queue = [];
-    	nv.utils.clearAllListeners();
+    	//nv.render.queue = [];
+    	//nv.utils.clearAllListeners();
     }
     
     

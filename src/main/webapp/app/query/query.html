@@ -24,7 +24,7 @@
         <!--  Query (sidebar) Panel  -->
      	<!--                         -->
      	
-     	<div class="col-sm-12 col-md-12 col-lg-4" ng-hide="queryPanelHide">
+     	<div class="col-sm-12 col-md-12 col-lg-4" ng-hide="queryPanelHide || fullJBrowse">
      		       	
             <div class="panel panel-default" >
 				<div class="panel-heading-btn panel-heading ">
@@ -72,6 +72,7 @@
 					<div class="form-group" >
 		  				<div class="col-md-12">
 		    				<select name="gbSelect"
+		    						ng-change=genomeChanged();
 		    				        ng-model="idOrganismBuild" 
 		    				        required
 		    				        ng-options="gb.idOrganismBuild as gb.name group by gb.organism.common for gb in organismBuildList" 
@@ -224,6 +225,34 @@
 					    	</div>
 						</div>
 						
+						<!--  Preload -->
+						<div class="form-group" ng-show="codeResultType!='GENE' && codeResultType == 'REGION' && tfList.length != 0">
+							<div class="col-md-2" style="padding-right: 0px;">
+								<div class="radio">
+									<label for="radio-tf" tooltip="Preloaded Genomic Intervals">
+								    	<input name="radios-tf" id="radio-tf"  ng-model="intersectionTarget" value="TF" type="radio" class="input-xs"> Preload
+							   		</label>
+								</div>
+							</div>
+							<div class="col-md-10" ng-show="intersectionTarget == 'TF'" style="padding-left: 1px; padding-right: 0px;">
+	 							<div class="col-md-7">
+	 							    &nbsp;&nbsp;
+						    		<select chosen name="tfSelect"
+		    				        ng-model="selectedTF" 
+		    				        ng-options="tf.idTransFactor as tf.name for tf in tfList" 
+		    				        class="form-control input-sm"
+		    				        ng-required="intersectionTarget=='TF'">
+		    				        <option value=""></option>
+		    						</select>
+		    						<span class="label label-danger" ng-show="queryForm.tfSelect.$error.required && showValidation">Required when 'Preload' is specified</span>
+						    	</div>
+						    	<div class="col-md-5" ng-hide="codeResultType == 'GENE'">
+							    	&nbsp;&nbsp;Padding +/- bp
+							    	<input type="text" ng-model="tfMargins" style="display: inline;"class="form-control input-sm" placeholder="1000"/>
+						    	</div>
+					    	</div>
+						</div>
+						
 						
 						<!-- Everything -->
 						<div class="form-group " ng-show="codeResultType=='GENE' || codeResultType=='REGION'">
@@ -342,13 +371,28 @@
      	<!--                 -->
         <!--  Results Panel  -->
      	<!--                 -->
+     	
+     	
 		<div cg-busy="{promise: runQueryPromise,message: 'Searching'}" ng-class="resultPanelClass">
+			<div class="panel panel-default" ng-show="showJBrowse" cg-busy="{promise: jbrowseRepoRunning,message: 'Loading JBrowse Repo', minDuration: 1000 }">
+			    <div class="panel-heading panel-heading-btn" ng-show="showJBrowse">
+			            <span class=panel-title>JBrowse</span>
+			    		<button type="button" class="btn btn-sm btn-info pull-right" ng-show="showJBrowse==true" ng-click="closeJBrowse()" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-eye-close"></span> Close JBrowse</button>
+			    		<button type="button" class="btn btn-sm btn-info pull-right" ng-show="showJBrowse==true" ng-click="maxJBrowse()" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-eye-open"></span> Fullscreen JBrowse</button>
+			    		<button type="button" class="btn btn-sm btn-info pull-right" ng-show="showJBrowse==true && fullJBrowse==true" ng-click="minJBrowse()" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-eye-close"></span> Minimize JBrowse</button>
+			     		<button type="button" class="btn btn-sm btn-info pull right" ng-show="showJBrowse==true" ng-click="toggleTrackList()" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-list-alt"></span> Toggle Tracklist</button>
+			    </div>
+			    <div class="panel-body">
+			    	<iframe src={{finalPathJBrowse}} resize2 per={{sizeJBrowse}} ng-style="style()" style="width: 100%"></iframe>
+			    </div>
+     			
+     		</div>
 			
-			<div class=" panel panel-default" cg-busy="{promise: loadExistingPromise,message: 'Loading'}" >
+			<div class=" panel panel-default" cg-busy="{promise: loadExistingPromise,message: 'Loading'}" ng-hide=fullJBrowse>
 			
 				<div class="panel-heading panel-heading-btn">
-				 <button type="button" class="btn btn-xs pull-left" style="margin-right: 10px" tooltip="show query panel" tooltip-placement="right" ng-show="queryPanelHide" ng-click="queryPanelHide=false;resultPanelClass='col-sm-12 col-md-12 col-lg-8'"><span class="glyphicon glyphicon glyphicon-resize-small"></span></button>
-				 <button type="button" class="btn btn-xs pull-left" style="margin-right: 10px" tooltip="hide query panel" tooltip-placement="left" ng-show="!queryPanelHide" ng-click="queryPanelHide=true;resultPanelClass='col-sm-12 col-md-12 col-lg-12'"><span class="glyphicon glyphicon glyphicon-resize-full"></span></button>
+				 <button type="button" class="btn btn-xs pull-left" style="margin-right: 10px" tooltip="hide query panel" tooltip-placement="right" ng-show="queryPanelHide" ng-click="queryPanelHide=false;resultPanelClass='col-sm-12 col-md-12 col-lg-8'"><span class="glyphicon glyphicon glyphicon-resize-small"></span></button>
+				 <button type="button" class="btn btn-xs pull-left" style="margin-right: 10px" tooltip="show query panel" tooltip-placement="left" ng-show="!queryPanelHide" ng-click="queryPanelHide=true;resultPanelClass='col-sm-12 col-md-12 col-lg-12'"><span class="glyphicon glyphicon glyphicon-resize-full"></span></button>
 				 
 				  <span class=panel-title>Results Panel <span class="glyphicon glyphicon-question-sign help-button" ng-click="showHelpResultPanel()"></span></span>
 				    
@@ -359,7 +403,9 @@
 			   	  <button type="button" class="btn btn-sm btn-danger pull-right" ng-show="igvWarnings != ''" ng-click="displayWarnings('igv')" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-exclamation-sign"></span> IGV</button>
 			   	  <button type="button" class="btn btn-sm btn-primary pull-right" style="margin-top: -6px;margin-left: 10px" ng-click="loadExistingData()" ng-hide="loggedUser == null || hasResults">	
 				   	<span class="glyphicon glyphicon-cloud-download" tooltip="Load last query and results"></span> Load Last
-				  </button> 	 
+				  </button>
+				  
+				  	 <button type="button" class="btn btn-sm btn-info pull-right" ng-show="showJBrowse==false" ng-click="openJBrowse()" ng-disabled="totalDatatracks == 0 && returnedIntersectionTarget != 'TF'" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-eye-open"></span> Open JBrowse</button>
 				</div>
 				
 				<div class="panel-body">
@@ -398,20 +444,20 @@
 								<th >Conditions</th>
 								<th style="width: 10%">
 									<button type="button" class="btn btn-xs btn-primary" tooltip="Copy selected coordinates to query" ng-click="copyCoordinates()"><span class="glyphicon glyphicon-share"></span></button>
-									<span class="cursor: pointer" tooltip="Sort by coordinate" ng-click="sortType='Coordinate';changeTablePosition()">Coordinates</span>
+									<span class="cursor: pointer" tooltip="Sort by coordinate" ng-click="queryCurrentPage=0;sortType='Coordinate';sortReverse=!sortReverse;changeTablePosition()">Coordinates</span>
 								</th>
 								<th style="width: 10%" ng-hide="returnedAnalysisType.type=='Variant'">
-									<span class="cursor: pointer" tooltip="Sort by FDR" ng-click="sortType='FDR';changeTablePosition()" >FDR</span>
+									<span class="cursor: pointer" tooltip="Sort by FDR" ng-click="queryCurrentPage=0;sortType='FDR';sortReverse=!sortReverse;changeTablePosition()" >FDR</span>
 								</th>
 								<th style="width: 10%" ng-hide="returnedAnalysisType.type=='Variant'">
-									<span class="cursor: pointer" tooltip="Sort by log2ratio" ng-click="sortType='Log2Ratio';changeTablePosition()">Log2FC</span>
+									<span class="cursor: pointer" tooltip="Sort by log2ratio" ng-click="queryCurrentPage=0;sortType='Log2Ratio';sortReverse=!sortReverse;changeTablePosition()">Log2FC</span>
 								</th>
 				            </tr>
 				        </thead>
 				        <tbody>
-				            <tr ng-repeat="row in queryResults">
+				            <tr ng-repeat="row in queryResults" ng-click="navJBrowse(row)" >
 				            	<td><input type="checkbox" ng-model="row.selected"/></td>
-				            	<td class="nowrap">{{row.index | limitTo:15}}</td>
+				            	<td class="nowrap" >{{row.index | limitTo:15}}</td>
 				                <td class="nowrap-ellipsis"><span popover-trigger="mouseenter" popover-popup-delay="500" popover="{{row.projectName}}">{{row.projectName | limitTo : 20}}</td>
 				                <td class="nowrap-ellipsis"><span popover-trigger="mouseenter" popover-popup-delay="500" popover="{{row.analysisName}}">{{row.analysisName | limitTo : 20}}</span></td>
 				                <td class="nowrap-ellipsis"><span popover-trigger="mouseenter" popover-popup-delay="500" popover="{{row.analysisType}}">{{row.analysisType | limitTo : 20}}</td>

@@ -6,16 +6,13 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -46,6 +43,7 @@ import hci.biominer.model.DataTrack;
 import hci.biominer.model.GeneNameModel;
 import hci.biominer.model.GenericResult;
 import hci.biominer.model.IgvSessionResult;
+import hci.biominer.model.LocalInterval;
 import hci.biominer.model.OrganismBuild;
 import hci.biominer.model.Project;
 import hci.biominer.model.QueryResult;
@@ -53,6 +51,7 @@ import hci.biominer.model.QueryResultContainer;
 import hci.biominer.model.RegionUpload;
 import hci.biominer.model.Sample;
 import hci.biominer.model.SampleSource;
+import hci.biominer.model.TransFactor;
 import hci.biominer.model.access.Lab;
 import hci.biominer.model.access.User;
 import hci.biominer.model.genome.Gene;
@@ -61,9 +60,11 @@ import hci.biominer.model.genome.Transcript;
 import hci.biominer.model.intervaltree.Interval;
 import hci.biominer.model.intervaltree.IntervalTree;
 import hci.biominer.model.ExternalGene;
+import hci.biominer.parser.BedLocalIntervalParser;
 import hci.biominer.service.DashboardService;
 import hci.biominer.service.OrganismBuildService;
 import hci.biominer.service.LabService;
+import hci.biominer.service.TransFactorService;
 import hci.biominer.service.UserService;
 import hci.biominer.service.AnalysisService;
 import hci.biominer.service.AnalysisTypeService;
@@ -73,6 +74,8 @@ import hci.biominer.util.Enumerated.AnalysisTypeEnum;
 import hci.biominer.util.GenomeBuilds;
 import hci.biominer.util.IO;
 import hci.biominer.util.IntervalTrees;
+import hci.biominer.util.JBrowseReturnData;
+import hci.biominer.util.JBrowseUtilities;
 import hci.biominer.util.QuerySettings;
 import hci.biominer.util.SessionData;
 import hci.biominer.util.igv.IGVResource;
@@ -85,11 +88,6 @@ import java.util.zip.ZipOutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.charset.CharacterCodingException;
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
 import java.util.zip.GZIPOutputStream;
 
 
@@ -119,6 +117,9 @@ public class QueryController {
     
     @Autowired
     private DashboardService dashboardService;
+    
+    @Autowired
+    private TransFactorService tfService;
     
     //private StringBuilder warnings = new StringBuilder("");
     
@@ -548,6 +549,8 @@ public class QueryController {
         @RequestParam(value="regionMargins",required=false) Integer regionMargins,
         @RequestParam(value="genes") String genes,
         @RequestParam(value="geneMargins",required=false) Integer geneMargins,
+        @RequestParam(value="idTransFactor",required=false) Long idTransFactor,
+        @RequestParam(value="tfMargins",defaultValue="0") Integer tfMargins,
         @RequestParam(value="FDR",required=false) Float FDR,
         @RequestParam(value="codeFDRComparison") String codeFDRComparison,
         @RequestParam(value="log2Ratio",required=false) Float log2Ratio,
@@ -557,7 +560,8 @@ public class QueryController {
         @RequestParam(value="intersectionTarget") String target,
         @RequestParam(value="isReverse") boolean reverse,
         @RequestParam(value="searchExisting") boolean searchExisting,
-        @RequestParam(value="idTab") String idTab
+        @RequestParam(value="idTab") String idTab,
+        @RequestParam(value="sortReverse") boolean sortReverse
         ) throws Exception {
       
     	
@@ -625,6 +629,7 @@ public class QueryController {
     	if (target.equals("EVERYTHING")) {
     		intervalsToCheck = ip.parseIntervals("", "", 0, genome);
     	} else if (codeResultType.equals("GENE") || (codeResultType.equals("REGION") && target.equals("GENE"))) {
+    		System.out.println("GENE");
     		List<List<String>> parsed = null;
     		if (genes.startsWith("[LOAD GENES FROM FILE: ")) {
     			if (sessionData.getGeneString() != null) {
@@ -651,22 +656,33 @@ public class QueryController {
         		intervalsToCheck = ip.parseIntervals(this.convertListToString(parsed.get(0)), this.convertListToString(parsed.get(1)), geneMargins, genome);
     		} 
     	} else if (codeResultType.equals("REGION"))  {
-    		if (regions.startsWith("[Load regions from file: ")) {
-    			if (sessionData.getRegionString() != null) {
-    				String loadedRegions = sessionData.getRegionString();
-        			intervalsToCheck = ip.parseIntervals(loadedRegions, loadedRegions, regionMargins, genome);
-    			} else {
-    				sessionData.addWarning("Biominer expects regions loaded from file, but none could be found. Please try reloading your region file.<br/>");
+    		if (target.equals("TF")) {
+    			System.out.println("TRANSCRIPTION FACTOR!!!!");
+    			if (tfMargins == null) {
+    				tfMargins = 0;
     			}
-    		} else if (regions.equals("[All result coordinates]")) {
-    			if (sessionData.getRegionString() != null) {
-    				String loadedRegions = sessionData.getRegionString();
-        			intervalsToCheck = ip.parseIntervals(loadedRegions, loadedRegions, regionMargins, genome);
-    			} else {
-    				sessionData.addWarning("Biominer expects regions copied from the previous query , but none could be found. Please submit a bug report.<br/>");
-    			}
+        		TransFactor tf = tfService.getTransFactorById(idTransFactor);
+        		File bedFile = new File(FileController.getTfParseDirectory(),tf.getFilename());
+        		BedLocalIntervalParser blip = new BedLocalIntervalParser(bedFile);
+        		intervalsToCheck = blip.getLocalIntervals(tf.getName(), tfMargins);
     		} else {
-    			intervalsToCheck = ip.parseIntervals(regions, regions, regionMargins, genome);
+    			if (regions.startsWith("[Load regions from file: ")) {
+        			if (sessionData.getRegionString() != null) {
+        				String loadedRegions = sessionData.getRegionString();
+            			intervalsToCheck = ip.parseIntervals(loadedRegions, loadedRegions, regionMargins, genome);
+        			} else {
+        				sessionData.addWarning("Biominer expects regions loaded from file, but none could be found. Please try reloading your region file.<br/>");
+        			}
+        		} else if (regions.equals("[All result coordinates]")) {
+        			if (sessionData.getRegionString() != null) {
+        				String loadedRegions = sessionData.getRegionString();
+            			intervalsToCheck = ip.parseIntervals(loadedRegions, loadedRegions, regionMargins, genome);
+        			} else {
+        				sessionData.addWarning("Biominer expects regions copied from the previous query , but none could be found. Please submit a bug report.<br/>");
+        			}
+        		} else {
+        			intervalsToCheck = ip.parseIntervals(regions, regions, regionMargins, genome);
+        		}
     		}
     	}
     	
@@ -729,6 +745,7 @@ public class QueryController {
     	}
     	
     	if (codeResultType.equals("GENE") && mappedNames != null) {
+    		System.out.println("FILTERING");
     		results = this.filterGene(results, mappedNames);
     	}
     	
@@ -738,11 +755,11 @@ public class QueryController {
     	List<Analysis> usedAnalyses = this.getUsedAnalyses(analyses, fullRegionResults);
     	HashMap<String,String> usedDataTracks = this.getDataTrackList(usedAnalyses);
     	
-    	QueryResultContainer qrc = new QueryResultContainer(fullRegionResults, fullRegionResults.size(), usedAnalyses.size(), usedDataTracks.keySet().size(), 0, sortType, true, idOrganismBuild, ob.getEnsemblCode());
+    	QueryResultContainer qrc = new QueryResultContainer(fullRegionResults, fullRegionResults.size(), usedAnalyses.size(), usedDataTracks.keySet().size(), 0, sortType, true, idOrganismBuild, ob.getEnsemblCode(),ob.getOrganism().getBinomial(),sortReverse);
     	
     	//Create settings object
     	QuerySettings qs = new QuerySettings(codeResultType, target, idOrganismBuild, idAnalysisTypes, idLabs, idProjects,
-    			idAnalyses, idSampleSources, regions, regionMargins, genes, geneMargins, FDR, codeFDRComparison, log2Ratio, 
+    			idAnalyses, idSampleSources, idTransFactor, tfMargins, regions, regionMargins, genes, geneMargins, FDR, codeFDRComparison, log2Ratio, 
     			codeLog2RatioComparison,resultsPerPage, sortType, reverse, searchExisting);
     	
     	
@@ -761,7 +778,7 @@ public class QueryController {
     	this.dashboardService.increaseQuery();
     	
     	//Create result object
-    	QueryResultContainer qrcSub = qrc.getQrcSubset(resultsPerPage, 0, sortType);
+    	QueryResultContainer qrcSub = qrc.getQrcSubset(resultsPerPage, 0, sortType,sortReverse);
     	
     	return qrcSub;	
     }
@@ -914,7 +931,7 @@ public class QueryController {
     			System.out.println(tab);
     		}
     		
-    		qrcSub = currentSessions.get(username).get(idTab).getResults().getQrcSubset(25, 0, "FDR");
+    		qrcSub = currentSessions.get(username).get(idTab).getResults().getQrcSubset(25, 0, "FDR",true);
     		return qrcSub;
     		
     	} else {
@@ -961,7 +978,6 @@ public class QueryController {
     	}
     	
     	//Grab the stored analyses
-    	List<Analysis> analyses = this.analysisService.getAllAnalyses();
     	QueryResultContainer results = null;
     	
     	if (!currentSessions.containsKey(username) || !currentSessions.get(username).containsKey(idTab)) {
@@ -973,7 +989,7 @@ public class QueryController {
     	}
     	
     	//Get datatracks list
-    	List<Analysis> usedAnalyses = this.getUsedAnalyses(analyses, results.getResultList());
+    	List<Analysis> usedAnalyses = getUsedAnalyses(results.getResultList());
     	HashMap<String,String> datatracks = this.getDataTrackList(usedAnalyses);
     	
     	String igvBuildName = null;
@@ -1053,6 +1069,7 @@ public class QueryController {
     	return igvSR;
     }
     
+    
    
     
     @RequestMapping(value="startIgvSession",method=RequestMethod.GET)
@@ -1086,9 +1103,87 @@ public class QueryController {
     	this.dashboardService.increaseIgv();
     	
     	return igr;
-    	
-    	
     }
+    
+    @RequestMapping(value="startJBrowseSession",method=RequestMethod.GET)
+    @ResponseBody
+    public JBrowseReturnData startJbrowseSession(HttpServletResponse response, HttpServletRequest request, @RequestParam("idTab") String idTab) throws Exception {
+    	try {
+	    	String serverName = request.getServerName();
+	    	System.out.println(serverName);
+	    	
+	    	if (serverName.equals("localhost")) {
+	    		serverName = "localhost:8080";
+	    	}
+	    	
+	    	//Get current active user
+	    	Subject currentUser = SecurityUtils.getSubject();
+	    	User user = null;
+	    	String username = "guest";
+	    	if (currentUser.isAuthenticated()) {
+	    		Long userId = (Long) currentUser.getPrincipal();
+	    		user = userService.getUser(userId);
+	    		username = user.getUsername();
+	    	}
+	    	
+	   
+	    	StringBuilder warnings = new StringBuilder("");
+	    	StringBuilder errors = new StringBuilder("");
+	    	
+	    	//Grab the stored analyses
+	    	QueryResultContainer results = null;
+	    	Long idTransFactor = null;
+	    	if (!currentSessions.containsKey(username) || !currentSessions.get(username).containsKey(idTab)) {
+	    		errors.append(String.format("This user %s doesn't appear to have any stored analyses, JBrowse session can't be created.",username));
+	    		JBrowseReturnData dbrd = new JBrowseReturnData(errors.toString(),"",false,"");
+	    		return dbrd;
+	    	} else {
+	    		results = currentSessions.get(username).get(idTab).getResults();
+	    		idTransFactor = currentSessions.get(username).get(idTab).getSettings().getIdTransFactor();
+	    	}
+	    	
+	    	//Get transfactor
+	    	TransFactor tf = null;
+	    	if (idTransFactor != null) {
+	    		tf = tfService.getTransFactorById(idTransFactor);
+	    	}
+	    	
+	    	//Get datatracks list
+	    	List<Analysis> usedAnalyses = getUsedAnalyses(results.getResultList());
+	    	List<DataTrack> dtList = new ArrayList<DataTrack>();
+	    	for (Analysis a: usedAnalyses) {
+	    		dtList.addAll(a.getDataTracks());
+	    	}
+	    	
+	    	
+	    	
+	    	String buildName = null;
+	    	if (usedAnalyses.size() != 0) {
+	    		OrganismBuild ob = usedAnalyses.get(0).getProject().getOrganismBuild();
+	    		if (!GenomeBuilds.doesGenomeExist(ob)) {
+	    			GenomeBuilds.loadGenome(ob);
+	    		}
+	    		buildName = GenomeBuilds.getGenome(ob).getBuildName();
+	    		
+	    	} 
+	    	
+	    	String pathToJBrowse = BiominerProperties.getProperty("jbrowsePath");
+	    	String pathToRepo = "";
+	    	boolean repoCreated = JBrowseUtilities.createJbrowseRepo(username, buildName, dtList, tf, pathToJBrowse);
+	    	
+	    	if (repoCreated) {
+	    		//http://localhost:8080/jbrowse/JBrowse-1.12.1/index.html?data=data/u0855942
+	    		pathToRepo = "http://" + serverName + "/jbrowse/JBrowse-1.12.1/index.html?data=data/" + username;
+	    	}
+	    	JBrowseReturnData dbrd = new JBrowseReturnData(errors.toString(),"",repoCreated,pathToRepo);
+	    	return dbrd;
+    	} catch (Exception ex) {
+    		JBrowseReturnData dbrd = new JBrowseReturnData("Error creating JBrowseRepo: " + ex.getMessage(),"",false,"");
+    		return dbrd;
+    	}
+    }
+    
+    
     
     /* Stolen from http://www.rgagnon.com/javadetails/java-0059.html */
     public boolean urlExists(URL url){
@@ -1121,6 +1216,8 @@ public class QueryController {
     	return pathDict;
     }
     
+  
+    
     private List<Analysis> getUsedAnalyses(List<Analysis> analyses, List<QueryResult> results) {
     	HashSet<Long> usedIds = new HashSet<Long>();
     	for (QueryResult qr: results) {
@@ -1137,6 +1234,19 @@ public class QueryController {
     	return usedAnalyses;
     }
     
+    private List<Analysis> getUsedAnalyses(List<QueryResult> results) {
+    	HashSet<Long> usedIds = new HashSet<Long>();
+    	for (QueryResult qr: results) {
+    		usedIds.add(qr.getIdAnalysis());
+    	}
+    	
+    	List<Analysis> usedAnalyses = new ArrayList<Analysis>();
+    	for (Long id: usedIds) {
+    		usedAnalyses.add(analysisService.getAnalysisById(id));
+    	}
+    	
+    	return usedAnalyses;
+    }
     
     
     
@@ -1247,7 +1357,8 @@ public class QueryController {
     		@RequestParam(value="resultsPerPage") Integer resultsPerPage,
     		@RequestParam(value="pageNum") Integer pageNum,
     		@RequestParam(value="sortType") String sortType,
-    		@RequestParam(value="idTab") String idTab
+    		@RequestParam(value="idTab") String idTab,
+    		@RequestParam(value="sortReverse") boolean sortReverse
     ) {
     	//Get current active user
     	Subject currentUser = SecurityUtils.getSubject();
@@ -1264,7 +1375,7 @@ public class QueryController {
     	if (currentSessions.containsKey(key) && currentSessions.get(key).containsKey(idTab)) {
     		QueryResultContainer full = currentSessions.get(key).get(idTab).getResults();
     		
-    		qrc = full.getQrcSubset(resultsPerPage, pageNum, sortType);
+    		qrc = full.getQrcSubset(resultsPerPage, pageNum, sortType, sortReverse);
     	} 
     	
     	return qrc;
@@ -1288,8 +1399,10 @@ public class QueryController {
     		user = userService.getUser(userId);
     	} 
     	
-    	List<OrganismBuild> obList = this.analysisService.getOrgansimBuildByQuery(user, idAnalysisTypes, idLabs, idProjects, idAnalyses, idSampleSources);
-    	
+    	//Not sure it is smart to restrict organism list by anything but user.  Going to comment out this fancy version for now...
+    	//List<OrganismBuild> obList = this.analysisService.getOrgansimBuildByQuery(user, idAnalysisTypes, idLabs, idProjects, idAnalyses, idSampleSources);
+    	ArrayList<Long> empty = new ArrayList<Long>();
+    	List<OrganismBuild> obList = this.analysisService.getOrgansimBuildByQuery(user, empty, empty, empty, empty, empty);
     	return obList;
     }
     
@@ -1611,10 +1724,11 @@ public class QueryController {
     	
     	List<QueryResult> filteredResults = new ArrayList<QueryResult>();
     	for (QueryResult qr: results) {
-    		if (qr.getMappedName() == null) {
+    		if (qr.getEnsemblName() == null) {
     			continue;
     		}
-    		if (cleanGeneSet.contains(qr.getMappedName())) {
+    		
+    		if (cleanGeneSet.contains(qr.getEnsemblName())) {
     			filteredResults.add(qr);
     		}
     	}
@@ -1950,6 +2064,7 @@ public class QueryController {
     	    			String chrom = m1.group(2);
     	    			
     	    			if (!genome.getNameChromosome().containsKey(chrom)) {
+    	    				
     	    				warnings.append(String.format("The chromsome %s could not be found in the genome %s.<br/>",chrom,genome.getBuildName()));
     	    				continue;
     	    			}
@@ -1975,6 +2090,7 @@ public class QueryController {
     	    			String chrom  = m2.group(2);
     	    			
     	    			if (!genome.getNameChromosome().containsKey(chrom)) {
+    	    			
     	    				warnings.append(String.format("The chromsome %s could not be found in the genome %s.<br/>",chrom,genome.getBuildName()));
     	    				continue;
     	    			}
@@ -2000,36 +2116,7 @@ public class QueryController {
     	}
     }
     
-    private class LocalInterval {
-    	private String chrom;
-    	private int start;
-    	private int end;
-    	private String search; //what was searched to get this interval 
-
-	
-    	public LocalInterval(String chrom, int start, int end, String search) {
-    		this.chrom = chrom;
-    		this.start = start;
-    		this.end = end;
-    		this.search = search;
-    	}
-    	
-    	public String getChrom() {
-    		return this.chrom;
-    	} 
-    	
-    	public int getStart() {
-    		return this.start;
-    	}
-    	
-    	public int getEnd() {
-    		return this.end;
-    	}
-    	
-    	public String getSearch() {
-    		return this.search;
-    	}
-    }
+    
     
     private class SessionCheckerTimer {
     	private long delay = 60000;

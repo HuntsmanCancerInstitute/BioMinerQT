@@ -130,6 +130,7 @@ public class GenomeParser implements Serializable{
 			chromosome.setAliases(aliases);
 		}
 		genome.setNameChromosome(nameChromosome);
+		
 	}
 
 	public Genome getGenome() {

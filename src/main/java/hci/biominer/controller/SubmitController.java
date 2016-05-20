@@ -4,7 +4,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.*;
@@ -13,33 +13,27 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.zip.GZIPOutputStream;
 
-import javax.annotation.PostConstruct;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+//utils
 import hci.biominer.util.BooleanModel;
 import hci.biominer.util.Enumerated.FileStateEnum;
 import hci.biominer.util.Enumerated.ProjectVisibilityEnum;
 import hci.biominer.util.BiominerProperties;
+import hci.biominer.util.JBrowseUtilities;
 import hci.biominer.util.FileMeta;
-import hci.biominer.util.GenomeBuilds;
 import hci.biominer.util.IntervalTrees;
 import hci.biominer.util.ModelUtil;
-import hci.biominer.util.PreviewMap;
 import hci.biominer.util.VCFUtilities;
 import hci.biominer.service.DashboardService;
-//Services
+
+//Service
 import hci.biominer.service.ProjectService;
-//import hci.biominer.service.AnalysisService;
 import hci.biominer.service.LabService;
 import hci.biominer.service.OrganismBuildService;
 import hci.biominer.service.DataTrackService;
@@ -70,7 +64,6 @@ import hci.biominer.model.access.Institute;
 import hci.biominer.model.access.Role;
 import hci.biominer.model.access.User;
 import hci.biominer.model.access.Lab;
-import hci.biominer.model.genome.Genome;
 
 /**
  * 
@@ -811,8 +804,16 @@ public class SubmitController {
     @RequestMapping(value="finalizeDataTrack", method=RequestMethod.PUT)
     @ResponseBody
     public void finalizeDataTrack(@RequestParam(value="idDataTrack") Long idDataTrack, @RequestParam(value="uploadStatus") FileStateEnum fs, 
-    		@RequestParam(value="message",required=false) String message) {
+    		@RequestParam(value="message",required=false) String message) throws Exception {
     	this.dataTrackService.finalizeDataTrack(idDataTrack, fs, message);
+    	if (fs.equals(FileStateEnum.SUCCESS)) {
+    		DataTrack dt = dataTrackService.getDataTrackById(idDataTrack);
+    		if (dt.getPath().endsWith(".bb")) {
+    			createJbrowseBB(dt);
+    		}
+    		
+    	}
+    	
     }
     
     /***************************************************
@@ -832,7 +833,6 @@ public class SubmitController {
     	//Create secondary objects
     	Project project = this.projectService.getProjectById(idProject);
     	
-    
     	//Load existing datatrack
     	DataTrack updatedDataTrack = this.dataTrackService.getDataTrackById(idDataTrack);
     	
@@ -850,6 +850,7 @@ public class SubmitController {
 
     	//Update sample
     	this.dataTrackService.updateDataTrack(idDataTrack, updatedDataTrack);
+    	
     	return this.dataTrackService.getDataTrackById(idDataTrack);
     }
    
@@ -865,7 +866,7 @@ public class SubmitController {
     @RequestMapping(value="createDataTrack",method=RequestMethod.PUT)
     @ResponseBody
     public DataTrack createDataTrack(@RequestParam(value="idProject") Long idProject, @RequestParam(value="name") String name, 
-    		@RequestParam(value="path") String path) {
+    		@RequestParam(value="path") String path) throws Exception {
     	
     	//Create secondary objects
     	Project project = this.projectService.getProjectById(idProject);
@@ -878,16 +879,33 @@ public class SubmitController {
     	
     	return dataTrack;
     }
+    
+    private void createJbrowseBB(DataTrack dt) throws Exception {
+		String pathToJBrowse = BiominerProperties.getProperty("jbrowsePath");
+		String pathToUCSC = BiominerProperties.getProperty("ucscToolsPath");
+		File bbFile = new File(FileController.getIgvDirectory(),dt.getProject().getIdProject() + "/" + dt.getPath());
+		if (bbFile.exists()) {
+			JBrowseUtilities.createJbrowseFromBigBed(bbFile, dt.getName(), pathToJBrowse, pathToUCSC);
+		}
+    }
+   
 	
 	private void deleteDataTrackFile(DataTrack dt) throws Exception {
 		File dataTrackFile = new File(FileController.getIgvDirectory(),dt.getProject().getIdProject() + "/" + dt.getPath());
 		File dataTrackIndexFile = new File(FileController.getIgvDirectory(),dt.getProject().getIdProject() + "/" + dt.getPath() + ".tbi");
+	
 		if (dataTrackFile.exists()) {
 			dataTrackFile.delete();
 		}
 		if (dataTrackIndexFile.exists()) {
 			dataTrackIndexFile.delete();
 		}
+		
+		File dataTrackJBrowseDir = new File(FileController.getIgvDirectory(),dt.getProject().getIdProject() + "/" + dt.getPath() + "_jbrowse");
+		if (dataTrackJBrowseDir.exists()) {
+			FileUtils.deleteDirectory(dataTrackJBrowseDir);
+		}
+		
 	}
 	
 	/***************************************************

@@ -14,7 +14,7 @@ public class Enumerated {
 	}
 	
 	public static enum AnalysisTypeEnum {
-		ChIPSeq, RNASeq, Methylation, Variant
+		ChIPSeq, RNASeq, Methylation, Variant, Bed
 	}
 	
 	public static enum VarTypeEnum {

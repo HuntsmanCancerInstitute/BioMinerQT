@@ -8,15 +8,16 @@
 	   <a ng-click="refreshAll()"><span class="glyphicon glyphicon-refresh"></span> Refresh</a>
 </div>
 
+
+
 <div class="row">
 	<div class="col-lg-3">
 		<div class="panel panel-primary">
 		  <div class="panel-heading">
 		    <div class="panel-title">RNA Seq Experiments: {{rnaseqCount}}</div>
-		  </div>
-		  <div class="panel-body" >
-			 <nvd3 options="rnaOptions" data="rnaseq" api="api1"></nvd3>
-<!-- 		      <canvas id="rnaPieChart" class="chart chart-pie" data="rnaseq.data" labels="rnaseq.labels" options="pieOpt"></canvas>  -->
+		  </div>  
+		  <div class="panel-body">
+			<canvas id="rna-chart" class="chart chart-bar" chart-data="rnaData" chart-labels="rnaLabels" style="margin: 5px"></canvas>
 		  </div>
 		</div> 
 	</div>
@@ -27,8 +28,7 @@
 		    <div class="panel-title">Chip Seq Experiments: {{chipseqCount}}</div>
 		  </div>
 		  <div class="panel-body">
-		  	<nvd3 options="chipOptions" data="chipseq" api="api2"></nvd3>
-<!-- 		      <canvas id="chipPieChart" class="chart chart-pie" data="chipseq.data" labels="chipseq.labels"></canvas>  -->
+		  	<canvas id="chip-chart" class="chart chart-bar" chart-data="chipData" chart-labels="chipLabels" style="margin: 5px"></canvas>
 		  </div>
 		</div> 
 	</div>
@@ -36,12 +36,11 @@
 		<div class="panel panel-primary">
 		  <div class="panel-heading">
 		    <div class="panel-title">Bisulfite Seq Experiments: {{bisseqCount}}</div>
-		  </div >
-		  <div class="panel-body">
-		  	<nvd3 options="bisOptions" data="bisseq" api="api3"></nvd3>
-<!-- 		      <canvas id="bisPieChart" class="chart chart-pie" data="bisseq.data" labels="bisseq.labels"></canvas>  -->
 		  </div>
+		  <div class="panel-body">
+			<canvas id="bis-chart" class="chart chart-bar" chart-data="bisData" chart-labels="bisLabels" style="margin: 5px"></canvas>
 		 </div>
+		</div>
 	</div> 
 	<div class="col-lg-3">
 		<div class="panel panel-primary">
@@ -49,89 +48,89 @@
 		    <div class="panel-title">Variant Experiments: {{variantCount}}</div>
 		  </div>
 		  <div class="panel-body">
-		    <nvd3 options="varOptions" data="variant" api="api4"></nvd3>
-<!-- 		      <canvas id="varPieChart" class="chart chart-pie" data="variant.data" labels="variant.labels"></canvas>  -->
-		  </div>
+			<canvas id="var-chart" class="chart chart-bar" chart-data="varData" chart-labels="varLabels" style="margin: 5px"></canvas>
 		 </div>
+		</div>
 	</div>
 </div>
 <br/>
-<div class="row" ng-show="$root.admin">
-	<div class="panel col-lg-4 col-sm-12">
-		<span class="section-header" style="padding-top: 0px">User Stats</span>
-		<ul class="list-group">
-		  <li class="list-group-item">
-		  	<span class="badge">{{totalUsers}}</span>
-		  	Total users
-		  </li>
-		  <li class="list-group-item">
-		  	<span class="badge">{{totalLabs}}</span>
-		  	Total labs
-		  </li>
-		  <li class="list-group-item">
-		  	<span class="badge">{{loginCount}}</span>
-		  	Total logins
-		  </li>
-		  <li class="list-group-item">
-		  	<span class="badge">{{queryCount}}</span>
-		  	Total queries
-		  </li>
-		  <li class="list-group-item">
-		  	<span class="badge">{{lastQueryDate | date:'short'}}</span>
-		  	Last query
-		  </li>
-		  <li class="list-group-item">
-		  	<span class="badge">{{igvCount}}</span>
-		  	Total IGV launches
-		  </li>		  
-		</ul>
-	</div>
-	<div class="panel col-lg-4 col-sm-12">
-		<span class="section-header" style="padding-top: 0px">Analysis Stats</span>
-		<ul class="list-group">
-		  <li class="list-group-item">
-		  	<span class="badge">{{totalAnalyses}}</span>
-		  	Total analyses
-		  </li>	
-		  <li class="list-group-item">
-		  	<span class="badge">{{uploadSize | number : 2}} GB</span>
-		  	Size of uploaded analyses
-		  </li>
-		  <li class="list-group-item">
-		  	<span class="badge">{{parsedSize | number : 2}} GB</span>
-		  	Size of parsed analyses
-		  </li>
-		  <li class="list-group-item">
-		  	<span class="badge">{{lastSubmissionDate | date:'short'}}</span>
-		  	Last submission
-		  </li>
-		</ul>
-	</div>
-	<div class="panel col-lg-4 col-sm-12">
-		<span class="section-header" style="padding-top: 0px">Error Stats</span>
-		<ul class="list-group">
-		   <li class="list-group-item">
-		  	<span class="badge">{{crashCount}}</span>
-		    Number crashes
-		   </li>
-		   <li class="list-group-item">
-		  	<span class="badge">{{daysSinceCrash | number : 2}}</span>
-		    Days since last crash
-		   </li>
-		   <li class="list-group-item">
-		  	<span class="badge">{{reportCount}}</span>
-		  	Cries for help
-		  </li>
-		  <li class="list-group-item">
-		  	<span class="badge">{{daysSinceReport | number : 2}}</span>
-		  	Days since last cry for help
-		  </li>
-		</ul>
-	</div>
+<!-- <div class="row" ng-show="$root.admin"> -->
+<!-- 	<div class="panel col-lg-4 col-sm-12"> -->
+<!-- 		<span class="section-header" style="padding-top: 0px">User Stats</span> -->
+<!-- 		<ul class="list-group"> -->
+<!-- 		  <li class="list-group-item"> -->
+<!-- 		  	<span class="badge">{{totalUsers}}</span> -->
+<!-- 		  	Total users -->
+<!-- 		  </li> -->
+<!-- 		  <li class="list-group-item"> -->
+<!-- 		  	<span class="badge">{{totalLabs}}</span> -->
+<!-- 		  	Total labs -->
+<!-- 		  </li> -->
+<!-- 		  <li class="list-group-item"> -->
+<!-- 		  	<span class="badge">{{loginCount}}</span> -->
+<!-- 		  	Total logins -->
+<!-- 		  </li> -->
+<!-- 		  <li class="list-group-item"> -->
+<!-- 		  	<span class="badge">{{queryCount}}</span> -->
+<!-- 		  	Total queries -->
+<!-- 		  </li> -->
+<!-- 		  <li class="list-group-item"> -->
+<!-- 		  	<span class="badge">{{lastQueryDate | date:'short'}}</span> -->
+<!-- 		  	Last query -->
+<!-- 		  </li> -->
+<!-- 		  <li class="list-group-item"> -->
+<!-- 		  	<span class="badge">{{igvCount}}</span> -->
+<!-- 		  	Total IGV launches -->
+<!-- 		  </li>		   -->
+<!-- 		</ul> -->
+<!-- 	</div> -->
+<!-- 	<div class="panel col-lg-4 col-sm-12"> -->
+<!-- 		<span class="section-header" style="padding-top: 0px">Analysis Stats</span> -->
+<!-- 		<ul class="list-group"> -->
+<!-- 		  <li class="list-group-item"> -->
+<!-- 		  	<span class="badge">{{totalAnalyses}}</span> -->
+<!-- 		  	Total analyses -->
+<!-- 		  </li>	 -->
+<!-- 		  <li class="list-group-item"> -->
+<!-- 		  	<span class="badge">{{uploadSize | number : 2}} GB</span> -->
+<!-- 		  	Size of uploaded analyses -->
+<!-- 		  </li> -->
+<!-- 		  <li class="list-group-item"> -->
+<!-- 		  	<span class="badge">{{parsedSize | number : 2}} GB</span> -->
+<!-- 		  	Size of parsed analyses -->
+<!-- 		  </li> -->
+<!-- 		  <li class="list-group-item"> -->
+<!-- 		  	<span class="badge">{{lastSubmissionDate | date:'short'}}</span> -->
+<!-- 		  	Last submission -->
+<!-- 		  </li> -->
+<!-- 		</ul> -->
+<!-- 	</div> -->
+<!-- 	<div class="panel col-lg-4 col-sm-12"> -->
+<!-- 		<span class="section-header" style="padding-top: 0px">Error Stats</span> -->
+<!-- 		<ul class="list-group"> -->
+<!-- 		   <li class="list-group-item"> -->
+<!-- 		  	<span class="badge">{{crashCount}}</span> -->
+<!-- 		    Number crashes -->
+<!-- 		   </li> -->
+<!-- 		   <li class="list-group-item"> -->
+<!-- 		  	<span class="badge">{{daysSinceCrash | number : 2}}</span> -->
+<!-- 		    Days since last crash -->
+<!-- 		   </li> -->
+<!-- 		   <li class="list-group-item"> -->
+<!-- 		  	<span class="badge">{{reportCount}}</span> -->
+<!-- 		  	Cries for help -->
+<!-- 		  </li> -->
+<!-- 		  <li class="list-group-item"> -->
+<!-- 		  	<span class="badge">{{daysSinceReport | number : 2}}</span> -->
+<!-- 		  	Days since last cry for help -->
+<!-- 		  </li> -->
+<!-- 		</ul> -->
+<!-- 	</div> -->
 
-</div>
+<!-- </div> -->
 
-<div class="row" ng-show="!$root.admin">
+<!-- <div class="row" ng-show="!$root.admin"> -->
+<div class="row">
 	<div class="panel col-lg-6 col-sm-12">
 		<span class="section-header" style="padding-top: 0px">User Stats</span>
 		<ul class="list-group">

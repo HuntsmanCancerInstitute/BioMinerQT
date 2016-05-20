@@ -27,5 +27,6 @@
         <mapping class="hci.biominer.model.BiominerGene"/>
         <mapping class="hci.biominer.model.ExternalGene"/>
         <mapping class="hci.biominer.model.Dashboard"/>
+        <mapping class="hci.biominer.model.TransFactor"/>
     </session-factory>
 </hibernate-configuration>

@@ -18,16 +18,16 @@
 				<div class="form-group">
 				  <label class="col-md-4 control-label" for="project_description">Description</label>
 				  <div class="col-md-5">                     
-				    <textarea maxlength="1000" ng-show="projectEditMode" class="form-control input-sm" id="project_description" ng-model="editedProject.description" name="project_description"></textarea>
-				  	<textarea maxlength="1000" ng-hide="projectEditMode" ng-readonly="true" class="form-control  input-sm" id="project_description2" ng-model="project.description" name="project_description"></textarea>
+				    <textarea maxlength="255" ng-show="projectEditMode" class="form-control input-sm" id="project_description" ng-model="editedProject.description" name="project_description"></textarea>
+				  	<textarea maxlength="255" ng-hide="projectEditMode" ng-readonly="true" class="form-control  input-sm" id="project_description2" ng-model="project.description" name="project_description"></textarea>
 				  </div>
 				</div>
 				
 				<div class="form-group">
 				  <label class="col-md-4 control-label" for="project_urls">Data URLs</label>
 				  <div class="col-md-5">                     
-				    <textarea maxlength="1000" ng-show="projectEditMode" class="form-control  input-sm" id="project_urls" ng-model="editedProject.dataUrls" name="project_urls"></textarea>
-				    <textarea maxlength="1000" ng-hide="projectEditMode" ng-readonly="true" class="form-control  input-sm" id="project_urls2" ng-model="project.dataUrls" name="project_urls"></textarea>
+				    <textarea maxlength="255" ng-show="projectEditMode" class="form-control  input-sm" id="project_urls" ng-model="editedProject.dataUrls" name="project_urls"></textarea>
+				    <textarea maxlength="255" ng-hide="projectEditMode" ng-readonly="true" class="form-control  input-sm" id="project_urls2" ng-model="project.dataUrls" name="project_urls"></textarea>
 				  </div>
 				</div>
 				

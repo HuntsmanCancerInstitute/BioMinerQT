@@ -1,0 +1,60 @@
+
+<div class="modal-header">
+	<h4>Global Genomic Interval Upload</h4>
+</div>
+<div class="modal-body">
+	<form class="form-horizontal" name="newUserForm">
+		<fieldset>
+			<div class="form-group">
+				<label class="col-md-2 control-label">TF Name</label>
+				<div class="col-md-10">
+					<input maxlength="250" class="col-md-10" ng-model="tf.name"  class="form-control input-md" required type="text">
+				</div>  
+			</div>
+
+			<div class="form-group">
+				<label class="col-md-2 control-label">Description</label>  
+  				<div class="col-md-10">                     
+    				<textarea maxlength="1000" ng-model="tf.description" placeholder="description" class="form-control input-md"></textarea>
+  				</div>
+			</div>
+			
+			<div class="form-group">
+			  <label class="col-md-2 control-label">Genome Build</label>
+			  <div class="col-md-10">
+			    <select width="100" data-placeholder="Select build..." ng-model="tf.organismBuild.idOrganismBuild"  ng-options="gb.idOrganismBuild as gb.name for gb in organismBuildList | filter:{transcriptFile:'!!',genomeFile:'!!',geneIdFile:'!!'}" chosen class="form-control chosen-select" required>
+			    	<option value=""></option> 
+			    </select>
+			  </div>
+			</div>
+			
+			<div class="form-group">
+			    <label class="col-md-2 control-label">TF File</label>
+			    <div class="col-md-10">
+			    	 <span class="btn btn-success fileinput-button btn-sm">
+				     	<i class="glyphicon glyphicon-upload"></i>
+				        <input type="file" ng-file-select ng-model="tf.path"> Select File           
+					</span>
+			    </div>
+			</div>
+			
+			<div class="form-group" ng-hide="!tf.path || 0 === tf.path.length">
+				<label class="col-md-2 control-label">Selected File</label>
+			    <div class="col-md-10">
+			    	<input maxlength="250" class="col-md-10" ng-model="tf.path[0].name" ng-disabled=true  class="form-control input-md" required type="text">
+			    </div>	
+			</div>
+			
+			<div class="form-group">
+				<label class="col-md-2 control-label">Transformed</label>
+				<div class="col-md-10">
+					<input ng-model="tf.transformed" type="checkbox" ></input>
+				</div>
+			</div>
+		</fieldset>
+	</form>
+</div>
+<div class="modal-footer">
+            <button class="btn btn-primary" ng-click="tfOK()" ng-disabled="newUserForm.$invalid">Submit</button>
+            <button class="btn btn-warning" ng-click="tfCancel()">Cancel</button>
+</div>

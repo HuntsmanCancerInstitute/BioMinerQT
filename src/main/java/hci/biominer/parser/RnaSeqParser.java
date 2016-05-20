@@ -67,7 +67,7 @@ public class RnaSeqParser {
 		for (ExternalGene eg: egList) {
 			String geneName = eg.getExternalGeneName();
 			String source = eg.getExternalGeneSource();
-			Long bId = eg.getBiominerGene().getIdBiominerGene();
+			Long bId = eg.getIdBiominerGene();
 			if (!externalGeneToBiominerId.containsKey(geneName)) {
 				externalGeneToBiominerId.put(geneName, new ArrayList<Long>());
 			}

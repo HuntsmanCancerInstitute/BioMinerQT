@@ -63,6 +63,14 @@ public class GenericResult implements Serializable {
 		this.analysisType = analysisType;
 	}
 	
+	public void loadBedData(String chrom, int start, int stop, String transFDR, AnalysisTypeEnum analysisType) {
+		this.chrom = chrom;
+		this.start = start;
+		this.stop = stop;
+		this.transFDR = transFDR;
+		this.analysisType = analysisType;
+	}
+	
 	public void loadRnaseqData(String chrom, int start, int stop, String originalName, String mappedName, String transFDR, float log2Rto, AnalysisTypeEnum analysisType) {
 		this.chrom = chrom;
 		this.start = start;

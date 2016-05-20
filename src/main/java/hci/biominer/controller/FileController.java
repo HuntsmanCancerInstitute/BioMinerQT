@@ -123,6 +123,16 @@ public class FileController {
 		return createDirectory("queries");
 	}
 	
+	public static File getTfRawDirectory() throws Exception {
+		return createDirectory("tfFilesRaw");
+	}
+	
+	public static File getTfParseDirectory() throws Exception {
+		return createDirectory("tfFilesParse");
+	}
+	
+	
+	
 	private static File createDirectory(String subdir) throws Exception {
 		checkProperties();
 		File localDirectory = new File(BiominerProperties.getProperty("filePath"));
@@ -721,9 +731,6 @@ public class FileController {
 				String cond2 = m.group(2);
 				String name = FilenameUtils.getBaseName(outputFile.getName());
 				boolean success = submitController.autoCreateAnalysis(Long.parseLong(id), idFileUpload, idAnalysisType, cond1, cond2, name);
-				if (success) {
-					fileUpload.setMessage("AUTOCREATE");
-				}
 				
 			} 
 			

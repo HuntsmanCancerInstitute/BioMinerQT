@@ -76,6 +76,20 @@
 		<label class="label label-warning">{{message}}</label>
 </div>
 
+<!-- TF tool bar -->
+<div class="row toolbar" ng-show="tfTabOpen" >
+     	<h3>
+     		<span class="glyphicon glyphicon-cog"></span>
+     		Users and Labs
+     	</h3>
+     		
+		<a ng-click="addTfFile()" href="#/useradmin">
+ 		 	<span class="glyphicon glyphicon-plus"></span>Add Global Interval
+		</a>
+		
+		<label class="label label-warning">{{message}}</label>
+</div>
+
 
 
 <div class="row">	
@@ -274,6 +288,39 @@
 			   </div> <!-- for cg-busy -->
 			   </div> <!-- for cg-busy -->
 			   </div> <!-- for cg-busy -->
+			   </div> <!-- for cg-busy -->
+	     	</tab>
+	        <tab heading="Global Intervals" active="$parent.tfTabOpen">
+	     	   <div cg-busy="{promise:uploadTfPromise,message:'Parsing Transcription Factor File',minDuration: 1000}">
+	     	   <div cg-busy="{promise:addTfPromise,message:'Prepping JBrowse Repo',minDuration: 1000}">
+		     	<table class="table" >
+				    <thead>
+				        <tr>
+				            <th>Name</th>
+				            <th>Description</th>
+				            <th>File</th>
+				            <th>Genome Build</th>
+				            <th>Controls</th>
+				        </tr>
+				    </thead>
+				    <tbody>
+				        <tr ng-repeat="tf in tfList" ng-mouseenter="showTfControls(tf)" ng-mouseleave="hideTfControls(tf)" >
+				        	<td style="width: 20%" >{{tf.name}}</td>
+				        	<td style="width: 30%" >{{tf.description}}</td>
+				        	<td style="width: 20%" >{{tf.filename}}</td>
+				        	<td style="width: 20%" >{{tf.organismBuild.name}}</td>
+				        	<td style="width: 10%" >
+				        	<div ng-show="tf.show">
+				                <button class="btn btn-xs btn-danger table-button" ng-click="deleteTf(tf)" tooltip="delete tf" data-toggle="tooltip" data-placement="top" title="remove">
+				                 	<span class="glyphicon glyphicon-trash"></span>
+				                </button>
+			               </div>
+			               </td>	
+				        </tr>
+				    </tbody>
+				</table>
+			   </div>
+			   </div>
 			   </div> <!-- for cg-busy -->
 	     	</tab>
 	    </tabset>

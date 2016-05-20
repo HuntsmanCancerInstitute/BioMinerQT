@@ -100,7 +100,7 @@ public class ColumnValidators {
 		int maxPos = build.getNameChromosome().get(chromosome).getLength();
 		//int maxPos = GenomeBuilds.BUILD_INFO.get(build).get(chromosome);
 		if (tempStart < 0 || tempStart >= maxPos) {
-			throw new NumberFormatException(String.format("[ColumnValidator] Parsed start position ( %d ) does not fall with %s boundaries: %d - %d. Please make"
+			throw new NumberFormatException(String.format("[ColumnValidator] Parsed position ( %d ) does not fall within chromosome %s boundaries: %d - %d. Please make"
 					+ " sure you selected the proper genome build.",
 					tempStart,chromosome,0,maxPos));	
 		}

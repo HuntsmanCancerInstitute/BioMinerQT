@@ -228,11 +228,16 @@ var services = angular.module('services', ['ngResource','ui.bootstrap'])
 				url: 'shared/getAllOrganisms',
 			});
 		};
+		
+		dict.loadTfs = function() {
+			return $http({
+				method: 'GET',
+				url: 'transFactor/getAllTfs',
+			});
+		}
 
 		return dict;
-		
-		
-                   
+	                 
 }]);
 
 

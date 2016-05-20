@@ -25,6 +25,8 @@ public class QuerySettings implements Serializable {
     private String genes;
     private Integer geneMargins;
     private boolean isReverse;
+    private Long idTransFactor;
+    private Integer tfMargins;
     
     //Threshold filtering
     private Float FDR;
@@ -38,7 +40,7 @@ public class QuerySettings implements Serializable {
     
     
     public QuerySettings(String codeResultType, String target, Long idOrganismBuild, List<Long> idAnalysisTypes, List<Long> idLabs,
-    		List<Long> idProjects, List<Long> idAnalyses, List<Long> idSampleSources, String regions, Integer regionMargins, String genes,
+    		List<Long> idProjects, List<Long> idAnalyses, List<Long> idSampleSources, Long idTransFactor, Integer tfMargins, String regions, Integer regionMargins, String genes,
     		Integer geneMargins, Float FDR, String codeFDRComparison, Float log2Ratio, String codeLog2RatioComparison, Integer resultsPerPage,
     		String sortType, boolean isReverse, boolean searchExisting) {
     	this.codeResultType = codeResultType;
@@ -49,6 +51,8 @@ public class QuerySettings implements Serializable {
     	this.idProjects = idProjects;
     	this.idAnalyses = idAnalyses;
     	this.idSampleSources = idSampleSources;
+    	this.idTransFactor = idTransFactor;
+    	this.tfMargins = tfMargins;
     	this.regions = regions;
     	this.regionMargins = regionMargins;
     	this.genes = genes;
@@ -63,6 +67,28 @@ public class QuerySettings implements Serializable {
     	this.searchExisting = searchExisting;
     }
     
+    
+    
+	public Integer getTfMargins() {
+		return tfMargins;
+	}
+
+
+
+	public void setTfMargins(Integer tfMargins) {
+		this.tfMargins = tfMargins;
+	}
+
+
+
+	public Long getIdTransFactor() {
+		return idTransFactor;
+	}
+
+	public void setIdTransFactor(Long idTransFactor) {
+		this.idTransFactor = idTransFactor;
+	}
+
 	public boolean isSearchExisting() {
 		return searchExisting;
 	}

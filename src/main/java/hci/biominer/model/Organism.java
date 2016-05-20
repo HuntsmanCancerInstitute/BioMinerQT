@@ -48,6 +48,7 @@ public class Organism {
 	}
 	
 	public String getBinomial() {
+		this.binomial = this.binomial.replace(" ", "_");
 		return this.binomial;
 	}
 

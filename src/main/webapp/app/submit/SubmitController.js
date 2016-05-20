@@ -1045,13 +1045,11 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 		
 		//Cleanup
 		promise = promise.then(function() {
-			console.log("GLOBAL OK");
 			
 			$scope.datatrack = null;
 			$scope.dtcomplete = 100;
 			cleanupAfterDatatrackUpload();
 		}, function() {
-			console.log("GLOBAL FAIL");
 			$scope.datatrack = null;
 			cleanupAfterDatatrackUpload();
 			$scope.dtcomplete = 0;
@@ -1497,7 +1495,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 			params: {idAnalysis: result.idAnalysis, name: result.name, description: result.description, date: result.date.getTime(), idProject: $scope.projectId, 
 				idSampleList: sampleList, idDataTrackList: dataTrackList, idFileUpload: result.file.idFileUpload, idAnalysisType: result.analysisType.idAnalysisType}
 		}).success(function(data, status, headers, config, statusText) {
-			$scope.refreshResults(config.params.idProject);
+			$scope.refresh();
 			$scope.originalResultName = null;
 		}).error(function(data) {
 			console.log("Could not update analysis.");
@@ -1511,7 +1509,8 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 			method: "DELETE",
 			params: {idAnalysis: result.idAnalysis, idProject: $scope.projectId}
 		}).success(function(data, status, headers, config, statusText) {
-			$scope.refreshResults(config.params.idProject);
+			//$scope.refreshResults(config.params.idProject);
+			$scope.refresh();
 		}).error(function(data) {
 			console.log("Error deleting analysis");
 		});
@@ -1535,7 +1534,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 			params: {name: result.name, description: result.description, date: result.date.getTime(), idProject: $scope.projectId, 
 				idSampleList: sampleList, idDataTrackList: dataTrackList, idFileUpload: result.file.idFileUpload, idAnalysisType: result.analysisType.idAnalysisType}
 		}).success(function(data, status, headers, config, statusText) {
-			$scope.refreshResults(config.params.idProject);
+			$scope.refresh();
 			$scope.lastResult = $scope.result;
 			$scope.lastResult.file = null;
 			$scope.originalResultName = null;
