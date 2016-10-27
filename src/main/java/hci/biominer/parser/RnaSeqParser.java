@@ -14,16 +14,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
 import hci.biominer.model.ExternalGene;
-import hci.biominer.model.OrganismBuild;
 import hci.biominer.model.genome.Gene;
 import hci.biominer.model.genome.Genome;
 import hci.biominer.model.genome.Transcript;
-import hci.biominer.service.ExternalGeneService;
 import hci.biominer.util.ColumnValidators;
-import hci.biominer.util.GenomeBuilds;
 import hci.biominer.util.ModelUtil;
 
 public class RnaSeqParser {

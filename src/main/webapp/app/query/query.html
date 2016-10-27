@@ -91,7 +91,7 @@
 	           	 		
 	           	 		<!-- What data sets? -->
 						<div class="form-group">
-						  <div class="col-md-12">
+						  <div class="col-md-8">
 						    <label ng-repeat="analysisType in analysisTypeCheckedList"  
 						           class="radio-inline" 
 						           ng-class="analysisType.class"
@@ -105,17 +105,19 @@
 						             ng-model="$parent.selectedAnalysisType"
 						             ng-value="analysisType">
 						     {{ analysisType.type }}
-						    </label>    
-						  </div>
-						  
-						  
+						    </label>
+						   </div>
+						   <div class="col-md-4">
+						      <label class="control-label" for="searchResults">Search Results</label>
+						  	  <input name="searchResults" type="checkbox" ng-model="searchExisting" ng-disabled="!hasResults"/>
+							</div>    
 						  <div class="col-md-12" ng-show="queryForm.analysisRadio.$error.required && showValidation">
 						  	<span class="label label-danger" >Required</span>
 						  </div>
 						</div>
 					</div>
 					
-					<div class="panel" ng-show="selectedAnalysisType != '' && idOrganismBuild != ''">
+					<div class="panel" ng-show="(selectedAnalysisType != '' || searchExisting) && idOrganismBuild != ''">
 						<!--  Lab -->
 						<div class="form-group" >
 							<label class="col-md-3 control-label" for=""labEntry">Labs</label> 
@@ -140,10 +142,7 @@
 						    <select width="70" data-placeholder="Select sample source..." multiple class="form-control input-sm" ng-model="selectedSampleSources" chosen  ng-options="sampleSource as sampleSource.source for sampleSource in sampleSourceList track by sampleSource.idSampleSource" ng-disabled="searchExisting"  ></select>
 						</div>
 						
-						<div class="form-group">
-						    <label class="col-md-3 control-label" for="searchResults">Search Results</label>
-						  	<input name="searchResults" type="checkbox" ng-model="searchExisting" ng-disabled="!hasResults"/>
-						</div>
+						
 					</div>
 			
 					<div class="panel" ng-show="selectedAnalysisType != '' && idOrganismBuild != ''">
@@ -372,13 +371,14 @@
         <!--  Results Panel  -->
      	<!--                 -->
      	
-     	
-		<div cg-busy="{promise: runQueryPromise,message: 'Searching'}" ng-class="resultPanelClass">
+     	<div ng-class="resultPanelClass">
+			<div cg-busy="{promise: runQueryPromise,message: 'Searching'}" >
+			<div cg-busy="{promise: createHomologyInformationPromise,message: 'Converting Names'}">
 			<div class="panel panel-default" ng-show="showJBrowse" cg-busy="{promise: jbrowseRepoRunning,message: 'Loading JBrowse Repo', minDuration: 1000 }">
 			    <div class="panel-heading panel-heading-btn" ng-show="showJBrowse">
 			            <span class=panel-title>JBrowse</span>
 			    		<button type="button" class="btn btn-sm btn-info pull-right" ng-show="showJBrowse==true" ng-click="closeJBrowse()" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-eye-close"></span> Close JBrowse</button>
-			    		<button type="button" class="btn btn-sm btn-info pull-right" ng-show="showJBrowse==true" ng-click="maxJBrowse()" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-eye-open"></span> Fullscreen JBrowse</button>
+			    		<button type="button" pclass="btn btn-sm btn-info pull-right" ng-show="showJBrowse==true" ng-click="maxJBrowse()" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-eye-open"></span> Fullscreen JBrowse</button>
 			    		<button type="button" class="btn btn-sm btn-info pull-right" ng-show="showJBrowse==true && fullJBrowse==true" ng-click="minJBrowse()" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-eye-close"></span> Minimize JBrowse</button>
 			     		<button type="button" class="btn btn-sm btn-info pull right" ng-show="showJBrowse==true" ng-click="toggleTrackList()" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-list-alt"></span> Toggle Tracklist</button>
 			    </div>
@@ -404,8 +404,8 @@
 			   	  <button type="button" class="btn btn-sm btn-primary pull-right" style="margin-top: -6px;margin-left: 10px" ng-click="loadExistingData()" ng-hide="loggedUser == null || hasResults">	
 				   	<span class="glyphicon glyphicon-cloud-download" tooltip="Load last query and results"></span> Load Last
 				  </button>
-				  
-				  	 <button type="button" class="btn btn-sm btn-info pull-right" ng-show="showJBrowse==false" ng-click="openJBrowse()" ng-disabled="totalDatatracks == 0 && returnedIntersectionTarget != 'TF'" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-eye-open"></span> Open JBrowse</button>
+				  <button type="button" class="btn btn-sm btn-info pull-right" ng-show="showJBrowse==false" ng-click="openJBrowse()" ng-disabled="totalDatatracks == 0 && returnedIntersectionTarget != 'TF'" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-eye-open"></span> Open JBrowse</button>
+				  <button type="button" class="btn btn-sm btn-info pull-right" ng-show="possibleConversions.length > 0 && returnedAnalysisType.type == 'RNASeq'" ng-click="openConversionPane()" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon glyphicon-share-alt"></span> Convert Build</button>
 				</div>
 				
 				<div class="panel-body">
@@ -504,7 +504,8 @@
 			
 		
 			</div> <!--  end of panel  -->
-		
+		</div> <!-- cgbusy -->
+		</div> <!-- cgbusy -->
 	  </div>  <!-- end of row (main panel) -->
 
 </fieldset>

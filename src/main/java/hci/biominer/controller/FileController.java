@@ -131,6 +131,10 @@ public class FileController {
 		return createDirectory("tfFilesParse");
 	}
 	
+	public static File getHomologyDirectory() throws Exception {
+		return createDirectory("homology");
+	}
+	
 	
 	
 	private static File createDirectory(String subdir) throws Exception {

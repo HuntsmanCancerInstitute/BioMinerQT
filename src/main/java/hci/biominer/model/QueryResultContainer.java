@@ -137,6 +137,22 @@ public class QueryResultContainer implements Serializable {
 		return qrc;
 		
 	}
+
+
+	public void setAnalysisNum(int analysisNum) {
+		this.analysisNum = analysisNum;
+	}
+
+
+	public void setDataTrackNum(int dataTrackNum) {
+		this.dataTrackNum = dataTrackNum;
+	}
+
+
+	public void setIdOrganismBuild(long idOrganismBuild) {
+		this.idOrganismBuild = idOrganismBuild;
+	}
+	
 		
 
 }

@@ -40,6 +40,7 @@ import org.springframework.web.multipart.MultipartFile;
 import hci.biominer.model.Analysis;
 import hci.biominer.model.AnalysisType;
 import hci.biominer.model.DataTrack;
+import hci.biominer.model.GeneIdConversion;
 import hci.biominer.model.GeneNameModel;
 import hci.biominer.model.GenericResult;
 import hci.biominer.model.IgvSessionResult;
@@ -61,7 +62,9 @@ import hci.biominer.model.intervaltree.Interval;
 import hci.biominer.model.intervaltree.IntervalTree;
 import hci.biominer.model.ExternalGene;
 import hci.biominer.parser.BedLocalIntervalParser;
+import hci.biominer.parser.HomologyParser;
 import hci.biominer.service.DashboardService;
+import hci.biominer.service.GeneIdConversionService;
 import hci.biominer.service.OrganismBuildService;
 import hci.biominer.service.LabService;
 import hci.biominer.service.TransFactorService;
@@ -72,6 +75,7 @@ import hci.biominer.service.ExternalGeneService;
 import hci.biominer.util.BiominerProperties;
 import hci.biominer.util.Enumerated.AnalysisTypeEnum;
 import hci.biominer.util.GenomeBuilds;
+import hci.biominer.util.HomologyModel;
 import hci.biominer.util.IO;
 import hci.biominer.util.IntervalTrees;
 import hci.biominer.util.JBrowseReturnData;
@@ -121,6 +125,9 @@ public class QueryController {
     @Autowired
     private TransFactorService tfService;
     
+    @Autowired
+    private GeneIdConversionService geneIdConversionService;
+    
     //private StringBuilder warnings = new StringBuilder("");
     
     //private HashMap<String,QueryResultContainer> resultsDict =  new HashMap<String,QueryResultContainer>();
@@ -131,12 +138,14 @@ public class QueryController {
     
     private HashMap<String,HashMap<String,SessionData>> currentSessions = new HashMap<String,HashMap<String,SessionData>>();
     private HashMap<String,Subject> activeUsers = new HashMap<String,Subject>();
+    private HashMap<String,ArrayList<QueryResult>> homologyResult = new HashMap<String,ArrayList<QueryResult>>();
     
     
     private HashMap<String,File> fileDict = new HashMap<String,File>();
     private HashMap<Long,List<GeneNameModel>> searchDict = new HashMap<Long,List<GeneNameModel>>();
     private HashMap<String,ArrayList<Long>> nameLookupDict = new HashMap<String,ArrayList<Long>>();
     private HashMap<String,String> ensembl2NameDict = new HashMap<String,String>();
+    
     
     
     
@@ -169,7 +178,8 @@ public class QueryController {
         	for (OrganismBuild ob: obList) {
         		if (ob.getGenomeFile() != null) {
         			GenomeBuilds.loadGenome(ob);
-        			Genome g = GenomeBuilds.getGenome(ob);
+        		    Genome g = GenomeBuilds.getGenome(ob);
+        			
         			
         			List<Analysis> analyses = new ArrayList<Analysis>();
         			
@@ -783,6 +793,167 @@ public class QueryController {
     	return qrcSub;	
     }
     
+    @RequestMapping(value="homologyGeneNames",method=RequestMethod.POST)
+    @ResponseBody
+    private String homologyGeneNames(HttpServletResponse response, @RequestParam("idTab") String idTab, @RequestParam("idConversion") Long idConversion) throws Exception {
+    	Subject currentUser = SecurityUtils.getSubject();
+    	String username = "guest";
+    	
+    	if (currentUser.isAuthenticated()) {
+    		Long userId = (Long) currentUser.getPrincipal();
+    		User user = userService.getUser(userId);
+    		username = user.getUsername();
+    	}
+    	
+    	ArrayList<QueryResult> homologyResult = new ArrayList<QueryResult>();
+    	
+    	StringBuilder returnMessage = new StringBuilder("");
+    	if (!currentSessions.containsKey(username) || !currentSessions.get(username).containsKey(idTab)) {
+    		response.setStatus(988);
+    		returnMessage.append("Could not find an existing session for homology conversion!");
+    	} else {
+    		SessionData sd = currentSessions.get(username).get(idTab);
+    	
+    		//Get external gene information
+    		GeneIdConversion gic = this.geneIdConversionService.getGeneIdConversionByID(idConversion);
+    		OrganismBuild sourceBuild = gic.getSourceBuild();
+    		OrganismBuild destBuild = gic.getDestBuild();
+    		List<ExternalGene> sourceList = this.externalGeneService.getExternalGenesByOrganismBuild(sourceBuild);
+    		List<ExternalGene> destList = this.externalGeneService.getExternalGenesByOrganismBuild(destBuild);
+    		
+    		//Get gene names if not done already
+    		if(!searchDict.containsKey(destBuild.getIdOrganismBuild())) {
+    			loadGeneNames(destBuild);
+    		}
+    		
+    		//get conversion information
+    		File conversionFile = new File(FileController.getHomologyDirectory(),gic.getConversionFile());
+    		
+    		//Create homology stuff
+    		HomologyParser hp = new HomologyParser(conversionFile,sourceList,destList,sourceBuild,destBuild);
+    		HomologyModel hm = hp.processData();
+    		HashMap<String,String> homologyMap = hm.getHomologyMap();
+    		
+    		//Get coordinate information
+    		Genome genome = GenomeBuilds.fetchGenome(destBuild);
+    		HashMap<String, Gene> geneNameGene = genome.getTranscriptomes()[0].getGeneNameGene();
+    		
+    	       
+        	//counters    		
+    		int totalInput = 0;
+    		int totalHomology = 0;
+    		int totalCoordinate = 0;
+    		
+    		
+    		for (QueryResult qr: sd.getResults().getResultList()) {
+    			String name = qr.getEnsemblName();
+    			
+    			totalInput++;
+    			if (homologyMap.containsKey(name)) {
+    				String updatedName = homologyMap.get(name);
+    				if (!updatedName.equals("None")) {
+    					totalHomology++;
+        				if (geneNameGene.containsKey(updatedName)) {
+        					totalCoordinate += 1;
+        					Gene gene = geneNameGene.get(updatedName);
+        					QueryResult newQR = qr.clone();
+        					newQR.setCoordinates(geneByTxBoundary(gene));
+        					newQR.setSearch(newQR.getEnsemblName());
+        					newQR.setEnsemblName(updatedName);
+        					if (ensembl2NameDict.containsKey(updatedName)) {
+        		    			newQR.setMappedName(ensembl2NameDict.get(updatedName));
+        		    		} else {
+        		    			newQR.setMappedName(updatedName);
+        		    		}
+        					homologyResult.add(newQR);
+        				}
+    				}	
+    			}
+    		}
+    		
+    		this.homologyResult.put(idTab, homologyResult);
+    		
+    		returnMessage.append(String.format("Found %d genes to convert.<br>",totalInput));
+    		returnMessage.append(String.format("Successfully found homology for %d genes (%.3f). <br>",totalHomology,(float)totalHomology / totalInput ));
+    		returnMessage.append(String.format("Successfully found coordinates for %d genes (%.3f). <br>",totalCoordinate,(float)totalCoordinate / totalInput));
+    	}
+    	return returnMessage.toString();
+    }
+    
+    @RequestMapping(value="homologyGeneNameClear",method=RequestMethod.GET)
+    @ResponseBody
+    private void homlogyGeneNameClear(
+    		HttpServletResponse response, 
+    		@RequestParam(value="idTab") String idTab) {
+    	
+    	if (!homologyResult.containsKey(idTab)) {
+			response.setStatus(988);
+		} else {
+			homologyResult.remove(idTab);
+		}
+    	
+    }
+    
+    @RequestMapping(value="homologyGeneNameResult",method=RequestMethod.GET)
+    @ResponseBody
+    private QueryResultContainer homlogyGeneNameResult(
+    		HttpServletResponse response, 
+    		@RequestParam(value="idTab") String idTab, 
+    		@RequestParam(value="idConversion") Long idConversion, 
+            @RequestParam(value="resultsPerPage") Integer resultsPerPage,
+            @RequestParam(value="sortType") String sortType,
+            @RequestParam(value="isReverse") boolean reverse) {
+    	
+    	
+    	QueryResultContainer qrc = null;
+    
+    	
+		Subject currentUser = SecurityUtils.getSubject();
+    	String username = "guest";
+    	    	
+    	if (currentUser.isAuthenticated()) {
+    		Long userId = (Long) currentUser.getPrincipal();
+    		User user = userService.getUser(userId);
+    		username = user.getUsername();
+    	}
+    	
+    	if (!currentSessions.containsKey(username) || !currentSessions.get(username).containsKey(idTab)) {
+    		response.setStatus(988);
+    		
+    	} else {
+    		if (!homologyResult.containsKey(idTab)) {
+    			response.setStatus(988);
+    			System.out.println("Could not find homology");
+    		} else {
+    			//Pull up the existing result
+        		SessionData sd = currentSessions.get(username).get(idTab);
+        		
+        		//Get new organism build information and add to qrc
+        		GeneIdConversion gic = geneIdConversionService.getGeneIdConversionByID(idConversion);
+        		OrganismBuild ob = gic.getDestBuild();
+        		
+        		
+        		
+        		QueryResultContainer oldQrc = sd.getResults();
+            	qrc = new QueryResultContainer(homologyResult.get(idTab),homologyResult.get(idTab).size(),oldQrc.getAnalysisNum(),
+            			0, 0, oldQrc.getSortType(), true, ob.getIdOrganismBuild(), ob.getEnsemblCode(),ob.getOrganism().getBinomial(), false);
+        
+      
+        		//Stuff back into session
+            	sd.setResults(qrc);
+            	sd.setLastTouched(new Date());
+            	
+
+        		currentSessions.get(username).put(idTab, sd);
+        		
+    		}
+    	}
+    	 
+    	
+    	homologyResult.remove(idTab);
+    	QueryResultContainer qrcSub = qrc.getQrcSubset(resultsPerPage, 0, sortType, reverse);
+        return qrcSub;
+    }
     
     @RequestMapping(value="copyAllCoordinates",method=RequestMethod.POST)
     @ResponseBody

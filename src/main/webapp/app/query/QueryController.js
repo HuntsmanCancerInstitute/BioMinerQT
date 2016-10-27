@@ -154,6 +154,14 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
     	});
     };
     
+    //Dynamic dictionaries.
+	$scope.loadConversionData = function() {
+		DynamicDictionary.loadConversions().success(function(data,status) {
+			$scope.conversionList = data;
+		});
+	};
+    
+   
 	$scope.loadAnalysisTypeList = function () {
     	StaticDictionary.getAnalysisTypeList().success(function(data) {
     		$scope.analysisTypeCheckedList = data;
@@ -170,7 +178,6 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
     
   
     $scope.$watch("idOrganismBuild",function() {
-    	
     	if ($scope.idOrganismBuild != null && $scope.idOrganismBuild != "") {
     		$scope.hugoList = [];
     		$http({
@@ -687,7 +694,7 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 	};
 		
 	$scope.clearQuery = function() {
-		console.log("Clearing");
+		$scope.showJBrowse = false;
 		$scope.warnings = "";
 		$scope.igvWarnings = "";
 		$scope.hasResults = false;
@@ -1098,6 +1105,7 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 				$scope.returnedEnsemblCode = data.returnedEnsemblCode;
 				$scope.returnedOrganismName = data.returnedOrganismName;
 				$scope.hasResults = true;
+				$scope.findHomologies();
 			}
 			
 			
@@ -1537,6 +1545,83 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 		}
 	});
 	
+	$scope.findHomologies = function() {
+		$scope.possibleConversions = [];
+		for( var i=0;i<$scope.conversionList.length; i++) {
+			var homology = $scope.conversionList[i];
+			if ($scope.returnedOrganismBuild === homology.sourceBuild.idOrganismBuild) {
+				$scope.possibleConversions.push($scope.conversionList[i]);
+			}
+		}
+	};
+	
+	$scope.openConversionPane = function() {
+		var modalInstance = $modal.open({
+    		templateUrl: 'app/query/conversionPane.html',
+    		controller: 'ConversionPaneController',
+    		resolve: {
+    			conversionList: function() {
+    				return $scope.possibleConversions;
+    			}
+    		}
+    	});
+    	
+    	modalInstance.result.then(function (conversion) {
+    		(function(conversion) {
+    			$scope.createHomologyInformationPromise = $http({
+        			method: "POST",
+        			url: "query/homologyGeneNames",
+        			params: {idTab: $window.sessionStorage.getItem("idTab"),idConversion: conversion}
+        		}).success(function(data) {
+        			var dlg = dialogs.confirm("Gene Name Conversion Successful","Conversion statistics: <br><br>" + data + "<br> Would you like to use the conversion?");
+        			dlg.result.then(function(data) {
+        				$scope.clearQuery();
+        				(function(conversion) {
+        					$scope.loadHomologyInformationPromise = $http({
+                    			method: "GET",
+                    			url: "query/homologyGeneNameResult",
+                    			params: {idTab: $window.sessionStorage.getItem("idTab"),
+                    				    idConversion: conversion,
+                    				    resultsPerPage:          $scope.resultsPerPage,
+                   				     	sortType:                $scope.sortType,
+                   				     	isReverse:               $scope.isReverse}
+        					}).success(function(data) {
+        						$scope.queryResults = data.resultList;
+        						$scope.resultPages = data.pages;
+        						$scope.totalResults = data.resultNum;
+        						$scope.totalAnalyses = data.analysisNum;
+        						$scope.totalDatatracks = data.dataTrackNum;
+        						$scope.returnedOrganismBuild = data.idOrganismBuild;
+        						$scope.returnedEnsemblCode = data.returnedEnsemblCode;
+        						$scope.returnedOrganismName = data.returnedOrganismName;
+        						$scope.hasResults = true;
+        						$scope.idOrganismBuild = data.idOrganismBuild;
+        						$scope.genomeChanged();
+        						$scope.findHomologies();
+        					}).error(function(data) {
+        						dialogs.error("Error Fetching Homology");
+        					});
+        				})(conversion)
+        			},function(data) {
+        				(function(conversion) {
+        					$scope.loadHomologyInformation = $http({
+                    			method: "GET",
+                    			url: "query/homologyGeneNameClear",
+                    			params: {idTab: $window.sessionStorage.getItem("idTab")}
+        					}).success(function(data) {
+        						//pass
+        					}).error(function(data) {
+        						dialogs.error("Error Cleaning Homology");
+        					});
+        				})(conversion)
+        			})
+        		}).error(function(data) {
+    				dialogs.error("Error Creating Homology",data);
+    			});
+    		}(conversion));
+	    });
+	};
+	
 	
 	
 	$scope.loadExistingResults = function() {
@@ -1545,7 +1630,6 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 			url: "query/loadExistingResults",
 			params: {idTab: $window.sessionStorage.getItem("idTab")}
 		}).success(function(data) {
-			ngProgress.complete();
 			if (data != null && data != "") {
 				$scope.queryResults = data.resultList;
 				$scope.resultPages = data.pages;
@@ -1555,6 +1639,7 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 				$scope.returnedOrganismBuild = data.idOrganismBuild;
 				$scope.returnedEnsemblCode = data.returnedEnsemblCode;
 				$scope.hasResults = true;
+				$scope.findHomologies();
 			}
 			$http({
 				url: "query/warnings",
@@ -1632,8 +1717,6 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 					}
 				}
 				
-				
-				console.log($scope.intersectionTarget);
 				$scope.regions = data.regions;
 				$scope.regionMargins = data.regionMargins;
 				$scope.genes = data.genes;
@@ -1698,6 +1781,7 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 
 	$scope.loadGenotypeList();
 	$scope.loadGeneAnnotationList();
+	$scope.loadConversionData();
 	
 	
 	

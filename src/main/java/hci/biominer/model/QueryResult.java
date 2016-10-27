@@ -8,7 +8,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
-public class QueryResult implements Serializable {
+public class QueryResult implements Serializable,Cloneable {
 	private final static Pattern p1 = Pattern.compile("(chr)*(\\w+?):(\\d+)-(\\d+)");
 	private Integer index;
 	private String projectName;
@@ -198,7 +198,9 @@ public class QueryResult implements Serializable {
 		this.ensemblName = ensemblName;
 	}
 	
-	
+	public QueryResult clone() throws CloneNotSupportedException {
+		return (QueryResult)super.clone();
+	}
 
 
 }

@@ -6,7 +6,7 @@
  */
 var useradmin = angular.module('useradmin', ['angularFileUpload','ui.mask','ui.validate','filters','directives','services','ngProgress','dialogs.main','error','cgBusy']);
 
-angular.module("useradmin").controller("UserAdminController", ['$rootScope','$scope','$http','$location','$window','$modal','$timeout','$upload','DynamicDictionary',
+useradmin.controller("UserAdminController", ['$rootScope','$scope','$http','$location','$window','$modal','$timeout','$upload','DynamicDictionary',
                                                                'StaticDictionary','ngProgress','dialogs','$q',
                                                       
 function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $upload, DynamicDictionary, StaticDictionary, ngProgress, dialogs,$q) {
@@ -32,7 +32,8 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
 	$scope.userTabOpen = true;
 	$scope.labTabOpen = false;
 	$scope.genomeTabOpen = false;
-	$scope.tfTabOpen=true;
+	$scope.tfTabOpen=false;
+	$scope.idConversionTabOpen=false;
 
 	//Model data
 	$scope.labs = [];
@@ -56,6 +57,8 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
 	$scope.deletePromise = null;
 	$scope.uploadTfPromise = null;
 	$scope.addTfPromise = null;
+	$scope.uploadConvPromise = null;
+	$scope.parseConvPromise = null;
 	
 	$scope.columnDefs = null;
 	
@@ -201,7 +204,14 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
 		});
 	};
 	
+	$scope.loadConversionData = function() {
+		DynamicDictionary.loadConversions().success(function(data,status) {
+			$scope.conversionList = data;
+		});
+	};
+	
 	$scope.loadTfData();
+	$scope.loadConversionData();
 	
 	
 	/***************************************
@@ -506,6 +516,108 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
 						$scope.selectedTf = null;
 					}).error(function() {
 						$scope.selectedTf = null;
+					});
+				}(data));
+			});
+	    });
+		
+	};
+	
+	/***************************************
+	 * *************************************
+	 * 
+	 *     Homology methods
+	 * 
+	 * *************************************
+	 ***************************************/
+	$scope.$watch('conversionTabOpen', function() {
+		if ($scope.conversionTabOpen) {
+			$scope.loadConversionData();
+		}
+    });
+	
+	$scope.showConversionControls = function(conv) {
+		conv.show = true;
+	}
+	
+	$scope.hideConversionControls = function(conv) {
+		conv.show = false;
+	}
+	
+	$scope.stopConverionParse = function() {
+		$scope.convDeferred.resolve();
+		$scope.convRunning = false;
+	}
+	
+	$scope.deleteConversion = function(conv) {
+		$http({
+			url: "id_conversion/delete_conversion",
+			method: "DELETE",
+			params: {idGeneIdConversion : conv.idGeneIdConversion},
+		}).success(function(){
+			console.log("Deleted conversion");
+			$scope.loadConversionData();
+		}).error(function() {
+			console.log("Failed to delete conversion");
+			$scope.loadConversionData();
+		});
+	}
+	
+	$scope.addConversionFile = function(file,ob) {
+		var modalInstance = $modal.open({
+    		templateUrl: 'app/useradmin/conversionUploadWindow.html',
+    		controller: 'ConversionUploadWindowController',
+    		resolve: {
+    			organismBuildList: function() {
+    				return $scope.organismBuildList;
+    			},
+    			homologyList: function() {
+    				return $scope.conversionList;
+    			}
+    		}
+    	});
+    	
+    	modalInstance.result.then(function (conv) {
+    		$scope.selectedConv = conv;
+    		$scope.convDeferred = $q.defer();
+    		$scope.convRunning = true;
+    		$scope.convPromise = null;
+    		$scope.uploadConvPromise =  $upload.upload({
+				url: "id_conversion/add_conversion",
+				file: $scope.selectedConv.path[0],
+				params : {idSourceBuild: $scope.selectedConv.sourceBuild.idOrganismBuild, idDestBuild: $scope.selectedConv.destBuild.idOrganismBuild},
+				timeout: $scope.convDeferred.promise,
+			}).success(function(data) {
+				(function(data) {
+					$scope.parseConvPromise = $http({
+						url: "id_conversion/check_conversion",
+						method: "POST",
+						params: {idGeneIdConversion : data.idx},
+					}).success(function(data) {
+						$scope.loadConversionData();
+						$scope.convRunning = false;
+						dialogs.notify("Homology File Parsing Stats",data.message);
+					}).error(function(data) {
+						console.log(data);
+						$scope.loadConversionData();
+						$scope.convRunning = false;
+						dialogs.error("Homology File Error","Error parsing homology file: " + data.message);
+					});
+				}(data));
+			}).error(function(data) {
+				$scope.convRunning = false;
+				dialogs.error("Homology File Upload Error","Error creating homology database entry: " + data.message);
+				(function(data) {
+					$http({
+						url: "id_conversion/delete_conversion",
+						method: "DELETE",
+						params: {idGeneIdConversion : data.idx},
+					}).success(function(){
+						$scope.loadConversionData();
+						$scope.selectedConv = null;
+					}).error(function() {
+						$scope.loadConversionData();
+						$scope.selectedConv = null;
 					});
 				}(data));
 			});

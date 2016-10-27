@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+
+<div class="modal-header">
+	<h4>EnsemblID Conversion Selection</h4>
+</div>
+<div class="modal-body">
+	<form class="form-horizontal" name="conversionForm">
+	    <p>Please select the destination build</p>
+		<fieldset>
+			<div class="form-group">
+			  <label class="col-md-2 control-label">Destination Build</label>
+			  <div class="col-md-10">
+			    <select width="100" data-placeholder="Select build..." ng-model="conversion"  name="destBuildEntry"
+			    ng-options="c.idGeneIdConversion as c.destBuild.name for c in conversionList" 
+			    chosen class="form-control chosen-select" required ">
+			    	<option value=""></option> 
+			    </select>
+			  </div>
+			</div>
+		</fieldset>
+	</form>
+</div>
+<div class="modal-footer">
+     <button class="btn btn-primary" ng-click="conversionOK()" ng-disabled="conversionForm.$invalid">Submit</button>
+     <button class="btn btn-warning" ng-click="conversionCancel()">Cancel</button>
+</div>
+
+</html>

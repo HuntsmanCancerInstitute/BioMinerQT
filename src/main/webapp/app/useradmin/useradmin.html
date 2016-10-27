@@ -21,9 +21,7 @@
 		<select id="labSelect" ng-model="selectedLab"  ng-options="lab.last for lab in labs" >
 			<option value=""></option>
 		</select>
-			
-		<label class="label label-warning">{{message}}</label>
-			
+						
 	    <div class="form-group right">
 	  		 <label for="search">Filter Users </label>	
 			 <input id="search" ng-model="userQuery">
@@ -33,10 +31,10 @@
 
 <!-- Lab tool bar -->
 <div class="row toolbar" ng-show="labTabOpen" >
-     	<h3>
+     	<span class="page-header-bm">
      		<span class="glyphicon glyphicon-cog"></span>
      		Users and Labs
-     	</h3>
+     	</span>
      		
 		<a ng-click="openNewLabWindow()" href="#/useradmin">
  		 	<span class="glyphicon glyphicon-plus"></span>Add Lab
@@ -45,21 +43,19 @@
 		<a ng-click="confirmLabDelete()" href="#/useradmin">
  		 	<span class="glyphicon glyphicon-minus"></span>Delete lab
 		</a>
-		
-		<label class="label label-warning">{{message}}</label>
-			
+					
 		<div class="form-group right">
 			<label for="search">Filter Labs </label>	
 			<input id="search" ng-model="labQuery">
 	    </div>
 </div>
 
-<!-- Admin tool bar -->
+<!-- Genome tool bar -->
 <div class="row toolbar" ng-show="genomeTabOpen" >
-     	<h3>
+     	<span class="page-header-bm">
      		<span class="glyphicon glyphicon-cog"></span>
      		Users and Labs
-     	</h3>
+     	</span>
      		
 		<a ng-click="openNewOrganismWindow()" href="#/useradmin">
  		 	<span class="glyphicon glyphicon-plus"></span>Add Organism
@@ -72,25 +68,46 @@
 		<a ng-click="confirmOrganismDelete()" href="#/useradmin">
  		 	<span class="glyphicon glyphicon-minus"></span>Delete Organism Build
 		</a>
-		
-		<label class="label label-warning">{{message}}</label>
+				
+		<div class="form-group right">
+	  		 <label for="search">Filter Genome </label>	
+			 <input id="search" ng-model="genomeQuery">
+	    </div>
 </div>
 
 <!-- TF tool bar -->
 <div class="row toolbar" ng-show="tfTabOpen" >
-     	<h3>
+     	<span class="page-header-bm">
      		<span class="glyphicon glyphicon-cog"></span>
      		Users and Labs
-     	</h3>
+     	</span>
      		
 		<a ng-click="addTfFile()" href="#/useradmin">
  		 	<span class="glyphicon glyphicon-plus"></span>Add Global Interval
 		</a>
 		
-		<label class="label label-warning">{{message}}</label>
+		<div class="form-group right">
+	  		 <label for="search">Filter Interval </label>	
+			 <input id="search" ng-model="intervalQuery">
+	    </div>
 </div>
 
-
+<!-- ID Conversion Bar -->
+<div class="row toolbar" ng-show="idConversionTabOpen" >
+     	<span class="page-header-bm">
+     		<span class="glyphicon glyphicon-cog"></span>
+     		Users and Labs
+     	</span>
+     		
+		<a ng-click="addConversionFile()" href="#/useradmin">
+ 		 	<span class="glyphicon glyphicon-plus"></span>Add Ensembl ID Conversion Relationship
+		</a>
+		
+		<div class="form-group right">
+	  		 <label for="search">Filter Relationship </label>	
+			 <input id="search" ng-model="relationshipQuery">
+	    </div>
+</div>
 
 <div class="row">	
 	<div class="panel panel-default col-lg-12">
@@ -219,7 +236,7 @@
 				        </tr>
 				    </thead>
 				    <tbody>
-				        <tr ng-repeat="ob in organismBuildList" ng-mouseenter="showOrganismControls(ob)" ng-mouseleave="hideOrganismControls(ob)" >
+				        <tr ng-repeat="ob in organismBuildList | filter:genomeQuery" ng-mouseenter="showOrganismControls(ob)" ng-mouseleave="hideOrganismControls(ob)" >
 				        	<td style="width: 10% "><input ng-model=ob.selected type="checkbox"/></td>	
 				        	<td style="width: 12%;" ng-dblclick="openEditOrganismWindow(ob.organism.idOrganism)">{{ob.organism.idOrganism | lookupOrganism:organismList}}</td>
 				            <td style="width: 12%;" ng-dblclick="openEditBuildWindow(ob)">
@@ -304,7 +321,7 @@
 				        </tr>
 				    </thead>
 				    <tbody>
-				        <tr ng-repeat="tf in tfList" ng-mouseenter="showTfControls(tf)" ng-mouseleave="hideTfControls(tf)" >
+				        <tr ng-repeat="tf in tfList | filter:intervalQuery" ng-mouseenter="showTfControls(tf)" ng-mouseleave="hideTfControls(tf)" >
 				        	<td style="width: 20%" >{{tf.name}}</td>
 				        	<td style="width: 30%" >{{tf.description}}</td>
 				        	<td style="width: 20%" >{{tf.filename}}</td>
@@ -320,12 +337,41 @@
 				    </tbody>
 				</table>
 			   </div>
-			   </div>
+			   </div> <!-- for cg-busy -->
+	     	</tab>
+	        <tab heading="EnsemblID Conversion" active="$parent.idConversionTabOpen">
+	     	   <div cg-busy="{promise:uploadConvPromise,message:'Parsing Homology file',minDuration: 1000}">
+	     	   <div cg-busy="{promise:parseConvPromise,message:'Uploading Homology file',minDuration: 1000}">
+		     	<table class="table" >
+				    <thead>
+				        <tr>
+				            <th>Filename</th>
+				            <th>Source Build</th>
+				            <th>Dest Build</th>
+				            <th>Controls</th>
+				        </tr>
+				    </thead>
+				    <tbody>
+				        <tr ng-repeat="conv in conversionList | filter:intervalQuery" ng-mouseenter="showConversionControls(conv)" ng-mouseleave="hideConversionControls(conv)" >
+				        	<td style="width: 20%" >{{conv.conversionFile}}</td>
+				        	<td style="width: 20%" >{{conv.sourceBuild.name}}</td>
+				        	<td style="width: 20%" >{{conv.destBuild.name}}</td>
+				        	<td style="width: 10%" >
+				        	<div ng-show="conv.show">
+				                <button class="btn btn-xs btn-danger table-button" ng-click="deleteConversion(conv)" tooltip="delete conversion" data-toggle="tooltip" data-placement="top" title="remove">
+				                 	<span class="glyphicon glyphicon-trash"></span>
+				                </button>
+			               </div>
+			               </td>	
+				        </tr>
+				    </tbody>
+				</table>
+			   </div> <!-- for cg-busy -->
 			   </div> <!-- for cg-busy -->
 	     	</tab>
 	    </tabset>
-		</div>
-	</div>
-</div>
-</div>
+		</div> <!-- panel -->
+	</div> <!-- panel -->
+</div> <!-- row -->
+</div> <!-- main -->
 

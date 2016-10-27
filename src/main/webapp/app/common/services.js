@@ -235,6 +235,13 @@ var services = angular.module('services', ['ngResource','ui.bootstrap'])
 				url: 'transFactor/getAllTfs',
 			});
 		}
+		
+		dict.loadConversions = function() {
+			return $http({
+				method: 'GET',
+				url: 'id_conversion/get_conversions',
+			});
+		}
 
 		return dict;
 	                 
