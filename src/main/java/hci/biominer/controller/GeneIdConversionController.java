@@ -14,9 +14,6 @@ import hci.biominer.parser.HomologyParser;
 import hci.biominer.service.ExternalGeneService;
 import hci.biominer.service.GeneIdConversionService;
 import hci.biominer.service.OrganismBuildService;
-import hci.biominer.service.OrganismService;
-import hci.biominer.util.HomologyModel;
-import hci.biominer.util.IdxModel;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -26,6 +23,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
+
+import returnModel.HomologyModel;
+import returnModel.IdxModel;
 
 @Controller
 @RequestMapping("/id_conversion")
@@ -47,8 +47,8 @@ public class GeneIdConversionController {
 	 * 
 	 ************************************************/
 	@RequestMapping(value="/get_conversions",method=RequestMethod.GET)
-	public @ResponseBody
-	List<GeneIdConversion> getGeneIdConversions() {
+	@ResponseBody
+	public List<GeneIdConversion> getGeneIdConversions() {
 		List<GeneIdConversion> conversions = gicService.getGeneIdConversions();
 		return conversions;
 	}
@@ -61,8 +61,8 @@ public class GeneIdConversionController {
 	 * 
 	 ************************************************/
 	@RequestMapping(value="/add_conversion",method=RequestMethod.POST)
-	public @ResponseBody
-	IdxModel addGeneIdConversion(@RequestParam("file") MultipartFile file, @RequestParam("idSourceBuild") Long idSourceBuild, 
+	@ResponseBody
+	public IdxModel addGeneIdConversion(@RequestParam("file") MultipartFile file, @RequestParam("idSourceBuild") Long idSourceBuild, 
 			@RequestParam("idDestBuild") Long idDestBuild, HttpServletResponse response) {
 		//Response message, empty of everything OK, error if failed
 		String message = null;
@@ -100,8 +100,8 @@ public class GeneIdConversionController {
 	 * 
 	 ************************************************/
 	@RequestMapping(value="/delete_conversion",method=RequestMethod.DELETE)
-	public @ResponseBody
-	void deleteGeneIdConversion(@RequestParam("idGeneIdConversion") Long idGeneIdConversion) throws Exception {
+	@ResponseBody
+	public void deleteGeneIdConversion(@RequestParam("idGeneIdConversion") Long idGeneIdConversion) throws Exception {
 		//Set up the source and destination organism builds
 		GeneIdConversion oldConversion = gicService.getGeneIdConversionByID(idGeneIdConversion);
 		File localFile = new File(FileController.getHomologyDirectory(),oldConversion.getConversionFile());
@@ -119,8 +119,8 @@ public class GeneIdConversionController {
 	 * 
 	 ************************************************/
 	@RequestMapping(value="/check_conversion",method=RequestMethod.POST)
-	public @ResponseBody
-	IdxModel checkConversionFile(@RequestParam("idGeneIdConversion") Long idGeneIdConversion, HttpServletResponse response) throws Exception{
+	@ResponseBody
+	public IdxModel checkConversionFile(@RequestParam("idGeneIdConversion") Long idGeneIdConversion, HttpServletResponse response) throws Exception{
 		//Set up the source and destination organism builds
 		GeneIdConversion conversion = gicService.getGeneIdConversionByID(idGeneIdConversion);
 		OrganismBuild obSource = conversion.getSourceBuild();

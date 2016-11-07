@@ -1,4 +1,4 @@
-package hci.biominer.util;
+package returnModel;
 
 public class JBrowseReturnData {
 	String errorMessage;

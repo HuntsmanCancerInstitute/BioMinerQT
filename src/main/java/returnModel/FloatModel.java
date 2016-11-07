@@ -1,4 +1,4 @@
-package hci.biominer.util;
+package returnModel;
 
 public class FloatModel {
 	private Float f;

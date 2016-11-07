@@ -8,10 +8,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
+import returnModel.HomologyModel;
 import hci.biominer.model.ExternalGene;
 import hci.biominer.model.OrganismBuild;
 import hci.biominer.util.ModelUtil;
-import hci.biominer.util.HomologyModel;
 
 public class HomologyParser {
 	HashSet<String> sourceNameSet;
@@ -62,8 +62,19 @@ public class HomologyParser {
 		StringBuffer warningMessage = new StringBuffer("");
 		StringBuffer errorMessage = new StringBuffer("");
 		int homologyCount = 0;
+		int stableCount = 0;
 		int sourceCount = 0;
 		int destCount = 0;
+		
+		int homologyMissingCount = 0;
+		int homologyAmbigCount = 0;
+		int homologyOkCount = 0;
+		int stableRetiredCount = 0;
+		int stableAmbigCount = 0;
+		int stableOkCount = 0;
+		int stableIncompleteCount = 0;
+		int stableNoHistoryCount = 0;
+		
 		ArrayList<String> sourceListFailed = new ArrayList<String>();
 		ArrayList<String> destListFailed = new ArrayList<String>();
 		HashMap<String,String> homologyMap = new HashMap<String,String>();
@@ -76,33 +87,95 @@ public class HomologyParser {
 			String line = null;
 			while ((line = br.readLine()) != null) {
 				homologyCount++;
+				boolean isHomologyAmbig = false;
+				boolean isStableAmbig = false;
+				
 				String[] parts = line.split("\t");
 				
-				if (parts.length != 2) {
+				if (parts.length != 3) {
 					failed = true;
-					errorMessage.append("There should exactly two columns of data in the homology file\n");
+					errorMessage.append("There should exactly three columns of data in the homology file\n");
 					break;
 				}
 				
-				
-				if (!parts[1].equals("None")) {
-                    if (!observed.contains(parts[1])) {
-                    	if (!destNameSet.contains(parts[1])) {
-                    		destCount++;
-    						destListFailed.add(parts[1]);
-    					}
-                    	observed.add(parts[1]);
-					}
-				}
-				
-				
+				//Check source ID to see if it's found in our annotation
 				if (!sourceNameSet.contains(parts[0])) {
 					sourceCount++;
 					sourceListFailed.add(parts[0]);
 				}
 				
-				homologyMap.put(parts[0], parts[1]);
+				//Check homology ID and classify
+				if (parts[1].equals("no_homology")) {
+					homologyMissingCount++;
+					continue;
+				} else if (parts[1].endsWith("*")) {
+					homologyAmbigCount++;
+					isHomologyAmbig = true;
+				} else {
+					homologyOkCount++;
+				}
+				
+				//Check stable ID and classify
+				String finalID = null;
+				stableCount++;
+				if (parts[2].equals("none")) {
+					stableRetiredCount++;
+					continue;
+				} else if (parts[2].equals("incomplete")) {
+					stableIncompleteCount++;
+					continue;
+				} else if (parts[2].equals("no_history")) {
+					stableNoHistoryCount++;
+					continue;
+				} else if (parts[2].endsWith("*")) {
+					stableAmbigCount++;
+					isStableAmbig = true;
+					finalID = parts[2].substring(0, parts[2].length()-1);
+				} else {
+					stableOkCount++;
+					finalID = parts[2];
+				}
+				
+				//Check stable ID to see if it's found in our annotation
+				if (!observed.contains(finalID)) {
+                	if (!destNameSet.contains(finalID)) {
+                		destCount++;
+						destListFailed.add(finalID);
+					}
+                	observed.add(finalID);
+				}
+				
+				//If either the homology or stable ID is ambiguous, mark it
+				if (isHomologyAmbig) {
+					finalID += "*";
+				}
+				if (isStableAmbig) {
+					finalID += "+";
+				}
+				
+			
+				homologyMap.put(parts[0], finalID);
 			}
+			
+			StringBuffer stats = new StringBuffer("");
+			stats.append(String.format("Homolog Statistics:<br>"));
+			stats.append(String.format("Total IDs searched %d<br>",homologyCount));
+			stats.append(String.format("Single Homolog %d (%.2f)<br>",homologyOkCount, (float)stableOkCount / homologyCount*100));
+			stats.append(String.format("Multiple Homolog %d (%.2f)<br>",homologyAmbigCount, (float)homologyOkCount / homologyCount*100));
+			stats.append(String.format("No Homology %d (%.2f)<br>",homologyMissingCount, (float)homologyMissingCount / homologyCount*100));
+			stats.append("<br><br>");
+			
+			stats.append(String.format("Stable ID Statistics:<br>"));
+			stats.append(String.format("Total IDs searched %d<br>",stableCount));
+			stats.append(String.format("Single Stable ID %d (%.2f)<br>",stableOkCount, (float)stableOkCount / stableCount * 100));
+			stats.append(String.format("Multiple StableID %d (%.2f)<br>",stableAmbigCount, (float)stableAmbigCount / stableCount * 100));
+			stats.append(String.format("Retired Stable ID %d (%.2f)<br>",stableRetiredCount, (float)stableRetiredCount / stableCount * 100));
+			stats.append(String.format("Retired Stable ID %d (%.2f)<br>",stableNoHistoryCount, (float)stableNoHistoryCount / stableCount * 100));
+			stats.append(String.format("Incomplete Stable ID %d (%.2f)<br>",stableIncompleteCount, (float)stableIncompleteCount / stableCount * 100));
+			stats.append("<br><br>");
+			
+			errorMessage.append(stats.toString());
+			warningMessage.append(stats.toString());
 			
 			float pSourceFailed = (float)sourceCount / homologyCount;
 			float pDestFailed = (float)destCount / observed.size();
@@ -136,7 +209,6 @@ public class HomologyParser {
 					warningMessage.append(String.format("%s<br>",s));
 				}
 			}
-		
 		
 		} catch (IOException ioex) {
 			failed = true;

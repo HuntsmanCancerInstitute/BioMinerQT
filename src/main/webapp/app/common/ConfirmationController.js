@@ -6,16 +6,16 @@
  */
 var confirmation = angular.module("confirmation",[])
 
-.controller("ConfirmationController", ['$scope','$modalInstance','data',
+.controller("ConfirmationController", ['$scope','$uibModalInstance','data',
                                                       
-function($scope, $modal, data) {
+function($scope, $uibModalInstance, data) {
 	$scope.data = data;
 	
 	$scope.confirm = function() {
-		$modal.close();
+		$uibModalInstance.close();
 	};
 	
 	$scope.cancel = function() {
-		$modal.dismiss();
+		$uibModalInstance.dismiss();
 	};
 }]);

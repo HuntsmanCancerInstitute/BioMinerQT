@@ -37,19 +37,21 @@ import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import returnModel.HomologyModel;
+import returnModel.IgvSessionResult;
+import returnModel.JBrowseReturnData;
+import returnModel.QueryResultContainer;
+import returnModel.QuerySettings;
 import hci.biominer.model.Analysis;
 import hci.biominer.model.AnalysisType;
 import hci.biominer.model.DataTrack;
 import hci.biominer.model.GeneIdConversion;
 import hci.biominer.model.GeneNameModel;
 import hci.biominer.model.GenericResult;
-import hci.biominer.model.IgvSessionResult;
 import hci.biominer.model.LocalInterval;
 import hci.biominer.model.OrganismBuild;
 import hci.biominer.model.Project;
 import hci.biominer.model.QueryResult;
-import hci.biominer.model.QueryResultContainer;
-import hci.biominer.model.RegionUpload;
 import hci.biominer.model.Sample;
 import hci.biominer.model.SampleSource;
 import hci.biominer.model.TransFactor;
@@ -75,12 +77,10 @@ import hci.biominer.service.ExternalGeneService;
 import hci.biominer.util.BiominerProperties;
 import hci.biominer.util.Enumerated.AnalysisTypeEnum;
 import hci.biominer.util.GenomeBuilds;
-import hci.biominer.util.HomologyModel;
 import hci.biominer.util.IO;
 import hci.biominer.util.IntervalTrees;
-import hci.biominer.util.JBrowseReturnData;
 import hci.biominer.util.JBrowseUtilities;
-import hci.biominer.util.QuerySettings;
+import hci.biominer.util.RegionUpload;
 import hci.biominer.util.SessionData;
 import hci.biominer.util.igv.IGVResource;
 import hci.biominer.util.igv.IGVSession;
@@ -145,6 +145,7 @@ public class QueryController {
     private HashMap<Long,List<GeneNameModel>> searchDict = new HashMap<Long,List<GeneNameModel>>();
     private HashMap<String,ArrayList<Long>> nameLookupDict = new HashMap<String,ArrayList<Long>>();
     private HashMap<String,String> ensembl2NameDict = new HashMap<String,String>();
+    private HashMap<Long,String> bidToEnsembl = new HashMap<Long,String>();
     
     
     
@@ -243,7 +244,6 @@ public class QueryController {
     	//Iterate through external genes and extract information on associated gene name and ensembl name
     	HashSet<String> uniqueNamesHash = new HashSet<String>();
     	HashMap<Long,String> associatedLink = new HashMap<Long,String>();
-    	HashMap<Long,String> ensemblLink = new HashMap<Long,String>();
     	for (ExternalGene eg: egList) {
     		String name = eg.getExternalGeneName();
     		String source = eg.getExternalGeneSource();
@@ -251,11 +251,12 @@ public class QueryController {
     			uniqueNamesHash.add(name);
     			associatedLink.put(eg.getIdBiominerGene(), name);
     		} else if (source.equals("ensembl")) {
-    			ensemblLink.put(eg.getIdBiominerGene(), name);
-    		} if (!nameLookupDict.containsKey(name)) {
+    			bidToEnsembl.put(eg.getIdBiominerGene(), name);
+    		} 
+    		if (!nameLookupDict.containsKey(name)) {
     			nameLookupDict.put(name, new ArrayList<Long>());
     		}
-    		nameLookupDict.get(name).add(eg.getIdExternalGene());	
+    		nameLookupDict.get(name).add(eg.getIdBiominerGene());	
     	}
     	egList = null;
     	
@@ -274,11 +275,13 @@ public class QueryController {
     	searchDict.put(ob.getIdOrganismBuild(), uniqueNamesList);
     	
     	//Create lookup table ensembl to hugo
-    	for (Long id: ensemblLink.keySet()) {
+    	for (Long id: bidToEnsembl.keySet()) {
     		if (associatedLink.containsKey(id)) {
-    			ensembl2NameDict.put(ensemblLink.get(id),associatedLink.get(id));
+    			ensembl2NameDict.put(bidToEnsembl.get(id),associatedLink.get(id));
     		}
     	}
+    	
+    	
 
     }
   
@@ -290,12 +293,12 @@ public class QueryController {
     	}
     }
     
-    @RequestMapping("/layout")
+    @RequestMapping(value="/layout",produces="text/plain")
     public String getQueryPartialPage(ModelMap modelMap) {
         return "query/layout";
     }
     
-    @RequestMapping(value="warnings",method=RequestMethod.GET)
+    @RequestMapping(value="warnings",method=RequestMethod.GET,produces="text/plain")
     @ResponseBody
     public String getWarnings(@RequestParam("idTab") String idTab) throws Exception{
     	//Get current active user
@@ -541,9 +544,6 @@ public class QueryController {
     	return regions;
     }
     
-    
-    
-    
     @RequestMapping(value = "run", method=RequestMethod.GET)
     @ResponseBody
     //public List<QueryResult> run(
@@ -639,12 +639,11 @@ public class QueryController {
     	if (target.equals("EVERYTHING")) {
     		intervalsToCheck = ip.parseIntervals("", "", 0, genome);
     	} else if (codeResultType.equals("GENE") || (codeResultType.equals("REGION") && target.equals("GENE"))) {
-    		System.out.println("GENE");
     		List<List<String>> parsed = null;
     		if (genes.startsWith("[LOAD GENES FROM FILE: ")) {
     			if (sessionData.getGeneString() != null) {
     				String loadedGenes = sessionData.getGeneString();
-        			parsed = this.getGeneIntervals(loadedGenes, genome, "TxBoundary",ob, idTab);
+        			parsed = getGeneIntervals(loadedGenes, genome, "TxBoundary",ob, idTab);
     			}
     		    else {
     				sessionData.getQueryWarnings().append("Biominer expects genes loaded from file, but none could be found. Please try reloading your gene file.<br/>");
@@ -653,12 +652,12 @@ public class QueryController {
     		} else if (genes.equals("[ALL RESULT GENES]")) {
     			if (sessionData.getGeneString() != null) {
     				String loadedGenes = sessionData.getGeneString();
-        			parsed = this.getGeneIntervals(loadedGenes, genome, "TxBoundary",ob, idTab);
+        			parsed = getGeneIntervals(loadedGenes, genome, "TxBoundary",ob, idTab);
     			} else {
     				sessionData.addWarning("Biominer expects genes copied from the previous query, but none could be found. Please submit a bug report.<br/>");
     			}
     		} else {
-    			parsed = this.getGeneIntervals(genes, genome, "TxBoundary",ob, idTab);
+    			parsed = getGeneIntervals(genes, genome, "TxBoundary",ob, idTab);
     		}
     	 
     		if (parsed != null && parsed.get(0).size() != 0) {
@@ -793,7 +792,7 @@ public class QueryController {
     	return qrcSub;	
     }
     
-    @RequestMapping(value="homologyGeneNames",method=RequestMethod.POST)
+    @RequestMapping(value="homologyGeneNames",method=RequestMethod.POST,produces="text/plain")
     @ResponseBody
     private String homologyGeneNames(HttpServletResponse response, @RequestParam("idTab") String idTab, @RequestParam("idConversion") Long idConversion) throws Exception {
     	Subject currentUser = SecurityUtils.getSubject();
@@ -805,6 +804,7 @@ public class QueryController {
     		username = user.getUsername();
     	}
     	
+   
     	ArrayList<QueryResult> homologyResult = new ArrayList<QueryResult>();
     	
     	StringBuilder returnMessage = new StringBuilder("");
@@ -843,6 +843,8 @@ public class QueryController {
     		int totalInput = 0;
     		int totalHomology = 0;
     		int totalCoordinate = 0;
+    		int ambiguousHomologyCount = 0;
+    		int ambiguousStableCount = 0;
     		
     		
     		for (QueryResult qr: sd.getResults().getResultList()) {
@@ -851,6 +853,19 @@ public class QueryController {
     			totalInput++;
     			if (homologyMap.containsKey(name)) {
     				String updatedName = homologyMap.get(name);
+    				boolean isHomologyAmbig = false;
+    				boolean isStableAmbig = false;
+    				if (updatedName.endsWith("*")) {
+    					ambiguousHomologyCount += 1;
+    					updatedName = updatedName.substring(0,updatedName.length()-1);
+    					isHomologyAmbig = true;
+    				}
+    				if (updatedName.endsWith("+")) {
+    					ambiguousStableCount += 1;
+    					updatedName = updatedName.substring(0,updatedName.length()-1);
+    					isStableAmbig = true;
+    				}
+    				
     				if (!updatedName.equals("None")) {
     					totalHomology++;
         				if (geneNameGene.containsKey(updatedName)) {
@@ -858,7 +873,14 @@ public class QueryController {
         					Gene gene = geneNameGene.get(updatedName);
         					QueryResult newQR = qr.clone();
         					newQR.setCoordinates(geneByTxBoundary(gene));
-        					newQR.setSearch(newQR.getEnsemblName());
+        					if (isHomologyAmbig) {
+        						newQR.setSearch("*" + newQR.getEnsemblName());
+        					} else if (isStableAmbig) {
+        						newQR.setSearch("+" + newQR.getEnsemblName());
+        					} else {
+        						newQR.setSearch(newQR.getEnsemblName());
+        					}
+        					
         					newQR.setEnsemblName(updatedName);
         					if (ensembl2NameDict.containsKey(updatedName)) {
         		    			newQR.setMappedName(ensembl2NameDict.get(updatedName));
@@ -874,8 +896,10 @@ public class QueryController {
     		this.homologyResult.put(idTab, homologyResult);
     		
     		returnMessage.append(String.format("Found %d genes to convert.<br>",totalInput));
-    		returnMessage.append(String.format("Successfully found homology for %d genes (%.3f). <br>",totalHomology,(float)totalHomology / totalInput ));
-    		returnMessage.append(String.format("Successfully found coordinates for %d genes (%.3f). <br>",totalCoordinate,(float)totalCoordinate / totalInput));
+    		returnMessage.append(String.format("Successfully found homology for %d genes (%.2f). <br>",totalHomology,(float)totalHomology / totalInput * 100 ));
+    		returnMessage.append(String.format("Genes with ambiguous homology: %d (%.2f). <br>",ambiguousHomologyCount,(float)ambiguousHomologyCount / totalHomology * 100));
+    		returnMessage.append(String.format("Genes with ambiguous stable IDs: %d  (%.2f). <br>",ambiguousStableCount,(float)ambiguousStableCount / totalHomology * 100 ));
+    		returnMessage.append(String.format("Successfully found coordinates for %d genes (%.2f). <br>",totalCoordinate,(float)totalCoordinate / totalInput * 100));
     	}
     	return returnMessage.toString();
     }
@@ -941,6 +965,7 @@ public class QueryController {
       
         		//Stuff back into session
             	sd.setResults(qrc);
+            	
             	sd.setLastTouched(new Date());
             	
 
@@ -955,7 +980,7 @@ public class QueryController {
         return qrcSub;
     }
     
-    @RequestMapping(value="copyAllCoordinates",method=RequestMethod.POST)
+    @RequestMapping(value="copyAllCoordinates",method=RequestMethod.POST,produces="text/plain")
     @ResponseBody
     private String copyAllCoordinates(HttpServletResponse response, @RequestParam("idTab") String idTab) {
     	Subject currentUser = SecurityUtils.getSubject();
@@ -993,7 +1018,7 @@ public class QueryController {
     	return message;
     }
     
-    @RequestMapping(value="copyAllGenes",method=RequestMethod.POST)
+    @RequestMapping(value="copyAllGenes",method=RequestMethod.POST,produces="text/plain")
     @ResponseBody
     private String copyAllGenes(HttpServletResponse response, @RequestParam("idTab") String idTab) {
     	Subject currentUser = SecurityUtils.getSubject();
@@ -1240,9 +1265,6 @@ public class QueryController {
     	return igvSR;
     }
     
-    
-   
-    
     @RequestMapping(value="startIgvSession",method=RequestMethod.GET)
     @ResponseBody
     public IgvSessionResult startIgvSession(HttpServletResponse response, HttpServletRequest request, @RequestParam("idTab") String idTab) throws Exception {
@@ -1298,7 +1320,6 @@ public class QueryController {
 	    	}
 	    	
 	   
-	    	StringBuilder warnings = new StringBuilder("");
 	    	StringBuilder errors = new StringBuilder("");
 	    	
 	    	//Grab the stored analyses
@@ -1423,6 +1444,7 @@ public class QueryController {
     
     
      @RequestMapping(value = "downloadAnalysis", method = RequestMethod.GET)
+     @ResponseBody
 	 public void downloadAnalysis(HttpServletRequest request, HttpServletResponse response, @RequestParam(value="codeResultType") String codeResultType, @RequestParam(value="idTab") String idTab) throws Exception{
     	
     	//Get current active user
@@ -1731,6 +1753,13 @@ public class QueryController {
     	List<String> searches = new ArrayList<String>();
     	List<String> mapped = new ArrayList<String>();
     	
+    	//Load gene names if not already done
+    	if(!searchDict.containsKey(ob.getIdOrganismBuild())) {
+    		System.out.println("Loading gene names");
+			loadGeneNames(ob);
+		} else {
+			System.out.println("nope already loaded");
+		}
     	
     	//Get current active user
     	Subject currentUser = SecurityUtils.getSubject();
@@ -1774,10 +1803,8 @@ public class QueryController {
     		if (nameLookupDict.containsKey(name)) {
     			//For each biominer id, return the ensembl identifer
     			for (Long id: nameLookupDict.get(name)) {
-    				List<ExternalGene> eglist = this.externalGeneService.getEnsemblNamesById(id,"ensembl",ob.getIdOrganismBuild());
- 
-    				for (ExternalGene eg: eglist) {
-    					extIdFinalSet.add(eg.getExternalGeneName());
+    				if (bidToEnsembl.containsKey(id)) {
+    					extIdFinalSet.add(bidToEnsembl.get(id));
     				}
     			}
     			
@@ -2218,41 +2245,46 @@ public class QueryController {
     	    		
     	    			int end = 0;
     	    			int start = 0;
+    	    			String chrom = m1.group(2);
+    	    			
     	    			try {
-    	    				start = Integer.parseInt(m1.group(4)) - regionMargin;
+    	    				start = Integer.parseInt(m1.group(4));
     	    			} catch (NumberFormatException nfe) {
     	    				warnings.append(String.format("Start boundary not an integer %s, skipping.<br/>",m1.group(2)));
     	    				continue;
     	    			}
     	    			
     	    			try {
-    	    				end = Integer.parseInt(m1.group(6)) + regionMargin;
+    	    				end = Integer.parseInt(m1.group(6));
     	    			} catch (NumberFormatException nfe) {
     	    				warnings.append(String.format("End boundary not an integer %s, skipping.<br/>",m1.group(3)));
     	    				continue;
     	    			}
     	    			
-    	    			String chrom = m1.group(2);
-    	    			
     	    			if (!genome.getNameChromosome().containsKey(chrom)) {
-    	    				
     	    				warnings.append(String.format("The chromsome %s could not be found in the genome %s.<br/>",chrom,genome.getBuildName()));
     	    				continue;
     	    			}
     	    			if (start >= end) {
-    	    				warnings.append(String.format("The start coordinate (%d) is greater or equal to the end coordinate (%d).<br/>",start,end));
+    	    				warnings.append(String.format("The start coordinate (%d) is greater or equal to the end coordinate before padding (%d).<br/>",start,end));
     	    				continue;
     	    			}
     	    			
     	    			if (start < 0) {
-    	    				warnings.append(String.format("The start coordinate ( %d ) is less than 0.  Setting to zero.<br/>",start));
+    	    				warnings.append(String.format("The start coordinate ( %d ) is less than 0 before padding. Setting to zero.<br/>",start));
     	    				start = 0;
     	    			} 
     	    			if (end > genome.getNameChromosome().get(chrom).getLength()) {
-    	    				warnings.append(String.format("The end coordinate ( %d) is greater than the chromsome length (%d). Setting to chromsome"
+    	    				warnings.append(String.format("The end coordinate ( %d) is greater than the chromsome length (%d) before padding. Setting to chromsome"
     	    						+ " end.<br/>",end,genome.getNameChromosome().get(chrom).getLength()));
     	    				end = genome.getNameChromosome().get(chrom).getLength();
     	    			}  
+    	    			
+    	    			start = Math.max(start-regionMargin,0);
+    	    			end = Math.min(end+regionMargin,genome.getNameChromosome().get(chrom).getLength());
+    	    			
+    	    			
+   	    		
     	    			
     	    			LocalInterval inv = new LocalInterval(chrom,start,end,s);
     	    			localIntervals.add(inv);
@@ -2262,7 +2294,7 @@ public class QueryController {
     	    			
     	    			if (!genome.getNameChromosome().containsKey(chrom)) {
     	    			
-    	    				warnings.append(String.format("The chromsome %s could not be found in the genome %s.<br/>",chrom,genome.getBuildName()));
+    	    				warnings.append(String.format("The chromosome %s could not be found in the genome %s.<br/>",chrom,genome.getBuildName()));
     	    				continue;
     	    			}
     	    			
@@ -2335,7 +2367,6 @@ public class QueryController {
             	
             	for (String key: activeUsers.keySet()) {
             		Subject s = activeUsers.get(key);
-            		
             		
             		try {
             			s.getPrincipal();

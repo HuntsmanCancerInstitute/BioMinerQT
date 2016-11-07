@@ -1,4 +1,6 @@
-package hci.biominer.model;
+package hci.biominer.util;
+
+import hci.biominer.model.QueryResult;
 
 import java.util.Comparator;
 import java.util.regex.Matcher;

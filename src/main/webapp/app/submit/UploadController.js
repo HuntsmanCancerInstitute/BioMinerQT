@@ -1,11 +1,11 @@
 'use strict';
 
 
-var upload  = angular.module('upload',  ['ui.bootstrap', 'angularFileUpload','filters', 'services', 'directives','fneditor','chosen','ngProgress','dialogs.main','error','cgBusy']);
+var upload  = angular.module('upload',  ['ui.bootstrap', 'angularFileUpload','filters', 'services', 'directives','fneditor','localytics.directives','ngProgress','dialogs.main','error','cgBusy']);
 
-angular.module("upload").controller("UploadController", ['$scope','$upload','$http','$modal','$q','ngProgress','dialogs','$timeout','$location',
+angular.module("upload").controller("UploadController", ['$scope','$upload','$http','$uibModal','$q','ngProgress','dialogs','$timeout','$location',
                                                       
-	function($scope, $upload, $http, $modal, $q, ngProgress, dialogs, $timeout, $location) {
+	function($scope, $upload, $http, $uibModal, $q, ngProgress, dialogs, $timeout, $location) {
 
 		$scope.selectAllImport = false;
 		$scope.columnDefs = null;
@@ -388,7 +388,7 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 							method: "GET",
 							params: {name: $scope.selectedFiles[0].file.name, idProject: $scope.$parent.projectId}
 						}).success(function(data,status,headers,config) {
-					    	var modalInstance = $modal.open({
+					    	var modalInstance = $uibModal.open({
 					    		templateUrl: 'app/submit/previewWindow.html',
 					    		controller: 'PreviewWindowController',
 					    		windowClass: 'preview-dialog',
@@ -426,7 +426,7 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 		 * method calls the parseDriver() method.
 		 */
 		$scope.setFilenames = function() {
-			var modalInstance = $modal.open({
+			var modalInstance = $uibModal.open({
 	    		templateUrl: 'app/submit/filenameEditor.html',
 	    		controller: 'FilenameEditorController',
 	    		windowClass: 'filename-dialog',
@@ -591,7 +591,7 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 										method: "PUT",
 										params: {idFileUpload: config.params["idFileUpload"], state: data.state},
 									})
-									
+									console.log(data);
 									if (data.state != "FAILURE" && data.message == "AUTOCREATE") {
 										$scope.autoCreateCount += 1;
 									}
@@ -675,6 +675,7 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 		 * This method is called after parsing is complete.
 		 */
 		$scope.cleanupAfterParse = function() {
+			console.log("Cleanup");
 			$scope.importPromise = null;
 			$scope.importDeferred = null;
 			$scope.selectedFiles = [];
@@ -687,7 +688,7 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
 				dialogs.notify("Analysis Autodetect Successful","Biominer automatically created " + $scope.autoCreateCount + " analysis based on matching sample condition names.");
 			}
 			$scope.autoCreateCount = 0;
-			$scope.refreshResults($scope.projectId);
+			$scope.refresh();
 		}
 		
 		/**
@@ -972,10 +973,9 @@ angular.module("upload").controller("UploadController", ['$scope','$upload','$ht
     	/********************
 		 * Select/Deselect all
 		 ********************/
-		$scope.clickSelected = function(collection,status) {
-			status = !status;
+		$scope.clickSelected = function(collection) {
 			for (var i=0; i < collection.length;i++) {
-				collection[i].selected = status;
+				collection[i].selected = $scope.selectAllUpload;
 			}
 		};
   

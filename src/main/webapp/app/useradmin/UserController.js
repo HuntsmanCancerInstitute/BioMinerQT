@@ -1,8 +1,8 @@
  'use strict';
 
 angular.module("useradmin").controller("UserController", [
- '$scope','$http', '$modalInstance','labList','instituteList','userData','title','bFace','showAll',
-function ($scope, $http, $modalInstance, labList, instituteList, userData, title, bFace, showAll) {
+ '$scope','$http', '$uibModalInstance','labList','instituteList','userData','title','bFace','showAll',
+function ($scope, $http, $uibModalInstance, labList, instituteList, userData, title, bFace, showAll) {
  
 	$scope.title = title;
 	$scope.bFace = bFace;
@@ -21,11 +21,11 @@ function ($scope, $http, $modalInstance, labList, instituteList, userData, title
 	});
 	
 	$scope.ok = function () {
-	  $modalInstance.close($scope.user);
+	  $uibModalInstance.close($scope.user);
 	};
 	
 	$scope.cancel = function () {
-	  $modalInstance.dismiss('cancel');
+	  $uibModalInstance.dismiss('cancel');
 	};
 	
 	

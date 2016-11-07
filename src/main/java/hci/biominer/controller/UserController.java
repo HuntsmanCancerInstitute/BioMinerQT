@@ -89,7 +89,7 @@ public class UserController {
     	userService.addUser(newUser);
     }
 
-    @RequestMapping(value = "newuser", method=RequestMethod.POST)
+    @RequestMapping(value = "newuser", method=RequestMethod.POST,produces="text/plain")
     @ResponseBody
     public String newUser(@RequestParam(value="first") String firstName, @RequestParam(value="last") String lastName, @RequestParam(value="username") String username,
     		@RequestParam(value="password") String password, @RequestParam(value="email") String email, @RequestParam(value="phone") Long phone, 
@@ -140,7 +140,7 @@ public class UserController {
     	
     }
     
-    @RequestMapping(value = "approveuser", method=RequestMethod.POST)
+    @RequestMapping(value = "approveuser", method=RequestMethod.POST,produces="text/plain")
     @ResponseBody
     public String approveUser(@RequestParam(value="guid") String guid, @RequestParam(value="iduser") String iduser, @RequestParam(value="deleteuser") String deleteuser,
     		@RequestParam(value="theUrl") String theUrl) {
@@ -335,9 +335,7 @@ public class UserController {
     	//Update user
     	userService.updateUser(idUser,user);
     }
-    
-
-    
+   
     public String createSalt() {
     	SecureRandom srandom = new SecureRandom();
     	byte[] data = new byte[64];

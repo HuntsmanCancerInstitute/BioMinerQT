@@ -3,7 +3,6 @@ package hci.biominer.controller;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
@@ -19,13 +18,9 @@ import hci.biominer.service.UserService;
 import hci.biominer.util.GenomeBuilds;
 import hci.biominer.util.ModelUtil;
 import hci.biominer.util.ParsedAnnotation;
-import hci.biominer.util.PreviewMap;
-import hci.biominer.util.Enumerated.FileTypeEnum;
 import hci.biominer.model.BiominerGene;
-import hci.biominer.model.FileUpload;
 import hci.biominer.model.Organism;
 import hci.biominer.model.OrganismBuild;
-import hci.biominer.model.Project;
 import hci.biominer.model.access.User;
 
 import org.apache.shiro.SecurityUtils;
@@ -38,6 +33,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
+
+import returnModel.PreviewMap;
 
 @Controller
 @RequestMapping("/genetable")
@@ -66,8 +63,8 @@ public class GeneTableController {
 	 * @return OrganismBuild as json format
 	 ****************************************************/
 	@RequestMapping(value="/list", method = RequestMethod.GET)
-	public @ResponseBody 
-	List<OrganismBuild> getFiles() {
+	@ResponseBody 
+	public List<OrganismBuild> getFiles() {
 		List<OrganismBuild> builds = this.obService.getAllOrganismBuilds();
 		return builds;
 	}
@@ -118,8 +115,8 @@ public class GeneTableController {
 	 * addTranscriptFile
 	 ****************************************************/
 	@RequestMapping(value="/addAnnotationFile",method=RequestMethod.POST)
-	public @ResponseBody
-	PreviewMap addAnnotationFile(@RequestParam("file") MultipartFile file, 
+	@ResponseBody
+	public PreviewMap addAnnotationFile(@RequestParam("file") MultipartFile file, 
 			HttpServletResponse response) throws Exception {
 		File localFile = null;
 		PreviewMap pm = new PreviewMap();
@@ -197,9 +194,9 @@ public class GeneTableController {
 	 * URL: /genetable/addTranscriptFile
 	 * addTranscriptFile
 	 ****************************************************/
-	@RequestMapping(value="/addTranscriptFile",method=RequestMethod.POST)
-	public @ResponseBody
-	String addTranscriptFile(@RequestParam("file") MultipartFile file, @RequestParam("idOrganismBuild") Long idOrganismBuild, 
+	@RequestMapping(value="/addTranscriptFile",method=RequestMethod.POST,produces="text/plain")
+	@ResponseBody
+	public String addTranscriptFile(@RequestParam("file") MultipartFile file, @RequestParam("idOrganismBuild") Long idOrganismBuild, 
 			HttpServletResponse response) throws Exception {
 		String message = "OK";
 		File localFile = null;
@@ -248,9 +245,9 @@ public class GeneTableController {
 	 * URL: /genetable/addGenomeFile
 	 * addGenomeFile
 	 ****************************************************/
-	@RequestMapping(value="/addGenomeFile",method=RequestMethod.POST)
-	public @ResponseBody
-	String addGenomeFile(@RequestParam("file") MultipartFile file, @RequestParam("idOrganismBuild") Long idOrganismBuild, 
+	@RequestMapping(value="/addGenomeFile",method=RequestMethod.POST,produces="text/plain")
+	@ResponseBody
+	public String addGenomeFile(@RequestParam("file") MultipartFile file, @RequestParam("idOrganismBuild") Long idOrganismBuild, 
 			HttpServletResponse response) throws Exception {
 		String message = "OK";
 		OrganismBuild ob = this.obService.getOrganismBuildById(idOrganismBuild);
@@ -293,8 +290,8 @@ public class GeneTableController {
 	 * removeGenomeFile
 	 ****************************************************/
 	@RequestMapping(value="/removeGenomeFromBuild",method=RequestMethod.DELETE)
-	public @ResponseBody
-	void removeGenomeFile(@RequestParam("idOrganismBuild") Long idOrganismBuild) throws Exception {
+	@ResponseBody
+	public void removeGenomeFile(@RequestParam("idOrganismBuild") Long idOrganismBuild) throws Exception {
 		OrganismBuild ob = obService.getOrganismBuildById(idOrganismBuild);
 		this.removeExistingGenome(ob);
 	}
@@ -304,8 +301,8 @@ public class GeneTableController {
 	 * removeGenomeFile
 	 ****************************************************/
 	@RequestMapping(value="/removeTranscriptsFromBuild",method=RequestMethod.DELETE)
-	public @ResponseBody
-	void removeTranscriptFile(@RequestParam("idOrganismBuild") Long idOrganismBuild) throws Exception {
+	@ResponseBody
+	public void removeTranscriptFile(@RequestParam("idOrganismBuild") Long idOrganismBuild) throws Exception {
 		OrganismBuild ob = obService.getOrganismBuildById(idOrganismBuild);
 		this.removeExistingTranscript(ob);
 	}
@@ -315,8 +312,8 @@ public class GeneTableController {
 	 * removeAnnotationFile
 	 ****************************************************/
 	@RequestMapping(value="/removeAnnotationsFromBuild",method=RequestMethod.DELETE)
-	public @ResponseBody
-	void removeAnnotationFile(@RequestParam("idOrganismBuild") Long idOrganismBuild, @RequestParam("delay") boolean delay) throws Exception {
+	@ResponseBody
+	public void removeAnnotationFile(@RequestParam("idOrganismBuild") Long idOrganismBuild, @RequestParam("delay") boolean delay) throws Exception {
 		OrganismBuild ob = obService.getOrganismBuildById(idOrganismBuild);
 		this.removeExistingAnnotation(ob, delay);
 	}
@@ -326,8 +323,8 @@ public class GeneTableController {
 	 * removeGenomeBuild
 	 ****************************************************/
 	@RequestMapping(value="/removeOrganismBuild",method=RequestMethod.DELETE)
-	public @ResponseBody
-	void removeOrganismBuild(@RequestParam("idOrganismBuild") Long idOrganismBuild) throws Exception {
+	@ResponseBody
+	public void removeOrganismBuild(@RequestParam("idOrganismBuild") Long idOrganismBuild) throws Exception {
 		OrganismBuild ob = obService.getOrganismBuildById(idOrganismBuild);
 		this.removeExistingTranscript(ob);
 		this.removeExistingGenome(ob);
@@ -341,8 +338,8 @@ public class GeneTableController {
 	 * params: common, binomial
 	 ****************************************************/
 	@RequestMapping(value="/addOrganism",method=RequestMethod.PUT)
-	public @ResponseBody
-	void addOrganism(@RequestParam("common") String common, @RequestParam("binomial") String binomial) {
+	@ResponseBody
+	public void addOrganism(@RequestParam("common") String common, @RequestParam("binomial") String binomial) {
 		Organism o = new Organism(common,binomial);
 		organismService.addOrganism(o);
 	}
@@ -353,8 +350,8 @@ public class GeneTableController {
 	 * params: common, binomial, idOrganism
 	 ****************************************************/
 	@RequestMapping(value="/modifyOrganism",method=RequestMethod.PUT)
-	public @ResponseBody
-	void modifyOrganism(@RequestParam("common") String common, @RequestParam("binomial") String binomial, @RequestParam("idOrganism") Long idOrganism) {
+	@ResponseBody
+	public void modifyOrganism(@RequestParam("common") String common, @RequestParam("binomial") String binomial, @RequestParam("idOrganism") Long idOrganism) {
 		Organism o = new Organism(common,binomial);
 		organismService.updateOrganism(idOrganism, o);
 	}
@@ -365,8 +362,8 @@ public class GeneTableController {
 	 * params: idOrganism, name
 	 ****************************************************/
 	@RequestMapping(value="/addOrganismBuild",method=RequestMethod.PUT)
-	public @ResponseBody
-	void addOrganismBuild(@RequestParam("idOrganism") Long idOrganism, @RequestParam("name") String name) {
+	@ResponseBody
+	public void addOrganismBuild(@RequestParam("idOrganism") Long idOrganism, @RequestParam("name") String name) {
 		Organism o = organismService.getOrganism(idOrganism);
 		System.out.println(o.getCommon());
 		System.out.println(o.getBinomial());
@@ -381,8 +378,8 @@ public class GeneTableController {
 	 * params: idOrganism, name, idOrganismBuild
 	 ****************************************************/
 	@RequestMapping(value="/modifyOrganismBuild",method=RequestMethod.PUT)
-	public @ResponseBody
-	void modifyOrganismBuild(@RequestParam("idOrganism") Long idOrganism, @RequestParam("name") String name, @RequestParam("idOrganismBuild") Long idOrganismBuild) {
+	@ResponseBody
+	public void modifyOrganismBuild(@RequestParam("idOrganism") Long idOrganism, @RequestParam("name") String name, @RequestParam("idOrganismBuild") Long idOrganismBuild) {
 		Organism o = organismService.getOrganism(idOrganism);
 		OrganismBuild ob = new OrganismBuild(o,name);
 		obService.updateOrganismBuild(idOrganismBuild, ob);
@@ -393,9 +390,9 @@ public class GeneTableController {
 	 * parseAnnotations
 	 * params:
 	 ****************************************************/
-	@RequestMapping(value="/parseAnnotations",method=RequestMethod.PUT)
-	public @ResponseBody
-	String parseAnnotations(
+	@RequestMapping(value="/parseAnnotations",method=RequestMethod.PUT,produces="text/plain")
+	@ResponseBody
+	public String parseAnnotations(
 			@RequestParam(value="Ensembl") Integer ensemblIdx, 
 			@RequestParam(value="Common") Integer hugoIdx, 
 			@RequestParam(value="RefSeq") Integer refseqIdx,
@@ -473,8 +470,8 @@ public class GeneTableController {
 	 * params:
 	 ****************************************************/
 	@RequestMapping(value="/deleteAnnotationUpload",method=RequestMethod.DELETE)
-	public @ResponseBody
-	void deleteAnnotationUpload() throws Exception {
+	@ResponseBody
+	public void deleteAnnotationUpload() throws Exception {
 		
 		//Get current active user
     	Subject currentUser = SecurityUtils.getSubject();
@@ -493,9 +490,5 @@ public class GeneTableController {
     	if (annotationFile.exists()) {
     		annotationFile.delete();
     	}
-    	
-    	
 	}
-	
-	
 }

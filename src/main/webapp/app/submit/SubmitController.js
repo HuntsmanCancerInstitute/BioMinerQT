@@ -5,11 +5,11 @@
  * @constructor
  */
  
-var submit    = angular.module('submit', ['ui.bootstrap','ui.validate','filters', 'services', 'directives','chosen','ngProgress','dialogs.main','error','cgBusy']);
+var submit    = angular.module('submit', ['ui.bootstrap','ui.validate','filters', 'services', 'directives','localytics.directives','ngProgress','dialogs.main','error','cgBusy']);
 
 angular.module("submit").controller("SubmitController", [
-'$scope', '$http', '$modal','DynamicDictionary','StaticDictionary','$rootScope','$upload','$q','ngProgress','dialogs','$anchorScroll','$location','$timeout',
-function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$upload,$q,ngProgress, dialogs, $anchorScroll, $location, $timeout) {
+'$scope', '$http', '$uibModal','DynamicDictionary','StaticDictionary','$rootScope','$upload','$q','ngProgress','dialogs','$anchorScroll','$location','$timeout',
+function($scope, $http, $uibModal, DynamicDictionary, StaticDictionary,$rootScope,$upload,$q,ngProgress, dialogs, $anchorScroll, $location, $timeout) {
 	/**********************
 	 * Initialization!
 	 *********************/
@@ -365,7 +365,6 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 				$scope.result.file = null;
 			}
 		}
-		
 		$scope.checkFileStatus();
 	});
     
@@ -399,8 +398,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
     $scope.checkFileStatus = function() {
     	$scope.validFiles = [];
     	for (var i=0; i<$scope.files.importedFiles.length;i++) {
-    		var file = $scope.files.importedFiles[i];
-    		if (file.isAnalysisSet || !file.doesAnalysisMatch) {
+    		var file = $scope.files.importedFiles[i];    		if (file.isAnalysisSet || !file.doesAnalysisMatch) {
     			if ($scope.result.file != undefined && file.idFileUpload == $scope.result.file.idFileUpload) {
     				$scope.validFiles.push(file);
     			} else {
@@ -411,6 +409,11 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
     		}
     	}
     };
+    
+    
+    $scope.resultSelected = function() {
+    	$scope.checkFileStatus();
+    }
     
     /*********************
      * 
@@ -670,7 +673,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
     
 	//New Analysis Project Dialog
 	$scope.openNewProjectWindow = function () {
-	    var modalInstance = $modal.open({
+	    var modalInstance = $uibModal.open({
 	      templateUrl: 'app/submit/newProjectWindow.html',
 	      controller: 'ProjectWindowController',
 	        
@@ -819,7 +822,7 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
         		params: {idProject: $scope.projectId,name: files[0].name},
         		timeout: $scope.loadSampleSheetDeferred.promise,
         	}).success(function(data,status,headers,config) {
-        		var modalInstance = $modal.open({
+        		var modalInstance = $uibModal.open({
 		    		templateUrl: 'app/submit/sampleUpload.html',
 		    		controller: 'SampleUploadController',
 		    		windowClass: 'preview-dialog',
@@ -1509,7 +1512,6 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 			method: "DELETE",
 			params: {idAnalysis: result.idAnalysis, idProject: $scope.projectId}
 		}).success(function(data, status, headers, config, statusText) {
-			//$scope.refreshResults(config.params.idProject);
 			$scope.refresh();
 		}).error(function(data) {
 			console.log("Error deleting analysis");
@@ -1544,9 +1546,6 @@ function($scope, $http, $modal, DynamicDictionary, StaticDictionary,$rootScope,$
 		});
 	};
 	
-	$scope.refreshResult = function() {
-		
-	}
 	
 	$scope.duplicateResult = function() {
 		$scope.originalResultName = null;

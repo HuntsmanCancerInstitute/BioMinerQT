@@ -46,6 +46,11 @@ table.inner-table tbody tr:nth-child(odd) {background-color: #E4F4FC}
     color: #333;
 }
 
+.popover-content {
+    word-wrap: break-word;
+}
+
+
 .filename-dialog .modal-body {
 	overflow-y: auto;
 }
@@ -115,7 +120,6 @@ table.inner-table tbody tr:nth-child(odd) {background-color: #E4F4FC}
 }
 
 .navbar-brand {
-	padding-top: 10px;
 	font-size: 15pt;
 	font-family: "Raleway", sans-serif;
 	font-weight: 400;

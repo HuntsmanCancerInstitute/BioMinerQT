@@ -39,7 +39,7 @@
 				    <option value=""></option>
 				    </select>
 				  </div>
-				  <div  class="col-md-5" ng-show="projectEditMode && files.importedFiles.length>0" tooltip="Can't be changed when there are imported files associated with the project">
+				  <div  class="col-md-5" ng-show="projectEditMode && files.importedFiles.length>0" uib-tooltip="Can't be changed when there are imported files associated with the project">
 				    <select width="100" ng-disabled="disableElement" chosen id="species_build_warning" ng-model="project.organismBuild.idOrganismBuild"  ng-options="gb.idOrganismBuild as gb.name for gb in organismBuildList | filter:{transcriptFile:'!!',genomeFile:'!!',geneIdFile:'!!'}"  class="form-control chosen-select"/>
 				  </div>
 				  <fieldset class="col-md-5"  ng-show="!projectEditMode" disabled="true">

@@ -1,8 +1,8 @@
 var error = angular.module("error",[])
 
-.controller("ErrorController", ['$scope','$modalInstance','$sce','$rootScope','$http','title','message','stackTrace','errorTime',
+.controller("ErrorController", ['$scope','$uibModalInstance','$sce','$rootScope','$http','title','message','stackTrace','errorTime',
                                                       
-function($scope, $modal, $sce, $rootScope, $http, title, message, stackTrace, errorTime) {
+function($scope, $uibModalInstance, $sce, $rootScope, $http, title, message, stackTrace, errorTime) {
 	$scope.title = title;
 	$scope.message = $sce.trustAsHtml(message);
 	$scope.stackTrace = stackTrace;
@@ -10,7 +10,7 @@ function($scope, $modal, $sce, $rootScope, $http, title, message, stackTrace, er
 	$scope.userComments = "";
 	
 	$scope.ok = function() {
-		$modal.dismiss();
+		$uibModalInstance.dismiss();
 	};
 	
 	$scope.sendReport = function() {
@@ -31,15 +31,15 @@ function($scope, $modal, $sce, $rootScope, $http, title, message, stackTrace, er
 			method : "POST",
 			params : {subject: subject, body: body}
 		});
-		$modal.dismiss();
+		$uibModalInstance.dismiss();
 	};
 }])
-.controller("userErrorController", ['$scope','$modalInstance','$sce','title','message',
-	 function($scope, $modal, $sce, title, message) {
+.controller("userErrorController", ['$scope','$uibModalInstance','$sce','title','message',
+	 function($scope, $uibModalInstance, $sce, title, message) {
 		$scope.title = title;
 		$scope.message = $sce.trustAsHtml(message);
 		
 		$scope.ok = function() {
-			$modal.dismiss();
+			$uibModalInstance.dismiss();
 		};
 }]);

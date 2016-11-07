@@ -7,10 +7,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import returnModel.DashboardModel;
 import hci.biominer.dao.AnalysisDAO;
 import hci.biominer.model.Analysis;
 import hci.biominer.model.AnalysisType;
-import hci.biominer.model.DashboardModel;
 import hci.biominer.model.OrganismBuild;
 import hci.biominer.model.Project;
 import hci.biominer.model.SampleSource;

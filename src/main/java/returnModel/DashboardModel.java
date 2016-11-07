@@ -1,4 +1,4 @@
-package hci.biominer.model;
+package returnModel;
 
 public class DashboardModel {
 	private int y;

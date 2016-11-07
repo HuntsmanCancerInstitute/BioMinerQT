@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module("useradmin").controller("OrganismBuildController", [
- '$scope','$http', '$modalInstance','organismBuildData','organismList','title','bFace','organismBuildList',
-function ($scope, $http, $modalInstance, organismBuildData, organismList, title, bFace,organismBuildList) {
+ '$scope','$http', '$uibModalInstance','organismBuildData','organismList','title','bFace','organismBuildList',
+function ($scope, $http, $uibModalInstance, organismBuildData, organismList, title, bFace,organismBuildList) {
  
 	$scope.title = title;
 	$scope.bFace = bFace;
@@ -26,10 +26,10 @@ function ($scope, $http, $modalInstance, organismBuildData, organismList, title,
 	};
 	
 	$scope.ok = function () {
-	 $modalInstance.close($scope.organismBuildData);
+	 $uibModalInstance.close($scope.organismBuildData);
 	};
 	
 	$scope.cancel = function () {
-	 $modalInstance.dismiss('cancel');
+	 $uibModalInstance.dismiss('cancel');
 	};
 }]);

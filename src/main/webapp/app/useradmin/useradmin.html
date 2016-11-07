@@ -1,7 +1,7 @@
 
 <div>
 <!-- Users tool bar -->
- <div class="row toolbar" ng-show="userTabOpen" >
+ <div class="row toolbar" ng-show="currentTab == 0" >
 	   <span class="page-header-bm">
 	 	   <span class="glyphicon glyphicon-cog"></span>
 	        Users and Labs
@@ -30,7 +30,7 @@
 
 
 <!-- Lab tool bar -->
-<div class="row toolbar" ng-show="labTabOpen" >
+<div class="row toolbar" ng-show="currentTab == 1" >
      	<span class="page-header-bm">
      		<span class="glyphicon glyphicon-cog"></span>
      		Users and Labs
@@ -51,7 +51,7 @@
 </div>
 
 <!-- Genome tool bar -->
-<div class="row toolbar" ng-show="genomeTabOpen" >
+<div class="row toolbar" ng-show="currentTab == 2" >
      	<span class="page-header-bm">
      		<span class="glyphicon glyphicon-cog"></span>
      		Users and Labs
@@ -76,7 +76,7 @@
 </div>
 
 <!-- TF tool bar -->
-<div class="row toolbar" ng-show="tfTabOpen" >
+<div class="row toolbar" ng-show="currentTab == 3" >
      	<span class="page-header-bm">
      		<span class="glyphicon glyphicon-cog"></span>
      		Users and Labs
@@ -93,7 +93,7 @@
 </div>
 
 <!-- ID Conversion Bar -->
-<div class="row toolbar" ng-show="idConversionTabOpen" >
+<div class="row toolbar" ng-show="currentTab == 4" >
      	<span class="page-header-bm">
      		<span class="glyphicon glyphicon-cog"></span>
      		Users and Labs
@@ -112,8 +112,8 @@
 <div class="row">	
 	<div class="panel panel-default col-lg-12">
 	  <div class="panel-body" style="padding-top: 10px;">	
-	    <tabset>
-	     	<tab heading="Users" active="$parent.userTabOpen" >
+	    <uib-tabset active="currentTab">
+	     	<uib-tab heading="Users">
 	     		<div>
 			     	<table class="table" id="userTable" >
 			     	    <thead>
@@ -165,8 +165,8 @@
 			    			<span class="glyphicon glyphicon-chevron-right"></span>
 			    		</button>
 	     	   	</div>
-	     	</tab>
-	     	<tab heading="Labs" active="$parent.labTabOpen">
+	     	</uib-tab>
+	     	<uib-tab heading="Labs">
 	     	    <div>
 	     		<table class="table">
 	     			<thead>
@@ -210,8 +210,8 @@
 			    			<span class="glyphicon glyphicon-chevron-right"></span>
 			    		</button>
 	     	   	</div>
-	     	</tab>
-	     	<tab heading="Organisms" active="$parent.genomeTabOpen">
+	     	</uib-tab>
+	     	<uib-tab heading="Organisms">
 	     	   <div cg-busy="{promise:uploadGenomePromise,message:'Uploading Files',minDuration: 1000}">
 	     	   <div cg-busy="{promise:uploadTranscriptPromise,message:'Uploading Files',minDuration: 1000}">
 	     	   <div cg-busy="{promise:uploadAnnotationPromise,message:'Uploading Files',minDuration: 1000}">
@@ -306,8 +306,8 @@
 			   </div> <!-- for cg-busy -->
 			   </div> <!-- for cg-busy -->
 			   </div> <!-- for cg-busy -->
-	     	</tab>
-	        <tab heading="Global Intervals" active="$parent.tfTabOpen">
+	     	</uib-tab>
+	        <uib-tab heading="Global Intervals">
 	     	   <div cg-busy="{promise:uploadTfPromise,message:'Parsing Transcription Factor File',minDuration: 1000}">
 	     	   <div cg-busy="{promise:addTfPromise,message:'Prepping JBrowse Repo',minDuration: 1000}">
 		     	<table class="table" >
@@ -328,7 +328,7 @@
 				        	<td style="width: 20%" >{{tf.organismBuild.name}}</td>
 				        	<td style="width: 10%" >
 				        	<div ng-show="tf.show">
-				                <button class="btn btn-xs btn-danger table-button" ng-click="deleteTf(tf)" tooltip="delete tf" data-toggle="tooltip" data-placement="top" title="remove">
+				                <button class="btn btn-xs btn-danger table-button" ng-click="deleteTf(tf)" uib-tooltip="delete tf" data-toggle="tooltip" data-placement="top" title="remove">
 				                 	<span class="glyphicon glyphicon-trash"></span>
 				                </button>
 			               </div>
@@ -338,8 +338,8 @@
 				</table>
 			   </div>
 			   </div> <!-- for cg-busy -->
-	     	</tab>
-	        <tab heading="EnsemblID Conversion" active="$parent.idConversionTabOpen">
+	     	</uib-tab>
+	        <uib-tab heading="EnsemblID Conversion">
 	     	   <div cg-busy="{promise:uploadConvPromise,message:'Parsing Homology file',minDuration: 1000}">
 	     	   <div cg-busy="{promise:parseConvPromise,message:'Uploading Homology file',minDuration: 1000}">
 		     	<table class="table" >
@@ -358,7 +358,7 @@
 				        	<td style="width: 20%" >{{conv.destBuild.name}}</td>
 				        	<td style="width: 10%" >
 				        	<div ng-show="conv.show">
-				                <button class="btn btn-xs btn-danger table-button" ng-click="deleteConversion(conv)" tooltip="delete conversion" data-toggle="tooltip" data-placement="top" title="remove">
+				                <button class="btn btn-xs btn-danger table-button" ng-click="deleteConversion(conv)" uib-tooltip="delete conversion" data-toggle="tooltip" data-placement="top" title="remove">
 				                 	<span class="glyphicon glyphicon-trash"></span>
 				                </button>
 			               </div>
@@ -368,8 +368,8 @@
 				</table>
 			   </div> <!-- for cg-busy -->
 			   </div> <!-- for cg-busy -->
-	     	</tab>
-	    </tabset>
+	     	</uib-tab>
+	    </uib-tabset>
 		</div> <!-- panel -->
 	</div> <!-- panel -->
 </div> <!-- row -->

@@ -54,8 +54,8 @@ public class TransFactorController {
 	 * @Return list of TransFactor
 	 */
 	@RequestMapping(value="getAllTfs",method=RequestMethod.GET)
-	public @ResponseBody
-	List<TransFactor> getAllTfs() {
+	@ResponseBody
+	public List<TransFactor> getAllTfs() {
 		List<TransFactor> tfList = tfService.getAllTransFactors();
 		return tfList;
 	}
@@ -66,8 +66,8 @@ public class TransFactorController {
 	 * @Return list of TransFactors associated with given genome build
 	 */
 	@RequestMapping(value="getTfByGenomeBuild",method=RequestMethod.GET)
-	public @ResponseBody
-	List<TransFactor> getTfByGenomeBuild(@RequestParam("idOrganismBuild") Long idGenomeBuild) {
+	@ResponseBody
+	public List<TransFactor> getTfByGenomeBuild(@RequestParam("idOrganismBuild") Long idGenomeBuild) {
 		OrganismBuild ob = obService.getOrganismBuildById(idGenomeBuild);
 		List<TransFactor> tfList = tfService.getTransFactorByGenomeBuild(ob);
 		return tfList;
@@ -79,8 +79,8 @@ public class TransFactorController {
 	 * remove TransFactor from database
 	 */
 	@RequestMapping(value="/deleteTf",method=RequestMethod.DELETE)
-	public @ResponseBody
-	void deleteTf(@RequestParam("idTransFactor") Long idTransFactor) throws Exception {
+	@ResponseBody
+	public void deleteTf(@RequestParam("idTransFactor") Long idTransFactor) throws Exception {
 		TransFactor tf = tfService.getTransFactorById(idTransFactor);
 		File file = new File(FileController.getTfRawDirectory(),tf.getFilename());
 		if (file.exists()) {
@@ -103,8 +103,8 @@ public class TransFactorController {
 	 * add TF in the database
 	 */
 	@RequestMapping(value="/addTf",method=RequestMethod.POST)
-	public @ResponseBody
-	void addTf(@RequestParam("name") String name, @RequestParam("description") String description, 
+	@ResponseBody
+	public void addTf(@RequestParam("name") String name, @RequestParam("description") String description, 
 			@RequestParam("filename") String filename,
 			@RequestParam("idOrganismBuild") Long idOrganismBuild) throws Exception {
 		
@@ -122,8 +122,8 @@ public class TransFactorController {
 	 * URL: /transFactor/deleteFile
 	 */
 	@RequestMapping(value="/deleteTfFile",method=RequestMethod.DELETE)
-	public @ResponseBody
-	void deleteTfFile(@RequestParam("name") String name) throws Exception {
+	@ResponseBody
+	public void deleteTfFile(@RequestParam("name") String name) throws Exception {
 		File file = new File(FileController.getTfRawDirectory(),name);
 		if (file.exists()) {
 			file.delete();
@@ -144,8 +144,8 @@ public class TransFactorController {
 	 * add TF in the database
 	 */
 	@RequestMapping(value="/updateTf",method=RequestMethod.POST)
-	public @ResponseBody
-	void updateTf(@RequestParam("name") String name, @RequestParam("description") String description, 
+	@ResponseBody
+	public void updateTf(@RequestParam("name") String name, @RequestParam("description") String description, 
 			@RequestParam("filename") String filename,
 			@RequestParam("idOrganismBuild") Long idOrganismBuild,
 			@RequestParam("idTransFactor") Long idTransFactor) throws Exception {
@@ -166,8 +166,8 @@ public class TransFactorController {
 	 * uploads a transcription factor file
 	 ****************************************************/
 	@RequestMapping(value="/parseTfFile",method=RequestMethod.POST)
-	public @ResponseBody
-	FileMetaSimple parseTfFile(@RequestParam("file") MultipartFile file, @RequestParam("idOrganismBuild") Long idOrganismBuild, 
+	@ResponseBody
+	public FileMetaSimple parseTfFile(@RequestParam("file") MultipartFile file, @RequestParam("idOrganismBuild") Long idOrganismBuild, 
 			@RequestParam("isConverted") Boolean isConverted, HttpServletResponse response) throws Exception {
 		File localFile = null;
 		File outputFile = null;

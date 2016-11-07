@@ -1,4 +1,4 @@
-package hci.biominer.model;
+package hci.biominer.util;
 
 public class RegionUpload {
 	private String regions;

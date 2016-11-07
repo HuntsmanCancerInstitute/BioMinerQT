@@ -1,8 +1,5 @@
 package hci.biominer.util;
 
-import hci.biominer.model.OrganismBuild;
-import hci.biominer.model.genome.Genome;
-import hci.biominer.parser.GenomeParser;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;

@@ -1,4 +1,4 @@
-package hci.biominer.model;
+package returnModel;
 
 import java.io.File;
 

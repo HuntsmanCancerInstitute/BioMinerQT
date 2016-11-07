@@ -3,7 +3,8 @@ package hci.biominer.util;
 import java.io.Serializable;
 import java.util.Date;
 
-import hci.biominer.model.QueryResultContainer;
+import returnModel.QueryResultContainer;
+import returnModel.QuerySettings;
 
 public class SessionData implements Serializable {
 	private static final long serialVersionUID = 1L;

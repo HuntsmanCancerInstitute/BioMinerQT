@@ -84,8 +84,8 @@
 			<table class="table table-condensed table-striped" ng-show="files.uploadedFiles.length > 0">
 			    <thead>
 			        <tr>
-			            <th><input type="checkbox" ng-model="selectAllUpload" data-ng-click="clickSelected(files.uploadedFiles,selectAllUpload)"/></th>
-			            <th ng-click="uploadOrderByField='name';uploadReverseSort=!uploadReverseSort">Name</th>
+			            <th><input type="checkbox" ng-model="selectAllUpload" data-ng-click="clickSelected(files.uploadedFiles)"/></th>
+			            <th width="30%" ng-click="uploadOrderByField='name';uploadReverseSort=!uploadReverseSort">Name</th>
 			            <th ng-click="uploadOrderByField='size';uploadReverseSort=!uploadReverseSort">Size</th>
 			            <th ng-hide="uploadingFiles" ng-click="uploadOrderByField='state';uploadReverseSort=!uploadReverseSort">Upload Controls</th>
 			            <th ng-show="uploadingFiles">Progress</th>
@@ -95,7 +95,7 @@
 			    <tbody>
 			        <tr ng-repeat="file in files.uploadedFiles | orderBy:uploadOrderByField:uploadReverseSort" ng-mouseenter="showUploadControls(file)" ng-mouseleave="hideUploadControls(file)">
 			            <td > <input type="checkbox" ng-model="file.selected"/></td>
-			            <td ><a target="_self" ng-href="submit/upload/get?file={{file.name}}&type=UPLOADED&idProject={{projectId}}">{{file.name}}</a></td>
+			            <td class="nowrap-ellipsis"><span popover-trigger="'mouseenter'" popover-placement="top-left" popover-popup-delay="500" uib-popover="{{file.name}}"><a target="_self" ng-href="submit/upload/get?file={{file.name}}&type=UPLOADED&idProject={{projectId}}">{{file.name}}</a></td>
 			            <td >{{file.size | bytes}}</td>
 			            <td >
 			            	<div ng-show="file.show || file.state != 'SUCCESS'">
@@ -139,7 +139,7 @@
 							    </thead>
 							    <tbody>
 							        <tr ng-repeat="ifile in files.importedFiles | filter:filterImports(file)" ng-mouseenter="showImportControls(ifile)" ng-mouseleave="hideImportControls(ifile)">
-							            <td><a target="_self" ng-href="submit/upload/get?file={{ifile.name}}&type=IMPORTED&idProject={{projectId}}">{{ifile.name}}</a></td>
+							            <td class="nowrap-ellipsis"><span popover-trigger="'mouseenter'" popover-placement="top-left" popover-popup-delay="500" uib-popover="{{ifile.name}}"><a target="_self" ng-href="submit/upload/get?file={{ifile.name}}&type=IMPORTED&idProject={{projectId}}">{{ifile.name}}</a></td>
 							            <td>{{ifile.size | bytes}}</td>
 							            <td >
 								          	<div ng-show="ifile.show || ifile.state == 'INCOMPLETE' || ifile.state == 'FAILURE'">

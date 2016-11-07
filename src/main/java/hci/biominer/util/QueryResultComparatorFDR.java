@@ -1,4 +1,6 @@
-package hci.biominer.model;
+package hci.biominer.util;
+
+import hci.biominer.model.QueryResult;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;

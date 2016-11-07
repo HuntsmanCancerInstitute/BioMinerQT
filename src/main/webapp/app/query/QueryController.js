@@ -5,13 +5,13 @@
  * QueryController
  * @constructor
  */
-var query = angular.module('query', ['angularFileUpload','filters', 'services', 'directives', 'ui.bootstrap', 'chosen','angucomplete-alt','dialogs.main','ngProgress','error','ngSanitize','cgBusy']);
+var query = angular.module('query', ['angularFileUpload','filters', 'services', 'directives', 'ui.bootstrap', 'localytics.directives','angucomplete-alt','dialogs.main','ngProgress','error','ngSanitize','cgBusy']);
 
 
 angular.module("query").controller("QueryController", 
-['$interval', '$window','$rootScope','$scope', '$http', '$modal','$anchorScroll','$upload','$location','$timeout','$q','DynamicDictionary','StaticDictionary','dialogs','ngProgress',
+['$interval', '$window','$rootScope','$scope', '$http', '$uibModal','$anchorScroll','$upload','$location','$timeout','$q','DynamicDictionary','StaticDictionary','dialogs','ngProgress',
   
-function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $upload, $location, $timeout, $q, DynamicDictionary, StaticDictionary, dialogs, ngProgress) {
+function($interval, $window, $rootScope, $scope, $http, $uibModal, $anchorScroll, $upload, $location, $timeout, $q, DynamicDictionary, StaticDictionary, dialogs, ngProgress) {
 	
 	$scope.hasResults = false;
 	$scope.warnings = "";
@@ -1060,9 +1060,6 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 		$scope.totalResults = 0;
 		
 		
-		
-		
-		
 		// Run the query on the server.
 		$scope.runQueryPromise = $http({
 			url: "query/run",
@@ -1556,7 +1553,7 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 	};
 	
 	$scope.openConversionPane = function() {
-		var modalInstance = $modal.open({
+		var modalInstance = $uibModal.open({
     		templateUrl: 'app/query/conversionPane.html',
     		controller: 'ConversionPaneController',
     		resolve: {
@@ -1738,7 +1735,6 @@ function($interval, $window, $rootScope, $scope, $http, $modal, $anchorScroll, $
 				
 				$scope.codeThresholdFDRComparison = data.codeFDRComparison;
 				$scope.codeThresholdLog2RatioComparison = data.codeLog2RatioComparison;
-				$scope.resultsPerPage = data.resultsPerPage;
 				$scope.sortType = data.sortType;
 				$scope.isReverse = data.reverse;
 				

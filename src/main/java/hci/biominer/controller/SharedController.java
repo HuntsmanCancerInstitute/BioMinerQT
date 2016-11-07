@@ -167,8 +167,9 @@ public class SharedController {
 	  return geneAnnotationService.getAllGeneAnnotations();
 	}
 
-	@RequestMapping(value="/reportissue",method=RequestMethod.POST)
-	public @ResponseBody String reportissue(@RequestParam(value="email") String useremail, @RequestParam(value="problem") String problem)  {
+	@RequestMapping(value="/reportissue",method=RequestMethod.POST,produces="text/plain")
+	@ResponseBody 
+	public String reportissue(@RequestParam(value="email") String useremail, @RequestParam(value="problem") String problem)  {
 		String result = null;
 	
 		//System.out.println ("[/reportissue] email is " + useremail);

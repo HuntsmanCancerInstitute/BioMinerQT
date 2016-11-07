@@ -1,4 +1,4 @@
-package hci.biominer.util;
+package returnModel;
 
 import java.io.Serializable;
 import java.util.List;

@@ -1,6 +1,6 @@
 angular.module("submit").controller("SampleUploadController", [
- '$scope', '$modalInstance','previewData',
-function ($scope, $modalInstance, previewData, filename) {
+ '$scope', '$uibModalInstance','previewData',
+function ($scope, $uibModalInstance, previewData, filename) {
 	//passed in to the controller
 	$scope.previewData = previewData;
 	$scope.filename = filename;
@@ -107,11 +107,11 @@ function ($scope, $modalInstance, previewData, filename) {
 		
 	//modal dismissed
 	$scope.cancel = function () {
-	   $modalInstance.dismiss('cancel');
+		$uibModalInstance.dismiss('cancel');
 	};
 	
 	$scope.ok = function() {
-	   $modalInstance.close($scope.globalColumns);
+		$uibModalInstance.close($scope.globalColumns);
 	};
 	
 	

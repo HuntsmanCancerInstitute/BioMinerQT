@@ -15,10 +15,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 
 import hci.biominer.service.DashboardService;
-import hci.biominer.util.ErrorModel;
 
 import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.shiro.authz.UnauthenticatedException;
+
+import returnModel.ErrorModel;
 
 @ControllerAdvice
 public class ExceptionController {

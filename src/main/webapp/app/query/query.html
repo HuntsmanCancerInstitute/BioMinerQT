@@ -152,8 +152,8 @@
 	          	 		<div class="form-group">
 						  <div class="col-md-12"> 
 						  <div class="btn-group btn-group-sm">
-	   					     	<label class="btn btn-toggle" ng-model="isReverse" btn-radio="false" >Intersect</label>
-	        					<label class="btn btn-toggle" ng-model="isReverse" btn-radio="true">Don't Intersect</label>
+	   					     	<label class="btn btn-toggle" ng-model="isReverse" uib-btn-radio="false" >Intersect</label>
+	        					<label class="btn btn-toggle" ng-model="isReverse" uib-btn-radio="true">Don't Intersect</label>
 	    					</div>
 	    					<span class="btn btn-primary pull-right fileinput-button col-md-4 btn-sm" ng-show="intersectionTarget == 'REGION' && !regionUploadRunning">
 						        <i class="glyphicon glyphicon-upload"></i>
@@ -208,11 +208,11 @@
 							</div>
 						 	<div class="col-md-10" ng-show="intersectionTarget == 'GENE'" style="padding-left: 1px; padding-right: 0px;">
 	 							<div class="col-md-7">
-	 								<angucomplete-alt tooltip-placement="right" tooltip="Search gene name database" id="test" minlength="2" placeholder="Search for gene.." pause="400" selected-object="searchGenes" local-data="hugoList" title-field="geneName" search-fields="geneName" input-class="form-control input-sm" match-class="highlight" clear-selected="true"/>
+	 								<angucomplete-alt tooltip-placement="right" uib-tooltip="Search gene name database" id="test" minlength="2" placeholder="Search for gene.." pause="400" selected-object="searchGenes" local-data="hugoList" title-field="geneName" search-fields="geneName" input-class="form-control input-sm" match-class="highlight" clear-selected="true"/>
 	 							</div>
 						    	<br>
 						    	<div class="col-md-7">
-						    		<textarea tooltip-placement="right"  tooltip="Add gene names manually" name="geneField" ng-model="genes" class="form-control input-sm" placeholder="ACTB, GAPDH, ..." ng-required="intersectionTarget=='GENE'"/>
+						    		<textarea tooltip-placement="right"  uib-tooltip="Add gene names manually" name="geneField" ng-model="genes" class="form-control input-sm" placeholder="ACTB, GAPDH, ..." ng-required="intersectionTarget=='GENE'"/>
 						    		<span class="label label-danger" ng-show="queryForm.geneField.$error.required && showValidation">Required when 'gene' intersections are specified</span>
 						    	</div>
 						    	<div class="col-md-5" ng-hide="codeResultType == 'GENE'">
@@ -228,7 +228,7 @@
 						<div class="form-group" ng-show="codeResultType!='GENE' && codeResultType == 'REGION' && tfList.length != 0">
 							<div class="col-md-2" style="padding-right: 0px;">
 								<div class="radio">
-									<label for="radio-tf" tooltip="Preloaded Genomic Intervals">
+									<label for="radio-tf" uib-tooltip="Preloaded Genomic Intervals">
 								    	<input name="radios-tf" id="radio-tf"  ng-model="intersectionTarget" value="TF" type="radio" class="input-xs"> Preload
 							   		</label>
 								</div>
@@ -273,8 +273,8 @@
 						<div class="form-group" ng-show="isThresholdBasedQuery" ng-hide="selectedAnalysisType != '' && selectedAnalysisType.type == 'Variant'">
 						  <label class="col-md-2 control-label" >FDR</label>  
 					  	  <div class="col-md-5 btn-group btn-group-sm ">
-					  	  		<label class="btn btn-toggle" ng-model="codeThresholdFDRComparison" btn-radio="'GT'" >&gt;</label>
-					  	  		<label class="btn btn-toggle" ng-model="codeThresholdFDRComparison" btn-radio="'LT'" >&lt;</label>
+					  	  		<label class="btn btn-toggle" ng-model="codeThresholdFDRComparison" uib-btn-radio="'GT'" >&gt;</label>
+					  	  		<label class="btn btn-toggle" ng-model="codeThresholdFDRComparison" uib-btn-radio="'LT'" >&lt;</label>
 	  					     	
 	   					  </div>
 						  <input id="textinput" class="col-md-3 form-control" style="display: inline; max-width: 120px" ng-model="thresholdFDR" name="textinput"  type="number" step="0.1">
@@ -285,9 +285,9 @@
 						<div class="form-group" ng-show="isThresholdBasedQuery" ng-hide="selectedAnalysisType != '' && selectedAnalysisType.type == 'Variant'">
 						    <label class="col-md-2 control-label">Log2Ratio</label>  
 						  	<div class="col-md-5 btn-group btn-group-sm">
-	   					     	<label class="btn btn-toggle" ng-model="codeThresholdLog2RatioComparison" btn-radio="'GTABS'" >&gt; abs</label>
-	   					     	<label class="btn btn-toggle" ng-model="codeThresholdLog2RatioComparison" btn-radio="'GT'"     >&gt;</label>
-	        					<label class="btn btn-toggle" ng-model="codeThresholdLog2RatioComparison" btn-radio="'LT'"     >&lt;</label>
+	   					     	<label class="btn btn-toggle" ng-model="codeThresholdLog2RatioComparison" uib-btn-radio="'GTABS'" >&gt; abs</label>
+	   					     	<label class="btn btn-toggle" ng-model="codeThresholdLog2RatioComparison" uib-btn-radio="'GT'"     >&gt;</label>
+	        					<label class="btn btn-toggle" ng-model="codeThresholdLog2RatioComparison" uib-btn-radio="'LT'"     >&lt;</label>
 	    					</div>
 						    
 							<input id="textinput" class="col-md-3 form-control"   style="display: inline; max-width: 120px" ng-model="thresholdLog2Ratio" name="textinput"  type="number" step="0.1">
@@ -304,8 +304,8 @@
 					  <label class="col-md-3 control-label" for="variant-filter-radios">Qual</label>
 					  <div class="col-md-6">
 					  	<div class="btn-group">
-   					     	<label class="btn btn-toggle" ng-model="codeThresholdVariantQualComparison" btn-radio="'>'" >&gt;</label>
-        					<label class="btn btn-toggle" ng-model="codeThresholdVariantQualComparison" btn-radio="'<'" >&lt;</label>
+   					     	<label class="btn btn-toggle" ng-model="codeThresholdVariantQualComparison" uib-btn-radio="'>'" >&gt;</label>
+        					<label class="btn btn-toggle" ng-model="codeThresholdVariantQualComparison" uib-btn-radio="'<'" >&lt;</label>
     					</div>
 						<input id="textinput" class="form-control col-md-3" ng-model="thresholdVariantQual" name="textinput" placeholder="20" type="text">
 					  </div>
@@ -391,8 +391,8 @@
 			<div class=" panel panel-default" cg-busy="{promise: loadExistingPromise,message: 'Loading'}" ng-hide=fullJBrowse>
 			
 				<div class="panel-heading panel-heading-btn">
-				 <button type="button" class="btn btn-xs pull-left" style="margin-right: 10px" tooltip="hide query panel" tooltip-placement="right" ng-show="queryPanelHide" ng-click="queryPanelHide=false;resultPanelClass='col-sm-12 col-md-12 col-lg-8'"><span class="glyphicon glyphicon glyphicon-resize-small"></span></button>
-				 <button type="button" class="btn btn-xs pull-left" style="margin-right: 10px" tooltip="show query panel" tooltip-placement="left" ng-show="!queryPanelHide" ng-click="queryPanelHide=true;resultPanelClass='col-sm-12 col-md-12 col-lg-12'"><span class="glyphicon glyphicon glyphicon-resize-full"></span></button>
+				 <button type="button" class="btn btn-xs pull-left" style="margin-right: 10px" uib-tooltip="hide query panel" tooltip-placement="right" ng-show="queryPanelHide" ng-click="queryPanelHide=false;resultPanelClass='col-sm-12 col-md-12 col-lg-8'"><span class="glyphicon glyphicon glyphicon-resize-small"></span></button>
+				 <button type="button" class="btn btn-xs pull-left" style="margin-right: 10px" uib-tooltip="show query panel" tooltip-placement="left" ng-show="!queryPanelHide" ng-click="queryPanelHide=true;resultPanelClass='col-sm-12 col-md-12 col-lg-12'"><span class="glyphicon glyphicon glyphicon-resize-full"></span></button>
 				 
 				  <span class=panel-title>Results Panel <span class="glyphicon glyphicon-question-sign help-button" ng-click="showHelpResultPanel()"></span></span>
 				    
@@ -402,7 +402,7 @@
 			   	  <button type="button" class="btn btn-sm btn-danger pull-right" ng-show="warnings != ''" ng-click="displayWarnings()" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-exclamation-sign"></span> Query</button>
 			   	  <button type="button" class="btn btn-sm btn-danger pull-right" ng-show="igvWarnings != ''" ng-click="displayWarnings('igv')" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-exclamation-sign"></span> IGV</button>
 			   	  <button type="button" class="btn btn-sm btn-primary pull-right" style="margin-top: -6px;margin-left: 10px" ng-click="loadExistingData()" ng-hide="loggedUser == null || hasResults">	
-				   	<span class="glyphicon glyphicon-cloud-download" tooltip="Load last query and results"></span> Load Last
+				   	<span class="glyphicon glyphicon-cloud-download" uib-tooltip="Load last query and results"></span> Load Last
 				  </button>
 				  <button type="button" class="btn btn-sm btn-info pull-right" ng-show="showJBrowse==false" ng-click="openJBrowse()" ng-disabled="totalDatatracks == 0 && returnedIntersectionTarget != 'TF'" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-eye-open"></span> Open JBrowse</button>
 				  <button type="button" class="btn btn-sm btn-info pull-right" ng-show="possibleConversions.length > 0 && returnedAnalysisType.type == 'RNASeq'" ng-click="openConversionPane()" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon glyphicon-share-alt"></span> Convert Build</button>
@@ -432,42 +432,42 @@
 	<!-- 				    </colgroup> -->
 				        <thead>
 				            <tr >
-				                <th ><input type="checkbox" ng-model="selectAll" tooltip="Select All Results"></th>
+				                <th ><input type="checkbox" ng-model="selectAll" uib-tooltip="Select All Results"></th>
 				                <th >Index</th>
 								<th>Project</th>
 								<th>Analysis</th>
 								<th>Type</th>
 								<th>Search</th>
 								<th style="width: 10%" ng-show="returnedAnalysisType.type == 'RNASeq'">
-									<button type="button" class="btn btn-xs btn-primary" tooltip="Copy selected genes to query" ng-click="copyGenes()"><span class="glyphicon glyphicon-share"></span></button>
+									<button type="button" class="btn btn-xs btn-primary" uib-tooltip="Copy selected genes to query" ng-click="copyGenes()"><span class="glyphicon glyphicon-share"></span></button>
 									<span > Gene</span></th>
 								<th >Conditions</th>
 								<th style="width: 10%">
-									<button type="button" class="btn btn-xs btn-primary" tooltip="Copy selected coordinates to query" ng-click="copyCoordinates()"><span class="glyphicon glyphicon-share"></span></button>
-									<span class="cursor: pointer" tooltip="Sort by coordinate" ng-click="queryCurrentPage=0;sortType='Coordinate';sortReverse=!sortReverse;changeTablePosition()">Coordinates</span>
+									<button type="button" class="btn btn-xs btn-primary" uib-tooltip="Copy selected coordinates to query" ng-click="copyCoordinates()"><span class="glyphicon glyphicon-share"></span></button>
+									<span class="cursor: pointer" uib-tooltip="Sort by coordinate" ng-click="queryCurrentPage=0;sortType='Coordinate';sortReverse=!sortReverse;changeTablePosition()">Coordinates</span>
 								</th>
 								<th style="width: 10%" ng-hide="returnedAnalysisType.type=='Variant'">
-									<span class="cursor: pointer" tooltip="Sort by FDR" ng-click="queryCurrentPage=0;sortType='FDR';sortReverse=!sortReverse;changeTablePosition()" >FDR</span>
+									<span class="cursor: pointer" uib-tooltip="Sort by FDR" ng-click="queryCurrentPage=0;sortType='FDR';sortReverse=!sortReverse;changeTablePosition()" >FDR</span>
 								</th>
 								<th style="width: 10%" ng-hide="returnedAnalysisType.type=='Variant'">
-									<span class="cursor: pointer" tooltip="Sort by log2ratio" ng-click="queryCurrentPage=0;sortType='Log2Ratio';sortReverse=!sortReverse;changeTablePosition()">Log2FC</span>
+									<span class="cursor: pointer" uib-tooltip="Sort by log2ratio" ng-click="queryCurrentPage=0;sortType='Log2Ratio';sortReverse=!sortReverse;changeTablePosition()">Log2FC</span>
 								</th>
 				            </tr>
 				        </thead>
 				        <tbody>
 				            <tr ng-repeat="row in queryResults" ng-click="navJBrowse(row)" >
 				            	<td><input type="checkbox" ng-model="row.selected"/></td>
-				            	<td class="nowrap" >{{row.index | limitTo:15}}</td>
-				                <td class="nowrap-ellipsis"><span popover-trigger="mouseenter" popover-popup-delay="500" popover="{{row.projectName}}">{{row.projectName | limitTo : 20}}</td>
-				                <td class="nowrap-ellipsis"><span popover-trigger="mouseenter" popover-popup-delay="500" popover="{{row.analysisName}}">{{row.analysisName | limitTo : 20}}</span></td>
-				                <td class="nowrap-ellipsis"><span popover-trigger="mouseenter" popover-popup-delay="500" popover="{{row.analysisType}}">{{row.analysisType | limitTo : 20}}</td>
-				                <td class="nowrap-ellipsis"><span popover-trigger="mouseenter" popover-popup-delay="500" popover="{{row.search}}">{{row.search | limitTo: 20}}</span></td>
-				                <td class="nowrap-ellipsis" ng-show="returnedAnalysisType.type == 'RNASeq'"><span popover-trigger="mouseenter" popover-popup-delay="1000" popover="{{row.mappedName}}"><a ng-click="hyperlink(row.ensemblName)">{{row.mappedName | limitTo: 30}}</a></td>
-				                <td class="nowrap-ellipsis"><span popover-trigger="mouseenter" popover-popup-delay="500" popover="{{row.sampleConditions}}">{{row.sampleConditions | limitTo:15}}</td>
-				                <td class="nowrap-ellipsis" ng-hide="igvLoaded"><span popover-trigger="mouseenter" popover-popup-delay="1000" popover="{{row.coordinates}}">{{row.coordinates | limitTo:30}}</td>
-				                <td class="nowrap-ellipsis" ng-show="igvLoaded"><span popover-trigger="mouseenter" popover-popup-delay="1000" popover="{{row.coordinates}}"><span tooltip="{{row.coordinate}}"><a ng-click="loadLocus(row)">{{row.coordinates | limitTo:30}}</a></td>
-				                <td class="nowrap-ellipsis" ng-hide="returnedAnalysisType.type=='Variant'"><span popover-trigger="mouseenter" popover-popup-delay="500" popover="{{row.fdr}}">{{row.fdr | limitTo:15}}</td>
-				                <td class="nowrap-ellipsis" ng-hide="returnedAnalysisType.type=='Variant'"><span popover-trigger="mouseenter" popover-popup-delay="500" popover="{{row.log2Ratio}}">{{row.log2Ratio | limitTo:15}}</td>
+				            	<td class="nowrap" >{{row.index }}</td>
+				                <td class="nowrap-ellipsis"><span popover-placement="top-left" popover-trigger="'mouseenter'" popover-popup-delay="500" uib-popover="{{row.projectName}}">{{row.projectName | limitTo : 40}}</td>
+				                <td class="nowrap-ellipsis"><span popover-placement="top-left" popover-trigger="'mouseenter'" popover-popup-delay="500" uib-popover="{{row.analysisName}}">{{row.analysisName | limitTo : 40}}</span></td>
+				                <td class="nowrap-ellipsis"><span popover-placement="top-left" popover-trigger="'mouseenter'" popover-popup-delay="500" uib-popover="{{row.analysisType}}">{{row.analysisType | limitTo : 40}}</td>
+				                <td class="nowrap-ellipsis"><span popover-placement="top-left" popover-trigger="'mouseenter'" popover-popup-delay="500" uib-popover="{{row.search}}">{{row.search | limitTo: 40}}</span></td>
+				                <td class="nowrap-ellipsis" ng-show="returnedAnalysisType.type == 'RNASeq'"><span popover-trigger="'mouseenter'" popover-popup-delay="500" uib-popover="{{row.mappedName}}"><a ng-click="hyperlink(row.ensemblName)">{{row.mappedName | limitTo: 40}}</a></td>
+				                <td class="nowrap-ellipsis"><span popover-placement="top-left"  popover-trigger="'mouseenter'" popover-popup-delay="500" uib-popover="{{row.sampleConditions}}">{{row.sampleConditions | limitTo:40}}</td>
+				                <td class="nowrap-ellipsis" ng-hide="igvLoaded"><span popover-trigger="'mouseenter'" popover-popup-delay="500" uib-popover="{{row.coordinates}}">{{row.coordinates | limitTo:40}}</td>
+				                <td class="nowrap-ellipsis" ng-show="igvLoaded"><span popover-trigger="'mouseenter'" popover-popup-delay="500" uib-popover="{{row.coordinates}}"><span uib-tooltip="{{row.coordinate}}"><a ng-click="loadLocus(row)">{{row.coordinates | limitTo:40}}</a></td>
+				                <td class="nowrap-ellipsis" ng-hide="returnedAnalysisType.type=='Variant'"><span popover-trigger="'mouseenter'" popover-popup-delay="500" uib-popover="{{row.fdr}}">{{row.fdr | limitTo:15}}</td>
+				                <td class="nowrap-ellipsis" ng-hide="returnedAnalysisType.type=='Variant'"><span popover-trigger="'mouseenter'" popover-popup-delay="500" uib-popover="{{row.log2Ratio}}">{{row.log2Ratio | limitTo:15}}</td>
 				            </tr>
 				
 				        </tbody>

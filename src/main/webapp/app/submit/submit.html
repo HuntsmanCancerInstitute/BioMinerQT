@@ -26,7 +26,7 @@
 					<ul>
 				 		<li class="list-group" ng-repeat="project in projects | orderBy: 'name'">
 				 			<a ng-class="project.cssClass" href="#/submit" ng-click="select(project.idProject)">
-				 			   <span class="glyphicon glyphicon-triangle-right"></span>> {{project.name}}</a>
+				 			   <span class="glyphicon glyphicon-triangle-right"></span> {{project.name}}</a>
 					    </li>
 				
 					</ul>
@@ -52,27 +52,27 @@
 				
 				<div class="panel-body" style="padding-top: 10px;">
 				
-					<tabset>
-					   <tab heading="1. Edit Project Metadata">
+					<uib-tabset>
+					   <uib-tab heading="1. Edit Project Metadata">
 							<ng:include src="'app/submit/basicinfo.html'"></ng:include>				
-					   </tab>
+					   </uib-tab>
 					   
-					   <tab heading="2. Import Samples into Project">
+					   <uib-tab heading="2. Import Samples into Project">
 							<ng:include src="'app/submit/samples.html'"></ng:include>				
-					   </tab>
+					   </uib-tab>
 					   
-					   <tab heading="3. Import IGV Files into Project">
+					   <uib-tab heading="3. Import IGV Files into Project">
 							<ng:include src="'app/submit/datatracks.html'"></ng:include>				
-					   </tab>
+					   </uib-tab>
 
-					   <tab heading="4. Import Processed Data into Project">
+					   <uib-tab heading="4. Import Processed Data into Project">
 							<ng:include src="'app/submit/upload.html'"></ng:include>				
-					   </tab>
+					   </uib-tab>
 					   
-					   <tab heading="5. Assemble Project Data into Analyses" >
+					   <uib-tab heading="5. Assemble Project Data into Analyses" select="resultSelected()">
 							<ng:include src="'app/submit/results.html'"></ng:include>				
-					   </tab>
-					</tabset>
+					   </uib-tab>
+					</uib-tabset>
 				</div>
 			</div>
 		

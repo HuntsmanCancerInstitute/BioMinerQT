@@ -1,6 +1,6 @@
 angular.module("upload").controller("PreviewWindowController", [
- '$scope', '$modalInstance','filename','previewData','analysisType',
-function ($scope, $modalInstance, filename, previewData, analysisType) {
+ '$scope', '$uibModalInstance','filename','previewData','analysisType',
+function ($scope, $uibModalInstance, filename, previewData, analysisType) {
 	//passed in to the controller
 	$scope.filename = filename;
 	$scope.previewData = previewData;
@@ -105,11 +105,11 @@ function ($scope, $modalInstance, filename, previewData, analysisType) {
 		
 	//modal dismissed
 	$scope.cancel = function () {
-	   $modalInstance.dismiss('cancel');
+		$uibModalInstance.dismiss('cancel');
 	};
 	
 	$scope.ok = function() {
-	   $modalInstance.close($scope.globalColumns);
+		$uibModalInstance.close($scope.globalColumns);
 	};
 	
 	

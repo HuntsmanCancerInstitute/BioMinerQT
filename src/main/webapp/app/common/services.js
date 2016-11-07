@@ -40,9 +40,9 @@ var services = angular.module('services', ['ngResource','ui.bootstrap'])
 			    } else if (rejection.data.errorMessage == null) {
 					return $q.reject(rejection);
 				} else {
-					var $modal = $injector.get('$modal');
+					var modalInstance = $injector.get('$uibModal');
 					
-					$modal.open({
+					modalInstance.open({
 			    		templateUrl: 'app/common/error.html',
 			    		controller: 'ErrorController',
 			    		resolve: {

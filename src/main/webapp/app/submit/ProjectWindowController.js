@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module("submit").controller("ProjectWindowController", [
- '$scope', '$modalInstance','labList','instList','organismBuildList','ownerList',                                                     
-function ($scope, $modalInstance, labList, instList, organismBuildList, ownerList) {
+ '$scope', '$uibModalInstance','labList','instList','organismBuildList','ownerList',                                                     
+function ($scope, $uibModalInstance, labList, instList, organismBuildList, ownerList) {
 	$scope.instituteList = instList;
 	$scope.labList = labList;
 	$scope.organismBuildList = organismBuildList;
@@ -14,10 +14,10 @@ function ($scope, $modalInstance, labList, instList, organismBuildList, ownerLis
 	$scope.project = {name: '', description: '', labs: '', institutes: '', owners: '', organismBuild: {idOrganismBuild: ''}};
 
 	$scope.ok = function () {
-	 $modalInstance.close($scope.project);
+		$uibModalInstance.close($scope.project);
 	};
 	
 	$scope.cancel = function () {
-	 $modalInstance.dismiss('cancel');
+		$uibModalInstance.dismiss('cancel');
 	};
 }]);

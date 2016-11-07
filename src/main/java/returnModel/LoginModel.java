@@ -1,4 +1,4 @@
-package hci.biominer.util;
+package returnModel;
 
 import hci.biominer.model.access.User;
 

@@ -4,6 +4,8 @@ import java.util.LinkedList;
 
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
+import returnModel.FileMeta;
+
 public class FileMap {
 	
 	private  LinkedList<FileMeta>   files;

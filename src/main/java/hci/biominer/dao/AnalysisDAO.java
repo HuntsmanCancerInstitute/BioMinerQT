@@ -10,7 +10,6 @@ import org.hibernate.SessionFactory;
 
 import hci.biominer.model.Analysis;
 import hci.biominer.model.AnalysisType;
-import hci.biominer.model.DashboardModel;
 import hci.biominer.model.DataTrack;
 import hci.biominer.model.OrganismBuild;
 import hci.biominer.model.Project;
@@ -28,6 +27,8 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+
+import returnModel.DashboardModel;
 
 @Repository
 public class AnalysisDAO {

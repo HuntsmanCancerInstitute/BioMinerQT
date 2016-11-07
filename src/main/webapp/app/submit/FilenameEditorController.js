@@ -1,8 +1,8 @@
 var error = angular.module("fneditor",['ui.validate'])
 
-.controller("FilenameEditorController", ['$scope','$http','$q','$modalInstance','selected','idProject',
+.controller("FilenameEditorController", ['$scope','$http','$q','$uibModalInstance','selected','idProject',
                                                       
-function($scope, $http, $q, $modal, selected, idProject) {
+function($scope, $http, $q, $uibModalInstance, selected, idProject) {
 	$scope.selected = angular.copy(selected);
 	$scope.usedNames = [];
 	$scope.usedExist = false;
@@ -77,10 +77,10 @@ function($scope, $http, $q, $modal, selected, idProject) {
 	$scope.getNames();
 
 	$scope.cancel = function() {
-		$modal.dismiss();
+		$uibModalInstance.dismiss();
 	};
 	
 	$scope.ok = function() {
-		$modal.close($scope.selected);
+		$uibModalInstance.close($scope.selected);
 	};
 }]);

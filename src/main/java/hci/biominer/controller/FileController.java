@@ -6,12 +6,9 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -21,8 +18,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,6 +26,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
+import returnModel.BooleanModel;
+import returnModel.FileMeta;
+import returnModel.PreviewMap;
 import hci.biominer.model.genome.Genome;
 import hci.biominer.model.AnalysisType;
 import hci.biominer.model.ExternalGene;
@@ -43,19 +41,14 @@ import hci.biominer.service.FileUploadService;
 import hci.biominer.service.OrganismBuildService;
 import hci.biominer.service.ProjectService;
 import hci.biominer.parser.ChipParser;
-import hci.biominer.parser.GenomeParser;
 import hci.biominer.parser.RnaSeqParser;
 import hci.biominer.parser.VCFParser;
 import hci.biominer.util.BiominerProperties;
-import hci.biominer.util.BooleanModel;
 import hci.biominer.util.Enumerated.FileStateEnum;
 import hci.biominer.util.Enumerated.FileTypeEnum;
-import hci.biominer.util.FileMeta;
 import hci.biominer.util.GenomeBuilds;
 import hci.biominer.util.IO;
-import hci.biominer.util.PreviewMap;
 import hci.biominer.util.ModelUtil;
-import hci.biominer.util.Enumerated.*;
 
 @Controller
 @RequestMapping("/submit")
@@ -155,8 +148,8 @@ public class FileController {
 	 * @return FileMeta as json format
 	 ****************************************************/
 	@RequestMapping(value="uploadchunk", method = RequestMethod.POST)
-	public @ResponseBody 
-	FileMeta uploadchunk(@RequestParam("file") MultipartFile file,
+	@ResponseBody 
+	public FileMeta uploadchunk(@RequestParam("file") MultipartFile file,
 			@RequestParam("index") Integer index, 
 			@RequestParam("total") Integer total, 		
 			@RequestParam("idProject") Long idProject,
@@ -269,8 +262,8 @@ public class FileController {
 	 * @param size : size of the file.
 	 */
 	@RequestMapping(value="/createUploadFile", method=RequestMethod.POST)
-	public @ResponseBody
-	FileUpload createUploadFile(@RequestParam("name") String name, @RequestParam("size") Long size, @RequestParam("idProject") Long idProject, HttpServletResponse response) {
+	@ResponseBody
+	public FileUpload createUploadFile(@RequestParam("name") String name, @RequestParam("size") Long size, @RequestParam("idProject") Long idProject, HttpServletResponse response) {
 				
 		File directoryStub = new File("/raw/",String.valueOf(idProject));
 
@@ -301,8 +294,8 @@ public class FileController {
 	 * @param idProject: project identifier
 	 */
 	@RequestMapping(value="/createImportFile", method=RequestMethod.POST)
-	public @ResponseBody
-	FileUpload createImportFile(@RequestParam("name") String name, @RequestParam("idProject") Long idProject, @RequestParam("idParent") Long idParent) {
+	@ResponseBody
+	public FileUpload createImportFile(@RequestParam("name") String name, @RequestParam("idProject") Long idProject, @RequestParam("idParent") Long idParent) {
 				
 		File directoryStub = new File("/parsed/",String.valueOf(idProject));
 
@@ -412,6 +405,7 @@ public class FileController {
 	 * @throws Exception 
 	 ****************************************************/
 	 @RequestMapping(value = "/upload/get", method = RequestMethod.GET)
+	 @ResponseBody
 	 public void getUpload(HttpServletResponse response,@RequestParam("file") String file, @RequestParam("type") FileTypeEnum type, @RequestParam("idProject") Long idProject) throws Exception{
 		 Project project = this.projectService.getProjectById(idProject);
 		 FileUpload fileUpload = this.fileUploadService.getFileUploadByName(file,type,project);
@@ -448,7 +442,8 @@ public class FileController {
 	 * @return void
 	 ****************************************************/
 	 @RequestMapping(value="/upload/deleteFileUpload", method=RequestMethod.DELETE)
-	 public @ResponseBody void deleteFileUpload(@RequestParam("idFileUpload") Long idFileUpload) throws Exception{
+	 @ResponseBody 
+	 public void deleteFileUpload(@RequestParam("idFileUpload") Long idFileUpload) throws Exception{
 		 deleteFile(idFileUpload);
 	}
 	 
@@ -461,7 +456,8 @@ public class FileController {
 	 * @return void
 	 ****************************************************/
 	@RequestMapping(value = "upload/load", method = RequestMethod.GET)
-	 public @ResponseBody List<FileUpload>  get(HttpServletResponse response, @RequestParam("type") FileTypeEnum type, @RequestParam("idProject") Long idProject){
+	@ResponseBody 
+	public List<FileUpload>  get(HttpServletResponse response, @RequestParam("type") FileTypeEnum type, @RequestParam("idProject") Long idProject){
 		Project project = this.projectService.getProjectById(idProject);
 		List<FileUpload> fileMap = this.fileUploadService.getFileUploadByType(type,project);
 		return fileMap;
@@ -541,8 +537,8 @@ public class FileController {
 	 * @return FileUpload: file upload object
 	 ****************************************************/
 	@RequestMapping(value="parse/chip", method = RequestMethod.POST)
-	public @ResponseBody 
-	FileUpload parseChip(
+	@ResponseBody 
+	public FileUpload parseChip(
 			@RequestParam("inputFile") String input, 
 			@RequestParam("outputFile") String output,
 			@RequestParam("Chromosome") Integer chrom, 
@@ -644,8 +640,8 @@ public class FileController {
 	 * @return FileUpload: file upload object
 	 ****************************************************/
 	@RequestMapping(value="parse/rnaseq", method = RequestMethod.POST)
-	public @ResponseBody 
-	FileUpload parseRnaseq(
+	@ResponseBody 
+	public FileUpload parseRnaseq(
 			@RequestParam("inputFile") String input, 
 			@RequestParam("outputFile") String output,
 			@RequestParam("Gene") Integer gene,
@@ -734,8 +730,7 @@ public class FileController {
 				String cond1 = m.group(1);
 				String cond2 = m.group(2);
 				String name = FilenameUtils.getBaseName(outputFile.getName());
-				boolean success = submitController.autoCreateAnalysis(Long.parseLong(id), idFileUpload, idAnalysisType, cond1, cond2, name);
-				
+				submitController.autoCreateAnalysis(Long.parseLong(id), idFileUpload, idAnalysisType, cond1, cond2, name);
 			} 
 			
 		} catch (Exception ioex) {
@@ -758,8 +753,8 @@ public class FileController {
 	 * @return FileUpload: File Upload Object
 	 ****************************************************/
 	@RequestMapping(value="parse/variant", method = RequestMethod.POST)
-	public @ResponseBody 
-	FileUpload parseVariant(
+	@ResponseBody 
+	public FileUpload parseVariant(
 			@RequestParam("inputFile") String input, 
 			@RequestParam("outputFile") String output,
 			@RequestParam("build") Long idOrganismBuild, 
@@ -782,7 +777,6 @@ public class FileController {
 			if (!parseDir.exists()) {
 				parseDir.mkdir();
 			}
-			File parseStub = new File("/parsed/",id);
 			
 			File inputFile = new File(importDir, input);
 			File outputFile = new File(parseDir, output);
@@ -851,16 +845,16 @@ public class FileController {
 	}
 	
 	@RequestMapping(value="finalizeFileUpload", method=RequestMethod.PUT)
-	public @ResponseBody
-	void finalizeFileUpload(@RequestParam("idFileUpload") Long idFileUpload, @RequestParam("state") FileStateEnum state) {
+	@ResponseBody
+	public void finalizeFileUpload(@RequestParam("idFileUpload") Long idFileUpload, @RequestParam("state") FileStateEnum state) {
 		FileUpload fu = this.fileUploadService.getFileUploadById(idFileUpload);
 		fu.setState(state);
 		this.fileUploadService.updateFileUpload(idFileUpload, fu);
 	}
 	
 	@RequestMapping(value="doesRawUploadExist", method = RequestMethod.GET)
-	public @ResponseBody 
-	BooleanModel doesRawUploadExist(@RequestParam("idProject") Long idProject, @RequestParam("fileName") String fileName) throws Exception {
+	@ResponseBody 
+	public BooleanModel doesRawUploadExist(@RequestParam("idProject") Long idProject, @RequestParam("fileName") String fileName) throws Exception {
 		File projectDirectory = new File(FileController.getRawDirectory(),idProject.toString());
 		File[] filePaths = new File[2];
 		filePaths[0] = new File(projectDirectory,fileName);
@@ -869,8 +863,8 @@ public class FileController {
 	}
 	
 	@RequestMapping(value="doesParsedUploadExist", method = RequestMethod.GET)
-	public @ResponseBody 
-	BooleanModel doesParsedUploadExist(@RequestParam("idProject") Long idProject, @RequestParam("fileName") String fileName) throws Exception {
+	@ResponseBody 
+	public BooleanModel doesParsedUploadExist(@RequestParam("idProject") Long idProject, @RequestParam("fileName") String fileName) throws Exception {
 		File projectDirectory = new File(FileController.getParsedDirectory(),idProject.toString());
 		File[] filePaths = new File[2];
 		filePaths[0] = new File(projectDirectory,fileName);
@@ -879,8 +873,8 @@ public class FileController {
 	}
 	
 	@RequestMapping(value="doesDatatrackExist", method = RequestMethod.GET)
-	public @ResponseBody 
-	BooleanModel doesDatatrackExist(@RequestParam("idProject") Long idProject, @RequestParam("fileName") String fileName) throws Exception {
+	@ResponseBody 
+	public BooleanModel doesDatatrackExist(@RequestParam("idProject") Long idProject, @RequestParam("fileName") String fileName) throws Exception {
 		File projectDirectory = new File(FileController.getIgvDirectory(),idProject.toString());
 		File[] filePaths = new File[2];
 		filePaths[0] = new File(projectDirectory,fileName);
@@ -889,8 +883,8 @@ public class FileController {
 	}
 	
 	@RequestMapping(value="getParsedUploadNames", method=RequestMethod.GET)
-	public @ResponseBody
-	List<String> getParsedUploadNames(@RequestParam("idProject") Long idProject) throws Exception {
+	@ResponseBody
+	public List<String> getParsedUploadNames(@RequestParam("idProject") Long idProject) throws Exception {
 		Project project = this.projectService.getProjectById(idProject);
 		List<FileUpload> files = this.fileUploadService.getFileUploadByType(FileTypeEnum.IMPORTED, project);
 		
@@ -902,8 +896,8 @@ public class FileController {
 	}
 	
 	@RequestMapping(value="cleanUploadedFiles", method=RequestMethod.DELETE)
-	public @ResponseBody
-	List<Long> cleanUploadedFiles(@RequestParam("idProject") Long idProject) throws Exception {
+	@ResponseBody
+	public List<Long> cleanUploadedFiles(@RequestParam("idProject") Long idProject) throws Exception {
 		Project project = this.projectService.getProjectById(idProject);
 		List<FileUpload> ful = this.fileUploadService.getFileUploadByProject(project);
 		List<Long> idList = new ArrayList<Long>();
@@ -938,8 +932,8 @@ public class FileController {
 	 * @return PreviewMap: Object that contains the first 20 lines of the file, with meaningless columns removed
 	 */
 	@RequestMapping(value="uploadSampleSheet", method=RequestMethod.POST)
-	public @ResponseBody
-	PreviewMap uploadSampleSheet(HttpServletResponse response, @RequestParam("file") MultipartFile file, @RequestParam("idProject") Long idProject) {
+	@ResponseBody
+	public PreviewMap uploadSampleSheet(HttpServletResponse response, @RequestParam("file") MultipartFile file, @RequestParam("idProject") Long idProject) {
 		PreviewMap pm = new PreviewMap();
 		
 		File localFile = null;
@@ -1078,9 +1072,9 @@ public class FileController {
 	 * @param Long idProject: project id, used to create sampleSheet directory
 	 * @return String message: Error message if failed, OK if success.
 	 */
-	@RequestMapping(value="deleteSampleSheet")
-	public @ResponseBody
-	String deleteSampleSheet(HttpServletResponse response, @RequestParam("idProject") Long idProject) {
+	@RequestMapping(value="deleteSampleSheet",produces="text/plain")
+	@ResponseBody
+	public String deleteSampleSheet(HttpServletResponse response, @RequestParam("idProject") Long idProject) {
 		try {
 			//Create the project directory, if it doens't exist
 			File directory = new File(getRawDirectory(),String.valueOf(idProject));
@@ -1099,7 +1093,6 @@ public class FileController {
 			return "Problem deleting sample sheet: " + ex.getMessage();
 		}
 		return "OK";
-		
 	}
 	
 	

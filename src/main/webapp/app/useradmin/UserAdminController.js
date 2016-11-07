@@ -6,10 +6,10 @@
  */
 var useradmin = angular.module('useradmin', ['angularFileUpload','ui.mask','ui.validate','filters','directives','services','ngProgress','dialogs.main','error','cgBusy']);
 
-useradmin.controller("UserAdminController", ['$rootScope','$scope','$http','$location','$window','$modal','$timeout','$upload','DynamicDictionary',
+useradmin.controller("UserAdminController", ['$rootScope','$scope','$http','$location','$window','$uibModal','$timeout','$upload','DynamicDictionary',
                                                                'StaticDictionary','ngProgress','dialogs','$q',
                                                       
-function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $upload, DynamicDictionary, StaticDictionary, ngProgress, dialogs,$q) {
+function($rootScope, $scope, $http, $location, $window, $uibModal, $timeout, $upload, DynamicDictionary, StaticDictionary, ngProgress, dialogs,$q) {
 	
 	// approve user variables
 	$scope.guid = "";
@@ -29,11 +29,8 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
 	$scope.labOrderByField = "last";
 	
 	//tabset variables
-	$scope.userTabOpen = true;
-	$scope.labTabOpen = false;
-	$scope.genomeTabOpen = false;
-	$scope.tfTabOpen=false;
-	$scope.idConversionTabOpen=false;
+	$scope.currentTab = 0;
+	
 
 	//Model data
 	$scope.labs = [];
@@ -283,7 +280,7 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
 					params: {idOrganismBuild: ob.idOrganismBuild},
 					
 				}).success(function(data) {
-			    	var modalInstance = $modal.open({
+			    	var modalInstance = $uibModal.open({
 			    		templateUrl: 'app/useradmin/annotationPreviewWindow.html',
 			    		controller: 'AnnotationPreviewController',
 			    		windowClass: 'preview-dialog',
@@ -454,7 +451,7 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
 	}
 	
 	$scope.addTfFile = function(file,ob) {
-		var modalInstance = $modal.open({
+		var modalInstance = $uibModal.open({
     		templateUrl: 'app/useradmin/tfUploadWindow.html',
     		controller: 'TfUploadWindowController',
     		resolve: {
@@ -564,7 +561,7 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
 	}
 	
 	$scope.addConversionFile = function(file,ob) {
-		var modalInstance = $modal.open({
+		var modalInstance = $uibModal.open({
     		templateUrl: 'app/useradmin/conversionUploadWindow.html',
     		controller: 'ConversionUploadWindowController',
     		resolve: {
@@ -685,6 +682,8 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
         		url: 'user/all'
             }).success(function(data,status) {
             	$scope.selectedUsers = $scope.isAdmin(data);
+        	}).error(function(data) {
+        		console.log(data);
         	});
     		
     	} else {
@@ -714,7 +713,7 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
 	 * *************************************
 	 ***************************************/
     $scope.openEditUserWindow = function(e) {
-    	var modalInstance = $modal.open({
+    	var modalInstance = $uibModal.open({
     		templateUrl: 'app/useradmin/userWindow.html',
     		controller: 'UserController',
     		resolve: {
@@ -767,7 +766,7 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
     
  
     $scope.openEditLabWindow = function(e) {
-    	var modalInstance = $modal.open({
+    	var modalInstance = $uibModal.open({
     		templateUrl: 'app/useradmin/labWindow.html',
     		controller: 'LabController',
     		resolve: {
@@ -807,7 +806,7 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
     		return;
     	}
     	
-	    var modalInstance = $modal.open({
+	    var modalInstance = $uibModal.open({
 	      templateUrl: 'app/useradmin/organismWindow.html',
 	      controller: 'OrganismController',
     	  resolve: {
@@ -840,7 +839,7 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
     };
     
     $scope.openEditBuildWindow = function (organismBuild) {	
-	    var modalInstance = $modal.open({
+	    var modalInstance = $uibModal.open({
 	      templateUrl: 'app/useradmin/organismBuildWindow.html',
 	      controller: 'OrganismBuildController',
     	  resolve: {
@@ -879,7 +878,7 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
      * Add new users/labs/organism
      **************************************/
     $scope.openNewUserWindow = function () {
-	    var modalInstance = $modal.open({
+	    var modalInstance = $uibModal.open({
 	      templateUrl: 'app/useradmin/userWindow.html',
 	      controller: 'UserController',
     	  resolve: {
@@ -931,7 +930,7 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
     
     $scope.openNewUserRequestWindow = function () {
 	//console.log("In openNewUserRequestWindow");    
-	    var modalInstance = $modal.open({
+	    var modalInstance = $uibModal.open({
 	      templateUrl: 'app/useradmin/userWindow.html',
 	      controller: 'UserController',
     	  resolve: {
@@ -985,7 +984,7 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
 
 
     $scope.openNewLabWindow = function () {
-	    var modalInstance = $modal.open({
+	    var modalInstance = $uibModal.open({
 	      templateUrl: 'app/useradmin/labWindow.html',
 	      controller: 'LabController',
     	  resolve: {
@@ -1042,7 +1041,7 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
 		
     
     $scope.openNewOrganismWindow = function () {
-	    var modalInstance = $modal.open({
+	    var modalInstance = $uibModal.open({
 	      templateUrl: 'app/useradmin/organismWindow.html',
 	      controller: 'OrganismController',
     	  resolve: {
@@ -1076,7 +1075,7 @@ function($rootScope, $scope, $http, $location, $window, $modal, $timeout, $uploa
     };
     
     $scope.openNewBuildWindow = function () {
-	    var modalInstance = $modal.open({
+	    var modalInstance = $uibModal.open({
 	      templateUrl: 'app/useradmin/organismBuildWindow.html',
 	      controller: 'OrganismBuildController',
     	  resolve: {

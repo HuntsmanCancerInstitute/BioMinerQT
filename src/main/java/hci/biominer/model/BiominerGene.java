@@ -10,6 +10,8 @@ import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+import org.hibernate.annotations.AccessType;
+
 
 @Entity
 @Table(name="BiominerGene")
@@ -17,6 +19,7 @@ public class BiominerGene {
 	@Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	@Column(name="idBiominerGene")
+	@AccessType("property")
 	Long idBiominerGene;
 	
 	@Column(name="BiominerGeneName")

@@ -20,12 +20,12 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import returnModel.LoginModel;
 import hci.biominer.dao.UserDAO;
 import hci.biominer.model.access.User;
 import hci.biominer.service.DashboardService;
 import hci.biominer.service.UserService;
 import hci.biominer.util.BiominerProperties;
-import hci.biominer.util.LoginModel;
 import hci.biominer.util.MailUtil;
 
 import java.security.SecureRandom;
@@ -66,7 +66,8 @@ public class SecurityController {
 	}
 	
 	@RequestMapping(value="/login",method=RequestMethod.POST)
-	public @ResponseBody LoginModel login(@RequestParam(value="username") String username, @RequestParam(value="password") String password, @RequestParam(value="remember") boolean remember)  {
+	@ResponseBody 
+	public LoginModel login(@RequestParam(value="username") String username, @RequestParam(value="password") String password, @RequestParam(value="remember") boolean remember)  {
 		LoginModel lm = new LoginModel();
 	
 		UsernamePasswordToken token = new UsernamePasswordToken(username,password,remember);
@@ -93,8 +94,9 @@ public class SecurityController {
 		return lm;
 	}
 	
-	@RequestMapping(value="/resetpassword",method=RequestMethod.POST)
-	public @ResponseBody String resetpassword(@RequestParam(value="username") String username, @RequestParam(value="theUrl") String theUrl, @RequestParam(value="remember") boolean remember, HttpServletRequest request)  {
+	@RequestMapping(value="/resetpassword",method=RequestMethod.POST,produces="text/plain")
+	@ResponseBody 
+	String resetpassword(@RequestParam(value="username") String username, @RequestParam(value="theUrl") String theUrl, @RequestParam(value="remember") boolean remember, HttpServletRequest request)  {
 		String result = null;
 	
 		//System.out.println ("[/resetpassword] username is " + username);
@@ -162,8 +164,9 @@ public class SecurityController {
 		return result;
 	}
 	
-	@RequestMapping(value="/changepassword",method=RequestMethod.POST)
-	public @ResponseBody String changepassword(@RequestParam(value="username") String username, @RequestParam(value="password") String password, @RequestParam(value="passwordconfirm") String passwordconfirm, @RequestParam(value="guid") String guid, @RequestParam(value="remember") boolean remember)  {
+	@RequestMapping(value="/changepassword",method=RequestMethod.POST,produces="text/plain")
+	@ResponseBody 
+	String changepassword(@RequestParam(value="username") String username, @RequestParam(value="password") String password, @RequestParam(value="passwordconfirm") String passwordconfirm, @RequestParam(value="guid") String guid, @RequestParam(value="remember") boolean remember)  {
 		String result = null;
 	
 		//System.out.println ("[/changepassword] username is " + username);
@@ -242,12 +245,14 @@ public class SecurityController {
 	}
 	
 	@RequestMapping(value="/logout",method=RequestMethod.POST)
-	public @ResponseBody void logout() {
+	@ResponseBody 
+	public void logout() {
 		SecurityUtils.getSubject().logout(); 
 	}
 	
 	@RequestMapping(value="/auth",method=RequestMethod.GET)
-	public @ResponseBody LoginModel isAuthenticated() {	
+	@ResponseBody 
+	public LoginModel isAuthenticated() {	
 		LoginModel lm = new LoginModel();
 		
 		if (SecurityUtils.getSubject().isAuthenticated()) {

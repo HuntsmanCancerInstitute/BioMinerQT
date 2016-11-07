@@ -4,11 +4,13 @@ import org.apache.commons.io.FileUtils;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import org.springframework.stereotype.Controller;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import returnModel.BooleanModel;
+import returnModel.FileMeta;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -20,13 +22,13 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 
+
 //utils
-import hci.biominer.util.BooleanModel;
+
 import hci.biominer.util.Enumerated.FileStateEnum;
 import hci.biominer.util.Enumerated.ProjectVisibilityEnum;
 import hci.biominer.util.BiominerProperties;
 import hci.biominer.util.JBrowseUtilities;
-import hci.biominer.util.FileMeta;
 import hci.biominer.util.IntervalTrees;
 import hci.biominer.util.ModelUtil;
 import hci.biominer.util.VCFUtilities;
@@ -65,12 +67,7 @@ import hci.biominer.model.access.Role;
 import hci.biominer.model.access.User;
 import hci.biominer.model.access.Lab;
 
-/**
- * 
- * By: Tony Di Sera
- * Date: Apr 17, 2014
- * 
- */
+
 @Controller
 @RequestMapping("/project")
 public class SubmitController {
@@ -694,8 +691,8 @@ public class SubmitController {
 	 * This method uploads a datatrack to biominer
 	 ****************************************************/
 	@RequestMapping(value="uploadDataTrack",method=RequestMethod.POST)
-	public @ResponseBody
-	FileMeta uploadDataTrack(
+	@ResponseBody
+	public FileMeta uploadDataTrack(
 			@RequestParam("file") MultipartFile file,  
 			@RequestParam(value="index") Integer index, 
 			@RequestParam(value="total") Integer total, 
@@ -1093,7 +1090,7 @@ public class SubmitController {
 	 * @param response
 	 * @param sampleNameIdx
 	 */
-	@RequestMapping(value="parseSampleSheet",method=RequestMethod.PUT)
+	@RequestMapping(value="parseSampleSheet",method=RequestMethod.PUT,produces="text/plain")
 	public @ResponseBody
 	String parseSampleSheet(HttpServletResponse response, @RequestParam("sampleNameIdx") Integer sampleNameIdx,@RequestParam("sampleTypeIdx") Integer sampleTypeIdx, 
 			@RequestParam("sampleConditionIdx") List<Integer> sampleConditionIdx, @RequestParam("sampleKitIdx") Integer sampleKitIdx, 

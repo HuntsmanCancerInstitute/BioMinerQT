@@ -4,8 +4,8 @@
 
 var useradmin = angular.module('navbar', ['login','services','error','dialogs.main']);
 
-angular.module('navbar').controller("NavbarController",['$modal','$scope','$http','$rootScope','$location','$interval','$route','DynamicDictionary','dialogs',
-	function($modal,$scope,$http,$rootScope,$location,$interval,$route,DynamicDictionary,dialogs) {
+angular.module('navbar').controller("NavbarController",['$uibModal','$scope','$http','$rootScope','$location','$interval','$route','DynamicDictionary','dialogs',
+	function($uibModal,$scope,$http,$rootScope,$location,$interval,$route,DynamicDictionary,dialogs) {
 	    $rootScope.loggedUser = null;
 	    $rootScope.lastLocation = "dashboard";
 		$rootScope.admin = false;
@@ -78,7 +78,7 @@ angular.module('navbar').controller("NavbarController",['$modal','$scope','$http
 		};
 		
 		$scope.openEditUserWindow = function(e) {
-	    	var modalInstance = $modal.open({
+	    	var modalInstance = $uibModal.open({
 	    		templateUrl: 'app/useradmin/userWindow.html',
 	    		controller: 'UserController',
 	    		resolve: {

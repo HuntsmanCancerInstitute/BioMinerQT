@@ -1,6 +1,6 @@
 angular.module("useradmin").controller("AnnotationPreviewController", [
- '$scope', '$modalInstance','filename','previewData',
-function ($scope, $modalInstance, filename, previewData) {
+ '$scope', '$uibModalInstance','filename','previewData',
+function ($scope, $uibModalInstance, filename, previewData) {
 	//passed in to the controller
 	$scope.filename = filename;
 	$scope.previewData = previewData;
@@ -85,11 +85,11 @@ function ($scope, $modalInstance, filename, previewData) {
 		
 	//modal dismissed
 	$scope.cancel = function () {
-	   $modalInstance.dismiss('cancel');
+		$uibModalInstance.dismiss('cancel');
 	};
 	
 	$scope.ok = function() {
-	   $modalInstance.close($scope.globalColumns);
+		$uibModalInstance.close($scope.globalColumns);
 	};
 	
 	

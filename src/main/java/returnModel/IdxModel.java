@@ -1,4 +1,4 @@
-package hci.biominer.util;
+package returnModel;
 
 public class IdxModel {
 	private String message;

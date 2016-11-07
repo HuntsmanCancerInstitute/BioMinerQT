@@ -23,7 +23,7 @@
 		    <tbody>
 		        <tr ng-repeat="row in previewData">
 		            <!--  Track by index to avoid duplicate rows -->
-		            <td ng-repeat="value in row track by $index" ng-class=" (showList.indexOf($index) != -1)  ? 'td-container-selected' : 'td-container-unselected' "><span popover="{{value}}" popover-trigger="mouseenter" popover-popup-delay="1000">{{value | limitTo : 20}}</span></td>
+		            <td ng-repeat="value in row track by $index" ng-class=" (showList.indexOf($index) != -1)  ? 'td-container-selected' : 'td-container-unselected' "><span uib-popover="{{value}}" popover-placement="top-left"  popover-trigger="'mouseenter'" popover-popup-delay="500">{{value | limitTo : 20}}</span></td>
 		        </tr>
 		    </tbody>
 		</table>

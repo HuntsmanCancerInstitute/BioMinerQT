@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module("useradmin").controller("ConversionUploadWindowController", [
- '$scope', '$modalInstance','organismBuildList','homologyList',                                                     
-function ($scope, $modalInstance, organismBuildList, homologyList) {
+ '$scope', '$uibModalInstance','organismBuildList','homologyList',                                                     
+function ($scope, $uibModalInstance, organismBuildList, homologyList) {
 	$scope.organismBuildList = organismBuildList;
 	$scope.selectedBuilds = [];
 	$scope.build_valid = true;
@@ -73,10 +73,10 @@ function ($scope, $modalInstance, organismBuildList, homologyList) {
 	}
 	
 	$scope.conversionOK = function () {
-	   $modalInstance.close($scope.conversion);
+	   $uibModalInstance.close($scope.conversion);
 	};
 		
 	$scope.conversionCancel = function () {
-	  $modalInstance.dismiss('cancel');
+	  $uibModalInstance.dismiss('cancel');
 	};
 }]);

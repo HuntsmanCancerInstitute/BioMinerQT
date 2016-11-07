@@ -1,4 +1,9 @@
-package hci.biominer.model;
+package returnModel;
+
+import hci.biominer.model.QueryResult;
+import hci.biominer.util.QueryResultComparatorCoordinate;
+import hci.biominer.util.QueryResultComparatorFDR;
+import hci.biominer.util.QueryResultComparatorLog2Ratio;
 
 import java.io.Serializable;
 import java.util.Collections;
