@@ -1,6 +1,4 @@
-package hci.biominer.util;
-
-import hci.biominer.model.QueryResult;
+package returnModel;
 
 import java.util.Comparator;
 

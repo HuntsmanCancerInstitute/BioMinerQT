@@ -1,10 +1,5 @@
 package returnModel;
 
-import hci.biominer.model.QueryResult;
-import hci.biominer.util.QueryResultComparatorCoordinate;
-import hci.biominer.util.QueryResultComparatorFDR;
-import hci.biominer.util.QueryResultComparatorLog2Ratio;
-
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
@@ -73,9 +68,8 @@ public class QueryResultContainer implements Serializable {
 	
 	public void setResultList(List<QueryResult> results) {
 		this.resultList = results;
+		this.resultNum = results.size();
 	}
-	
-	
 	
 	
 	public String getReturnedOrganismName() {

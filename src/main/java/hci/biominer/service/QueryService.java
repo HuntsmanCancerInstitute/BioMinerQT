@@ -1,13 +1,13 @@
 package hci.biominer.service;
 
 
-import hci.biominer.model.QueryResult;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+
+import returnModel.QueryResult;
 
 
 

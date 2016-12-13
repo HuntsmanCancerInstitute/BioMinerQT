@@ -109,6 +109,22 @@
 	    </div>
 </div>
 
+<!-- Liftover Conversion Bar -->
+<div class="row toolbar" ng-show="currentTab == 5" >
+     	<span class="page-header-bm">
+     		<span class="glyphicon glyphicon-cog"></span>
+     		Users and Labs
+     	</span>
+     		
+		<a ng-click="addLiftoverChain()" href="#/useradmin">
+ 		 	<span class="glyphicon glyphicon-plus"></span>Add Liftover Chain
+		</a>
+		
+		<a ng-click="addLiftoverSupport()" href="#/useradmin">
+ 		 	<span class="glyphicon glyphicon-plus"></span>Add Liftover Support
+		</a>
+</div>
+
 <div class="row">	
 	<div class="panel panel-default col-lg-12">
 	  <div class="panel-body" style="padding-top: 10px;">	
@@ -345,17 +361,17 @@
 		     	<table class="table" >
 				    <thead>
 				        <tr>
-				            <th>Filename</th>
 				            <th>Source Build</th>
 				            <th>Dest Build</th>
+				            <th>Filename</th>
 				            <th>Controls</th>
 				        </tr>
 				    </thead>
 				    <tbody>
 				        <tr ng-repeat="conv in conversionList | filter:intervalQuery" ng-mouseenter="showConversionControls(conv)" ng-mouseleave="hideConversionControls(conv)" >
-				        	<td style="width: 20%" >{{conv.conversionFile}}</td>
 				        	<td style="width: 20%" >{{conv.sourceBuild.name}}</td>
 				        	<td style="width: 20%" >{{conv.destBuild.name}}</td>
+				        	<td style="width: 20%" >{{conv.conversionFile}}</td>
 				        	<td style="width: 10%" >
 				        	<div ng-show="conv.show">
 				                <button class="btn btn-xs btn-danger table-button" ng-click="deleteConversion(conv)" uib-tooltip="delete conversion" data-toggle="tooltip" data-placement="top" title="remove">
@@ -366,6 +382,65 @@
 				        </tr>
 				    </tbody>
 				</table>
+			   </div> <!-- for cg-busy -->
+			   </div> <!-- for cg-busy -->
+	     	</uib-tab>
+	        <uib-tab heading="Liftover Conversion">
+	     	   <div cg-busy="{promise:liftoverPromise,message:'Uploading Liftover File',minDuration: 1000}">
+	     	    <h4>Liftover Chain Files</h4>
+			     	<table class="table" >
+					    <thead>
+					        <tr>
+					            <th>Source Build</th>
+					            <th>Dest Build</th>
+					            <th>Filename</th>
+					            <th>Controls</th>
+					        </tr>
+					    </thead>
+					    <tbody>
+					        <tr ng-repeat="liftFile in liftoverFileList" ng-mouseenter="showLiftoverFileControls(liftFile)" ng-mouseleave="hideLiftoverFileControls(liftFile)" >
+					        	<td style="width: 20%" >{{liftFile.sourceBuild.name}}</td>
+					        	<td style="width: 20%" >{{liftFile.destBuild.name}}</td>
+					        	<td style="width: 20%" >{{liftFile.chainFile}}</td>
+					        	<td style="width: 10%" >
+					        	<div ng-show="liftFile.show">
+					                <button class="btn btn-xs btn-danger table-button" ng-click="deleteLiftoverChain(liftFile)" uib-tooltip="delete liftover chain" data-toggle="tooltip" data-placement="top" title="remove">
+					                 	<span class="glyphicon glyphicon-trash"></span>
+					                </button>
+				               </div>
+				               </td>	
+					        </tr>
+					    </tbody>
+					</table>
+				 </h4>
+				 <h4>Supported Liftovers</h4>
+			     	<table class="table" >
+					    <thead>
+					        <tr>
+					            <th>Source Build</th>
+					            <th>Dest Build</th>
+					            <th>Chains</th>
+					            <th>Controls</th>
+					        </tr>
+					    </thead>
+					    <tbody>
+					        <tr ng-repeat="liftSupport in liftoverSupportList" ng-mouseenter="showLiftoverSupportControls(liftSupport)" ng-mouseleave="hideLiftoverSupportControls(liftSupport)" >
+					        	<td style="width: 20%" >{{liftSupport.sourceBuild.name}}</td>
+					        	<td style="width: 20%" >{{liftSupport.destBuild.name}}</td>
+					        	<td style="width: 20%" ><span ng-repeat="chain in liftSupport.chains">
+					        							  {{chain.chainFile}}
+					        							</span></td>
+					        	<td style="width: 10%" >
+					        	<div ng-show="liftSupport.show">
+					                <button class="btn btn-xs btn-danger table-button" ng-click="deleteLiftoverSupport(liftSupport)" uib-tooltip="delete liftover support" data-toggle="tooltip" data-placement="top" title="remove">
+					                 	<span class="glyphicon glyphicon-trash"></span>
+					                </button>
+				               </div>
+				               </td>	
+					        </tr>
+					    </tbody>
+					</table>
+				 </h4>
 			   </div> <!-- for cg-busy -->
 			   </div> <!-- for cg-busy -->
 	     	</uib-tab>

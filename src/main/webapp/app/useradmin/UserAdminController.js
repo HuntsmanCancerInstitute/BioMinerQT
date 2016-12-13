@@ -38,6 +38,9 @@ function($rootScope, $scope, $http, $location, $window, $uibModal, $timeout, $up
 	$scope.organismList = [];
 	$scope.selectedUsers = [];
 	$scope.selectedLab;
+	$scope.liftoverFileList = [];
+	$scope.liftoverSupportList = [];
+	
 
 	$scope.selectedTf;
 	$scope.tfList = [];
@@ -207,8 +210,22 @@ function($rootScope, $scope, $http, $location, $window, $uibModal, $timeout, $up
 		});
 	};
 	
+	$scope.loadLiftoverChainData = function() {
+		DynamicDictionary.loadLiftoverChains().success(function(data,status) {
+			$scope.liftoverFileList = data;
+		});
+	}
+	
+	$scope.loadLiftoverSupportData = function() {
+		DynamicDictionary.loadLiftoverSupports().success(function(data,status) {
+			$scope.liftoverSupportList = data;
+		});
+	}
+	
 	$scope.loadTfData();
 	$scope.loadConversionData();
+	$scope.loadLiftoverChainData();
+	$scope.loadLiftoverSupportData();
 	
 	
 	/***************************************
@@ -527,12 +544,7 @@ function($rootScope, $scope, $http, $location, $window, $uibModal, $timeout, $up
 	 * 
 	 * *************************************
 	 ***************************************/
-	$scope.$watch('conversionTabOpen', function() {
-		if ($scope.conversionTabOpen) {
-			$scope.loadConversionData();
-		}
-    });
-	
+
 	$scope.showConversionControls = function(conv) {
 		conv.show = true;
 	}
@@ -619,8 +631,160 @@ function($rootScope, $scope, $http, $location, $window, $uibModal, $timeout, $up
 				}(data));
 			});
 	    });
-		
 	};
+	
+	/***************************************
+	 * *************************************
+	 * 
+	 *     Liftover methods
+	 * 
+	 * *************************************
+	 ***************************************/
+
+	$scope.showLiftoverSupportControls = function(lift) {
+		lift.show = true;
+	}
+	
+	$scope.hideLiftoverSupportControls = function(lift) {
+		lift.show = false;
+	}
+	
+	$scope.showLiftoverFileControls = function(lift) {
+		lift.show = true;
+	}
+	
+	$scope.hideLiftoverFileControls = function(lift) {
+		lift.show = false;
+	}
+	
+	$scope.deleteLiftoverChain = function(lift) {
+		if (lift.supportCount > 0) {
+			dialogs.error("Chain in Use","Selected chain is currently in use, please delete Supporting Liftover before deleting the chain.");
+		} else {
+			var dialog = dialogs.confirm("Delete Liftover Chain","Are you sure you want to delete the Liftover Chain entry?");
+			
+			dialog.result.then(function() {
+				$http({
+					url: "liftover/delete_liftover_chain",
+					method: "DELETE",
+					params: {idLiftoverChain : lift.idLiftoverChain},
+				}).success(function(){
+					console.log("Deleted liftover");
+					$scope.loadLiftoverChainData();
+					$scope.loadLiftoverSupportData();
+				}).error(function() {
+					console.log("Failed to delete liftover");
+					$scope.loadLiftoverChainData();
+					$scope.loadLiftoverSupportData();
+				});
+			});
+		}
+	}
+	
+	$scope.deleteLiftoverSupport = function(lift) {
+		var dialog = dialogs.confirm("Delete Liftover Support","Are you sure you want to delete the Liftover Support entry?");
+		
+    	dialog.result.then(function() {
+    		$http({
+    			url: "liftover/delete_liftover_support",
+    			method: "DELETE",
+    			params: {idLiftoverSupport : lift.idLiftoverSupport},
+    		}).success(function(){
+    			$scope.loadLiftoverSupportData();
+    			$scope.loadLiftoverChainData();
+    		}).error(function(data) {
+    			dialog.error("Error Deleting Liftover Support","Failed to delete Liftover Support, please contact Admins.");
+    			$scope.loadLiftoverSupportData();
+    			$scope.loadLiftoverChainData();
+    		});
+    	});
+		
+		
+	}
+	
+	$scope.addLiftoverChain = function(file,ob) {
+		var modalInstance = $uibModal.open({
+    		templateUrl: 'app/useradmin/liftoverChainUploadWindow.html',
+    		controller: 'LiftoverChainUploadWindowController',
+    		resolve: {
+    			organismBuildList: function() {
+    				return $scope.organismBuildList;
+    			},
+    			chainList: function() {
+    				return $scope.liftoverFileList;
+    			}
+    		}
+    	});
+    	
+    	modalInstance.result.then(function (lift) {
+    		$scope.selectedLiftover = lift;
+    		$scope.liftoverDeferred = $q.defer();
+    		$scope.liftoverRunning = true;
+    		$scope.liftoverPromise = null;
+    		$scope.liftoverPromise =  $upload.upload({
+				url: "liftover/add_liftover_chain",
+				file: $scope.selectedLiftover.path[0],
+				params : {idSourceBuild: $scope.selectedLiftover.sourceBuild.idOrganismBuild, idDestBuild: $scope.selectedLiftover.destBuild.idOrganismBuild},
+				timeout: $scope.liftoverDeferred.promise,
+			}).success(function(data) {
+				dialogs.notify("Success","Liftover Chain successfully added to the database.")
+				$scope.liftoverPromise = null;
+				$scope.loadLiftoverChainData();
+				$scope.loadLiftoverSupportData();
+			}).error(function(data) {
+				$scope.liftoverRunning = false;
+				dialogs.error("Liftover Upload Error","Error creating liftover chain database entry: " + data.message);
+				$scope.liftoverPromise = null;
+				$scope.loadLiftoverChainData();
+				$scope.loadLiftoverSupportData();
+			});
+	    });
+	};
+	
+	$scope.addLiftoverSupport = function(file,ob) {
+		var modalInstance = $uibModal.open({
+    		templateUrl: 'app/useradmin/liftoverSupportUploadWindow.html',
+    		controller: 'LiftoverSupportUploadWindowController',
+    		resolve: {
+    			organismBuildList: function() {
+    				return $scope.organismBuildList;
+    			},
+    			supportList: function() {
+    				return $scope.liftoverSupportList;
+    			},
+    			chainList: function() {
+    				return $scope.liftoverFileList;
+    			}
+    		}
+    	});
+    	
+    	modalInstance.result.then(function (lift) {
+    		$scope.selectedLiftover = lift;
+    		$scope.liftoverDeferred = $q.defer();
+    		$scope.liftoverRunning = true;
+    		$scope.liftoverPromise = null;
+    		$scope.liftoverPromise =  $upload.upload({
+				url: "liftover/add_liftover_support",
+				params : {idSourceBuild: $scope.selectedLiftover.sourceBuild.idOrganismBuild, 
+					idDestBuild: $scope.selectedLiftover.destBuild.idOrganismBuild,
+					idChainList: $scope.selectedLiftover.idChainList},
+				timeout: $scope.liftoverDeferred.promise,
+			}).success(function(data) {
+				dialogs.notify("Success","Liftover Support successfully added to the database.")
+				$scope.liftoverPromise = null;
+				$scope.loadLiftoverChainData();
+				$scope.loadLiftoverSupportData();
+			}).error(function(data) {
+				$scope.liftoverRunning = false;
+				dialogs.error("Liftover Upload Error","Error creating liftover support database entry: " + data.message);
+				$scope.liftoverPromise = null;
+				$scope.loadLiftoverChainData();
+				$scope.loadLiftoverSupportData();
+			});
+	    });
+	};
+	
+
 	
 	
 	/***************************************
@@ -1180,7 +1344,7 @@ function($rootScope, $scope, $http, $location, $window, $uibModal, $timeout, $up
     	if (selectedBuilds.length > 0) {
     		var dialog = dialogs.confirm("Delete Builds","Click 'Yes' to delete selected builds, otherwise click 'No'.");
     		
-        	dialog.result.then(function(result) {
+        	dialog.result.then(function() {
         		$scope.deleteSelectedBuilds(selectedBuilds);
         	});
     	} else {
@@ -1224,7 +1388,7 @@ function($rootScope, $scope, $http, $location, $window, $uibModal, $timeout, $up
     	if (selectedIds.length > 0) {
     		var dialog = dialogs.confirm("Delete Users","Click 'Yes' to delete selected users, click 'No' to bail.");
     		
-        	dialog.result.then(function(result) {
+        	dialog.result.then(function() {
         		$scope.deleteSelectedUsers(selectedIds);
         	});
     	} else {

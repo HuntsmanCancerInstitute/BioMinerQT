@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.PrintWriter;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -40,7 +41,9 @@ import org.springframework.web.multipart.MultipartFile;
 import returnModel.HomologyModel;
 import returnModel.IgvSessionResult;
 import returnModel.JBrowseReturnData;
+import returnModel.QueryResult;
 import returnModel.QueryResultContainer;
+import returnModel.QueryResultMessage;
 import returnModel.QuerySettings;
 import hci.biominer.model.Analysis;
 import hci.biominer.model.AnalysisType;
@@ -48,10 +51,10 @@ import hci.biominer.model.DataTrack;
 import hci.biominer.model.GeneIdConversion;
 import hci.biominer.model.GeneNameModel;
 import hci.biominer.model.GenericResult;
+import hci.biominer.model.LiftoverSupport;
 import hci.biominer.model.LocalInterval;
 import hci.biominer.model.OrganismBuild;
 import hci.biominer.model.Project;
-import hci.biominer.model.QueryResult;
 import hci.biominer.model.Sample;
 import hci.biominer.model.SampleSource;
 import hci.biominer.model.TransFactor;
@@ -67,6 +70,7 @@ import hci.biominer.parser.BedLocalIntervalParser;
 import hci.biominer.parser.HomologyParser;
 import hci.biominer.service.DashboardService;
 import hci.biominer.service.GeneIdConversionService;
+import hci.biominer.service.LiftoverSupportService;
 import hci.biominer.service.OrganismBuildService;
 import hci.biominer.service.LabService;
 import hci.biominer.service.TransFactorService;
@@ -80,6 +84,8 @@ import hci.biominer.util.GenomeBuilds;
 import hci.biominer.util.IO;
 import hci.biominer.util.IntervalTrees;
 import hci.biominer.util.JBrowseUtilities;
+import hci.biominer.util.LiftoverUtilities;
+import hci.biominer.util.ObjectSizeFetcher;
 import hci.biominer.util.RegionUpload;
 import hci.biominer.util.SessionData;
 import hci.biominer.util.igv.IGVResource;
@@ -93,7 +99,6 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.zip.GZIPOutputStream;
-
 
 
 @Controller
@@ -128,29 +133,20 @@ public class QueryController {
     @Autowired
     private GeneIdConversionService geneIdConversionService;
     
-    //private StringBuilder warnings = new StringBuilder("");
+    @Autowired
+    private LiftoverSupportService liftoverService;
     
-    //private HashMap<String,QueryResultContainer> resultsDict =  new HashMap<String,QueryResultContainer>();
-    //private HashMap<String,StringBuilder> queryWarningsDict = new HashMap<String,StringBuilder>();
-    //private HashMap<String,QuerySettings> settingsDict = new HashMap<String,QuerySettings>();
-    //private HashMap<String,String> regionDict = new HashMap<String,String>();
-    //private HashMap<String,String> geneDict = new HashMap<String,String>();
-    
+    //User specific data
     private HashMap<String,HashMap<String,SessionData>> currentSessions = new HashMap<String,HashMap<String,SessionData>>();
+    private HashMap<String,HashMap<String,SessionData>> tempResult = new HashMap<String,HashMap<String,SessionData>>();
     private HashMap<String,Subject> activeUsers = new HashMap<String,Subject>();
-    private HashMap<String,ArrayList<QueryResult>> homologyResult = new HashMap<String,ArrayList<QueryResult>>();
-    
     
     private HashMap<String,File> fileDict = new HashMap<String,File>();
     private HashMap<Long,List<GeneNameModel>> searchDict = new HashMap<Long,List<GeneNameModel>>();
     private HashMap<String,ArrayList<Long>> nameLookupDict = new HashMap<String,ArrayList<Long>>();
     private HashMap<String,String> ensembl2NameDict = new HashMap<String,String>();
     private HashMap<Long,String> bidToEnsembl = new HashMap<Long,String>();
-    
-    
-    
-    
-    
+     
     private SessionCheckerTimer sct;
     private Date date = new Date();
     
@@ -280,9 +276,6 @@ public class QueryController {
     			ensembl2NameDict.put(bidToEnsembl.get(id),associatedLink.get(id));
     		}
     	}
-    	
-    	
-
     }
   
     @RequestMapping(value="/clearNames",method=RequestMethod.POST)
@@ -300,21 +293,9 @@ public class QueryController {
     
     @RequestMapping(value="warnings",method=RequestMethod.GET,produces="text/plain")
     @ResponseBody
-    public String getWarnings(@RequestParam("idTab") String idTab) throws Exception{
+    public String getWarnings(@RequestParam("idTab") String idTab) {
     	//Get current active user
-    	Subject currentUser = SecurityUtils.getSubject();
-    	
-    	User user = null;
-    	String username;
-    	if (currentUser.isAuthenticated()) {
-    		Long userId = (Long) currentUser.getPrincipal();
-    		user = userService.getUser(userId);
-    		
-    		this.activeUsers.put(user.getUsername(), currentUser);
-    		username = user.getUsername();
-    	} else {
-    		username = "guest";
-    	}
+    	String username = getUsername();
     	
     	String warnings = "";
     	if (currentSessions.containsKey(username)) {
@@ -330,20 +311,8 @@ public class QueryController {
     @RequestMapping(value="uploadGene",method=RequestMethod.POST)
     @ResponseBody
     public RegionUpload parseGenes(HttpServletResponse response, @RequestParam("file") MultipartFile file, @RequestParam("idTab") String idTab) {
-    	//Get current active user
-    	Subject currentUser = SecurityUtils.getSubject();
-    	
-    	User user = null;
-    	String username;
-    	if (currentUser.isAuthenticated()) {
-    		Long userId = (Long) currentUser.getPrincipal();
-    		user = userService.getUser(userId);
-    		
-    		this.activeUsers.put(user.getUsername(), currentUser);
-    		username = user.getUsername();
-    	} else {
-    		username = "guest";
-    	}
+      	//Get current active user
+    	String username = getUsername();
     	
     	//gene count
     	int geneCounter = 0;
@@ -367,8 +336,6 @@ public class QueryController {
     				br = new BufferedReader(new InputStreamReader(zip));
     			} else {
     				br = new BufferedReader(new InputStreamReader(file.getInputStream()));
-    				
-    				
     			}
     
     			String temp;
@@ -379,7 +346,6 @@ public class QueryController {
 						response.setStatus(500);
 						uploadFailed = true;
     				}
-    				
     				
     				String[] parts = temp.split("\\s+");
     				for (String p: parts) {
@@ -407,17 +373,12 @@ public class QueryController {
     				} else {
     					currentSessions.get(username).get(idTab).setGeneString(geneString.toString());
     				}
-    				
     			}
-    			
     			br.close();
-    			
     		} catch (IOException ioex) {
     			regions.setMessage("Error reading file: " + ioex.getMessage());
     			ioex.printStackTrace();
-    		}
-    		
-    		
+    		}	
     	} else {
     		regions.setMessage("File is empty!");
     	}
@@ -436,19 +397,7 @@ public class QueryController {
     @ResponseBody
     public RegionUpload parseRegions(HttpServletResponse response, @RequestParam("file") MultipartFile file, @RequestParam("idTab") String idTab) {
     	//Get current active user
-    	Subject currentUser = SecurityUtils.getSubject();
-    	
-    	User user = null;
-    	String username;
-    	if (currentUser.isAuthenticated()) {
-    		Long userId = (Long) currentUser.getPrincipal();
-    		user = userService.getUser(userId);
-    		
-    		this.activeUsers.put(user.getUsername(), currentUser);
-    		username = user.getUsername();
-    	} else {
-    		username = "guest";
-    	}
+    	String username = getUsername();
     	
     	//Count the number of regions uploaded
     	int regionCounter = 0;
@@ -546,7 +495,6 @@ public class QueryController {
     
     @RequestMapping(value = "run", method=RequestMethod.GET)
     @ResponseBody
-    //public List<QueryResult> run(
     public QueryResultContainer run (
         @RequestParam(value="codeResultType") String codeResultType,
         @RequestParam(value="idOrganismBuild") Long idOrganismBuild,
@@ -590,19 +538,8 @@ public class QueryController {
     	
     
     	//Get current active user
-    	Subject currentUser = SecurityUtils.getSubject();
-    	
-    	User user = null;
-    	String username;
-    	if (currentUser.isAuthenticated()) {
-    		Long userId = (Long) currentUser.getPrincipal();
-    		user = userService.getUser(userId);
-    		
-    		this.activeUsers.put(user.getUsername(), currentUser);
-    		username = user.getUsername();
-    	} else {
-    		username = "guest";
-    	}
+    	User user = getUser();
+    	String username = getUsername();
     	
     	//Clear out warnings
     	SessionData sessionData = null;
@@ -776,7 +713,11 @@ public class QueryController {
     	sessionData.setSettings(qs);
     	sessionData.setLastTouched(new Date());
     	
-    	currentSessions.get(username).put(idTab,sessionData);
+    	if (!tempResult.containsKey(username)) {
+    		tempResult.put(username, new HashMap<String,SessionData>());
+    	}
+    	tempResult.get(username).put(idTab, sessionData);
+    	//currentSessions.get(username).put(idTab,sessionData);
     	
     	System.out.println("Used analyses " + usedAnalyses.size());
     	System.out.println("Used data tracks " + usedDataTracks.keySet().size());
@@ -792,19 +733,164 @@ public class QueryController {
     	return qrcSub;	
     }
     
+    @RequestMapping(value="acceptResult",method=RequestMethod.POST)
+    @ResponseBody
+    private void acceptResult(HttpServletResponse response, @RequestParam(value="idTab") String idTab) throws IOException {
+    	String username = getUsername();
+    	
+    	if (!tempResult.containsKey(username) || !tempResult.get(username).containsKey(idTab)) {
+    		response.setStatus(998);
+        	PrintWriter out = response.getWriter();
+        	out.println("<p>No homologies found for user. Please try again or contact administrator.</p>");
+        	out.flush();
+    	} else {
+    		if (!currentSessions.containsKey(username)) {
+    			currentSessions.put(username, new HashMap<String,SessionData>());
+    		}
+    		
+    		currentSessions.get(username).put(idTab, tempResult.get(username).get(idTab));
+    		tempResult.get(username).remove(idTab);
+    	}
+    }
+    
+    @RequestMapping(value="rejectResult",method=RequestMethod.POST)
+    @ResponseBody
+    private void rejectResult(HttpServletResponse response, @RequestParam(value="idTab") String idTab) throws IOException {
+    	String username = getUsername();
+    	
+    	if (!tempResult.containsKey(username) || !tempResult.get(username).containsKey(idTab)) {
+    		response.setStatus(998);
+        	PrintWriter out = response.getWriter();
+        	out.println("<p>No homologies found for user. Please try again or contact administrator.</p>");
+        	out.flush();
+    	} else {
+    		tempResult.get(username).remove(idTab);
+    	}
+    }
+    
+    @RequestMapping(value="clearSessionInfo",method=RequestMethod.POST)
+    @ResponseBody
+    private void clearSessionInfo(@RequestParam(value="idTab") String idTab) {
+    	String username = getUsername();
+    	if (username.equals("guest")) {
+    		if (currentSessions.containsKey("guest") && currentSessions.get("guest").containsKey(idTab)) {
+    			currentSessions.get("guest").remove(idTab);
+    			System.out.println("DESTROY GUEST SESSION! " + idTab);
+    		}
+    		if (tempResult.containsKey("guest") && tempResult.get("guest").containsKey(idTab)) {
+    			tempResult.get("guest").remove(idTab);
+    			System.out.println("DESTROY GUEST HOMOLOGY!" + idTab);
+    		}
+    		
+    	} else {
+    		if (tempResult.containsKey(username) && tempResult.get(username).containsKey(idTab)) {
+    			tempResult.get(username).remove(idTab);
+    			System.out.println("DESTROY " + username + " HOMOLOGY!" + idTab);
+        	}
+    	}
+    	
+    }
+    
+    @RequestMapping(value="homologyLiftoverClear",method=RequestMethod.GET)
+    @ResponseBody
+    private void homologyLiftoverClear(
+    		HttpServletResponse response, 
+    		@RequestParam(value="idTab") String idTab) {
+    	String username = getUsername();
+    	
+    	if (!tempResult.containsKey(username) || !tempResult.get(username).containsKey(idTab)) {
+    		response.setStatus(998);
+    		System.out.println("No current homologies");
+    	} else {
+			tempResult.get(username).remove(idTab);
+		}
+    }
+    
+    @RequestMapping(value="homologyLiftoverResult",method=RequestMethod.GET)
+    @ResponseBody
+    private QueryResultContainer homologyLiftoverResult(
+    		HttpServletResponse response, 
+    		@RequestParam(value="idTab") String idTab, 
+    		@RequestParam(value="idSupport") Long idSupport, 
+            @RequestParam(value="resultsPerPage") Integer resultsPerPage,
+            @RequestParam(value="sortType") String sortType,
+            @RequestParam(value="isReverse") boolean reverse) throws IOException {
+    	
+    	String username = getUsername();
+    	
+    	if (!tempResult.containsKey(username) || !tempResult.get(username).containsKey(idTab)) {
+    		response.setStatus(998);
+        	PrintWriter out = response.getWriter();
+        	out.println("<p>No homologies found for user. Please try again or contact administrator.</p>");
+        	out.flush();
+    	} else {
+    		if (!currentSessions.containsKey(username)) {
+    			currentSessions.put(username, new HashMap<String,SessionData>());
+    		}
+    		currentSessions.get(username).put(idTab, tempResult.get(username).get(idTab));
+    		tempResult.get(username).remove(idTab);
+    	}
+    	 
+    	QueryResultContainer qrcSub = currentSessions.get(username).get(idTab).getResults().getQrcSubset(resultsPerPage, 0, sortType, reverse);
+        return qrcSub;
+    }
+    
+    
+    @RequestMapping(value="homologyLiftover",method=RequestMethod.POST,produces="text/plain")
+    @ResponseBody
+    private String homologyLiftover(HttpServletResponse response, @RequestParam("idTab") String idTab, @RequestParam("idSupport") Long idSupport) throws Exception {
+    	String username = getUsername();
+    	
+     	StringBuilder returnMessage = new StringBuilder("");
+    	if (!currentSessions.containsKey(username) || !currentSessions.get(username).containsKey(idTab)) {
+    		response.setStatus(988);
+    		returnMessage.append("Could not find an existing session for liftover!");
+    	} else {
+    		SessionData sd = currentSessions.get(username).get(idTab);
+    	
+    		//Get external gene information
+    		LiftoverSupport ls = this.liftoverService.getLiftoverSupportByID(idSupport);
+    		
+    		//Get property info
+    		String pathToLiftover = BiominerProperties.getProperty("liftoverPath");
+    		String pathToLiftoverTemp = BiominerProperties.getProperty("liftoverTemp");
+    		File pathToChains = FileController.getLiftoverDirectory();    		
+    		
+    		//Call liftover
+    		QueryResultMessage qrm = LiftoverUtilities.runLiftOver(sd.getResults(), ls, pathToLiftover, pathToChains, pathToLiftoverTemp, idTab);
+    		
+    		if (qrm.isFailed()) {
+    			returnMessage.append(qrm.getMessage());
+    			response.setStatus(988);
+    		} else {
+    			//qrc = new QueryResultContainer(tempResult.get(username).get(idTab),tempResult.get(username).get(idTab).size(),oldQrc.getAnalysisNum(),
+    			//0, 0, oldQrc.getSortType(), true, ob.getIdOrganismBuild(), ob.getEnsemblCode(),ob.getOrganism().getBinomial(), false);
+    			SessionData newSd = new SessionData();
+    			QueryResultContainer qrc = new QueryResultContainer(qrm.getResultList(),qrm.getResultList().size(),sd.getResults().getAnalysisNum(),0,0,
+    					sd.getResults().getSortType(),true,ls.getDestBuild().getIdOrganismBuild(),ls.getDestBuild().getEnsemblCode(),ls.getDestBuild().getOrganism().getBinomial(),false);
+    			qrc.setResultList(qrm.getResultList());
+    			QuerySettings qrs = sd.getSettings().clone();
+    			qrs.setHomology(ls.getSourceBuild().getIdOrganismBuild(), ls.getDestBuild().getIdOrganismBuild());
+    			newSd.clearWarnings();
+    			newSd.setLastTouched(new Date());
+    			newSd.setSettings(qrs);
+    			newSd.setResults(qrc);
+    			
+    			if (!tempResult.containsKey(username)) {
+    				tempResult.put(username, new HashMap<String,SessionData>());
+    			}
+    			tempResult.get(username).put(idTab, newSd);
+    			returnMessage.append(qrm.getMessage());
+    		}
+    	}
+    	return returnMessage.toString();
+    }
+    
     @RequestMapping(value="homologyGeneNames",method=RequestMethod.POST,produces="text/plain")
     @ResponseBody
     private String homologyGeneNames(HttpServletResponse response, @RequestParam("idTab") String idTab, @RequestParam("idConversion") Long idConversion) throws Exception {
-    	Subject currentUser = SecurityUtils.getSubject();
-    	String username = "guest";
+    	String username = getUsername();
     	
-    	if (currentUser.isAuthenticated()) {
-    		Long userId = (Long) currentUser.getPrincipal();
-    		User user = userService.getUser(userId);
-    		username = user.getUsername();
-    	}
-    	
-   
     	ArrayList<QueryResult> homologyResult = new ArrayList<QueryResult>();
     	
     	StringBuilder returnMessage = new StringBuilder("");
@@ -893,7 +979,23 @@ public class QueryController {
     			}
     		}
     		
-    		this.homologyResult.put(idTab, homologyResult);
+    		SessionData newSd = new SessionData();
+    		QueryResultContainer qrc = new QueryResultContainer(homologyResult,homologyResult.size(),sd.getResults().getAnalysisNum(),0,0,
+					sd.getResults().getSortType(),true,gic.getDestBuild().getIdOrganismBuild(),gic.getDestBuild().getEnsemblCode(),gic.getDestBuild().getOrganism().getBinomial(),false);
+			qrc.setResultList(homologyResult);
+			QuerySettings qrs = sd.getSettings().clone();
+			qrs.setHomology(gic.getSourceBuild().getIdOrganismBuild(), gic.getDestBuild().getIdOrganismBuild());
+			newSd.clearWarnings();
+			newSd.setLastTouched(new Date());
+			newSd.setSettings(qrs);
+			newSd.setResults(qrc);
+			
+			
+			
+			if (!tempResult.containsKey(username)) {
+				tempResult.put(username, new HashMap<String,SessionData>());
+			}
+			tempResult.get(username).put(idTab, newSd);
     		
     		returnMessage.append(String.format("Found %d genes to convert.<br>",totalInput));
     		returnMessage.append(String.format("Successfully found homology for %d genes (%.2f). <br>",totalHomology,(float)totalHomology / totalInput * 100 ));
@@ -906,91 +1008,57 @@ public class QueryController {
     
     @RequestMapping(value="homologyGeneNameClear",method=RequestMethod.GET)
     @ResponseBody
-    private void homlogyGeneNameClear(
+    private void homologyGeneNameClear(
     		HttpServletResponse response, 
     		@RequestParam(value="idTab") String idTab) {
     	
-    	if (!homologyResult.containsKey(idTab)) {
-			response.setStatus(988);
-		} else {
-			homologyResult.remove(idTab);
+    	String username = getUsername();
+    	
+    	if (!tempResult.containsKey(username) || !tempResult.get(username).containsKey(idTab)) {
+    		response.setStatus(998);
+    		System.out.println("No current homologies");
+    	} else {
+			tempResult.get(username).remove(idTab);
 		}
     	
     }
     
     @RequestMapping(value="homologyGeneNameResult",method=RequestMethod.GET)
     @ResponseBody
-    private QueryResultContainer homlogyGeneNameResult(
+    private QueryResultContainer homologyGeneNameResult(
     		HttpServletResponse response, 
     		@RequestParam(value="idTab") String idTab, 
     		@RequestParam(value="idConversion") Long idConversion, 
             @RequestParam(value="resultsPerPage") Integer resultsPerPage,
             @RequestParam(value="sortType") String sortType,
-            @RequestParam(value="isReverse") boolean reverse) {
+            @RequestParam(value="isReverse") boolean reverse) throws Exception {
     	
+    	String username = getUsername();
     	
-    	QueryResultContainer qrc = null;
-    
+    	QueryResultContainer qrcSub = null;
     	
-		Subject currentUser = SecurityUtils.getSubject();
-    	String username = "guest";
-    	    	
-    	if (currentUser.isAuthenticated()) {
-    		Long userId = (Long) currentUser.getPrincipal();
-    		User user = userService.getUser(userId);
-    		username = user.getUsername();
-    	}
-    	
-    	if (!currentSessions.containsKey(username) || !currentSessions.get(username).containsKey(idTab)) {
-    		response.setStatus(988);
-    		
+    	if (!tempResult.containsKey(username) || !tempResult.get(username).containsKey(idTab)) {
+    		response.setStatus(998);
+        	PrintWriter out = response.getWriter();
+        	out.println("<p>No homologies found for user. Please try again or contact administrator.</p>");
+        	out.flush();
     	} else {
-    		if (!homologyResult.containsKey(idTab)) {
-    			response.setStatus(988);
-    			System.out.println("Could not find homology");
-    		} else {
-    			//Pull up the existing result
-        		SessionData sd = currentSessions.get(username).get(idTab);
-        		
-        		//Get new organism build information and add to qrc
-        		GeneIdConversion gic = geneIdConversionService.getGeneIdConversionByID(idConversion);
-        		OrganismBuild ob = gic.getDestBuild();
-        		
-        		
-        		
-        		QueryResultContainer oldQrc = sd.getResults();
-            	qrc = new QueryResultContainer(homologyResult.get(idTab),homologyResult.get(idTab).size(),oldQrc.getAnalysisNum(),
-            			0, 0, oldQrc.getSortType(), true, ob.getIdOrganismBuild(), ob.getEnsemblCode(),ob.getOrganism().getBinomial(), false);
-        
-      
-        		//Stuff back into session
-            	sd.setResults(qrc);
-            	
-            	sd.setLastTouched(new Date());
-            	
-
-        		currentSessions.get(username).put(idTab, sd);
-        		
+    		if (!currentSessions.containsKey(username)) {
+    			currentSessions.put(username, new HashMap<String,SessionData>());
     		}
+    		
+    		currentSessions.get(username).put(idTab, tempResult.get(username).get(idTab));
+    		tempResult.get(username).remove(idTab);
+    		qrcSub = currentSessions.get(username).get(idTab).getResults().getQrcSubset(resultsPerPage, 0, sortType, reverse);
     	}
-    	 
     	
-    	homologyResult.remove(idTab);
-    	QueryResultContainer qrcSub = qrc.getQrcSubset(resultsPerPage, 0, sortType, reverse);
         return qrcSub;
     }
     
     @RequestMapping(value="copyAllCoordinates",method=RequestMethod.POST,produces="text/plain")
     @ResponseBody
     private String copyAllCoordinates(HttpServletResponse response, @RequestParam("idTab") String idTab) {
-    	Subject currentUser = SecurityUtils.getSubject();
-    	String username = "guest";
-    	    	
-    	if (currentUser.isAuthenticated()) {
-    		Long userId = (Long) currentUser.getPrincipal();
-    		User user = userService.getUser(userId);
-    		username = user.getUsername();
-    	} 
+    	String username = getUsername();
     	
     	boolean failed = false;
     	int coordinateCount = 0;
@@ -1021,15 +1089,7 @@ public class QueryController {
     @RequestMapping(value="copyAllGenes",method=RequestMethod.POST,produces="text/plain")
     @ResponseBody
     private String copyAllGenes(HttpServletResponse response, @RequestParam("idTab") String idTab) {
-    	Subject currentUser = SecurityUtils.getSubject();
-    	String username = "guest";
-    	    	
-    	//If user isn't authenticated, return nothing
-    	if (currentUser.isAuthenticated()) {
-    		Long userId = (Long) currentUser.getPrincipal();
-    		User user = userService.getUser(userId);
-    		username = user.getUsername();
-    	} 
+    	String username = getUsername();
     	
     	boolean failed = false;
     	int geneCount = 0;
@@ -1060,21 +1120,10 @@ public class QueryController {
     @ResponseBody
     public QuerySettings getQuerySettings(@RequestParam("idTab") String idTab) throws Exception {
     	//Get current active user
-    	Subject currentUser = SecurityUtils.getSubject();
-    	User user = null;
-    	
-    	//If user isn't authenticated, return nothing
-    	if (currentUser.isAuthenticated()) {
-    		Long userId = (Long) currentUser.getPrincipal();
-    		user = userService.getUser(userId);
-    	} else {
-    		return null;
-    	}
-    	
-    	String username = user.getUsername();
+    	String username = getUsername();
     	
     	if (!currentSessions.containsKey(username)) {
-    		loadSessionDict(username);
+    		loadSessionDict(username,idTab);
     	}
     	
     	if (currentSessions.containsKey(username)) {
@@ -1099,21 +1148,10 @@ public class QueryController {
     @ResponseBody
     public QueryResultContainer getQueryResults(@RequestParam("idTab") String idTab) throws Exception {
     	//Get current active user
-    	Subject currentUser = SecurityUtils.getSubject();
-    	User user = null;
-    	
-    	//If user isn't authenticated, return nothing
-    	if (currentUser.isAuthenticated()) {
-    		Long userId = (Long) currentUser.getPrincipal();
-    		user = userService.getUser(userId);
-    	} else {
-    		return null;
-    	}
-    	
-    	String username = user.getUsername();
+    	String username = getUsername();
     	
     	if (!currentSessions.containsKey(username)) {
-    		loadSessionDict(username);
+    		loadSessionDict(username,idTab);
     	}
     	
     	if (currentSessions.containsKey(username)) {
@@ -1136,7 +1174,7 @@ public class QueryController {
     }
     
     
-    private void loadSessionDict(String username) throws Exception {
+    private void loadSessionDict(String username, String idTab) throws Exception {
     	File resultsPath = new File(FileController.getQueryDirectory(),username + ".session.ser");
     	if (resultsPath.exists()) {
     		FileInputStream fin = new FileInputStream(resultsPath);
@@ -1144,7 +1182,7 @@ public class QueryController {
     		SessionData sd = (SessionData)ois.readObject();
     		ois.close();
     		HashMap<String,SessionData> sdHash = new HashMap<String,SessionData>();
-    		sdHash.put(username, sd);
+    		sdHash.put(idTab, sd);
     		currentSessions.put(username,sdHash);
     	}
     }
@@ -1273,15 +1311,7 @@ public class QueryController {
     		serverName = "127.0.0.1:8080";
     	}
     	
-    	//Get current active user
-    	Subject currentUser = SecurityUtils.getSubject();
-    	User user = null;
-    	String username = "guest";
-    	if (currentUser.isAuthenticated()) {
-    		Long userId = (Long) currentUser.getPrincipal();
-    		user = userService.getUser(userId);
-    		username = user.getUsername();
-    	}
+    	String username = getUsername();
     	
     	//Link hosted directory to local files
     	//Create file handle to hosted files
@@ -1310,14 +1340,7 @@ public class QueryController {
 	    	}
 	    	
 	    	//Get current active user
-	    	Subject currentUser = SecurityUtils.getSubject();
-	    	User user = null;
-	    	String username = "guest";
-	    	if (currentUser.isAuthenticated()) {
-	    		Long userId = (Long) currentUser.getPrincipal();
-	    		user = userService.getUser(userId);
-	    		username = user.getUsername();
-	    	}
+	    	String username = getUsername();
 	    	
 	   
 	    	StringBuilder errors = new StringBuilder("");
@@ -1448,14 +1471,7 @@ public class QueryController {
 	 public void downloadAnalysis(HttpServletRequest request, HttpServletResponse response, @RequestParam(value="codeResultType") String codeResultType, @RequestParam(value="idTab") String idTab) throws Exception{
     	
     	//Get current active user
-    	Subject currentUser = SecurityUtils.getSubject();
-    	User user = null;
-    	String key = "guest";
-    	if (currentUser.isAuthenticated()) {
-    		Long userId = (Long) currentUser.getPrincipal();
-    		user = userService.getUser(userId);
-    		key = user.getUsername();
-    	}
+    	String key = getUsername();
     	
     	if (this.fileDict.containsKey(key)) {
     		File fileToDelete = this.fileDict.get(key);
@@ -1554,14 +1570,7 @@ public class QueryController {
     		@RequestParam(value="sortReverse") boolean sortReverse
     ) {
     	//Get current active user
-    	Subject currentUser = SecurityUtils.getSubject();
-    	User user = null;
-    	String key = "guest";
-    	if (currentUser.isAuthenticated()) {
-    		Long userId = (Long) currentUser.getPrincipal();
-    		user = userService.getUser(userId);
-    		key = user.getUsername();
-    	}
+    	String key = getUsername();
     	
 
     	QueryResultContainer qrc = null;
@@ -1585,12 +1594,7 @@ public class QueryController {
     ) throws Exception {
     	
     	//Get current active user
-    	Subject currentUser = SecurityUtils.getSubject();
-    	User user = null;
-    	if (currentUser.isAuthenticated()) {
-    		Long userId = (Long) currentUser.getPrincipal();
-    		user = userService.getUser(userId);
-    	} 
+    	User user = getUser();
     	
     	//Not sure it is smart to restrict organism list by anything but user.  Going to comment out this fancy version for now...
     	//List<OrganismBuild> obList = this.analysisService.getOrgansimBuildByQuery(user, idAnalysisTypes, idLabs, idProjects, idAnalyses, idSampleSources);
@@ -1610,12 +1614,7 @@ public class QueryController {
     ) throws Exception {
     	
     	//Get current active user
-    	Subject currentUser = SecurityUtils.getSubject();
-    	User user = null;
-    	if (currentUser.isAuthenticated()) {
-    		Long userId = (Long) currentUser.getPrincipal();
-    		user = userService.getUser(userId);
-    	} 
+    	User user = getUser();
     	
     	List<Lab> obList = this.analysisService.getLabByQuery(user, idAnalysisTypes, idProjects, idAnalyses, idSampleSources, idOrganismBuild);
     	
@@ -1633,12 +1632,7 @@ public class QueryController {
     ) throws Exception {
     	
     	//Get current active user
-    	Subject currentUser = SecurityUtils.getSubject();
-    	User user = null;
-    	if (currentUser.isAuthenticated()) {
-    		Long userId = (Long) currentUser.getPrincipal();
-    		user = userService.getUser(userId);
-    	} 
+    	User user = getUser();
     	
     	List<Project> projectList = this.analysisService.getProjectsByQuery(idLabs, idAnalyses, idSampleSources, idAnalysisTypes, idOrganismBuild, user );
     	
@@ -1656,12 +1650,7 @@ public class QueryController {
     ) throws Exception {
     	
     	//Get current active user
-    	Subject currentUser = SecurityUtils.getSubject();
-    	User user = null;
-    	if (currentUser.isAuthenticated()) {
-    		Long userId = (Long) currentUser.getPrincipal();
-    		user = userService.getUser(userId);
-    	} 
+    	User user = getUser();
     	
     	List<Analysis> analysisList = this.analysisService.getAnalysesByQuery(idLabs, idProjects,  idSampleSources, idAnalysisTypes, idOrganismBuild, user );
     	
@@ -1679,12 +1668,7 @@ public class QueryController {
     ) throws Exception {
     	
     	//Get current active user
-    	Subject currentUser = SecurityUtils.getSubject();
-    	User user = null;
-    	if (currentUser.isAuthenticated()) {
-    		Long userId = (Long) currentUser.getPrincipal();
-    		user = userService.getUser(userId);
-    	} 
+    	User user = getUser();
     	
     	List<AnalysisType> analysisTypeList = this.analysisService.getAnalysisTypesByQuery(idLabs, idProjects, idAnalyses, idSampleSources, idOrganismBuild, user );
     	
@@ -1703,12 +1687,7 @@ public class QueryController {
     ) throws Exception {
     	
     	//Get current active user
-    	Subject currentUser = SecurityUtils.getSubject();
-    	User user = null;
-    	if (currentUser.isAuthenticated()) {
-    		Long userId = (Long) currentUser.getPrincipal();
-    		user = userService.getUser(userId);
-    	} 
+    	User user = getUser();
     	
     	List<SampleSource> sampleSourceList = this.analysisService.getSampleSourceByQuery(idLabs, idAnalyses, idProjects, idAnalysisTypes, idOrganismBuild, user );
     	
@@ -1762,18 +1741,7 @@ public class QueryController {
 		}
     	
     	//Get current active user
-    	Subject currentUser = SecurityUtils.getSubject();
-    	String username;
-    	User user = null;
-    	if (currentUser.isAuthenticated()) {
-    		Long userId = (Long) currentUser.getPrincipal();
-    		user = userService.getUser(userId);
-    		
-    		this.activeUsers.put(user.getUsername(), currentUser);
-    		username = user.getUsername();
-    	} else {
-    		username = "guest";
-    	}
+    	String username = getUsername();
     	
     	String[] genes = names.split("\n");
     	List<String> cleanedGenes = new ArrayList<String>();
@@ -2178,6 +2146,8 @@ public class QueryController {
     	
     	return qrList;
     }
+    
+    
    
     private SessionData fetchMostRecentSession(String username) {
     	SessionData mostRecent = null;
@@ -2190,6 +2160,32 @@ public class QueryController {
     	}
     	
     	return mostRecent;
+    }
+    
+    private String getUsername() {
+    	Subject currentUser = SecurityUtils.getSubject();
+    	String username = "guest";
+    	
+    	if (currentUser.isAuthenticated()) {
+    		Long userId = (Long) currentUser.getPrincipal();
+    		User user = userService.getUser(userId);
+    		this.activeUsers.put(user.getUsername(), currentUser);
+    		username = user.getUsername();
+    	}
+    	
+    	return username;
+    }
+    
+    private User getUser() {
+    	Subject currentUser = SecurityUtils.getSubject();
+    	User user = null;
+    	if (currentUser.isAuthenticated()) {
+    		Long userId = (Long) currentUser.getPrincipal();
+    		user = userService.getUser(userId);
+    		this.activeUsers.put(user.getUsername(), currentUser);
+    		
+    	}
+    	return user;
     }
     
     
@@ -2348,6 +2344,8 @@ public class QueryController {
     	
     	public void writeData(String key) {
     		if (currentSessions.containsKey(key)) {
+    			System.out.println(key);
+    			
     			SessionData sd = fetchMostRecentSession(key);
     			try {
     				File sessionPath = new File(FileController.getQueryDirectory(), key + ".session.ser");
@@ -2358,7 +2356,12 @@ public class QueryController {
     			} catch (Exception ex) {
     				ex.printStackTrace();
     			}
+    			currentSessions.remove(key);
     		}
+    		if (tempResult.containsKey(key)) {
+    			tempResult.remove(key);
+    		}
+    		
     	}
     	
     	private class SessionChecker extends TimerTask {
@@ -2366,10 +2369,12 @@ public class QueryController {
             	HashMap<String,Subject> updatedUsers = new HashMap<String,Subject>();
             	
             	for (String key: activeUsers.keySet()) {
+            		System.out.println("KEY " + key);
             		Subject s = activeUsers.get(key);
             		
             		try {
             			s.getPrincipal();
+            			System.out.println("OK");
             			updatedUsers.put(key, s);
             		} catch (Exception authEx) {
             			writeData(key);	
@@ -2377,6 +2382,19 @@ public class QueryController {
 
             	}
             	activeUsers = updatedUsers;
+            	
+            	for (String key: currentSessions.keySet()) {
+            		System.out.println("SESSIONS: " + key);
+            		for (String idTab: currentSessions.get(key).keySet()) {
+            			System.out.println("--> " + idTab);
+            		}
+            	}
+            	for (String key: tempResult.keySet()) {
+            		System.out.println("TEMP: " + key);
+            		for (String idTab: tempResult.get(key).keySet()) {
+            			System.out.println("--> " + idTab);
+            		}
+            	}
             }
         }
     }

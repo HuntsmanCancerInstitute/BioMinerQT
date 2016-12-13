@@ -31,13 +31,24 @@
 				   <span class="panel-title">Compose Query <span class="glyphicon glyphicon-question-sign help-button" ng-click="showHelpQueryPanel()"></span></span>
 				    
 				     			
-					<button type="button" class="btn btn-default pull-right btn-sm" style="margin-top: -6px;margin-left: 10px" ng-click="clearQuery()" ng-hide="queryStarted">
+					<button type="button" class="btn btn-default pull-right btn-sm" style="margin-top: -6px;margin-left: 10px" ng-click="clearQuery()" ng-hide="queryStarted || homologyRunning || liftoverRunning">
 	  					<span class="glyphicon glyphicon-refresh"></span> Clear
 		   			</button>
+		   			
 		   			<button type="button" class="btn btn-danger pull-right btn-sm" style="margin-top: -6px;margin-left: 10px" ng-click="abortQuery()" ng-show="queryStarted">
 		   				<span class="glyphicon glyphicon-stop"></span> Stop Query
 		   			</button>
-					<button type="button" class="btn btn-warning pull-right btn-sm" style="margin-top: -6px"  ng-click="runQuery(queryForm.$invalid)" ng-hide="queryStarted">
+		   			
+		   			<button type="button" class="btn btn-danger pull-right btn-sm" style="margin-top: -6px;margin-left: 10px" ng-click="abortHomology()" ng-show="homologyRunning">
+		   				<span class="glyphicon glyphicon-stop"></span> Stop Homology
+		   			</button>
+		   			
+		   			<button type="button" class="btn btn-danger pull-right btn-sm" style="margin-top: -6px;margin-left: 10px" ng-click="abortLiftover()" ng-show="liftoverRunning">
+		   				<span class="glyphicon glyphicon-stop"></span> Stop Liftover
+		   			</button>
+		   			
+		   			
+					<button type="button" class="btn btn-warning pull-right btn-sm" style="margin-top: -6px"  ng-click="runQuery(queryForm.$invalid)" ng-hide="queryStarted || homologyRunning || liftoverRunning">
 	  					<span class="glyphicon glyphicon-play"></span> Run Query
 		   			</button>
 				</div>
@@ -353,13 +364,22 @@
  				</div> <!-- end of panel body -->
  				<div class="panel-footer panel-footer-btn">
  				    
-		   			<button type="button" class="btn btn-sm btn-default pull-right" style="margin-top: -6px;margin-left: 10px" ng-click="clearQuery()" ng-hide="queryStarted">
+		   			<button type="button" class="btn btn-sm btn-default pull-right" style="margin-top: -6px;margin-left: 10px" ng-click="clearQuery()" ng-hide="queryStarted || homologyRunning || liftoverRunning">
   						<span class="glyphicon glyphicon-refresh"></span> Clear
 	   				</button>
 		   			<button type="button" class="btn btn-sm btn-danger pull-right" style="margin-top: -6px;margin-left: 10px" ng-click="abortQuery()" ng-show="queryStarted">
 		   					<span class="glyphicon glyphicon-stop"></span> Stop Query
 		   			</button>
-					<button type="button" class="btn btn-sm btn-warning pull-right" style="margin-top: -6px"  ng-click="runQuery(queryForm.$invalid)" ng-hide="queryStarted">
+		   			
+		   			<button type="button" class="btn btn-danger pull-right btn-sm" style="margin-top: -6px;margin-left: 10px" ng-click="abortHomology()" ng-show="homologyRunning">
+		   				<span class="glyphicon glyphicon-stop"></span> Stop Homology
+		   			</button>
+		   			
+		   			<button type="button" class="btn btn-danger pull-right btn-sm" style="margin-top: -6px;margin-left: 10px" ng-click="abortLiftover()" ng-show="liftoverRunning">
+		   				<span class="glyphicon glyphicon-stop"></span> Stop Liftover
+		   			</button>
+		   			
+					<button type="button" class="btn btn-sm btn-warning pull-right" style="margin-top: -6px"  ng-click="runQuery(queryForm.$invalid)" ng-hide="queryStarted || homologyRunning || liftoverRunning">
 	  						<span class="glyphicon glyphicon-play"></span> Run Query
 		   			</button>
 				</div>	
@@ -374,11 +394,13 @@
      	<div ng-class="resultPanelClass">
 			<div cg-busy="{promise: runQueryPromise,message: 'Searching'}" >
 			<div cg-busy="{promise: createHomologyInformationPromise,message: 'Converting Names'}">
+			<div cg-busy="{promise: liftoverPromise,message: 'Lifting Over Coordinates'}">
+			<div cg-busy="{promise: fetchLiftoverPromise,message: 'Fetching Liftover Results'}">
 			<div class="panel panel-default" ng-show="showJBrowse" cg-busy="{promise: jbrowseRepoRunning,message: 'Loading JBrowse Repo', minDuration: 1000 }">
 			    <div class="panel-heading panel-heading-btn" ng-show="showJBrowse">
 			            <span class=panel-title>JBrowse</span>
 			    		<button type="button" class="btn btn-sm btn-info pull-right" ng-show="showJBrowse==true" ng-click="closeJBrowse()" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-eye-close"></span> Close JBrowse</button>
-			    		<button type="button" pclass="btn btn-sm btn-info pull-right" ng-show="showJBrowse==true" ng-click="maxJBrowse()" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-eye-open"></span> Fullscreen JBrowse</button>
+			    		<button type="button" class="btn btn-sm btn-info pull-right" ng-show="showJBrowse==true" ng-click="maxJBrowse()" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-eye-open"></span> Fullscreen JBrowse</button>
 			    		<button type="button" class="btn btn-sm btn-info pull-right" ng-show="showJBrowse==true && fullJBrowse==true" ng-click="minJBrowse()" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-eye-close"></span> Minimize JBrowse</button>
 			     		<button type="button" class="btn btn-sm btn-info pull right" ng-show="showJBrowse==true" ng-click="toggleTrackList()" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-list-alt"></span> Toggle Tracklist</button>
 			    </div>
@@ -397,15 +419,16 @@
 				  <span class=panel-title>Results Panel <span class="glyphicon glyphicon-question-sign help-button" ng-click="showHelpResultPanel()"></span></span>
 				    
 				  <span class="label label-success panel-heading-label" ng-show="totalResults>0">{{totalResults}} results</span>
-			   	  <button type="button" class="btn btn-sm btn-info pull-right" ng-show="hasResults" ng-click="loadIgvSession()" ng-disabled="totalDatatracks == 0" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-eye-open"></span> Display in IGV</button>
-			   	  <a class="btn btn-sm btn-info pull-right" ng-show="hasResults" style="margin-top: -6px; margin-left: 10px" target="_self" ng-href="query/downloadAnalysis?codeResultType={{returnedResultType}}&idTab={{idTab}}"><span class="glyphicon glyphicon-download"></span> Download</a>
-			   	  <button type="button" class="btn btn-sm btn-danger pull-right" ng-show="warnings != ''" ng-click="displayWarnings()" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-exclamation-sign"></span> Query</button>
-			   	  <button type="button" class="btn btn-sm btn-danger pull-right" ng-show="igvWarnings != ''" ng-click="displayWarnings('igv')" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-exclamation-sign"></span> IGV</button>
-			   	  <button type="button" class="btn btn-sm btn-primary pull-right" style="margin-top: -6px;margin-left: 10px" ng-click="loadExistingData()" ng-hide="loggedUser == null || hasResults">	
-				   	<span class="glyphicon glyphicon-cloud-download" uib-tooltip="Load last query and results"></span> Load Last
+				  <button type="button" class="btn btn-sm btn-primary pull-right" style="margin-top: -6px;margin-left: 10px" ng-click="loadExistingData()" ng-hide="loggedUser == null || hasResults" uib-tooltip="Load last query and results">	
+				   	<span class="glyphicon glyphicon-cloud-download" ></span> Load Last
 				  </button>
-				  <button type="button" class="btn btn-sm btn-info pull-right" ng-show="showJBrowse==false" ng-click="openJBrowse()" ng-disabled="totalDatatracks == 0 && returnedIntersectionTarget != 'TF'" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-eye-open"></span> Open JBrowse</button>
-				  <button type="button" class="btn btn-sm btn-info pull-right" ng-show="possibleConversions.length > 0 && returnedAnalysisType.type == 'RNASeq'" ng-click="openConversionPane()" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon glyphicon-share-alt"></span> Convert Build</button>
+				  <a class="btn btn-sm btn-primary pull-right" ng-show="hasResults" uib-tooltip="Download Results" style="margin-top: -6px; margin-left: 10px" target="_self" ng-href="query/downloadAnalysis?codeResultType={{returnedResultType}}&idTab={{idTab}}"><span class="glyphicon glyphicon-download"></span> Download</a>
+			   	  <button type="button" class="btn btn-sm btn-info pull-right" uib-tooltip="Show Datatracks in IGV" ng-show="hasResults" ng-click="loadIgvSession()" ng-disabled="totalDatatracks == 0" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-eye-open"></span> Display in IGV</button>
+				  <button type="button" class="btn btn-sm btn-info pull-right" uib-tooltip="Show Datatracks in JBrowse" ng-show="showJBrowse==false" ng-click="openJBrowse()" ng-disabled="totalDatatracks == 0 && returnedIntersectionTarget != 'TF'" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-eye-open"></span> Open JBrowse</button>
+				  <button type="button" class="btn btn-sm btn-warning pull-right" ng-show="possibleConversions.length > 0 && returnedAnalysisType.type == 'RNASeq'" ng-click="openConversionPane()" uib-tooltip="Convert Gene Ids to Different Genome or Build" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon glyphicon-share-alt"></span> Convert IDs</button>
+				  <button type="button" class="btn btn-sm btn-warning pull-right" ng-show="possibleLiftovers.length > 0 " ng-click="openLiftoverPane()" uib-tooltip="Liftover Coordinates to Different Genome or Build" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon glyphicon-share-alt" ></span> Liftover Coord</button>
+				  <button type="button" class="btn btn-sm btn-danger pull-right" ng-show="warnings != ''" ng-click="displayWarnings()" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-exclamation-sign"></span> Query</button>
+			   	  <button type="button" class="btn btn-sm btn-danger pull-right" ng-show="igvWarnings != ''" ng-click="displayWarnings('igv')" style="margin-top: -6px; margin-left: 10px"><span class="glyphicon glyphicon-exclamation-sign"></span> IGV</button>
 				</div>
 				
 				<div class="panel-body">
@@ -504,6 +527,8 @@
 			
 		
 			</div> <!--  end of panel  -->
+		</div> <!-- cgbusy -->
+		</div> <!-- cgbusy -->
 		</div> <!-- cgbusy -->
 		</div> <!-- cgbusy -->
 	  </div>  <!-- end of row (main panel) -->

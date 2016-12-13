@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+
+<div class="modal-header">
+	<h4>Liftover Support Creation</h4>
+</div>
+<div class="modal-body">
+	<form class="form-horizontal" name="newLiftForm">
+		<fieldset>
+			<div class="form-group">
+			  <label class="col-md-2 control-label">Source Build</label>
+			  <div class="col-md-10">
+			    <select width="100" data-placeholder="Select build..." ng-model="support.sourceBuild.idOrganismBuild" name="sourceBuildEntry" 
+			    ng-options="gb.idOrganismBuild as gb.name for gb in organismBuildList | filter:{transcriptFile:'!!',genomeFile:'!!',geneIdFile:'!!'} " 
+			    chosen class="form-control chosen-select" required ">
+			    	<option value=""></option> 
+			    </select>
+			  </div>
+			</div>
+			
+			<div class="form-group">
+			  <label class="col-md-2 control-label">Destination Build</label>
+			  <div class="col-md-10">
+			    <select width="100" data-placeholder="Select build..." ng-model="support.destBuild.idOrganismBuild"  name="destBuildEntry"
+			    ng-options="gb.idOrganismBuild as gb.name for gb in organismBuildList | filter:{transcriptFile:'!!',genomeFile:'!!',geneIdFile:'!!'} " 
+			    chosen class="form-control chosen-select" required>
+			    	<option value=""></option> 
+			    </select>
+			    <span ng-show="newLiftForm.build_valid_box.$error.same" class="label label-danger col-md-12">Destination build can't match source</span>
+			    <span ng-show="newLiftForm.exist_valid_box.$error.exist" class="label label-danger col-md-12">This liftover already exists, please delete original if you want to replace.</span>
+			  </div>
+			</div>
+			
+			<!-- hidden input that looks at the selected builds -->
+			<div hidden>
+				<input maxlength="250" class="col-md-6" name="build_valid_box" ng-model="build_valid" class="form-control input-md" required type="text" required ui-validate="{same: 'checkValid($value)'}">
+				<input maxlength="250" class="col-md-6" name="chain_valid_box" ng-model="chains_valid" class="form-control input-md" required type="text" required ui-validate="{chain: 'checkValid($value)'}">
+				<input maxlength="250" class="col-md-6" name="support_valid_box" ng-model="support_valid" class="form-control input-md" required type="text" required ui-validate="{exist: 'checkValid($value)'}">
+			</div>
+			
+			
+			<div class="form-group">
+			    <label class="col-md-2 control-label">Select Chain 1</label>
+			    <div class="col-md-10">
+			    	 <select width="100" data-placeholder="Select chain..." ng-model="chain1"  name="chainEntry1" allow-single-deselect="true"
+				    ng-options="chain.chainFile for chain in chainList" 
+				    chosen class="form-control chosen-select" required>
+			    	<option value=""></option> 
+			    </select>
+			    </div>
+			</div>
+			
+			<div class="form-group" ng-show="chain1 != null">
+			    <label class="col-md-2 control-label">Select Chain 2</label>
+			    <div class="col-md-10">
+			    	 <select width="100" data-placeholder="Select chain..." ng-model="chain2"  name="chainEntry2" allow-single-deselect="true"
+				    ng-options="chain.chainFile for chain in chainList" 
+				    chosen class="form-control chosen-select">
+			    	<option value=""></option> 
+			    </select>
+			    <span ng-show="newLiftForm.chain_valid_box.$error.chain" class="label label-danger col-md-12">Duplicate chain selected, please select a different chain.</span>
+			    
+			    </div>
+			</div>
+			
+		</fieldset>
+	</form>
+</div>
+<div class="modal-footer">
+     <button class="btn btn-primary" ng-click="supportOK()" ng-disabled="newLiftForm.$invalid">Submit</button>
+     <button class="btn btn-warning" ng-click="supportCancel()">Cancel</button>
+</div>
+
+</html>

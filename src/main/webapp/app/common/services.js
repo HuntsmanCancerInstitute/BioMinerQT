@@ -242,6 +242,20 @@ var services = angular.module('services', ['ngResource','ui.bootstrap'])
 				url: 'id_conversion/get_conversions',
 			});
 		}
+		
+		dict.loadLiftoverChains = function() {
+			return $http({
+				method: 'GET',
+				url: "liftover/get_liftover_chains",
+			});
+		}
+		
+		dict.loadLiftoverSupports = function() {
+			return $http({
+				method: 'GET',
+				url: "liftover/get_liftover_supports",
+			});
+		}
 
 		return dict;
 	                 

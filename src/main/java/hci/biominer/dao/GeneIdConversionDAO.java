@@ -62,6 +62,4 @@ public class GeneIdConversionDAO {
 		session.getTransaction().commit();
 		session.close();
 	}
-	
-	
 }

@@ -3,7 +3,7 @@ package returnModel;
 import java.io.Serializable;
 import java.util.List;
 
-public class QuerySettings implements Serializable {
+public class QuerySettings implements Serializable,Cloneable {
 	private static final long serialVersionUID = 1L;
 	
 	//Enums
@@ -12,6 +12,9 @@ public class QuerySettings implements Serializable {
 	
 	//Analysis Filtering
     private Long idOrganismBuild;
+    private Long idSourceBuild = (long)-1;
+    private Long idDestBuild = (long)-1;
+    
     private List<Long> idAnalysisTypes;
     private List<Long> idLabs;
     private List<Long> idProjects;
@@ -67,19 +70,23 @@ public class QuerySettings implements Serializable {
     	this.searchExisting = searchExisting;
     }
     
+    public void setHomology(Long idSourceBuild, Long idDestBuild) {
+    	this.idSourceBuild = idSourceBuild;
+    	this.idDestBuild = idDestBuild;
+    }
     
+    public void clearHomology() {
+    	this.idSourceBuild = (long)-1;
+    	this.idDestBuild = (long)-1;
+    }
     
 	public Integer getTfMargins() {
 		return tfMargins;
 	}
-
-
-
+	
 	public void setTfMargins(Integer tfMargins) {
 		this.tfMargins = tfMargins;
 	}
-
-
 
 	public Long getIdTransFactor() {
 		return idTransFactor;
@@ -216,9 +223,24 @@ public class QuerySettings implements Serializable {
 	public void setSortType(String sortType) {
 		this.sortType = sortType;
 	}
-    
-    
-    
-    
+
+	public Long getIdSourceBuild() {
+		return idSourceBuild;
+	}
+
+	public void setIdSourceBuild(Long idSourceBuild) {
+		this.idSourceBuild = idSourceBuild;
+	}
+
+	public Long getIdDestBuild() {
+		return idDestBuild;
+	}
+
+	public void setIdDestBuild(Long idDestBuild) {
+		this.idDestBuild = idDestBuild;
+	} 
+	public QuerySettings clone() throws CloneNotSupportedException {
+		return (QuerySettings)super.clone();
+	}
 	
 }

@@ -128,6 +128,14 @@ public class FileController {
 		return createDirectory("homology");
 	}
 	
+	public static File getLiftoverDirectory() throws Exception  {
+		return createDirectory("liftover");
+	}
+	
+	public static File getLiftoverWorkingDirectory() throws Exception {
+		return createDirectory("liftover_working");
+	}
+	
 	
 	
 	private static File createDirectory(String subdir) throws Exception {

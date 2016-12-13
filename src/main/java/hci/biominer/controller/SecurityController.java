@@ -61,7 +61,7 @@ public class SecurityController {
 		try {
 			timeout = Long.parseLong(BiominerProperties.getProperty("sessionLength"));
 		} catch (NumberFormatException nfe) {
-			throw new Exception("The session length set in the propties file is not a void number: " + BiominerProperties.getProperty("sessionLength") );
+			throw new Exception("The session length set in the propties file is not a valid number: " + BiominerProperties.getProperty("sessionLength") );
 		}
 	}
 	
@@ -261,10 +261,7 @@ public class SecurityController {
 			lm.setUser(user);
 			lm.setTimeout(timeout);
 			lm.setTime(System.currentTimeMillis());
-		}
-		
-		
-			
+		}	
 		return lm;
 	}
 	

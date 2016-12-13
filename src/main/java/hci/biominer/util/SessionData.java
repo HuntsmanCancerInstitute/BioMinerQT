@@ -3,10 +3,11 @@ package hci.biominer.util;
 import java.io.Serializable;
 import java.util.Date;
 
+import returnModel.QueryResult;
 import returnModel.QueryResultContainer;
 import returnModel.QuerySettings;
 
-public class SessionData implements Serializable {
+public class SessionData implements Serializable,Cloneable {
 	private static final long serialVersionUID = 1L;
 	private QueryResultContainer results = null;
 	private QuerySettings settings = null;
@@ -73,6 +74,10 @@ public class SessionData implements Serializable {
 
 	public void setGeneString(String geneString) {
 		this.geneString = geneString;
+	}
+	
+	public SessionData clone() throws CloneNotSupportedException {
+		return (SessionData)super.clone();
 	}
 	
 

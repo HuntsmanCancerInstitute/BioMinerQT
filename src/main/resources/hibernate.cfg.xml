@@ -29,5 +29,7 @@
         <mapping class="hci.biominer.model.Dashboard"/>
         <mapping class="hci.biominer.model.TransFactor"/>
         <mapping class="hci.biominer.model.GeneIdConversion"/>
+        <mapping class="hci.biominer.model.LiftoverChain"/>
+        <mapping class="hci.biominer.model.LiftoverSupport"/>
     </session-factory>
 </hibernate-configuration>

@@ -41,6 +41,8 @@ function($interval, $window, $rootScope, $scope, $http, $uibModal, $anchorScroll
 	$scope.geneMargins = "1000";
 	$scope.selectedTF = null;
 	$scope.tfMargins = 0;
+	 
+	$scope.chipType = null;
 	
 	$scope.isThresholdBasedQuery = true;
 	$scope.thresholdFDR = "";
@@ -77,6 +79,11 @@ function($interval, $window, $rootScope, $scope, $http, $uibModal, $anchorScroll
 	$scope.regionUploadRunning = false;
 	$scope.jbrowseRepoRunning = false;
 	
+	$scope.homologyDeferred = null;
+	$scope.liftoverDeferred = null;
+	$scope.homologyRunning = false;
+	$scope.liftoverRunning = false;
+	
 	$scope.isReverse = false;
 	$scope.searchExisting = false;
 	
@@ -101,6 +108,10 @@ function($interval, $window, $rootScope, $scope, $http, $uibModal, $anchorScroll
 	
 	//Hyperlinks
 	$scope.returnedEnsemblCode;
+	
+	//Homology
+	$scope.idSourceBuild = null;
+	$scope.idDestBuild = null;
 	
 	
 	
@@ -160,6 +171,12 @@ function($interval, $window, $rootScope, $scope, $http, $uibModal, $anchorScroll
 			$scope.conversionList = data;
 		});
 	};
+	
+	$scope.loadHomologyData = function() {
+		DynamicDictionary.loadLiftoverSupports().success(function(data,status) {
+			$scope.homologyList = data;
+		});
+	};
     
    
 	$scope.loadAnalysisTypeList = function () {
@@ -170,6 +187,9 @@ function($interval, $window, $rootScope, $scope, $http, $uibModal, $anchorScroll
     			$scope.analysisTypeCheckedList[idx].codeResultTypes = $scope.analysisTypeCheckedList[idx].codeResultTypes.split(",");
     			$scope.analysisTypeCheckedList[idx].possible = true;
     			$scope.analysisTypeCheckedList[idx].class = '';
+    			if ($scope.analysisTypeCheckedList.type == "ChIPSeq") {
+    				$scope.chipType = $scope.analysisTypeCheckList[idx];
+    			}
     		}
     		$scope.selectedAnalysisType = "";
     		$scope.loadAnalysisTypes();
@@ -203,6 +223,7 @@ function($interval, $window, $rootScope, $scope, $http, $uibModal, $anchorScroll
 			$scope.queryResults[i].selected = $scope.selectAll;
 		}
     });
+    
     
     
     
@@ -249,6 +270,9 @@ function($interval, $window, $rootScope, $scope, $http, $uibModal, $anchorScroll
     	$scope.abortQuery();
     	$scope.abortGeneUpload();
     	$scope.abortGeneUpload();
+    	$scope.abortLiftover();
+    	$scope.abortHomology();
+    	$scope.cleanSession();
     }
     
    /************************************
@@ -735,12 +759,18 @@ function($interval, $window, $rootScope, $scope, $http, $uibModal, $anchorScroll
 		$scope.totalAnalyses = 0;
 		$scope.totalDatatracks = 0;
 		
-		
 		$scope.searchExisting = false;
 		$scope.isReverse = false;
 		
+		$scope.idSourceBuild = null;
+		$scope.idDestBuild = null;
+		
 		$scope.stopPing();
 		$scope.stopLaunchPing();
+		
+		$scope.returnedOrganismBuild = null;
+		$scope.findLiftovers();
+		$scope.findHomologies();
 		
 		for (var x =0; x < $scope.analysisTypeCheckedList.length; x++) {
 			$scope.analysisTypeCheckedList[x].show = true;
@@ -925,6 +955,13 @@ function($interval, $window, $rootScope, $scope, $http, $uibModal, $anchorScroll
 			}
 		}
 		
+		if ($scope.idSourceBuild != null && $scope.idDestBuild != null) {
+			console.log($scope.idSourceBuild);
+			console.log($scope.idDestBuild);
+			var sob = $scope.lookup($scope.organismBuildList, 'idOrganismBuild', $scope.idSourceBuild);
+			var dob = $scope.lookup($scope.organismBuildList, "idOrganismBuild", $scope.idDestBuild);
+			$scope.querySummary.push("LIFTOVER  " + sob.name + ' TO ' + dob.name);
+		}	
  	};
 	
 	$scope.concatDisplayName = function(element, index, array) {
@@ -1092,6 +1129,16 @@ function($interval, $window, $rootScope, $scope, $http, $uibModal, $anchorScroll
 		    timeout: $scope.queryDeferred.promise,
 				     
 		}).success(function(data) {
+			$http({
+				url: "query/acceptResult",
+				method: "POST",
+				params: {idTab: $window.sessionStorage.getItem("idTab")},
+			}).success(function(data) {
+				//pass
+			}).error(function(data) {
+				dialogs.error("Error Storing Result",data);
+			});
+			
 			if (data != null) {
 				$scope.queryResults = data.resultList;
 				$scope.resultPages = data.pages;
@@ -1103,6 +1150,9 @@ function($interval, $window, $rootScope, $scope, $http, $uibModal, $anchorScroll
 				$scope.returnedOrganismName = data.returnedOrganismName;
 				$scope.hasResults = true;
 				$scope.findHomologies();
+				$scope.findLiftovers();
+				$scope.idSourceBuild = null;
+				$scope.idDestBuild = null;
 			}
 			
 			
@@ -1120,6 +1170,11 @@ function($interval, $window, $rootScope, $scope, $http, $uibModal, $anchorScroll
 			$scope.queryStarted = false;
 			$scope.queryDeferred = null;
 		}).error(function(data, status, headers, config) {
+			if (status != -1) {
+				dialogs.error("Query Error","Unexpected error in Query.  Please contact admins");
+			}
+		
+			
 			$scope.hasResults = false;
 			$scope.resultPages = 0;
 			$scope.totalResults = 0;
@@ -1128,6 +1183,11 @@ function($interval, $window, $rootScope, $scope, $http, $uibModal, $anchorScroll
 			$scope.returnedResultType = null;
 			$scope.queryStarted = false;
 			$scope.queryDeferred = null;
+			$scope.idSourceBuild = null;
+			$scope.idDestBuild = null;
+			$scope.findHomologies();
+			$scope.findLiftovers();
+			$scope.returnedOrganismBuild = null;
 		});
 		
 		
@@ -1136,12 +1196,37 @@ function($interval, $window, $rootScope, $scope, $http, $uibModal, $anchorScroll
 
 	};
 	
+	$scope.cleanSession = function() {
+		$http({
+			url: "query/clearSessionInfo",
+			method: "POST",
+			params: {idTab: $window.sessionStorage.getItem("idTab")}
+		});
+	}
+	
+	$scope.abortLiftover = function() {
+		if ($scope.liftoverDeferred != null) {
+			$scope.liftoverDeferred.resolve("Liftover aborted by user");
+			$scope.liftoverDeferred = null;
+		}
+	}
+	
+	$scope.abortHomology = function() {
+		if ($scope.homologyDeferred != null) {
+			$scope.homologyDeferred.resolve("Liftover aborted by user");
+			$scope.homologyDeferred = null;
+		}
+	}
+	
+
 	$scope.abortQuery = function() {
 		if ($scope.queryDeferred != null) {
 			$scope.queryDeferred.resolve("Query aborted by user");
 			$scope.queryDeferred = null;
 		}
-	};
+	}
+	
+	
 	
 	$scope.abortGeneUpload = function() {
 		if ($scope.geneUploadDeferred != null) {
@@ -1546,11 +1631,24 @@ function($interval, $window, $rootScope, $scope, $http, $uibModal, $anchorScroll
 		$scope.possibleConversions = [];
 		for( var i=0;i<$scope.conversionList.length; i++) {
 			var homology = $scope.conversionList[i];
-			if ($scope.returnedOrganismBuild === homology.sourceBuild.idOrganismBuild) {
+			var ob = $scope.lookup($scope.organismBuildList, 'idOrganismBuild', homology.destBuild.idOrganismBuild);
+			
+			if ($scope.returnedOrganismBuild === homology.sourceBuild.idOrganismBuild && ob != null) {
 				$scope.possibleConversions.push($scope.conversionList[i]);
 			}
 		}
 	};
+	
+	$scope.findLiftovers = function() {
+		$scope.possibleLiftovers = [];
+		for (var i=0;i<$scope.homologyList.length;i++) {
+			var homology = $scope.homologyList[i];
+			var ob = $scope.lookup($scope.organismBuildList, 'idOrganismBuild', homology.destBuild.idOrganismBuild);
+			if ($scope.returnedOrganismBuild === homology.sourceBuild.idOrganismBuild && ob != null) {
+				$scope.possibleLiftovers.push($scope.homologyList[i]);
+			}
+		}
+	}
 	
 	$scope.openConversionPane = function() {
 		var modalInstance = $uibModal.open({
@@ -1564,21 +1662,23 @@ function($interval, $window, $rootScope, $scope, $http, $uibModal, $anchorScroll
     	});
     	
     	modalInstance.result.then(function (conversion) {
+    		$scope.homologyRunning = true;
+    		$scope.homologyDeferred = $q.defer();
     		(function(conversion) {
     			$scope.createHomologyInformationPromise = $http({
         			method: "POST",
         			url: "query/homologyGeneNames",
-        			params: {idTab: $window.sessionStorage.getItem("idTab"),idConversion: conversion}
+        			timeout: $scope.homologyDeferred.promise,
+        			params: {idTab: $window.sessionStorage.getItem("idTab"),idConversion: conversion.idGeneIdConversion}
         		}).success(function(data) {
         			var dlg = dialogs.confirm("Gene Name Conversion Successful","Conversion statistics: <br><br>" + data + "<br> Would you like to use the conversion?");
         			dlg.result.then(function(data) {
-        				$scope.clearQuery();
         				(function(conversion) {
         					$scope.loadHomologyInformationPromise = $http({
                     			method: "GET",
                     			url: "query/homologyGeneNameResult",
                     			params: {idTab: $window.sessionStorage.getItem("idTab"),
-                    				    idConversion: conversion,
+                    				    idConversion: conversion.idGeneIdConversion,
                     				    resultsPerPage:          $scope.resultsPerPage,
                    				     	sortType:                $scope.sortType,
                    				     	isReverse:               $scope.isReverse}
@@ -1592,11 +1692,17 @@ function($interval, $window, $rootScope, $scope, $http, $uibModal, $anchorScroll
         						$scope.returnedEnsemblCode = data.returnedEnsemblCode;
         						$scope.returnedOrganismName = data.returnedOrganismName;
         						$scope.hasResults = true;
+        						$scope.idSourceBuild = conversion.sourceBuild.idOrganismBuild;
+        						$scope.idDestBuild = conversion.destBuild.idOrganismBuild;
+        						$scope.buildQuerySummary();
         						$scope.idOrganismBuild = data.idOrganismBuild;
         						$scope.genomeChanged();
         						$scope.findHomologies();
+        						$scope.findLiftovers();
+        						$scope.homologyRunning = false;
         					}).error(function(data) {
-        						dialogs.error("Error Fetching Homology");
+        						$scope.homologyRunning = false;
+        						dialogs.error("Error Fetching Homology",data);
         					});
         				})(conversion)
         			},function(data) {
@@ -1606,16 +1712,112 @@ function($interval, $window, $rootScope, $scope, $http, $uibModal, $anchorScroll
                     			url: "query/homologyGeneNameClear",
                     			params: {idTab: $window.sessionStorage.getItem("idTab")}
         					}).success(function(data) {
-        						//pass
+        						$scope.homologyStarted = false;
+        						$scope.findHomologies();
+        						$scope.findLiftovers();
         					}).error(function(data) {
         						dialogs.error("Error Cleaning Homology");
+        						$scope.homologyRunning = false;
+        						$scope.findHomologies();
+        						$scope.findLiftovers();
         					});
         				})(conversion)
         			})
-        		}).error(function(data) {
-    				dialogs.error("Error Creating Homology",data);
+        		}).error(function(data,status) {
+        			if (status != -1) {
+        				dialogs.error("Error Creating Homology",data);
+        			}
+        			
+    				$scope.homologyRunning = false;
     			});
     		}(conversion));
+	    });
+	};
+	
+	$scope.openLiftoverPane = function() {
+		var modalInstance = $uibModal.open({
+    		templateUrl: 'app/query/liftoverPane.html',
+    		controller: 'LiftoverPaneController',
+    		resolve: {
+    			liftoverList: function() {
+    				return $scope.possibleLiftovers;
+    			}
+    		}
+    	});
+		
+    	
+    	modalInstance.result.then(function (support) {
+    		$scope.liftoverRunning = true;
+    		$scope.liftoverDeferred = $q.defer();
+    		(function(support) {
+    			$scope.liftoverPromise = $http({
+        			method: "POST",
+        			url: "query/homologyLiftover",
+        			timeout: $scope.liftoverDeferred.promise,
+        			params: {idTab: $window.sessionStorage.getItem("idTab"), idSupport: support.idLiftoverSupport}
+        		}).success(function(data) {
+        			var dlg = dialogs.confirm("Liftover Successful","Liftover statistics: <br><br>" + data + "<br> Would you like to use the liftover?");
+        	
+        			dlg.result.then(function(data) {
+        				(function(support) {
+        					$scope.fetchLiftoverPromise = $http({
+                    			method: "GET",
+                    			url: "query/homologyLiftoverResult",
+                    			params: {idTab: $window.sessionStorage.getItem("idTab"),
+                    				    idSupport: support.idLiftoverSupport,
+                    				    resultsPerPage:          $scope.resultsPerPage,
+                   				     	sortType:                $scope.sortType,
+                   				     	isReverse:               $scope.isReverse}
+        					}).success(function(data) {
+        						$scope.queryResults = data.resultList;
+        						$scope.resultPages = data.pages;
+        						$scope.totalResults = data.resultNum;
+        						$scope.totalAnalyses = data.analysisNum;
+        						$scope.totalDatatracks = data.dataTrackNum;
+        						$scope.returnedOrganismBuild = data.idOrganismBuild;
+        						$scope.returnedEnsemblCode = data.returnedEnsemblCode;
+        						$scope.returnedOrganismName = data.returnedOrganismName;
+        						$scope.hasResults = true;
+        						$scope.idSourceBuild = support.sourceBuild.idOrganismBuild;
+        						$scope.idDestBuild = support.destBuild.idOrganismBuild;
+        						$scope.buildQuerySummary();
+        						$scope.idOrganismBuild = data.idOrganismBuild;
+        						$scope.genomeChanged();
+        						$scope.findHomologies();
+        						$scope.findLiftovers();
+        						$scope.returnedResultType = "REGION";
+        						$scope.returnedAnalysisType = $scope.chipType;
+        						$scope.liftoverRunning = false;
+        					}).error(function(data) {
+        						dialogs.error("Error Fetching Homology");
+        						$scope.liftoverRunning = false;
+        					});
+        				})(support)
+        			},function(data) {
+    					$scope.loadHomologyInformation = $http({
+                			method: "GET",
+                			url: "query/homologyLiftoverClear",
+                			params: {idTab: $window.sessionStorage.getItem("idTab")}
+    					}).success(function(data) {
+    						$scope.liftoverRunning = false;
+    						$scope.findHomologies();
+    						$scope.findLiftovers();
+    					}).error(function(data) {
+    						dialogs.error("Error Cleaning Homology");
+    						$scope.liftoverRunning = false;
+    						$scope.findHomologies();
+    						$scope.findLiftovers();
+    					});
+        			})
+        		}).error(function(data,status) {
+        			if (status != -1) {
+        				dialogs.error("Error Creating Homology",data);
+        			}
+        			
+    				$scope.liftoverRunning = false;
+    				
+    			});
+    		}(support));
 	    });
 	};
 	
@@ -1637,6 +1839,7 @@ function($interval, $window, $rootScope, $scope, $http, $uibModal, $anchorScroll
 				$scope.returnedEnsemblCode = data.returnedEnsemblCode;
 				$scope.hasResults = true;
 				$scope.findHomologies();
+				$scope.findLiftovers();
 			}
 			$http({
 				url: "query/warnings",
@@ -1666,6 +1869,7 @@ function($interval, $window, $rootScope, $scope, $http, $uibModal, $anchorScroll
 			params: {idTab: $window.sessionStorage.getItem("idTab")}
 		}).success(function(data) {
 			if (data != null && data != "") {
+				
 				$scope.idOrganismBuild = data.idOrganismBuild;
 				$scope.codeResultType = data.codeResultType;
 				$scope.returnedResultType = data.codeResultType;
@@ -1738,9 +1942,19 @@ function($interval, $window, $rootScope, $scope, $http, $uibModal, $anchorScroll
 				$scope.sortType = data.sortType;
 				$scope.isReverse = data.reverse;
 				
+				if (data.idSourceBuild != -1 && data.idDestBuild != -1) {
+					$scope.idSourceBuild = data.idSourceBuild;
+					$scope.idDestBuild = data.idDestBuild;
+					$scope.buildQuerySummary();
+					$scope.genomeChanged();
+					$scope.idOrganismBuild = data.idDestBuild;
+				} else {
+					$scope.idSourceBuild = null;
+					$scope.idDestBuild = null;
+					$scope.buildQuerySummary();
+					
+				}
 				
-				$scope.buildQuerySummary();
-			
 				setTimeout(function () {
 			        $scope.$apply(function() {
 			        	$scope.searchExisting = data.searchExisting;
@@ -1778,6 +1992,7 @@ function($interval, $window, $rootScope, $scope, $http, $uibModal, $anchorScroll
 	$scope.loadGenotypeList();
 	$scope.loadGeneAnnotationList();
 	$scope.loadConversionData();
+	$scope.loadHomologyData();
 	
 	
 	
