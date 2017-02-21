@@ -154,10 +154,10 @@ public class RnaSeqParser {
 			
 			NumberFormat formatter = new DecimalFormat("0.##E0");
 			
-			boolean badGene = false;
-			int badGeneCount = 0;
 			int allGeneCount = 0;
+			ArrayList<String> missingGenes = new ArrayList<String>();
 			
+			//for each gene line
 			while ((line = br.readLine()) != null) {
 				allGeneCount++;
 				String[] parts = line.split("\t");
@@ -183,24 +183,13 @@ public class RnaSeqParser {
 					geneName = geneName.substring(0,geneName.length()-1);
 				}
 				
-				//System.out.println(geneName);
-				
 				Gene geneObject = this.checkGene(geneName);
 				
 				if (geneObject == null) {
-					badGeneCount++;
-					if (!badGene) {
-						badGene = true;
-						String body = this.warningMessage.toString();
-						this.warningMessage = new StringBuilder("The RNASeq dataset contained genes that were not found in Biominer's annotation. "
-								+ "Results associated with the following genes can't be searched:<br>");
-						
-						this.warningMessage.append(body);
-					}
+					missingGenes.add(geneName);
 					continue;
 				}
 				
-		
 				//Parse FDR
 				tempFdr = ColumnValidators.validateFdr(parts[this.fdrColumn], this.isConverted);
 					
@@ -237,19 +226,14 @@ public class RnaSeqParser {
 				lineCount++;
 			}
 			
-			if (this.warningMessage.toString().length() > 100000) {
-		    	this.warningMessage = new StringBuilder("Too many failed records to list.<br>");
-		    }
-			
 			if (this.externalGeneToBiominerId.size() == 0) {
-				this.warningMessage.append("There are no gene aliases found for genome: " + genome.getBuildName() + "<br>");
+				this.warningMessage.append("No gene aliases found for genome: " + genome.getBuildName() + "<br>");
 			} 
 			
-			if (badGene) {
-				this.warningMessage.append(String.format("Failed to process %d RNASeq records of %d.<br>",badGeneCount,allGeneCount));
+			if (missingGenes.size() !=0) {
+				this.warningMessage.append(String.format("Skipped %d of %d.<br>",missingGenes.size(),allGeneCount));
+				this.warningMessage.append("The following could not be found: "+missingGenes+"<br>");
 			}
-			
-			
 			
 			//Throw failure message or warning messages
 		    if (allTransformedFdrLessThanOne) {
@@ -288,7 +272,6 @@ public class RnaSeqParser {
 		if (this.externalGeneToBiominerId.containsKey(gene)) {
 			exIdList = this.externalGeneToBiominerId.get(gene);
 		} else {
-			this.warningMessage.append(String.format("Could not find a BiominerID for gene: %s in the BiominerDB.<br>", gene));
 			alreadyObserved.put(gene, null);
 			return null;
 		}
@@ -312,7 +295,6 @@ public class RnaSeqParser {
 		
 	
 		if (extIdFinal.size() == 0) {
-    		this.warningMessage.append(String.format("Could not find an EnsemblID for gene: %s in the BiominerDB.<br>",gene));
     		alreadyObserved.put(gene, null);
     		return null;
     	} else if (extIdFinal.size() > 1) {
@@ -326,7 +308,6 @@ public class RnaSeqParser {
         		this.warningMessage.append(String.format("Found multiple EnsemblIDs for gene: %s, using %s.<br>",gene,ensemblName));
     		} else {
     			ensemblName = extIdFinal.get(0);
-
     		}
     	}
     	

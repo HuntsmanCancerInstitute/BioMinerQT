@@ -6,6 +6,7 @@ import javax.persistence.Entity;
 import javax.persistence.Enumerated;
 import javax.persistence.GenerationType;
 import javax.persistence.JoinColumn;
+import javax.persistence.Lob;
 import javax.persistence.OneToOne;
 import javax.persistence.ManyToOne;
 import javax.persistence.PrimaryKeyJoinColumn;
@@ -43,6 +44,7 @@ public class FileUpload {
 	@Column(name="size")
 	Long size;
 	
+	@Lob
 	@Column(name="message")
 	String message;
 	
