@@ -17,6 +17,7 @@ import java.util.zip.GZIPOutputStream;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.FileCopyUtils;
@@ -25,7 +26,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
-
 import returnModel.BooleanModel;
 import returnModel.FileMeta;
 import returnModel.PreviewMap;
@@ -35,6 +35,8 @@ import hci.biominer.model.ExternalGene;
 import hci.biominer.model.OrganismBuild;
 import hci.biominer.model.Project;
 import hci.biominer.model.FileUpload;
+import hci.biominer.model.access.Lab;
+import hci.biominer.model.access.Institute;
 import hci.biominer.service.AnalysisTypeService;
 import hci.biominer.service.ExternalGeneService;
 import hci.biominer.service.FileUploadService;
@@ -72,20 +74,20 @@ public class FileController {
 	@Autowired
 	private SubmitController submitController;
 	
+	public static final Pattern WHITE_SPACE = Pattern.compile("\\s+");
+	public static final Pattern NON_WORD = Pattern.compile("[^\\w]+");
+	//private static final Logger lg = Logger.getLogger(FileController.class);
 
 	public static void checkProperties() throws Exception{
-		if (!BiominerProperties.isLoaded()) {
-			BiominerProperties.loadProperties();
-		}
+		if (!BiominerProperties.isLoaded()) BiominerProperties.loadProperties();
 	}
 	
-	public static File generateFilePath(FileUpload fileUpload) throws Exception  {
-		checkProperties();
-		File localDirectory = new File(BiominerProperties.getProperty("filePath"));
-		
-		File subDirectory = new File(localDirectory,fileUpload.getDirectory());
-		File filePath = new File(subDirectory,fileUpload.getName());
-		return filePath;
+	public static File generateFilePath(FileUpload fileUpload) throws Exception  {			
+			checkProperties();
+			File localDirectory = new File(BiominerProperties.getProperty("filePath"));
+			File subDirectory = new File(localDirectory,fileUpload.getDirectory());
+			File filePath = new File(subDirectory,fileUpload.getName());
+			return filePath;
 	}
 	
 	public static File getRawDirectory() throws Exception {
@@ -136,15 +138,11 @@ public class FileController {
 		return createDirectory("liftover_working");
 	}
 	
-	
-	
 	private static File createDirectory(String subdir) throws Exception {
 		checkProperties();
 		File localDirectory = new File(BiominerProperties.getProperty("filePath"));
 		File subDirectory = new File(localDirectory,subdir);
-		if (!subDirectory.exists()) {
-			subDirectory.mkdir();
-		}
+		if (!subDirectory.exists()) subDirectory.mkdir();
 		return subDirectory;
 	}
 
@@ -166,7 +164,7 @@ public class FileController {
 			HttpServletResponse response) throws Exception {
 	
 		FileMeta fm = new FileMeta();
-		
+
 		if (!file.isEmpty()) {
 			File localFile = null;
 			try {
@@ -205,7 +203,7 @@ public class FileController {
 					
 				//If last file, return info
 				if (index+1 == total) {
-					FileUpload fileUpload = this.fileUploadService.getFileUploadById(idFileUpload);
+					FileUpload fileUpload = fileUploadService.getFileUploadById(idFileUpload);
 					
 					if (ftype == 1) {
 						name = name + ".gz";
@@ -215,9 +213,7 @@ public class FileController {
 					
 					fileUpload.setName(name);
 					
-				
-					
-					this.fileUploadService.updateFileUpload(idFileUpload, fileUpload);
+					fileUploadService.updateFileUpload(idFileUpload, fileUpload);
 					
 					fm.setFinished(true);
 					fm.setState("SUCCESS");
@@ -229,10 +225,10 @@ public class FileController {
 				//update file upload
 				ex.printStackTrace();
 	
-				FileUpload fileUpload = this.fileUploadService.getFileUploadById(idFileUpload);
+				FileUpload fileUpload = fileUploadService.getFileUploadById(idFileUpload);
 				fileUpload.setMessage(ex.getMessage());
 				
-				this.fileUploadService.updateFileUpload(idFileUpload, fileUpload);
+				fileUploadService.updateFileUpload(idFileUpload, fileUpload);
 				
 				//setup file meta
 				fm.setFinished(true);
@@ -240,23 +236,19 @@ public class FileController {
 				fm.setState("FAILURE");
 				
 				response.setStatus(405);
-				
 			}			
 				
 		} else {
 			System.out.println("File is empty");
-			FileUpload fileUpload = this.fileUploadService.getFileUploadById(idFileUpload);
+			FileUpload fileUpload = fileUploadService.getFileUploadById(idFileUpload);
 			fileUpload.setMessage("file is empty");
 			fileUpload.setState(FileStateEnum.FAILURE);
-			this.fileUploadService.updateFileUpload(idFileUpload, fileUpload);
-			
+			fileUploadService.updateFileUpload(idFileUpload, fileUpload);
 			fm.setFinished(true);
 			fm.setMessage("file is empty");
 			fm.setState("FAILURE");
-		
 			response.setStatus(405);
 		}
-
 		return fm;
 	}
 	
@@ -276,7 +268,7 @@ public class FileController {
 		File directoryStub = new File("/raw/",String.valueOf(idProject));
 
 		//Grab project object
-		Project project = this.projectService.getProjectById(idProject);
+		Project project = projectService.getProjectById(idProject);
 	
 		//Setup fileUpload object.
 		FileUpload fileUpload = new FileUpload();
@@ -288,8 +280,7 @@ public class FileController {
 		fileUpload.setSize(size);
 		fileUpload.setName(name);
 						
-		this.fileUploadService.addFileUpload(fileUpload);
-		
+		fileUploadService.addFileUpload(fileUpload);
 		return fileUpload;
 	}
 	
@@ -308,8 +299,8 @@ public class FileController {
 		File directoryStub = new File("/parsed/",String.valueOf(idProject));
 
 		//Grab project object
-		Project project = this.projectService.getProjectById(idProject);
-		FileUpload parent = this.fileUploadService.getFileUploadById(idParent);
+		Project project = projectService.getProjectById(idProject);
+		FileUpload parent = fileUploadService.getFileUploadById(idParent);
 	
 		//Setup fileUpload object.
 		FileUpload fileUpload = new FileUpload();
@@ -322,86 +313,9 @@ public class FileController {
 		fileUpload.setName(name);
 		fileUpload.setSize((long)0);
 					
-		this.fileUploadService.addFileUpload(fileUpload);
-		
+		fileUploadService.addFileUpload(fileUpload);
 		return fileUpload;
 	}
-	
-	
-	
-//	/***************************************************
-//	 * URL: /submit/upload  
-//	 * upload(): receives files
-//	 * post():
-//	 * @param file : MultipartFile
-//	 * @return FileMeta as json format
-//	 ****************************************************/
-//	@RequestMapping(value="/upload", method = RequestMethod.POST)
-//	public @ResponseBody 
-//	FileUpload upload(@RequestParam("file") MultipartFile file, @RequestParam("idProject") Long idProject) {
-// 
-//		FileUpload fileUpload = new FileUpload();
-//
-//		String name = file.getOriginalFilename();
-//		
-//		if (!file.isEmpty()) {
-//			try {
-//				
-//				//Create directory
-//				File directory = new File(getRawDirectory(),String.valueOf(idProject));
-//				File directoryStub = new File("/raw/",String.valueOf(idProject));
-//				if (!directory.exists()) {
-//					directory.mkdir();
-//				}
-//				
-//				//Upload file
-//				if (name.endsWith(".bam") || name.endsWith(".bai") || name.endsWith(".useq") || name.endsWith(".bw") || name.endsWith(".gz") || name.endsWith(".zip")) {
-//					File localFile = new File(directory,name);
-//					FileCopyUtils.copy(file.getInputStream(), new FileOutputStream(localFile));
-//					fileUpload.setSize(localFile.length());
-//					fileUpload.setName(name);
-//				} else {
-//					File localFile = new File(directory,name + ".gz");
-//					FileCopyUtils.copy(file.getInputStream(), new GZIPOutputStream(new FileOutputStream(localFile)));
-//					fileUpload.setSize(localFile.length());
-//					fileUpload.setName(name + ".gz");
-//				}
-//				System.out.println("File upload successful! " + name);
-//				
-//				//Grab project object
-//				Project project = this.projectService.getProjectById(idProject);
-//				
-//				//Setup fileUpload object.
-//				fileUpload.setDirectory(directoryStub.getPath());
-//				fileUpload.setState(FileStateEnum.SUCCESS);
-//				fileUpload.setMessage("");
-//				fileUpload.setType(FileTypeEnum.UPLOADED);
-//				fileUpload.setProject(project);
-//				
-//				
-//				
-//				//Create/update fileUpload object
-//				FileUpload existing = this.fileUploadService.getFileUploadByName(fileUpload.getName(), fileUpload.getType(), project);
-//				if (existing == null) {
-//					this.fileUploadService.addFileUpload(fileUpload);
-//				} else {
-//					this.fileUploadService.updateFileUpload(existing.getIdFileUpload(),fileUpload);
-//				}
-//				
-//			} catch (Exception ex) {
-//				System.out.println("File upload failed: " + name + " " + ex.getMessage());
-//				fileUpload.setState(FileStateEnum.FAILURE);
-//				fileUpload.setMessage(ex.getMessage());
-//				ex.printStackTrace();
-//			}
-//		} else {
-//			fileUpload.setState(FileStateEnum.FAILURE);
-//			fileUpload.setMessage("File is empty");
-//		}
-//
-//		return fileUpload;
-//	}
-	
 	
 	/***************************************************
 	 * URL: /submit/upload/get/
@@ -415,8 +329,8 @@ public class FileController {
 	 @RequestMapping(value = "/upload/get", method = RequestMethod.GET)
 	 @ResponseBody
 	 public void getUpload(HttpServletResponse response,@RequestParam("file") String file, @RequestParam("type") FileTypeEnum type, @RequestParam("idProject") Long idProject) throws Exception{
-		 Project project = this.projectService.getProjectById(idProject);
-		 FileUpload fileUpload = this.fileUploadService.getFileUploadByName(file,type,project);
+		 Project project = projectService.getProjectById(idProject);
+		 FileUpload fileUpload = fileUploadService.getFileUploadByName(file,type,project);
 		 
 		 if (fileUpload == null) {
 			try {
@@ -430,9 +344,6 @@ public class FileController {
 		 try {		
 		 	//response.setContentType(getFile.getFileType());
 		 	response.setHeader("Content-disposition", "attachment; filename=\""+fileUpload.getName()+"\"");
-		 	
-		 	
-		 	
 		 	
 		 	File localFile = generateFilePath(fileUpload);
 		 	BufferedInputStream bis = new BufferedInputStream(new FileInputStream(localFile));
@@ -466,11 +377,10 @@ public class FileController {
 	@RequestMapping(value = "upload/load", method = RequestMethod.GET)
 	@ResponseBody 
 	public List<FileUpload>  get(HttpServletResponse response, @RequestParam("type") FileTypeEnum type, @RequestParam("idProject") Long idProject){
-		Project project = this.projectService.getProjectById(idProject);
-		List<FileUpload> fileMap = this.fileUploadService.getFileUploadByType(type,project);
+		Project project = projectService.getProjectById(idProject);
+		List<FileUpload> fileMap = fileUploadService.getFileUploadByType(type,project);
 		return fileMap;
 	}
-	
 	
 	 /***************************************************
 	 * URL: /submit/parse/preview/
@@ -482,8 +392,8 @@ public class FileController {
 	@RequestMapping(value = "parse/preview", method = RequestMethod.GET)
     @ResponseBody
 	public PreviewMap getHeader(@RequestParam(value="name") String name, @RequestParam("idProject") Long idProject) throws Exception {
-		 Project project = this.projectService.getProjectById(idProject);
-		 FileUpload fileUpload = this.fileUploadService.getFileUploadByName(name, FileTypeEnum.UPLOADED, project);
+		 Project project = projectService.getProjectById(idProject);
+		 FileUpload fileUpload = fileUploadService.getFileUploadByName(name, FileTypeEnum.UPLOADED, project);
 		 PreviewMap pm = new PreviewMap();
 		 
 		 try {		
@@ -561,12 +471,13 @@ public class FileController {
 			@RequestParam("idAnalysisType") Long idAnalysisType,
 			@RequestParam("idFileUpload") Long idFileUpload) {
  
-		FileUpload fileUpload = this.fileUploadService.getFileUploadById(idFileUpload);
-		 
+		FileUpload fileUpload = fileUploadService.getFileUploadById(idFileUpload);
+
 		try {
 			
-			OrganismBuild gb = this.organismBuildService.getOrganismBuildById(idOrganismBuild);
-			AnalysisType at = this.analysisTypeService.getAnalysisTypeById(idAnalysisType);
+			OrganismBuild gb = organismBuildService.getOrganismBuildById(idOrganismBuild);
+			AnalysisType at = analysisTypeService.getAnalysisTypeById(idAnalysisType);
+			Project project = projectService.getProjectById(Long.parseLong(id));
 			Genome genome = null;
 			
 			//Try to get genome build
@@ -581,18 +492,13 @@ public class FileController {
 			
 			//Get and create necessary directories.
 			File importDir = new File(getRawDirectory(),id);
-			File parseDir = new File(getParsedDirectory(),id);
-			if (!parseDir.exists()) {
-				parseDir.mkdir();
-			}
-			
+			File parseDir = fetchAnnotatedParseDirectory(genome, at, project);
+
 			File inputFile = new File(importDir, input);
 			File outputFile = new File(parseDir, output);
 
 			//Add gz extension if it doesn't exist
-			if (!outputFile.getName().endsWith(".gz")) {
-				outputFile = new File(outputFile.getParent(),outputFile.getName() + ".gz");
-			}
+			if (!outputFile.getName().endsWith(".gz")) outputFile = new File(outputFile.getParent(),outputFile.getName() + ".gz");
 			
 			//Run parser, throw errors if log2 or FDR are not set
 			String warningMessage = "";
@@ -611,10 +517,16 @@ public class FileController {
 			fileUpload.setMessage(warningMessage);
 		
 			fileUpload.setName(outputFile.getName());
+			
+			//make relative path for dir
+			File localDirectory = new File(BiominerProperties.getProperty("filePath"));
+			String ld = localDirectory.getCanonicalPath();
+			String dir = outputFile.getParent().replace(ld, "");
+			fileUpload.setDirectory(dir);
 			fileUpload.setSize(new Long(outputFile.length()));
 			fileUpload.setAnalysisType(at);
 			
-			this.fileUploadService.updateFileUpload(idFileUpload,fileUpload);
+			fileUploadService.updateFileUpload(idFileUpload,fileUpload);
 			
 			//set state after, so finalize works
 			if (warningMessage.equals("")) {
@@ -632,6 +544,73 @@ public class FileController {
 		}
 		
 		return fileUpload;
+	}
+	
+	/**
+	 * @param labs: Lab objects to extract first and last names, combine if different, and clean of non file name friendly characters.
+	 * @return String: merged lab names ready for inclusion in a file path.
+	 * */
+	public static String fetchMergedLabNames(List<Lab> labs){
+		StringBuilder sb = new StringBuilder();
+		//set first
+		Lab firstLab = labs.get(0);
+		String name = firstLab.getFirst();
+		if (name.equals(firstLab.getLast())) sb.append(cleanForFileName(name));
+		else {
+			sb.append(cleanForFileName(name));
+			sb.append(cleanForFileName(firstLab.getLast()));
+		}
+
+		for (int i=1; i< labs.size(); i++) {
+			sb.append("_");
+			Lab lab = labs.get(i);
+			String labName = lab.getFirst();
+			if (labName.equals(lab.getLast())) sb.append(cleanForFileName(labName));
+			else {
+				sb.append(cleanForFileName(labName));
+				sb.append(cleanForFileName(lab.getLast()));
+			}
+		}
+		return sb.toString();
+	}
+	
+	/**
+	 * @param raw: String to be stripped of whitespace and non-word characters.
+	 * @return String: cleaned String
+	 * */
+	public static String cleanForFileName(String raw){
+		String clean = WHITE_SPACE.matcher(raw).replaceAll("");
+		clean = NON_WORD.matcher(clean).replaceAll("");
+		return clean;
+	}
+	
+	public File fetchAnnotatedParseDirectory(Genome genome, AnalysisType at, Project project ) throws Exception{
+		
+		StringBuilder sb = new StringBuilder();
+		//GenomeBuild
+		sb.append(cleanForFileName(genome.getBuildName()));
+		sb.append(File.separator);
+		
+		//Institute concat
+		List<Institute> is = project.getInstitutes();
+		sb.append(cleanForFileName(is.get(0).getName()));
+		for (int i=1; i< is.size(); i++) {
+			sb.append("_");
+			sb.append(cleanForFileName(is.get(i).getName()));
+		}
+		sb.append(File.separator);
+		
+		//Lab concat
+		sb.append(fetchMergedLabNames(project.getLabs()));
+		sb.append(File.separator);
+		
+		//ProjectName
+		sb.append(cleanForFileName(project.getName()));
+		
+		File dir = new File (getParsedDirectory(), sb.toString());
+		dir.mkdirs();
+		return dir;
+		
 	}
 	
 	/***************************************************
@@ -662,17 +641,17 @@ public class FileController {
 			@RequestParam("idAnalysisType") Long idAnalysisType,
 			@RequestParam("idFileUpload") Long idFileUpload) {
  
-		FileUpload fileUpload = this.fileUploadService.getFileUploadById(idFileUpload);
+		FileUpload fileUpload = fileUploadService.getFileUploadById(idFileUpload);
 		
 		try {
 			
-			OrganismBuild gb = this.organismBuildService.getOrganismBuildById(idOrganismBuild);
-			AnalysisType at = this.analysisTypeService.getAnalysisTypeById(idAnalysisType);
+			OrganismBuild gb = organismBuildService.getOrganismBuildById(idOrganismBuild);
+			AnalysisType at = analysisTypeService.getAnalysisTypeById(idAnalysisType);
+			Project project = projectService.getProjectById(Long.parseLong(id));
 			
 			List<ExternalGene> egList = this.externalGeneService.getExternalGenesByOrganismBuild(gb);
 			
 			Genome genome = null;
-			
 			try {
 				genome = GenomeBuilds.fetchGenome(gb);
 			} catch (Exception ex) {
@@ -683,18 +662,13 @@ public class FileController {
 			}
 			
 			File importDir = new File(getRawDirectory(),id);
-			File parseDir = new File(getParsedDirectory(),id);
-			if (!parseDir.exists()) {
-				parseDir.mkdir();
-			}
+			File parseDir = fetchAnnotatedParseDirectory(genome, at, project);
 			File inputFile = new File(importDir, input);
 			File outputFile = new File(parseDir, output);
 			
 			//Add gz extension if it doesn't exist
-			if (!outputFile.getName().endsWith(".gz")) {
-				outputFile = new File(outputFile.getParent(),outputFile.getName() + ".gz");
-			}
-			
+			if (!outputFile.getName().endsWith(".gz")) outputFile = new File(outputFile.getParent(),outputFile.getName() + ".gz");
+
 			//Run parser, throw errors if log2 or FDR are not set
 			String warningMessage = "";
 			if (fdr != -1) {
@@ -708,16 +682,19 @@ public class FileController {
 				fileUpload.setState(FileStateEnum.FAILURE);
 				return fileUpload;
 			}
-			
-			
+
 			fileUpload.setMessage(warningMessage);
-			
-		
 			fileUpload.setName(outputFile.getName());
+			
+			//make relative path for dir
+			File localDirectory = new File(BiominerProperties.getProperty("filePath"));
+			String ld = localDirectory.getCanonicalPath();
+			String dir = outputFile.getParent().replace(ld, "");
+			fileUpload.setDirectory(dir);
 			fileUpload.setSize(new Long(outputFile.length()));
 			fileUpload.setAnalysisType(at);
 			
-			this.fileUploadService.updateFileUpload(idFileUpload,fileUpload);
+			fileUploadService.updateFileUpload(idFileUpload,fileUpload);
 			
 			//set state after, so finalize works
 			if (warningMessage.equals("")) {
@@ -741,12 +718,12 @@ public class FileController {
 				submitController.autoCreateAnalysis(Long.parseLong(id), idFileUpload, idAnalysisType, cond1, cond2, name);
 			} 
 			
+			
 		} catch (Exception ioex) {
 			ioex.printStackTrace();
 			fileUpload.setState(FileStateEnum.FAILURE);
 			fileUpload.setMessage(ioex.getMessage());
 		}
-		
 		return fileUpload;
 	}
 	
@@ -771,20 +748,27 @@ public class FileController {
 			@RequestParam("idAnalysisType") Long idAnalysisType,
 			@RequestParam("idFileUpload") Long idFileUpload) {
  
-		FileUpload fileUpload = this.fileUploadService.getFileUploadById(idFileUpload);
+		FileUpload fileUpload = fileUploadService.getFileUploadById(idFileUpload);
 		
 		try {
 			
-			OrganismBuild gb = this.organismBuildService.getOrganismBuildById(idOrganismBuild);
-			AnalysisType at = this.analysisTypeService.getAnalysisTypeById(idAnalysisType);
+			OrganismBuild gb = organismBuildService.getOrganismBuildById(idOrganismBuild);
+			AnalysisType at = analysisTypeService.getAnalysisTypeById(idAnalysisType);
+			Project project = projectService.getProjectById(Long.parseLong(id));
 			
 			List<ExternalGene> egList = this.externalGeneService.getExternalGenesByOrganismBuild(gb);
-			
-			File importDir = new File(getRawDirectory(),id);
-			File parseDir = new File(getParsedDirectory(),id);
-			if (!parseDir.exists()) {
-				parseDir.mkdir();
+
+			Genome genome = null;
+			try {
+				genome = GenomeBuilds.fetchGenome(gb);
+			} catch (Exception ex) {
+				ex.printStackTrace();
+				fileUpload.setState(FileStateEnum.FAILURE);
+				fileUpload.setMessage(String.format(ex.getMessage(), gb.getName()));
+				return fileUpload;
 			}
+			File importDir = new File(getRawDirectory(),id);
+			File parseDir = fetchAnnotatedParseDirectory(genome, at, project);
 			
 			File inputFile = new File(importDir, input);
 			File outputFile = new File(parseDir, output);
@@ -797,30 +781,21 @@ public class FileController {
 			//Run parser, throw errors if log2 or FDR are not set
 			String warningMessage = "";
 			
-			Genome genome = null;
-			
-			try {
-				genome = GenomeBuilds.fetchGenome(gb);
-			} catch (Exception ex) {
-				ex.printStackTrace();
-				fileUpload.setState(FileStateEnum.FAILURE);
-				fileUpload.setMessage(String.format(ex.getMessage(), gb.getName()));
-				return fileUpload;
-			}
-			
 			VCFParser vp = new VCFParser(inputFile, outputFile, egList, genome);
 			warningMessage = vp.run();
 			
 			fileUpload.setMessage(warningMessage);
-			
-		
 			fileUpload.setName(outputFile.getName());
 			fileUpload.setSize(new Long(outputFile.length()));
 			fileUpload.setAnalysisType(at);
 			
-
+			//make relative path for dir
+			File localDirectory = new File(BiominerProperties.getProperty("filePath"));
+			String ld = localDirectory.getCanonicalPath();
+			String dir = outputFile.getParent().replace(ld, "");
+			fileUpload.setDirectory(dir);
 			
-			this.fileUploadService.updateFileUpload(idFileUpload,fileUpload);
+			fileUploadService.updateFileUpload(idFileUpload,fileUpload);
 			
 			//Set state after
 			if (warningMessage.equals("")) {
@@ -842,12 +817,7 @@ public class FileController {
 		BooleanModel bm = new BooleanModel();
 		bm.setFound(false);
 		for (File fp: filePaths) {
-			if (fp.exists()) {
-				bm.setFound(true);
-				System.out.println("Yup " + fp);
-			} else {
-				System.out.println("Nope " + fp);
-			}
+			if (fp.exists()) bm.setFound(true);
 		}
 		return bm;
 	}
@@ -855,9 +825,9 @@ public class FileController {
 	@RequestMapping(value="finalizeFileUpload", method=RequestMethod.PUT)
 	@ResponseBody
 	public void finalizeFileUpload(@RequestParam("idFileUpload") Long idFileUpload, @RequestParam("state") FileStateEnum state) {
-		FileUpload fu = this.fileUploadService.getFileUploadById(idFileUpload);
+		FileUpload fu = fileUploadService.getFileUploadById(idFileUpload);
 		fu.setState(state);
-		this.fileUploadService.updateFileUpload(idFileUpload, fu);
+		fileUploadService.updateFileUpload(idFileUpload, fu);
 	}
 	
 	@RequestMapping(value="doesRawUploadExist", method = RequestMethod.GET)
@@ -893,8 +863,8 @@ public class FileController {
 	@RequestMapping(value="getParsedUploadNames", method=RequestMethod.GET)
 	@ResponseBody
 	public List<String> getParsedUploadNames(@RequestParam("idProject") Long idProject) throws Exception {
-		Project project = this.projectService.getProjectById(idProject);
-		List<FileUpload> files = this.fileUploadService.getFileUploadByType(FileTypeEnum.IMPORTED, project);
+		Project project = projectService.getProjectById(idProject);
+		List<FileUpload> files = fileUploadService.getFileUploadByType(FileTypeEnum.IMPORTED, project);
 		
 		List<String> fileNames = new ArrayList<String>();
 		for (FileUpload f: files) {
@@ -906,8 +876,8 @@ public class FileController {
 	@RequestMapping(value="cleanUploadedFiles", method=RequestMethod.DELETE)
 	@ResponseBody
 	public List<Long> cleanUploadedFiles(@RequestParam("idProject") Long idProject) throws Exception {
-		Project project = this.projectService.getProjectById(idProject);
-		List<FileUpload> ful = this.fileUploadService.getFileUploadByProject(project);
+		Project project = projectService.getProjectById(idProject);
+		List<FileUpload> ful = fileUploadService.getFileUploadByProject(project);
 		List<Long> idList = new ArrayList<Long>();
 		
 		for (FileUpload fu: ful) {
@@ -922,14 +892,10 @@ public class FileController {
 	}
 	
 	private void deleteFile(Long idFileUpload) throws Exception {
-		FileUpload fileUpload = this.fileUploadService.getFileUploadById(idFileUpload);
+		FileUpload fileUpload = fileUploadService.getFileUploadById(idFileUpload);
 		File fileToDelete = generateFilePath(fileUpload);
-		 
-		 if (fileToDelete.exists()) {
-			 fileToDelete.delete();
-		 }
-		 
-		 this.fileUploadService.deleteFileUploadById(idFileUpload);
+		 if (fileToDelete.exists()) fileToDelete.delete();
+		 fileUploadService.deleteFileUploadById(idFileUpload);
 	}
 	
 	/**** 
