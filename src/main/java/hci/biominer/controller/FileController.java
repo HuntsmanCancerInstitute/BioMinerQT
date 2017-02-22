@@ -76,7 +76,7 @@ public class FileController {
 	
 	public static final Pattern WHITE_SPACE = Pattern.compile("\\s+");
 	public static final Pattern NON_WORD = Pattern.compile("[^\\w]+");
-	//private static final Logger lg = Logger.getLogger(FileController.class);
+	private static final Logger lg = Logger.getLogger(FileController.class);
 
 	public static void checkProperties() throws Exception{
 		if (!BiominerProperties.isLoaded()) BiominerProperties.loadProperties();
@@ -606,6 +606,10 @@ public class FileController {
 		
 		//ProjectName
 		sb.append(cleanForFileName(project.getName()));
+		sb.append(File.separator);
+		
+		//AnalysisType
+		sb.append(cleanForFileName(at.getType().toString()));
 		
 		File dir = new File (getParsedDirectory(), sb.toString());
 		dir.mkdirs();
