@@ -439,6 +439,85 @@ public class FileController {
 	 }
 	
 	
+	
+	
+	
+	
+	 /***************************************************
+	 * URL: /submit/upload/updatepaths/
+	 * updateParsedFilePaths(): This updates the file paths for parsed data files and moves 
+	 * them to new directories when needed.  Call it after modifying the name of the Institute, 
+	 * Lab, Project, or AnalysisType e.g. http://localhost:8080/biominer/submit/upload/updatepaths
+	 * @author Nix
+	 * @param response : passed by the server
+	 * @return void
+	 ****************************************************/
+	@RequestMapping(value = "upload/updatepaths", method = RequestMethod.GET)
+	@ResponseBody 
+	public boolean  updateParsedFilePaths(HttpServletResponse response){
+
+		lg.info("Attempting to update parsed file paths...");
+
+		try {
+			//get all projects
+			List<Project> projects = projectService.getAllProjects();
+			//get the root dir where files are kept
+			File rootDir = new File(BiominerProperties.getProperty("filePath"));
+
+			//for each project
+			for (Project project: projects){
+
+				//for each file in the project
+				List<FileUpload> fus = project.getFiles();
+				for (FileUpload fu: fus){
+					
+					//is it a parsed file?
+					if (fu.getType().toString().equals("IMPORTED")){
+						
+						//load objects to build annotated path
+						AnalysisType at = fu.getAnalysisType();
+						OrganismBuild gb = project.getOrganismBuild();
+						
+						//create the current file and check if it is there
+						File currFile = new File (rootDir, fu.getDirectory()+File.separator+fu.getName());
+						lg.info("CURR  : "+currFile.getCanonicalPath());
+						if (currFile.exists() == false) throw new IOException("File doesn't exist?! "+currFile+" Aborting parsed file path updates.");
+							
+						//create new location dir and file
+						File newDir = fetchAnnotatedParseDirectory(gb, at, project);
+						File newFile = new File (newDir, currFile.getName());
+						
+						//move it?
+						if (currFile.getCanonicalPath().equals(newFile.getCanonicalPath()) == false && newFile.exists() == false){
+							lg.info("MOVE2 : "+newFile.getCanonicalPath());
+							String newDirAll = newDir.getCanonicalPath();
+							String newDirRel = newDirAll.replace(BiominerProperties.getProperty("filePath"), "");
+							
+							//attempt the move
+							if (currFile.renameTo(newFile) == false) throw new IOException ("Failed to move "+currFile+" to "+newFile+", ABORTING parsed file path updates.");
+							
+							//all good so modify the db, wish there was a way to find out if there was a problem here, could then reverse the file move
+							lg.info("Changing rel dir from "+fu.getDirectory()+" -> "+newDirRel);
+							fu.setDirectory(newDirRel);
+							fileUploadService.updateFileUpload(fu.getIdFileUpload(),fu);
+							
+						}
+						else lg.info("NoMOV : "+newFile.getCanonicalPath());
+						
+					}
+					else lg.info("Skipping non IMPORTED file "+fu.getDirectory()+File.separator+fu.getName());
+				}
+			}
+		} catch (Exception ioex) {
+			lg.error(IO.getStackTrace(ioex));
+			return false;
+		}
+		return true;
+
+	}
+
+	
+	
 	 /***************************************************
 	 * URL: /submit/parse/chip/
 	 * post(): call chip parser
@@ -492,7 +571,7 @@ public class FileController {
 			
 			//Get and create necessary directories.
 			File importDir = new File(getRawDirectory(),id);
-			File parseDir = fetchAnnotatedParseDirectory(genome, at, project);
+			File parseDir = fetchAnnotatedParseDirectory(gb, at, project);
 
 			File inputFile = new File(importDir, input);
 			File outputFile = new File(parseDir, output);
@@ -584,11 +663,12 @@ public class FileController {
 		return clean;
 	}
 	
-	public File fetchAnnotatedParseDirectory(Genome genome, AnalysisType at, Project project ) throws Exception{
-		
+	public File fetchAnnotatedParseDirectory(OrganismBuild ob, AnalysisType at, Project project ) throws Exception{
+	
 		StringBuilder sb = new StringBuilder();
 		//GenomeBuild
-		sb.append(cleanForFileName(genome.getBuildName()));
+		
+		sb.append(cleanForFileName(ob.getName()));
 		sb.append(File.separator);
 		
 		//Institute concat
@@ -613,6 +693,7 @@ public class FileController {
 		
 		File dir = new File (getParsedDirectory(), sb.toString());
 		dir.mkdirs();
+		if (dir.exists() == false) throw new IOException("Failed to create an annotated directory path for "+sb);
 		return dir;
 		
 	}
@@ -664,9 +745,8 @@ public class FileController {
 				fileUpload.setState(FileStateEnum.FAILURE);
 				return fileUpload;
 			}
-			
 			File importDir = new File(getRawDirectory(),id);
-			File parseDir = fetchAnnotatedParseDirectory(genome, at, project);
+			File parseDir = fetchAnnotatedParseDirectory(gb, at, project);
 			File inputFile = new File(importDir, input);
 			File outputFile = new File(parseDir, output);
 			
@@ -772,7 +852,7 @@ public class FileController {
 				return fileUpload;
 			}
 			File importDir = new File(getRawDirectory(),id);
-			File parseDir = fetchAnnotatedParseDirectory(genome, at, project);
+			File parseDir = fetchAnnotatedParseDirectory(gb, at, project);
 			
 			File inputFile = new File(importDir, input);
 			File outputFile = new File(parseDir, output);

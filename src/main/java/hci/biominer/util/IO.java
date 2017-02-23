@@ -115,6 +115,15 @@ public class IO {
 		return null;
 	}
 
+	/**Returns the standard stack trace in String form.*/
+	public static String getStackTrace(Exception e){
+		StringBuilder sb = new StringBuilder(e.toString());
+		for (StackTraceElement ste: e.getStackTrace()) {
+			sb.append("\n\tat ");
+			sb.append(ste.toString());
+		}
+		return sb.toString();
+	}
 
 	
 }
